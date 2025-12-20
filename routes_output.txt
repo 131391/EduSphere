@@ -1,0 +1,21 @@
+
+   ValueError 
+
+  str_repeat(): Argument #2 ($times) must be greater than or equal to 0
+
+  at vendor/laravel/framework/src/Illuminate/Foundation/Console/RouteListCommand.php:462
+    458▕         $routeCountText = 'Showing ['.$routes->count().'] routes';
+    459▕ 
+    460▕         $offset = $terminalWidth - mb_strlen($routeCountText) - 2;
+    461▕ 
+  ➜ 462▕         $spaces = str_repeat(' ', $offset);
+    463▕ 
+    464▕         return $spaces.'Showing ['.$routes->count().'] routes';
+    465▕     }
+    466▕
+
+      [2m+16 vendor frames [22m
+
+  17  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle()
+

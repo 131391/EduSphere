@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Models;
+
+use App\Traits\{Searchable, Sortable, Cacheable};
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
+class MiscellaneousFee extends Model
+{
+    use HasFactory, SoftDeletes, LogsActivity, Searchable, Sortable, Cacheable;
+
+    protected $fillable = [
+        'school_id',
+        'name',
+        'amount',
+        'description',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'is_active' => 'boolean',
+    ];
+
+    protected $searchable = ['name'];
+    protected $sortable = ['id', 'name', 'amount', 'created_at'];
+    protected $cacheTTL = 3600;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'amount', 'is_active'])
+            ->logOnlyDirty();
+    }
+
+    // Relationships
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
+}
