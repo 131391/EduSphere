@@ -46,5 +46,10 @@ class FeeType extends Model
     {
         return $this->hasMany(Fee::class);
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
 }
 

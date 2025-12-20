@@ -16,6 +16,15 @@
     
     @stack('styles')
     
+    <!-- Dark Mode Persistence -->
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    
     <style>
         /* Hide elements until Alpine.js is ready */
         [x-cloak] {
@@ -117,9 +126,15 @@
                     </li>
 
                     <li>
-                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                        <a href="{{ route('school.fee-master.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-master.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-money-bill-wave w-5 mr-3"></i>
-                            <span>Manage Fee</span>
+                            <span>Fee Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                            <i class="fas fa-percent w-5 mr-3"></i>
+                            <span>Manage Discount Fee</span>
                         </a>
                     </li>
                     <li>
@@ -330,18 +345,77 @@
                     </div>
 
                     <!-- Right: Actions & User -->
-                    <div class="flex items-center space-x-4">
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i class="far fa-star text-xl"></i>
+                    <div class="flex items-center space-x-4" x-data="headerActions">
+                        <!-- Star (Favorite) -->
+                        <button 
+                            @click="toggleFavorite()" 
+                            class="text-gray-500 hover:text-gray-700 transition-colors"
+                            :class="isFavorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-500 hover:text-gray-700'"
+                            title="Add to Favorites"
+                        >
+                            <i :class="isFavorite ? 'fas fa-star text-xl' : 'far fa-star text-xl'"></i>
                         </button>
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i class="far fa-bookmark text-xl"></i>
+
+                        <!-- Bookmark (Saved List) -->
+                        <div class="relative">
+                            <button 
+                                @click="showFavorites = !showFavorites" 
+                                class="text-gray-500 hover:text-gray-700 transition-colors"
+                                title="Saved Pages"
+                            >
+                                <i class="far fa-bookmark text-xl"></i>
+                            </button>
+                            
+                            <!-- Favorites Dropdown -->
+                            <div 
+                                x-show="showFavorites" 
+                                @click.away="showFavorites = false"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                                x-cloak
+                            >
+                                <div class="px-4 py-2 border-b border-gray-100">
+                                    <h3 class="text-sm font-semibold text-gray-700">Saved Pages</h3>
+                                </div>
+                                <div class="max-h-64 overflow-y-auto">
+                                    <template x-if="favorites.length === 0">
+                                        <div class="px-4 py-4 text-center text-gray-500 text-sm">
+                                            No saved pages yet.
+                                        </div>
+                                    </template>
+                                    <template x-for="fav in favorites" :key="fav.id">
+                                        <div class="group flex items-center justify-between px-4 py-2 hover:bg-gray-50">
+                                            <a :href="fav.url" class="text-sm text-gray-700 hover:text-blue-600 truncate flex-1" x-text="fav.title"></a>
+                                            <button @click="removeFavorite(fav.id)" class="ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fullscreen -->
+                        <button 
+                            @click="toggleFullscreen()" 
+                            class="text-gray-500 hover:text-gray-700 transition-colors"
+                            title="Toggle Fullscreen"
+                        >
+                            <i class="fas text-xl" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
                         </button>
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-expand text-xl"></i>
-                        </button>
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i class="far fa-moon text-xl"></i>
+
+                        <!-- Dark Mode -->
+                        <button 
+                            @click="toggleDarkMode()" 
+                            class="text-gray-500 hover:text-gray-700 transition-colors"
+                            title="Toggle Dark Mode"
+                        >
+                            <i class="far text-xl" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
                         </button>
                         
                         <!-- User Dropdown -->
@@ -401,6 +475,108 @@
     </div>
 
     @stack('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('headerActions', () => ({
+                isFullscreen: false,
+                isDark: localStorage.getItem('darkMode') === 'true',
+                isFavorite: false,
+                favorites: [],
+                showFavorites: false,
+                
+                init() {
+                    this.checkFavorite();
+                    this.loadFavorites();
+                    
+                    // Listen for fullscreen changes
+                    document.addEventListener('fullscreenchange', () => {
+                        this.isFullscreen = !!document.fullscreenElement;
+                    });
+                },
+                
+                toggleFullscreen() {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                        });
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                },
+                
+                toggleDarkMode() {
+                    this.isDark = !this.isDark;
+                    localStorage.setItem('darkMode', this.isDark);
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                
+                async toggleFavorite() {
+                    try {
+                        const response = await fetch('{{ route('school.favorites.toggle') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                title: document.title,
+                                url: window.location.href
+                            })
+                        });
+                        const data = await response.json();
+                        this.isFavorite = data.status === 'added';
+                        this.loadFavorites();
+                    } catch (error) {
+                        console.error('Error toggling favorite:', error);
+                    }
+                },
+                
+                async checkFavorite() {
+                    try {
+                        const response = await fetch('{{ route('school.favorites.check') }}?url=' + encodeURIComponent(window.location.href));
+                        const data = await response.json();
+                        this.isFavorite = data.is_favorite;
+                    } catch (error) {
+                        console.error('Error checking favorite:', error);
+                    }
+                },
+                
+                async loadFavorites() {
+                    try {
+                        const response = await fetch('{{ route('school.favorites.index') }}');
+                        this.favorites = await response.json();
+                    } catch (error) {
+                        console.error('Error loading favorites:', error);
+                    }
+                },
+                
+                async removeFavorite(id) {
+                    try {
+                        await fetch('{{ url('school/favorites') }}/' + id, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            }
+                        });
+                        this.loadFavorites();
+                        // If we are on the page we just removed, update the star icon
+                        const removedFav = this.favorites.find(f => f.id === id);
+                        if (removedFav && window.location.href === removedFav.url) {
+                            this.isFavorite = false;
+                        }
+                    } catch (error) {
+                        console.error('Error removing favorite:', error);
+                    }
+                }
+            }));
+        });
+    </script>
 </body>
 </html>
 

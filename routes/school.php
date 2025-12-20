@@ -28,6 +28,8 @@ use App\Http\Controllers\School\AdmissionNewsController;
 use App\Http\Controllers\School\SupportController;
 use App\Http\Controllers\School\RegistrationFeeController;
 use App\Http\Controllers\School\AdmissionFeeController;
+use App\Http\Controllers\School\UserFavoriteController;
+use App\Http\Controllers\School\FeeMasterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +49,13 @@ Route::get('/registrations/download-template', [RegistrationController::class, '
 
 // Student Management
 Route::resource('students', StudentController::class);
+Route::resource('fee-master', FeeMasterController::class);
+
+// Favorites
+Route::get('favorites', [UserFavoriteController::class, 'index'])->name('favorites.index');
+Route::post('favorites/toggle', [UserFavoriteController::class, 'toggle'])->name('favorites.toggle');
+Route::get('favorites/check', [UserFavoriteController::class, 'check'])->name('favorites.check');
+Route::delete('favorites/{userFavorite}', [UserFavoriteController::class, 'destroy'])->name('favorites.destroy');
 
 // Fee Management
 Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
