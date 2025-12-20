@@ -57,10 +57,10 @@
                             <button @click="$dispatch('open-modal', {name: 'edit-fee-master-modal', fee: {{ $fee->load(['class', 'feeName', 'feeType']) }}})" class="text-indigo-600 hover:text-indigo-900 transition-colors">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <form action="{{ route('school.fee-master.destroy', $fee->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this fee configuration?');">
+                            <form id="delete-fee-master-{{ $fee->id }}" action="{{ route('school.fee-master.destroy', $fee->id) }}" method="POST" class="inline-block">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-500 hover:text-red-700 transition-colors">
+                                <button type="button" @click="$dispatch('confirm-delete', { formId: 'delete-fee-master-{{ $fee->id }}', message: 'Are you sure you want to delete this fee configuration?' })" class="text-red-500 hover:text-red-700 transition-colors">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>

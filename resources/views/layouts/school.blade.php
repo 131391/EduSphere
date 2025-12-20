@@ -118,12 +118,7 @@
                             <span>Waiver</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('school.late-fees.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.late-fees.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-exclamation-circle w-5 mr-3"></i>
-                            <span>Manage Late Fee</span>
-                        </a>
-                    </li>
+
 
                     <li>
                         <a href="{{ route('school.fee-master.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-master.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -132,9 +127,9 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
-                            <i class="fas fa-percent w-5 mr-3"></i>
-                            <span>Manage Discount Fee</span>
+                        <a href="{{ route('school.late-fee.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.late-fee.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-clock w-5 mr-3"></i>
+                            <span>Manage Late Fee</span>
                         </a>
                     </li>
                     <li>
@@ -577,6 +572,7 @@
             }));
         });
     </script>
+    <x-delete-confirmation />
 </body>
 </html>
 

@@ -23,7 +23,7 @@
             document.body.classList.remove('overflow-y-hidden');
         }
     })"
-    x-on:open-modal.window="if ($event.detail == '{{ $name }}') show = true"
+    x-on:open-modal.window="if (typeof $event.detail === 'string' && $event.detail == '{{ $name }}') { show = true } else if (typeof $event.detail === 'object' && $event.detail.name == '{{ $name }}') { show = true }"
     x-on:close-modal.window="if ($event.detail == '{{ $name }}') show = false"
     x-on:keydown.escape.window="show = false"
     x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"

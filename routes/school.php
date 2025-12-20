@@ -30,6 +30,7 @@ use App\Http\Controllers\School\RegistrationFeeController;
 use App\Http\Controllers\School\AdmissionFeeController;
 use App\Http\Controllers\School\UserFavoriteController;
 use App\Http\Controllers\School\FeeMasterController;
+// use App\Http\Controllers\School\LateFeeController; // Duplicate removed
 
 /*
 |--------------------------------------------------------------------------
@@ -69,9 +70,7 @@ Route::get('/waivers', [WaiverController::class, 'index'])->name('waivers.index'
 Route::post('/waivers', [WaiverController::class, 'store'])->name('waivers.store');
 
 // Late Fee Management
-Route::get('/late-fees', [LateFeeController::class, 'index'])->name('late-fees.index');
-Route::post('/late-fees', [LateFeeController::class, 'store'])->name('late-fees.store');
-Route::put('/late-fees/{lateFee}', [LateFeeController::class, 'update'])->name('late-fees.update');
+Route::resource('late-fee', LateFeeController::class);
 
 // Class Management
 // Class Management

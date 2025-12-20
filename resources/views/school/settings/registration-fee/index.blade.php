@@ -64,10 +64,10 @@
                             <button @click="$dispatch('open-modal', {name: 'edit-registration-fee-modal', fee: {{ $fee }}})" class="text-indigo-600 hover:text-indigo-900">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <form action="{{ route('school.settings.registration-fee.destroy', $fee->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this fee?');">
+                            <form id="delete-reg-fee-{{ $fee->id }}" action="{{ route('school.settings.registration-fee.destroy', $fee->id) }}" method="POST" class="inline-block">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                <button type="button" @click="$dispatch('confirm-delete', { formId: 'delete-reg-fee-{{ $fee->id }}', message: 'Are you sure you want to delete this registration fee?' })" class="text-red-600 hover:text-red-900">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
