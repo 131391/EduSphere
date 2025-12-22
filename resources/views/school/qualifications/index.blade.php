@@ -30,72 +30,61 @@
         </button>
     </div>
 
-    <!-- Qualifications Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SR NO</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">QUALIFICATION</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DATE</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ACTION</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($qualifications as $index => $qualification)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $qualifications->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $qualification->name }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $qualification->created_at->format('F j, Y, g:i a') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <form 
-                                action="{{ route('school.qualifications.destroy', $qualification->id) }}" 
-                                method="POST" 
-                                class="inline"
-                                @submit.prevent="$dispatch('open-confirm-modal', { 
-                                    form: $el, 
-                                    title: 'Delete Qualification', 
-                                    message: 'Are you sure you want to delete this qualification?' 
-                                })"
-                            >
-                                @csrf
-                                @method('DELETE')
-                                <button 
-                                    type="submit" 
-                                    class="text-red-400 hover:text-red-600"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-graduation-cap text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No qualifications found</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($qualifications) {
+                    static $index = 0;
+                    return $qualifications->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'name',
+                'label' => 'QUALIFICATION',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<span class="font-medium text-gray-900">' . e($row->name) . '</span>';
+                }
+            ],
+            [
+                'key' => 'created_at',
+                'label' => 'DATE',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->created_at->format('F j, Y, g:i a');
+                }
+            ],
+        ];
 
-        @if($qualifications->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $qualifications->links() }}
-        </div>
-        @endif
-    </div>
+        $tableActions = [
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.qualifications.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-400 hover:text-red-600',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete Qualification',
+                    'message' => 'Are you sure you want to delete this qualification?'
+                ]
+            ],
+        ];
+    @endphp
+
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$qualifications"
+        :actions="$tableActions"
+        empty-message="No qualifications found"
+        empty-icon="fas fa-graduation-cap"
+    >
+        Qualifications List
+    </x-data-table>
 
     <!-- Add Qualification Modal -->
     <div 

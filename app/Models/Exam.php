@@ -13,8 +13,11 @@ class Exam extends Model
     protected $fillable = [
         'school_id',
         'academic_year_id',
+        'class_id',
+        'exam_type_id',
         'name',
         'code',
+        'month',
         'start_date',
         'end_date',
         'description',
@@ -35,6 +38,16 @@ class Exam extends Model
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function class()
+    {
+        return $this->belongsTo(ClassModel::class, 'class_id');
+    }
+
+    public function examType()
+    {
+        return $this->belongsTo(ExamType::class);
     }
 
     public function results()

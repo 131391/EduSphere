@@ -80,89 +80,106 @@
         </div>
     </div>
 
-    <!-- Classes Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Is available</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($classes as $index => $class)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $classes->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $class->name }}</div>
-                            <div class="text-xs text-gray-500">
-                                {{ $class->sections_count }} sections • {{ $class->students_count }} students
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($classes) {
+                    static $index = 0;
+                    return $classes->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'name',
+                'label' => 'CLASS',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<div>
+                        <div class="text-sm font-medium text-gray-900">' . e($row->name) . '</div>
+                        <div class="text-xs text-gray-500">' . $row->sections_count . ' sections • ' . $row->students_count . ' students</div>
+                    </div>';
+                }
+            ],
+            [
+                'key' => 'is_available',
+                'label' => 'IS AVAILABLE',
+                'sortable' => true,
+                'render' => function($row) {
+                    $color = $row->is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    $text = $row->is_available ? 'Y' : 'N';
+                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full ' . $color . '">' . $text . '</span>';
+                }
+            ],
+            [
+                'key' => 'actions',
+                'label' => 'ACTION',
+                'render' => function($row) {
+                    $route = route('school.classes.toggle-availability', $row->id);
+                    $csrf = csrf_field();
+                    $method = method_field('PATCH');
+                    
+                    return '<div class="flex items-center space-x-3">
+                        <div class="relative" x-data="{ open: false }">
+                            <button 
+                                @click="open = !open" 
+                                class="text-gray-600 hover:text-gray-900 px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 text-xs"
+                            >
+                                Is available <i class="fas fa-chevron-down ml-1 text-[10px]"></i>
+                            </button>
+                            <div 
+                                x-show="open" 
+                                @click.away="open = false"
+                                x-transition
+                                class="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 border border-gray-200"
+                            >
+                                <form action="' . $route . '" method="POST">
+                                    ' . $csrf . '
+                                    ' . $method . '
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        Yes
+                                    </button>
+                                </form>
+                                <form action="' . $route . '" method="POST">
+                                    ' . $csrf . '
+                                    ' . $method . '
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        No
+                                    </button>
+                                </form>
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $class->is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                {{ $class->is_available ? 'Y' : 'N' }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="relative" x-data="{ open: false }">
-                                <button 
-                                    @click="open = !open" 
-                                    class="text-gray-600 hover:text-gray-900 px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
-                                >
-                                    Is available <i class="fas fa-chevron-down ml-1 text-xs"></i>
-                                </button>
-                                <div 
-                                    x-show="open" 
-                                    @click.away="open = false"
-                                    x-transition
-                                    class="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 border border-gray-200"
-                                >
-                                    <form action="{{ route('school.classes.toggle-availability', $class->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            Yes
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('school.classes.toggle-availability', $class->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            No
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-chalkboard text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No classes found</p>
-                                <p class="text-sm text-gray-400 mt-1">Click "ADD" to create your first class</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                        <form 
+                            action="' . route('school.classes.destroy', $row->id) . '" 
+                            method="POST" 
+                            class="inline"
+                            @submit.prevent="$dispatch(\'open-confirm-modal\', { 
+                                form: $el, 
+                                title: \'Delete Class\', 
+                                message: \'Are you sure you want to delete this class? This will also delete all associated sections and data.\' 
+                            })"
+                        >
+                            ' . $csrf . '
+                            ' . method_field('DELETE') . '
+                            <button type="submit" class="text-red-400 hover:text-red-600" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>';
+                }
+            ]
+        ];
+    @endphp
 
-        <!-- Pagination -->
-        @if($classes->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $classes->links() }}
-        </div>
-        @endif
-    </div>
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$classes"
+        empty-message="No classes found"
+        empty-icon="fas fa-chalkboard"
+    >
+        Classes List
+    </x-data-table>
 
     <!-- Add Class Modal -->
     <div 
@@ -217,6 +234,9 @@
         </div>
     </div>
 </div>
+
+<!-- Confirmation Modal -->
+<x-confirm-modal />
 
 @push('scripts')
 <script>

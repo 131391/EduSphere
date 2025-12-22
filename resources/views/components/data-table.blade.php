@@ -189,7 +189,21 @@
                                         <i class="{{ $action['icon'] ?? 'fas fa-edit' }}"></i>
                                     </button>
                                     @elseif($action['type'] === 'form')
-                                    <form action="{{ $action['url']($row) }}" method="POST" class="inline" onsubmit="return confirm('{{ $action['confirm'] ?? 'Are you sure?' }}');" onclick="event.stopPropagation();">
+                                    <form 
+                                        action="{{ $action['url']($row) }}" 
+                                        method="POST" 
+                                        class="inline" 
+                                        @if(isset($action['dispatch']))
+                                        @submit.prevent="$dispatch('{{ $action['dispatch']['event'] }}', { 
+                                            form: $el, 
+                                            title: '{{ $action['dispatch']['title'] ?? 'Confirm Action' }}', 
+                                            message: '{{ $action['dispatch']['message'] ?? 'Are you sure?' }}' 
+                                        })"
+                                        @else
+                                        onsubmit="return confirm('{{ $action['confirm'] ?? 'Are you sure?' }}');" 
+                                        @endif
+                                        onclick="event.stopPropagation();"
+                                    >
                                         @csrf
                                         @method($action['method'] ?? 'DELETE')
                                         <button type="submit" class="{{ $action['class'] ?? 'text-red-600 hover:text-red-900' }}" title="{{ $action['title'] ?? '' }}">

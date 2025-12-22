@@ -30,72 +30,61 @@
         </button>
     </div>
 
-    <!-- Relatives Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SR NO</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CORRESPONDING RELATIVES</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DATE</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ACTION</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($relatives as $index => $relative)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $relatives->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $relative->name }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $relative->created_at->format('F j, Y, g:i a') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <form 
-                                action="{{ route('school.corresponding-relatives.destroy', $relative->id) }}" 
-                                method="POST" 
-                                class="inline"
-                                @submit.prevent="$dispatch('open-confirm-modal', { 
-                                    form: $el, 
-                                    title: 'Delete Relative', 
-                                    message: 'Are you sure you want to delete this relative?' 
-                                })"
-                            >
-                                @csrf
-                                @method('DELETE')
-                                <button 
-                                    type="submit" 
-                                    class="text-red-400 hover:text-red-600"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No relatives found</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($relatives) {
+                    static $index = 0;
+                    return $relatives->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'name',
+                'label' => 'CORRESPONDING RELATIVES',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<span class="font-medium text-gray-900">' . e($row->name) . '</span>';
+                }
+            ],
+            [
+                'key' => 'created_at',
+                'label' => 'DATE',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->created_at->format('F j, Y, g:i a');
+                }
+            ],
+        ];
 
-        @if($relatives->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $relatives->links() }}
-        </div>
-        @endif
-    </div>
+        $tableActions = [
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.corresponding-relatives.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-400 hover:text-red-600',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete Relative',
+                    'message' => 'Are you sure you want to delete this relative?'
+                ]
+            ],
+        ];
+    @endphp
+
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$relatives"
+        :actions="$tableActions"
+        empty-message="No relatives found"
+        empty-icon="fas fa-users"
+    >
+        Relatives List
+    </x-data-table>
 
     <!-- Add Relative Modal -->
     <div 

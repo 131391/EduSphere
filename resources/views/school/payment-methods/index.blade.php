@@ -30,73 +30,61 @@
         </button>
     </div>
 
-    <!-- Payment Methods Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sr No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Method</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($methods as $index => $method)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $methods->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $method->name }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $method->code ?? '-' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <form 
-                                action="{{ route('school.payment-methods.destroy', $method->id) }}" 
-                                method="POST" 
-                                class="inline"
-                                @submit.prevent="$dispatch('open-confirm-modal', { 
-                                    form: $el, 
-                                    title: 'Delete Payment Method', 
-                                    message: 'Are you sure you want to delete this payment method?' 
-                                })"
-                            >
-                                @csrf
-                                @method('DELETE')
-                                <button 
-                                    type="submit" 
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-credit-card text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No payment methods found</p>
-                                <p class="text-sm text-gray-400 mt-1">Click "Add Payment Method" to create your first payment method</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($methods) {
+                    static $index = 0;
+                    return $methods->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'name',
+                'label' => 'PAYMENT METHOD',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<span class="font-medium text-gray-900">' . e($row->name) . '</span>';
+                }
+            ],
+            [
+                'key' => 'code',
+                'label' => 'CODE',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->code ?? '-';
+                }
+            ],
+        ];
 
-        @if($methods->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $methods->links() }}
-        </div>
-        @endif
-    </div>
+        $tableActions = [
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.payment-methods.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-400 hover:text-red-600',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete Payment Method',
+                    'message' => 'Are you sure you want to delete this payment method?'
+                ]
+            ],
+        ];
+    @endphp
+
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$methods"
+        :actions="$tableActions"
+        empty-message="No payment methods found"
+        empty-icon="fas fa-credit-card"
+    >
+        Payment Methods List
+    </x-data-table>
 
     <!-- Add Payment Method Modal -->
     <div 

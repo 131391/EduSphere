@@ -100,6 +100,10 @@
             <!-- Navigation Menu - Scrollable -->
             <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll">
                 <ul class="space-y-1 px-2">
+                    <!-- Main -->
+                    <li class="pt-2">
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Main</p>
+                    </li>
                     <li>
                         <a href="{{ route('school.dashboard') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.dashboard') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-tachometer-alt w-5 mr-3"></i>
@@ -119,7 +123,10 @@
                         </a>
                     </li>
 
-
+                    <!-- Fee Operations -->
+                    <li class="pt-2">
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Operations</p>
+                    </li>
                     <li>
                         <a href="{{ route('school.fee-master.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-master.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-money-bill-wave w-5 mr-3"></i>
@@ -138,8 +145,16 @@
                             <span>Create New Fee</span>
                         </a>
                     </li>
+
+                    <!-- Academic Setup -->
                     <li class="pt-2">
-                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Management</p>
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Academic Setup</p>
+                    </li>
+                    <li>
+                        <a href="{{ route('school.academic-years.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.academic-years.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-calendar-alt w-5 mr-3"></i>
+                            <span>Academic Years</span>
+                        </a>
                     </li>
                     <li>
                         <a href="{{ route('school.classes.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.classes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -152,6 +167,17 @@
                             <i class="fas fa-users w-5 mr-3"></i>
                             <span>Section</span>
                         </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('school.subjects.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.subjects.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-book w-5 mr-3"></i>
+                            <span>Subject Master</span>
+                        </a>
+                    </li>
+
+                    <!-- Fee Masters -->
+                    <li class="pt-2">
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Masters</p>
                     </li>
                     <li>
                         <a href="{{ route('school.fee-types.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -183,17 +209,10 @@
                             <span>School Bank</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('school.academic-years.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.academic-years.*') ? 'bg-[#283593] text-white' : 'text-blue-800' }}">
-                            <i class="fas fa-calendar-alt w-5 mr-3"></i>
-                            <span>Academic Years</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('school.admission-codes.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-codes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-code w-5 mr-3"></i>
-                            <span>Admission Code</span>
-                        </a>
+
+                    <!-- Student Masters -->
+                    <li class="pt-2">
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Student Masters</p>
                     </li>
                     <li>
                         <a href="{{ route('school.student-types.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -238,7 +257,73 @@
                         </a>
                     </li>
 
-                    <!-- Settings Section -->
+                    <!-- Admission & News -->
+                    <li class="pt-2">
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Admission & News</p>
+                    </li>
+                    <li>
+                        <a href="{{ route('school.admission-codes.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-codes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-code w-5 mr-3"></i>
+                            <span>Admission Code</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('school.admission-news.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-news.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-newspaper w-5 mr-3"></i>
+                            <span>Admission News</span>
+                        </a>
+                    </li>
+
+                    <!-- Examination -->
+                    <li class="pt-2">
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Examination</p>
+                    </li>
+                    <li x-data="{ open: {{ request()->routeIs('school.examination.*') ? 'true' : 'false' }} }">
+                        <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none">
+                            <div class="flex items-center">
+                                <i class="fas fa-file-alt w-5 mr-3"></i>
+                                <span>Examination</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'transform rotate-180': open }"></i>
+                        </button>
+                        <ul x-show="open" x-collapse class="pl-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('school.examination.subjects.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.subjects.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3 mr-3"></i>
+                                    <span>Add Subject</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.examination.exam-types.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.exam-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3 mr-3"></i>
+                                    <span>Exam Type</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.examination.exams.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.exams.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3 mr-3"></i>
+                                    <span>Create Exam</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                                    <i class="fas fa-minus w-3 mr-3"></i>
+                                    <span>Exam Schedule</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.examination.grades.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.grades.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3 mr-3"></i>
+                                    <span>Student Grade</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- System -->
+                    <li class="pt-2">
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">System</p>
+                    </li>
                     <li x-data="{ open: {{ request()->routeIs('school.settings.*') || request()->routeIs('school.admission-news.*') || request()->routeIs('school.support') ? 'true' : 'false' }} }">
                         <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none">
                             <div class="flex items-center">
@@ -292,16 +377,9 @@
                             </li>
                         </ul>
                     </li>
-
-                    <li>
-                        <a href="{{ route('school.admission-news.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-news.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-newspaper w-3 mr-3"></i>
-                            <span>Admission News</span>
-                        </a>
-                    </li>
                     <li>
                         <a href="{{ route('school.support') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.support') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-question-circle w-3 mr-3"></i>
+                            <i class="fas fa-question-circle w-5 mr-3"></i>
                             <span>Support</span>
                         </a>
                     </li>
@@ -309,7 +387,7 @@
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="w-full flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] text-left">
-                                <i class="fas fa-sign-out-alt w-3 mr-3"></i>
+                                <i class="fas fa-sign-out-alt w-5 mr-3"></i>
                                 <span>LogOut</span>
                             </button>
                         </form>

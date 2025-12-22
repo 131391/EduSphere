@@ -67,77 +67,66 @@
         </div>
     </div>
 
-    <!-- Sections Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sr No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Class</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Section</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Length</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($sections as $index => $section)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $sections->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $section->class->name ?? 'N/A' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $section->name }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $section->capacity }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <form 
-                                action="{{ route('school.sections.destroy', $section->id) }}" 
-                                method="POST" 
-                                class="inline"
-                                @submit.prevent="$dispatch('open-confirm-modal', { 
-                                    form: $el, 
-                                    title: 'Delete Section', 
-                                    message: 'Are you sure you want to delete this section?' 
-                                })"
-                            >
-                                @csrf
-                                @method('DELETE')
-                                <button 
-                                    type="submit" 
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No sections found</p>
-                                <p class="text-sm text-gray-400 mt-1">Click "ADD" to create your first section</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($sections) {
+                    static $index = 0;
+                    return $sections->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'class_name',
+                'label' => 'CLASS',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->class->name ?? 'N/A';
+                }
+            ],
+            [
+                'key' => 'name',
+                'label' => 'SECTION',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<span class="font-medium text-gray-900">' . e($row->name) . '</span>';
+                }
+            ],
+            [
+                'key' => 'capacity',
+                'label' => 'LENGTH',
+                'sortable' => true,
+            ],
+        ];
 
-        @if($sections->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $sections->links() }}
-        </div>
-        @endif
-    </div>
+        $tableActions = [
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.sections.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-400 hover:text-red-600',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete Section',
+                    'message' => 'Are you sure you want to delete this section?'
+                ]
+            ],
+        ];
+    @endphp
+
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$sections"
+        :actions="$tableActions"
+        empty-message="No sections found"
+        empty-icon="fas fa-users"
+    >
+        Sections List
+    </x-data-table>
 
     <!-- Add Section Modal -->
     <div 

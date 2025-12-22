@@ -30,81 +30,74 @@
         </button>
     </div>
 
-    <!-- Banks Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sr No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bank Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IFSC Code</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($banks as $index => $bank)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $banks->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $bank->bank_name }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $bank->account_number }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $bank->branch_name ?? '-' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $bank->ifsc_code ?? '-' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <form 
-                                action="{{ route('school.school-banks.destroy', $bank->id) }}" 
-                                method="POST" 
-                                class="inline"
-                                @submit.prevent="$dispatch('open-confirm-modal', { 
-                                    form: $el, 
-                                    title: 'Delete School Bank', 
-                                    message: 'Are you sure you want to delete this bank account?' 
-                                })"
-                            >
-                                @csrf
-                                @method('DELETE')
-                                <button 
-                                    type="submit" 
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-university text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No bank accounts found</p>
-                                <p class="text-sm text-gray-400 mt-1">Click "Add Bank Name" to create your first bank account</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($banks) {
+                    static $index = 0;
+                    return $banks->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'bank_name',
+                'label' => 'BANK NAME',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<span class="font-medium text-gray-900">' . e($row->bank_name) . '</span>';
+                }
+            ],
+            [
+                'key' => 'account_number',
+                'label' => 'ACCOUNT NUMBER',
+                'sortable' => true,
+            ],
+            [
+                'key' => 'branch_name',
+                'label' => 'BRANCH NAME',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->branch_name ?? '-';
+                }
+            ],
+            [
+                'key' => 'ifsc_code',
+                'label' => 'IFSC CODE',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->ifsc_code ?? '-';
+                }
+            ],
+        ];
 
-        @if($banks->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $banks->links() }}
-        </div>
-        @endif
-    </div>
+        $tableActions = [
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.school-banks.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-400 hover:text-red-600',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete School Bank',
+                    'message' => 'Are you sure you want to delete this bank account?'
+                ]
+            ],
+        ];
+    @endphp
+
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$banks"
+        :actions="$tableActions"
+        empty-message="No bank accounts found"
+        empty-icon="fas fa-university"
+    >
+        School Banks List
+    </x-data-table>
 
     <!-- Add Bank Modal -->
     <div 

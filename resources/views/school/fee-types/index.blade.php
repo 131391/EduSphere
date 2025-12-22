@@ -30,47 +30,53 @@
         </button>
     </div>
 
-    <!-- Fee Types Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sr No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fee type</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($feeTypes as $index => $feeType)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $feeTypes->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $feeType->name }}
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="2" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-credit-card text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No fee types found</p>
-                                <p class="text-sm text-gray-400 mt-1">Click "Create Fee Type" to add your first fee type</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($feeTypes) {
+                    static $index = 0;
+                    return $feeTypes->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'name',
+                'label' => 'FEE TYPE',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<span class="font-medium text-gray-900">' . e($row->name) . '</span>';
+                }
+            ],
+        ];
 
-        @if($feeTypes->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $feeTypes->links() }}
-        </div>
-        @endif
-    </div>
+        $tableActions = [
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.fee-types.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-400 hover:text-red-600',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete Fee Type',
+                    'message' => 'Are you sure you want to delete this fee type?'
+                ]
+            ],
+        ];
+    @endphp
+
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$feeTypes"
+        :actions="$tableActions"
+        empty-message="No fee types found"
+        empty-icon="fas fa-credit-card"
+    >
+        Fee Types List
+    </x-data-table>
 
     <!-- Add Fee Type Modal -->
     <div 

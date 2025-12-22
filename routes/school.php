@@ -27,10 +27,12 @@ use App\Http\Controllers\School\SchoolSettingsController;
 use App\Http\Controllers\School\AdmissionNewsController;
 use App\Http\Controllers\School\SupportController;
 use App\Http\Controllers\School\RegistrationFeeController;
-use App\Http\Controllers\School\AdmissionFeeController;
-use App\Http\Controllers\School\UserFavoriteController;
 use App\Http\Controllers\School\FeeMasterController;
-// use App\Http\Controllers\School\LateFeeController; // Duplicate removed
+use App\Http\Controllers\School\SubjectController;
+use App\Http\Controllers\School\Examination\SubjectController as ExamSubjectController;
+use App\Http\Controllers\School\Examination\ExamTypeController;
+use App\Http\Controllers\School\Examination\ExamController;
+use App\Http\Controllers\School\Examination\GradeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -149,6 +151,20 @@ Route::resource('admission-news', AdmissionNewsController::class)->only(['index'
 
 // Support
 Route::get('support', [SupportController::class, 'index'])->name('support');
+
+// Examination Module
+Route::prefix('examination')->name('examination.')->group(function () {
+    Route::get('subjects', [ExamSubjectController::class, 'index'])->name('subjects.index');
+    Route::post('subjects', [ExamSubjectController::class, 'store'])->name('subjects.store');
+    Route::delete('subjects/{id}', [ExamSubjectController::class, 'destroy'])->name('subjects.destroy');
+    
+    Route::resource('exam-types', ExamTypeController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('exams', ExamController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('grades', GradeController::class)->only(['index', 'store', 'update', 'destroy']);
+});
+
+// Subject Management
+Route::resource('subjects', SubjectController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Other school admin routes...
 

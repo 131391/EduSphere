@@ -30,76 +30,65 @@
         </button>
     </div>
 
-    <!-- Academic Years Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SR NO</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ACADEMIC YEAR</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">DATE</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ACTION</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($academicYears as $index => $year)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $academicYears->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $year->name }}
-                            @if($year->is_current)
-                            <span class="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Current</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $year->start_date->format('M d, Y') }} - {{ $year->end_date->format('M d, Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <form 
-                                action="{{ route('school.academic-years.destroy', $year->id) }}" 
-                                method="POST" 
-                                class="inline"
-                                @submit.prevent="$dispatch('open-confirm-modal', { 
-                                    form: $el, 
-                                    title: 'Delete Academic Year', 
-                                    message: 'Are you sure you want to delete this academic year?' 
-                                })"
-                            >
-                                @csrf
-                                @method('DELETE')
-                                <button 
-                                    type="submit" 
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-calendar-alt text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No academic years found</p>
-                                <p class="text-sm text-gray-400 mt-1">Click "ADD" to create your first academic year</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($academicYears) {
+                    static $index = 0;
+                    return $academicYears->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'name',
+                'label' => 'ACADEMIC YEAR',
+                'sortable' => true,
+                'render' => function($row) {
+                    $html = '<span class="font-medium text-gray-900">' . e($row->name) . '</span>';
+                    if ($row->is_current) {
+                        $html .= '<span class="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Current</span>';
+                    }
+                    return $html;
+                }
+            ],
+            [
+                'key' => 'start_date',
+                'label' => 'DATE',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->start_date->format('M d, Y') . ' - ' . $row->end_date->format('M d, Y');
+                }
+            ],
+        ];
 
-        @if($academicYears->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $academicYears->links() }}
-        </div>
-        @endif
-    </div>
+        $tableActions = [
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.academic-years.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-400 hover:text-red-600',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete Academic Year',
+                    'message' => 'Are you sure you want to delete this academic year?'
+                ]
+            ],
+        ];
+    @endphp
+
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$academicYears"
+        :actions="$tableActions"
+        empty-message="No academic years found"
+        empty-icon="fas fa-calendar-alt"
+    >
+        Academic Years List
+    </x-data-table>
 
     <!-- Add Academic Year Modal -->
     <div 

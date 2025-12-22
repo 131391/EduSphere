@@ -134,7 +134,11 @@
             'icon' => 'fas fa-trash',
             'class' => 'text-red-600 hover:text-red-900',
             'title' => 'Delete',
-            'confirm' => 'Are you sure you want to delete this school?',
+            'dispatch' => [
+                'event' => 'open-confirm-modal',
+                'title' => 'Delete School',
+                'message' => 'Are you sure you want to delete this school? This action cannot be undone.'
+            ],
         ],
     ];
 @endphp
@@ -220,5 +224,8 @@
     >
         All Schools
     </x-data-table>
+
+    <!-- Confirmation Modal -->
+    <x-confirm-modal />
 </div>
 @endsection
