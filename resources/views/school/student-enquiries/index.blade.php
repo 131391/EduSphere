@@ -216,8 +216,7 @@
 
     <!-- Add/Edit Enquiry Modal -->
     <div x-show="showModal" x-cloak 
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-         @click.self="closeModal()">
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
         <div class="relative top-10 mx-auto w-full max-w-6xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 mb-10"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 transform scale-95"

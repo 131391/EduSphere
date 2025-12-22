@@ -706,10 +706,11 @@
         });
     </script>
     
-    <!-- Alpine.js - loaded here to ensure DOM is ready and alpine:init events work -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
     @stack('scripts')
+    
+    <!-- Alpine.js with defer - standard approach that ensures DOM ready and proper initialization order -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('headerActions', () => ({
