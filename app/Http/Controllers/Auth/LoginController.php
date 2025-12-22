@@ -76,6 +76,7 @@ class LoginController extends Controller
         return match ($user->role) {
             'super_admin' => redirect()->route('admin.dashboard'),
             'school_admin' => redirect()->route('school.dashboard'),
+            'receptionist' => redirect()->route('receptionist.dashboard'),
             'teacher' => redirect()->route('teacher.dashboard'),
             'student' => redirect()->route('student.dashboard'),
             'parent' => redirect()->route('parent.dashboard'),

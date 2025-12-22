@@ -84,6 +84,11 @@ class School extends Model
         return $this->hasMany(Subject::class);
     }
 
+    public function sections()
+    {
+        return $this->hasMany(Section::class);
+    }
+
     public function fees()
     {
         return $this->hasMany(Fee::class);
