@@ -31,7 +31,14 @@ class VisitorController extends Controller
             });
         }
 
-        $visitors = $query->orderBy('created_at', 'desc')->paginate(15);
+        // Sorting
+        $sortColumn = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+        $query->orderBy($sortColumn, $sortDirection);
+
+        // Pagination
+        $perPage = $request->get('per_page', 15);
+        $visitors = $query->paginate($perPage)->withQueryString();
 
         // Statistics for the page
         $stats = [
@@ -52,11 +59,11 @@ class VisitorController extends Controller
             'mobile' => 'required|string|max:20',
             'email' => 'nullable|email',
             'address' => 'nullable|string',
-            'visitor_type' => 'nullable|string',
-            'visit_purpose' => 'nullable|string',
+            'visitor_type' => 'required|string',
+            'visit_purpose' => 'required|string',
             'meeting_purpose' => 'nullable|string',
-            'meeting_with' => 'nullable|string',
-            'priority' => 'required|in:low,medium,high,urgent',
+            'meeting_with' => 'required|string',
+            'priority' => 'required|in:Low,Medium,High,Urgent,low,medium,high,urgent',
             'no_of_guests' => 'nullable|integer|min:1',
             'meeting_type' => 'required|in:online,offline,office',
             'source' => 'nullable|string',
@@ -92,11 +99,11 @@ class VisitorController extends Controller
             'mobile' => 'required|string|max:20',
             'email' => 'nullable|email',
             'address' => 'nullable|string',
-            'visitor_type' => 'nullable|string',
-            'visit_purpose' => 'nullable|string',
+            'visitor_type' => 'required|string',
+            'visit_purpose' => 'required|string',
             'meeting_purpose' => 'nullable|string',
-            'meeting_with' => 'nullable|string',
-            'priority' => 'required|in:low,medium,high,urgent',
+            'meeting_with' => 'required|string',
+            'priority' => 'required|in:Low,Medium,High,Urgent,low,medium,high,urgent',
             'no_of_guests' => 'nullable|integer|min:1',
             'meeting_type' => 'required|in:online,offline,office',
             'source' => 'nullable|string',

@@ -16,6 +16,20 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div x-data="{ show: true }" x-show="show" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative">
+        <strong class="font-bold">Whoops! Something went wrong.</strong>
+        <ul class="mt-2 list-disc list-inside">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    @endif
+
     <!-- Visitor Statistics -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center space-x-3">
@@ -66,95 +80,116 @@
     </div>
 
     <!-- Actions Bar -->
-    <div class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <div class="flex items-center space-x-3">
-            <input type="text" placeholder="Search Note..." 
-                   class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-        </div>
-        <div class="flex items-center space-x-3">
-            <button @click="openAddModal()" 
-                    class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-plus"></i>
-                <span>Add Visitor</span>
-            </button>
-            <a href="{{ route('receptionist.visitors.index', ['today' => 1]) }}" 
-               class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-calendar-day"></i>
-                <span>Today's Visitor</span>
-            </a>
-            <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-file-excel"></i>
-                <span>Export To Excel</span>
-            </button>
-        </div>
+    <div class="flex items-center justify-end bg-white dark:bg-gray-800 rounded-lg shadow p-4 gap-3">
+        <button @click="openAddModal()" 
+                class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+            <i class="fas fa-plus"></i>
+            <span>Add Visitor</span>
+        </button>
+        <a href="{{ route('receptionist.visitors.index', ['today' => 1]) }}" 
+           class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+            <i class="fas fa-calendar-day"></i>
+            <span>Today's Visitor</span>
+        </a>
+        <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+            <i class="fas fa-file-excel"></i>
+            <span>Export To Excel</span>
+        </button>
     </div>
 
     <!-- Visitors Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-teal-500 text-white">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Visitor No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Visitor Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Contact Number</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Sources</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Meeting Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Meeting With</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Check In</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Meeting Scheduled</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($visitors as $visitor)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ $visitor->visitor_no }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $visitor->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $visitor->mobile }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $visitor->source ?? 'N/A' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                {{ ucfirst($visitor->meeting_type) }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $visitor->meeting_with ?? 'N/A' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                            {{ $visitor->check_in ? $visitor->check_in->format('d M, h:i A') : 'Not checked in' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                            {{ $visitor->meeting_scheduled ? $visitor->meeting_scheduled->format('d M, h:i A') : 'N/A' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                            <button @click="openEditModal({{ $visitor }})" class="text-blue-600 hover:text-blue-900" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <form action="{{ route('receptionist.visitors.destroy', $visitor) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" onclick="return confirm('Are you sure?')" class="text-red-600 hover:text-red-900" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="9" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-users text-4xl mb-2"></i>
-                            <p>No visitors found</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            {{ $visitors->links() }}
-        </div>
-    </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'visitor_no',
+                'label' => 'Visitor No',
+                'sortable' => true,
+            ],
+            [
+                'key' => 'name',
+                'label' => 'Visitor Name',
+                'sortable' => true,
+            ],
+            [
+                'key' => 'mobile',
+                'label' => 'Contact Number',
+                'sortable' => false,
+            ],
+            [
+                'key' => 'source',
+                'label' => 'Sources',
+                'sortable' => false,
+                'render' => function($row) {
+                    return $row->source ?? 'N/A';
+                }
+            ],
+            [
+                'key' => 'meeting_type',
+                'label' => 'Meeting Type',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">' 
+                         . ucfirst($row->meeting_type) . '</span>';
+                }
+            ],
+            [
+                'key' => 'meeting_with',
+                'label' => 'Meeting With',
+                'sortable' => false,
+                'render' => function($row) {
+                    return $row->meeting_with ?? 'N/A';
+                }
+            ],
+            [
+                'key' => 'check_in',
+                'label' => 'Check In',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->check_in ? $row->check_in->format('d M, h:i A') : 'Not checked in';
+                }
+            ],
+            [
+                'key' => 'meeting_scheduled',
+                'label' => 'Meeting Scheduled',
+                'sortable' => true,
+                'render' => function($row) {
+                    return $row->meeting_scheduled ? $row->meeting_scheduled->format('d M, h:i A') : 'N/A';
+                }
+            ],
+        ];
+
+        $tableActions = [
+            [
+                'type' => 'button',
+                'onclick' => function($row) {
+                    return "openEditModal(" . htmlspecialchars(json_encode($row), ENT_QUOTES) . ")";
+                },
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+            ],
+            [
+                'type' => 'button',
+                'onclick' => function($row) {
+                    return "confirmDelete({$row->id})";
+                },
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-600 hover:text-red-900',
+                'title' => 'Delete',
+            ],
+        ];
+    @endphp
+
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$visitors"
+        :searchable="true"
+        :actions="$tableActions"
+        empty-message="No visitors found"
+        empty-icon="fas fa-users"
+    >
+        Visitor List
+    </x-data-table>
 
     <!-- Add/Edit Visitor Modal -->
     <div x-show="showModal" x-cloak 
@@ -186,12 +221,31 @@
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Mobile Number *</label>
                             <input type="text" name="mobile" x-model="formData.mobile" required
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('mobile') border-red-500 @enderror">
+                            @error('mobile')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visit Purpose</label>
-                            <input type="text" name="visit_purpose" x-model="formData.visit_purpose"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visit Purpose *</label>
+                            <select name="visit_purpose" x-model="formData.visit_purpose" required
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('visit_purpose') border-red-500 @enderror">
+                                <option value="">Select Purpose</option>
+                                <option value="Walk in">Walk in</option>
+                                <option value="General">General</option>
+                                <option value="Admission">Admission</option>
+                                <option value="Vendor">Vendor</option>
+                                <option value="Fee Deposit">Fee Deposit</option>
+                                <option value="Enquiry">Enquiry</option>
+                                <option value="For Discussion">For Discussion</option>
+                                <option value="Complain">Complain</option>
+                                <option value="Suggestion">Suggestion</option>
+                                <option value="For Document">For Document</option>
+                                <option value="Transfer Certificate">Transfer Certificate</option>
+                            </select>
+                            @error('visit_purpose')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email ID</label>
@@ -207,10 +261,11 @@
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Priority *</label>
                             <select name="priority" x-model="formData.priority" required
                                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                                <option value="urgent">Urgent</option>
+                                <option value="">Select Priority</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
                             </select>
                         </div>
                     </div>
@@ -220,22 +275,36 @@
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Name *</label>
                             <input type="text" name="name" x-model="formData.name" required
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('name') border-red-500 @enderror">
+                            @error('name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor Type</label>
-                            <input type="text" name="visitor_type" x-model="formData.visitor_type" placeholder="Parent, Vendor, etc."
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor Type *</label>
+                            <select name="visitor_type" x-model="formData.visitor_type" required
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                                <option value="">Select Type</option>
+                                <option value="Parent">Parent</option>
+                                <option value="General Visitor">General Visitor</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Address</label>
-                            <textarea name="address" x-model="formData.address" rows="2"
-                                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"></textarea>
+                            <input type="text" name="address" x-model="formData.address"
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Meeting with</label>
-                            <input type="text" name="meeting_with" x-model="formData.meeting_with" placeholder="Principal, Teacher, etc."
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Meeting with *</label>
+                            <select name="meeting_with" x-model="formData.meeting_with" required
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                                <option value="">Select Person</option>
+                                <option value="Principal">Principal</option>
+                                <option value="Teacher">Teacher</option>
+                                <option value="Accountant">Accountant</option>
+                                <option value="Student">Student</option>
+                                <option value="Non Teaching">Non Teaching</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">No. of Guest(s)</label>
@@ -287,6 +356,57 @@
             </form>
         </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div x-show="showDeleteModal" x-cloak 
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         @click.self="showDeleteModal = false">
+        <div class="relative mx-auto w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-800 overflow-hidden"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100">
+            
+            <!-- Modal Header -->
+            <div class="bg-red-500 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-white">Confirm Delete</h3>
+                <button @click="showDeleteModal = false" class="text-white hover:text-red-100 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-lg font-semibold text-gray-800 dark:text-white">Are you sure?</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone.</p>
+                    </div>
+                </div>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Do you really want to delete this visitor record? This will permanently remove the visitor data from the system.
+                </p>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex items-center justify-end gap-3">
+                <button @click="showDeleteModal = false"
+                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
+                    Cancel
+                </button>
+                <form :action="`/receptionist/visitors/${deleteVisitorId}`" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-md">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -294,8 +414,10 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('visitorManagement', () => ({
         showModal: false,
+        showDeleteModal: false,
         editMode: false,
         visitorId: null,
+        deleteVisitorId: null,
         formData: {
             name: '',
             mobile: '',
@@ -305,7 +427,7 @@ document.addEventListener('alpine:init', () => {
             visit_purpose: '',
             meeting_purpose: '',
             meeting_with: '',
-            priority: 'medium',
+            priority: 'Medium',
             no_of_guests: 1,
             meeting_type: 'offline',
         },
@@ -324,7 +446,7 @@ document.addEventListener('alpine:init', () => {
                 visit_purpose: '',
                 meeting_purpose: '',
                 meeting_with: '',
-                priority: 'medium',
+                priority: 'Medium',
                 no_of_guests: 1,
                 meeting_type: 'offline',
             };
@@ -352,6 +474,11 @@ document.addEventListener('alpine:init', () => {
         
         closeModal() {
             this.showModal = false;
+        },
+
+        confirmDelete(visitorId) {
+            this.deleteVisitorId = visitorId;
+            this.showDeleteModal = true;
         }
     }));
 });

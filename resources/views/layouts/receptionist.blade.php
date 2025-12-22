@@ -27,78 +27,111 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 font-sans antialiased">
-    <div x-data="{ sidebarOpen: true, darkMode: localStorage.getItem('darkMode') === 'true' }" 
-         :class="{ 'dark': darkMode }"
-         class="min-h-screen flex">
-        
+<body class="bg-gray-100">
+    @php
+        $school = auth()->user()->school;
+        $currentAcademicYear = $school ? \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first() : null;
+    @endphp
+
+    <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" 
-               class="bg-[#1a237e] text-white transition-all duration-300 flex flex-col">
-            
-            <!-- Logo -->
-            <div class="p-4 flex items-center justify-between border-b border-[#283593]">
-                <div class="flex items-center space-x-3" x-show="sidebarOpen">
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                        <i class="fas fa-school text-[#1a237e]"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-lg">{{ auth()->user()->school->name ?? 'School' }}</h1>
-                        <p class="text-xs text-indigo-200">Receptionist</p>
+        <aside class="w-64 bg-[#1a237e] text-white flex flex-col">
+            <!-- Logo Section -->
+            <div class="p-4 border-b border-[#283593] flex-shrink-0">
+                <div class="flex items-center justify-center mb-2">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                        @if($school && $school->logo)
+                            <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name }}" class="w-16 h-16 rounded-full object-cover">
+                        @else
+                            <i class="fas fa-book text-[#1a237e] text-2xl"></i>
+                        @endif
                     </div>
                 </div>
-                <button @click="sidebarOpen = !sidebarOpen" class="text-white hover:bg-[#283593] p-2 rounded">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <h2 class="text-xs font-bold text-center leading-tight">{{ strtoupper($school->name ?? 'SCHOOL NAME') }}</h2>
+                @if($school)
+                    <p class="text-xs text-indigo-100 text-center mt-1">{{ $school->city ?? '' }}, {{ $school->state ?? '' }}</p>
+                @endif
+            </div>
+
+            <!-- Session Info -->
+            <div class="px-4 py-2 bg-[#283593] text-xs flex-shrink-0">
+                <p class="font-semibold">SESSION: {{ $currentAcademicYear?->name ?? '2025 - 2026' }}</p>
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2">
+            <nav class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2" x-data="{ frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }} }">
                 <a href="{{ route('receptionist.dashboard') }}" 
-                   class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('receptionist.dashboard') ? 'bg-[#283593]' : 'hover:bg-[#283593]' }} transition-colors">
-                    <i class="fas fa-home w-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3">Dashboard</span>
+                   class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('receptionist.dashboard') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors">
+                    <i class="fas fa-home w-5 mr-3"></i>
+                    <span>Dashboard</span>
                 </a>
+
+                <!-- Front Desk Collapsible Menu -->
+                <div>
+                    <button @click="frontDeskOpen = !frontDeskOpen" 
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors">
+                        <div class="flex items-center">
+                            <i class="fas fa-desktop w-5 mr-3"></i>
+                            <span>Front Desk</span>
+                        </div>
+                        <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': frontDeskOpen }"></i>
+                    </button>
+                    
+                    <!-- Submenu -->
+                    <div x-show="frontDeskOpen" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="ml-4 mt-1 space-y-1">
+                        <a href="{{ route('receptionist.visitors.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-users w-5 mr-3"></i>
+                            <span>Visitor Entry</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-user-plus w-5 mr-3"></i>
+                            <span>Admission Enquiry</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-envelope w-5 mr-3"></i>
+                            <span>Postal Enquiry</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-phone w-5 mr-3"></i>
+                            <span>Phone Enquiry</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-file-alt w-5 mr-3"></i>
+                            <span>Online Application Report</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-comments w-5 mr-3"></i>
+                            <span>Complain & Suggestions</span>
+                        </a>
+                    </div>
+                </div>
 
                 <div class="pt-4">
-                    <p x-show="sidebarOpen" class="px-4 text-xs font-semibold text-blue-300 uppercase mb-2">Front Desk</p>
+                    <p class="px-4 text-xs font-semibold text-blue-300 uppercase mb-2">Account</p>
                 </div>
 
-                <a href="{{ route('receptionist.visitors.index') }}" 
-                   class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593]' : 'hover:bg-[#283593]' }} transition-colors">
-                    <i class="fas fa-users w-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3">Visitor Entry</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 rounded-lg hover:bg-[#283593] transition-colors">
-                    <i class="fas fa-user-plus w-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3">Admission Enquiry</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 rounded-lg hover:bg-[#283593] transition-colors">
-                    <i class="fas fa-envelope w-5"></i>
-                    <span x-show="sidebarOpen" class="ml-3">Postal Enquiry</span>
-                </a>
-            </nav>
-
-            <!-- User Profile -->
-            <div class="p-4 border-t border-[#283593]">
-                <div class="flex items-center space-x-3" x-show="sidebarOpen">
-                    <div class="w-10 h-10 bg-[#283593] rounded-full flex items-center justify-center">
-                        <span class="text-sm font-bold">{{ substr(auth()->user()->name, 0, 2) }}</span>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold">{{ auth()->user()->name }}</p>
-                        <p class="text-xs text-indigo-200">{{ auth()->user()->email }}</p>
-                    </div>
-                </div>
-                <form method="POST" action="{{ route('logout') }}" class="mt-2">
+                <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="w-full flex items-center px-4 py-2 rounded-lg hover:bg-[#283593] transition-colors">
-                        <i class="fas fa-sign-out-alt w-5"></i>
-                        <span x-show="sidebarOpen" class="ml-3">Logout</span>
+                    <button type="submit" class="w-full flex items-center px-4 py-3 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-left">
+                        <i class="fas fa-sign-out-alt w-5 mr-3"></i>
+                        <span>LogOut</span>
                     </button>
                 </form>
+            </nav>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center">
+                <p>{{ date('Y') }} ©</p>
             </div>
         </aside>
 
