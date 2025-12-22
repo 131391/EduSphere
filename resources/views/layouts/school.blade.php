@@ -14,9 +14,6 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
     @stack('styles')
     
     <!-- Dark Mode Persistence -->
@@ -139,6 +136,11 @@
             border: 1px solid #d1d5db;
             border-radius: 0.375rem;
             padding: 0.5rem;
+        }
+        
+        /* Prevent double scrollbar */
+        body {
+            overflow: hidden;
         }
     </style>
 </head>
@@ -703,6 +705,9 @@
             });
         });
     </script>
+    
+    <!-- Alpine.js - loaded here to ensure DOM is ready and alpine:init events work -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     @stack('scripts')
     <script>
