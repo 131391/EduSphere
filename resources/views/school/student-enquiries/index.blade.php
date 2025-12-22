@@ -257,8 +257,9 @@
 
     <!-- Delete Confirmation Modal -->
     <div x-show="showDeleteModal" x-cloak 
+         @close="document.body.style.overflow = ''"
          class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         @click.self="showDeleteModal = false">
+         @click.self="showDeleteModal = false; document.body.style.overflow = ''">
         <div class="relative mx-auto w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-800 overflow-hidden"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 transform scale-95"
@@ -266,7 +267,7 @@
             
             <div class="bg-red-500 px-6 py-4 flex items-center justify-between">
                 <h3 class="text-xl font-bold text-white">Confirm Delete</h3>
-                <button @click="showDeleteModal = false" class="text-white hover:text-red-100 transition-colors">
+                <button @click="showDeleteModal = false; document.body.style.overflow = ''" class="text-white hover:text-red-100 transition-colors">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
@@ -287,7 +288,7 @@
             </div>
 
             <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex items-center justify-end gap-3">
-                <button @click="showDeleteModal = false"
+                <button @click="showDeleteModal = false; document.body.style.overflow = ''"
                         class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
                     Cancel
                 </button>
@@ -318,12 +319,16 @@ document.addEventListener('alpine:init', () => {
             this.editMode = false;
             this.enquiryId = null;
             this.showModal = true;
+            // Lock body scroll
+            document.body.style.overflow = 'hidden';
         },
         
         openEditModal(enquiry) {
             this.editMode = true;
             this.enquiryId = enquiry.id;
             this.showModal = true;
+            // Lock body scroll
+            document.body.style.overflow = 'hidden';
             
             // Populate form fields
             this.$nextTick(() => {
@@ -338,11 +343,15 @@ document.addEventListener('alpine:init', () => {
         
         closeModal() {
             this.showModal = false;
+            // Unlock body scroll
+            document.body.style.overflow = '';
         },
 
         confirmDelete(enquiryId) {
             this.deleteEnquiryId = enquiryId;
             this.showDeleteModal = true;
+            // Lock body scroll
+            document.body.style.overflow = 'hidden';
         }
     }));
 });
