@@ -221,6 +221,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="{{ route('school.student-enquiries.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-clipboard-list w-5 mr-3"></i>
+                            <span>Student Enquiry</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('school.boarding-types.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.boarding-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-bed w-5 mr-3"></i>
                             <span>Boarding Type</span>

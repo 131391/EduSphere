@@ -19,6 +19,15 @@
     
     @stack('styles')
     
+    <!-- Dark Mode Persistence -->
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    
     <style>
         [x-cloak] { display: none !important; }
         .sidebar-scroll {
@@ -59,7 +68,22 @@
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2" x-data="{ frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }} }">
+            <nav class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2" x-data="{ 
+                frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }},
+                studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') ? 'true' : 'false' }},
+                toggleFrontDesk() {
+                    this.frontDeskOpen = !this.frontDeskOpen;
+                    if (this.frontDeskOpen) {
+                        this.studentOpen = false;
+                    }
+                },
+                toggleStudent() {
+                    this.studentOpen = !this.studentOpen;
+                    if (this.studentOpen) {
+                        this.frontDeskOpen = false;
+                    }
+                }
+            }">
                 <a href="{{ route('receptionist.dashboard') }}" 
                    class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('receptionist.dashboard') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors">
                     <i class="fas fa-home w-5 mr-3"></i>
@@ -68,7 +92,7 @@
 
                 <!-- Front Desk Collapsible Menu -->
                 <div>
-                    <button @click="frontDeskOpen = !frontDeskOpen" 
+                    <button @click="toggleFrontDesk()" 
                             class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors">
                         <div class="flex items-center">
                             <i class="fas fa-desktop w-5 mr-3"></i>
@@ -90,11 +114,6 @@
                         </a>
 
                         <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
-                            <i class="fas fa-user-plus w-5 mr-3"></i>
-                            <span>Admission Enquiry</span>
-                        </a>
-
-                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-envelope w-5 mr-3"></i>
                             <span>Postal Enquiry</span>
                         </a>
@@ -112,6 +131,51 @@
                         <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-comments w-5 mr-3"></i>
                             <span>Complain & Suggestions</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Student Collapsible Menu -->
+                <div>
+                    <button @click="toggleStudent()" 
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors">
+                        <div class="flex items-center">
+                            <i class="fas fa-user-graduate w-5 mr-3"></i>
+                            <span>Student</span>
+                        </div>
+                        <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': studentOpen }"></i>
+                    </button>
+                    
+                    <!-- Submenu -->
+                    <div x-show="studentOpen" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="ml-4 mt-1 space-y-1">
+                        <a href="{{ route('receptionist.student-enquiries.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-clipboard-list w-5 mr-3"></i>
+                            <span>Enquiry</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-user-plus w-5 mr-3"></i>
+                            <span>Registration</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-graduation-cap w-5 mr-3"></i>
+                            <span>Admission</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-id-card w-5 mr-3"></i>
+                            <span>ID Card</span>
+                        </a>
+
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                            <i class="fas fa-bus w-5 mr-3"></i>
+                            <span>Assign Transport Facility</span>
                         </a>
                     </div>
                 </div>
@@ -138,7 +202,25 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Header -->
-            <header class="bg-white shadow-sm border-b border-gray-200">
+            <header class="bg-white shadow-sm border-b border-gray-200" 
+                    x-data="{ 
+                        darkMode: localStorage.getItem('darkMode') === 'true', 
+                        isFullscreen: false,
+                        init() {
+                            document.addEventListener('fullscreen-changed', (e) => {
+                                this.isFullscreen = e.detail.isFullscreen;
+                            });
+                        },
+                        toggleDarkMode() {
+                            this.darkMode = !this.darkMode;
+                            if (this.darkMode) {
+                                document.documentElement.classList.add('dark');
+                            } else {
+                                document.documentElement.classList.remove('dark');
+                            }
+                            localStorage.setItem('darkMode', this.darkMode);
+                        }
+                    }">
                 <div class="flex items-center justify-between px-6 py-4">
                     <!-- Left: Menu & Search -->
                     <div class="flex items-center space-x-4 flex-1">
@@ -154,16 +236,25 @@
                     <!-- Right: Actions & User -->
                     <div class="flex items-center space-x-4">
                         <!-- Dark Mode Toggle -->
-                        <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)" 
+                        <button @click="toggleDarkMode()" 
                                 class="text-gray-500 hover:text-gray-700 transition-colors">
                             <i class="fas fa-moon text-xl" x-show="!darkMode"></i>
                             <i class="fas fa-sun text-xl" x-show="darkMode"></i>
                         </button>
 
                         <!-- Fullscreen Toggle -->
-                        <button onclick="document.documentElement.requestFullscreen()" 
-                                class="text-gray-500 hover:text-gray-700 transition-colors">
-                            <i class="fas fa-expand text-xl"></i>
+                        <button @click="
+                            if (!document.fullscreenElement) {
+                                document.documentElement.requestFullscreen();
+                                isFullscreen = true;
+                            } else {
+                                document.exitFullscreen();
+                                isFullscreen = false;
+                            }
+                        " 
+                        class="text-gray-500 hover:text-gray-700 transition-colors">
+                            <i class="fas fa-expand text-xl" x-show="!isFullscreen"></i>
+                            <i class="fas fa-compress text-xl" x-show="isFullscreen"></i>
                         </button>
 
                         <!-- User Dropdown -->
@@ -209,6 +300,17 @@
             </main>
         </div>
     </div>
+
+    <script>
+        // Listen for fullscreen changes (e.g., when user presses ESC)
+        document.addEventListener('fullscreenchange', function() {
+            // This will be handled by Alpine.js state in the header
+            const event = new CustomEvent('fullscreen-changed', { 
+                detail: { isFullscreen: !!document.fullscreenElement } 
+            });
+            document.dispatchEvent(event);
+        });
+    </script>
 
     @stack('scripts')
 </body>

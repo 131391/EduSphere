@@ -23,4 +23,7 @@ Route::middleware(['auth', 'role:receptionist'])->prefix('receptionist')->name('
     Route::post('visitors/{visitor}/check-in', [VisitorController::class, 'checkIn'])->name('visitors.check-in');
     Route::post('visitors/{visitor}/check-out', [VisitorController::class, 'checkOut'])->name('visitors.check-out');
     Route::get('visitors-export', [VisitorController::class, 'export'])->name('visitors.export');
+    
+    // Student Enquiry Management
+    Route::resource('student-enquiries', \App\Http\Controllers\Receptionist\StudentEnquiryController::class);
 });

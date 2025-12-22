@@ -170,5 +170,8 @@ Route::resource('subjects', SubjectController::class)->only(['index', 'store', '
 // User Management
 Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
 
+// Student Enquiry Management
+Route::resource('student-enquiries', \App\Http\Controllers\School\StudentEnquiryController::class);
+
 // Other school admin routes...
 
