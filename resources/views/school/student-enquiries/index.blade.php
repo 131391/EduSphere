@@ -185,7 +185,12 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "openEditModal(" . htmlspecialchars(json_encode($row), ENT_QUOTES) . ")";
+                    // Use data attribute to avoid JSON escaping issues
+                    $encodedData = base64_encode(json_encode($row));
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-enquiry'))))";
+                },
+                'data-enquiry' => function($row) {
+                    return base64_encode(json_encode($row));
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',

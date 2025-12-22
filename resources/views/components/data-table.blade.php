@@ -184,6 +184,9 @@
                                         @elseif(isset($action['onClick']))
                                         onclick="event.stopPropagation();" @click="{{ $action['onClick'] }}"
                                         @endif
+                                        @if(isset($action['data-enquiry']))
+                                        data-enquiry="{{ $action['data-enquiry']($row) }}"
+                                        @endif
                                         class="{{ $action['class'] ?? 'text-blue-600 hover:text-blue-900' }}"
                                         title="{{ $action['title'] ?? '' }}"
                                         type="button"
