@@ -355,8 +355,9 @@ document.addEventListener('alpine:init', () => {
                             // Regular select
                             input.value = value;
                         } else if (input.type === 'date' && value) {
-                            // Format date for input
-                            input.value = value.split(' ')[0]; // Get just the date part
+                            // Format date for input (YYYY-MM-DD)
+                            // Handles both "2025-12-25 15:00:00" and "2025-12-25T00:00:00.000000Z"
+                            input.value = value.substring(0, 10);
                         } else {
                             // Regular input/textarea
                             input.value = value;
