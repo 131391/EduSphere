@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Receptionist;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\StudentEnquiry;
 use App\Models\AcademicYear;
 use App\Models\ClassModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class StudentEnquiryController extends Controller
+class StudentEnquiryController extends TenantController
 {
     public function index(Request $request)
     {
-        $school = auth()->user()->school;
+        $schoolId = $this->getSchoolId();
         
-        $query = StudentEnquiry::where('school_id', $school->id)
+        $query = StudentEnquiry::where('school_id', $schoolId)
             ->with(['academicYear', 'class']);
 
         // Search functionality
@@ -40,16 +40,16 @@ class StudentEnquiryController extends Controller
 
         // Statistics
         $stats = [
-            'total' => StudentEnquiry::where('school_id', $school->id)->count(),
-            'pending' => StudentEnquiry::where('school_id', $school->id)->pending()->count(),
-            'cancelled' => StudentEnquiry::where('school_id', $school->id)->cancelled()->count(),
-            'registration' => StudentEnquiry::where('school_id', $school->id)->completed()->count(),
-            'admitted' => StudentEnquiry::where('school_id', $school->id)->admitted()->count(),
+            'total' => StudentEnquiry::where('school_id', $schoolId)->count(),
+            'pending' => StudentEnquiry::where('school_id', $schoolId)->pending()->count(),
+            'cancelled' => StudentEnquiry::where('school_id', $schoolId)->cancelled()->count(),
+            'registration' => StudentEnquiry::where('school_id', $schoolId)->completed()->count(),
+            'admitted' => StudentEnquiry::where('school_id', $schoolId)->admitted()->count(),
         ];
 
         // Get academic years and classes for dropdowns
-        $academicYears = AcademicYear::where('school_id', $school->id)->get();
-        $classes = ClassModel::where('school_id', $school->id)->get();
+        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
+        $classes = ClassModel::where('school_id', $schoolId)->get();
 
         return view('receptionist.student-enquiries.index', compact('enquiries', 'stats', 'academicYears', 'classes'));
     }
@@ -58,8 +58,7 @@ class StudentEnquiryController extends Controller
     {
         $validated = $this->validateEnquiry($request);
 
-        $school = auth()->user()->school;
-        $validated['school_id'] = $school->id;
+        $validated['school_id'] = $this->getSchoolId();
 
         // Handle file uploads
         $validated = $this->handleFileUploads($request, $validated);
@@ -72,7 +71,7 @@ class StudentEnquiryController extends Controller
 
     public function update(Request $request, StudentEnquiry $studentEnquiry)
     {
-        $this->authorizeAccess($studentEnquiry);
+        $this->authorizeTenant($studentEnquiry);
 
         $validated = $this->validateEnquiry($request, $studentEnquiry->id);
 
@@ -87,7 +86,7 @@ class StudentEnquiryController extends Controller
 
     public function destroy(StudentEnquiry $studentEnquiry)
     {
-        $this->authorizeAccess($studentEnquiry);
+        $this->authorizeTenant($studentEnquiry);
 
         // Delete associated files
         $this->deleteFiles($studentEnquiry);
@@ -219,16 +218,6 @@ class StudentEnquiryController extends Controller
         }
         if ($enquiry->student_photo) {
             Storage::disk('public')->delete($enquiry->student_photo);
-        }
-    }
-
-    /**
-     * Authorize access
-     */
-    private function authorizeAccess($enquiry)
-    {
-        if ($enquiry->school_id !== auth()->user()->school_id) {
-            abort(403);
         }
     }
 }

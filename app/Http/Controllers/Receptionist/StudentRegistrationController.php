@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Receptionist;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\StudentRegistration;
 use App\Models\ClassModel;
 use App\Models\AcademicYear;
@@ -19,13 +19,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class StudentRegistrationController extends Controller
+class StudentRegistrationController extends TenantController
 {
     public function index(Request $request)
     {
-        $school = Auth::user()->school;
+        $schoolId = $this->getSchoolId();
         
-        $query = StudentRegistration::where('school_id', $school->id)
+        $query = StudentRegistration::where('school_id', $schoolId)
             ->with(['class', 'academicYear']);
 
         // Search
@@ -52,34 +52,34 @@ class StudentRegistrationController extends Controller
 
         // Statistics
         $stats = [
-            'total' => StudentRegistration::where('school_id', $school->id)->count(),
-            'admitted' => StudentRegistration::where('school_id', $school->id)->admitted()->count(),
-            'pending' => StudentRegistration::where('school_id', $school->id)->pending()->count(),
-            'cancelled' => StudentRegistration::where('school_id', $school->id)->cancelled()->count(),
-            'total_enquiry' => StudentEnquiry::where('school_id', $school->id)->count(),
+            'total' => StudentRegistration::where('school_id', $schoolId)->count(),
+            'admitted' => StudentRegistration::where('school_id', $schoolId)->admitted()->count(),
+            'pending' => StudentRegistration::where('school_id', $schoolId)->pending()->count(),
+            'cancelled' => StudentRegistration::where('school_id', $schoolId)->cancelled()->count(),
+            'total_enquiry' => StudentEnquiry::where('school_id', $schoolId)->count(),
         ];
 
-        $classes = ClassModel::where('school_id', $school->id)->get();
+        $classes = ClassModel::where('school_id', $schoolId)->get();
 
         return view('receptionist.student-registrations.index', compact('registrations', 'stats', 'classes'));
     }
 
     public function create()
     {
-        $school = Auth::user()->school;
-        $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
-        $academicYears = AcademicYear::where('school_id', $school->id)->get();
-        $enquiries = StudentEnquiry::where('school_id', $school->id)
+        $schoolId = $this->getSchoolId();
+        $classes = ClassModel::where('school_id', $schoolId)->with('registrationFee')->get();
+        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
+        $enquiries = StudentEnquiry::where('school_id', $schoolId)
             ->where('form_status', 'pending')
             ->get();
             
-        $studentTypes = StudentType::where('school_id', $school->id)->get();
-        $bloodGroups = BloodGroup::where('school_id', $school->id)->get();
-        $religions = Religion::where('school_id', $school->id)->get();
-        $categories = Category::where('school_id', $school->id)->get();
-        $boardingTypes = BoardingType::where('school_id', $school->id)->get();
-        $correspondingRelatives = CorrespondingRelative::where('school_id', $school->id)->get();
-        $qualifications = Qualification::where('school_id', $school->id)->get();
+        $studentTypes = StudentType::where('school_id', $schoolId)->get();
+        $bloodGroups = BloodGroup::where('school_id', $schoolId)->get();
+        $religions = Religion::where('school_id', $schoolId)->get();
+        $categories = Category::where('school_id', $schoolId)->get();
+        $boardingTypes = BoardingType::where('school_id', $schoolId)->get();
+        $correspondingRelatives = CorrespondingRelative::where('school_id', $schoolId)->get();
+        $qualifications = Qualification::where('school_id', $schoolId)->get();
 
         return view('receptionist.student-registrations.create', compact(
             'classes', 'academicYears', 'enquiries', 'studentTypes', 
@@ -90,7 +90,7 @@ class StudentRegistrationController extends Controller
 
     public function store(Request $request)
     {
-        $school = Auth::user()->school;
+        $schoolId = $this->getSchoolId();
 
         $validated = $request->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -112,13 +112,13 @@ class StudentRegistrationController extends Controller
         ]);
 
         $data = $request->all();
-        $data['school_id'] = $school->id;
+        $data['school_id'] = $schoolId;
 
         // Handle File Uploads
         $fileFields = ['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
-                $path = $request->file($field)->store("registrations/{$school->id}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
+                $path = $request->file($field)->store("registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
                 $data[$field] = $path;
             }
         }
@@ -135,17 +135,17 @@ class StudentRegistrationController extends Controller
 
     public function edit(StudentRegistration $studentRegistration)
     {
-        $school = Auth::user()->school;
-        $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
-        $academicYears = AcademicYear::where('school_id', $school->id)->get();
-        $enquiries = StudentEnquiry::where('school_id', $school->id)->get();
-        $studentTypes = StudentType::where('school_id', $school->id)->get();
-        $bloodGroups = BloodGroup::where('school_id', $school->id)->get();
-        $religions = Religion::where('school_id', $school->id)->get();
-        $categories = Category::where('school_id', $school->id)->get();
-        $boardingTypes = BoardingType::where('school_id', $school->id)->get();
-        $correspondingRelatives = CorrespondingRelative::where('school_id', $school->id)->get();
-        $qualifications = Qualification::where('school_id', $school->id)->get();
+        $schoolId = $this->getSchoolId();
+        $classes = ClassModel::where('school_id', $schoolId)->with('registrationFee')->get();
+        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
+        $enquiries = StudentEnquiry::where('school_id', $schoolId)->get();
+        $studentTypes = StudentType::where('school_id', $schoolId)->get();
+        $bloodGroups = BloodGroup::where('school_id', $schoolId)->get();
+        $religions = Religion::where('school_id', $schoolId)->get();
+        $categories = Category::where('school_id', $schoolId)->get();
+        $boardingTypes = BoardingType::where('school_id', $schoolId)->get();
+        $correspondingRelatives = CorrespondingRelative::where('school_id', $schoolId)->get();
+        $qualifications = Qualification::where('school_id', $schoolId)->get();
 
         return view('receptionist.student-registrations.edit', compact(
             'studentRegistration', 'classes', 'academicYears', 'enquiries', 
@@ -156,7 +156,7 @@ class StudentRegistrationController extends Controller
 
     public function update(Request $request, StudentRegistration $studentRegistration)
     {
-        $school = Auth::user()->school;
+        $schoolId = $this->getSchoolId();
 
         $validated = $request->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -176,7 +176,7 @@ class StudentRegistrationController extends Controller
                 if ($studentRegistration->$field) {
                     Storage::disk('public')->delete($studentRegistration->$field);
                 }
-                $path = $request->file($field)->store("registrations/{$school->id}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
+                $path = $request->file($field)->store("registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
                 $data[$field] = $path;
             }
         }

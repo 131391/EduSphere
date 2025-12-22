@@ -3,146 +3,130 @@
 @section('title', 'Admission Fee')
 
 @section('content')
-<div class="container mx-auto px-4 py-6" x-data>
-    <div class="flex justify-between items-center mb-6">
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-gray-800">Admission Fee</h1>
-        <button @click="$dispatch('open-modal', 'add-admission-fee-modal')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center">
-            <i class="fas fa-plus mr-2"></i> ADD
+        <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            ADD
         </button>
     </div>
 
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <span class="block sm:inline">{{ session('success') }}</span>
-    </div>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+            {{ session('success') }}
+        </div>
     @endif
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <!-- Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600">
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        SR NO
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        CLASS
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        FEE
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        DATE
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ACTION
-                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SR NO</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CLASS</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">FEE</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ACTION</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($fees as $index => $fee)
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600">
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $fees->firstItem() + $index }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ $fee->class->name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ number_format($fee->amount, 2) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $fee->created_at->format('F j, Y, g:i a') }}
-                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $index + 1 }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $fee->class->name ?? 'N/A' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($fee->amount, 2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $fee->created_at->format('M d, Y, g:i a') }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            <button @click="$dispatch('open-modal', {name: 'edit-admission-fee-modal', fee: {{ $fee }}})" class="text-indigo-600 hover:text-indigo-900">
-                                <i class="fas fa-edit"></i>
+                        <button onclick="editFee({{ $fee->id }}, {{ $fee->class_id }}, {{ $fee->amount }})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <form action="{{ route('school.settings.admission-fee.destroy', $fee->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
                             </button>
-                            <form id="delete-adm-fee-{{ $fee->id }}" action="{{ route('school.settings.admission-fee.destroy', $fee->id) }}" method="POST" class="inline-block">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" @click="$dispatch('confirm-delete', { formId: 'delete-adm-fee-{{ $fee->id }}', message: 'Are you sure you want to delete this admission fee?' })" class="text-red-600 hover:text-red-900">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </div>
+                        </form>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                        No admission fees found.
-                    </td>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No admission fees found.</td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
-        <div class="px-6 py-4 border-t border-gray-200">
-            {{ $fees->links() }}
-        </div>
     </div>
 </div>
 
-<!-- Add Modal -->
-<x-modal name="add-admission-fee-modal" title="Admission Fee">
-    <form action="{{ route('school.settings.admission-fee.store') }}" method="POST" class="space-y-4">
-        @csrf
-        <div>
-            <label for="class_id" class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-            <select name="class_id" id="class_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                <option value="">Select Class</option>
-                @foreach($classes as $class)
-                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Fee</label>
-            <input type="number" name="amount" id="amount" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter Fee" required>
-        </div>
-        <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" @click="show = false" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-                Close
-            </button>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Submit
+<!-- Modal -->
+<div id="feeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">Admission Fee</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
             </button>
         </div>
-    </form>
-</x-modal>
-
-<!-- Edit Modal -->
-<div x-data="{ fee: null }" @open-modal.window="if ($event.detail.name === 'edit-admission-fee-modal') { fee = $event.detail.fee; $dispatch('open-actual-edit-modal'); }">
-    <x-modal name="edit-admission-fee-modal-actual" title="Edit Admission Fee" focusable>
-        <form x-bind:action="'{{ route('school.settings.admission-fee.update', '') }}/' + fee.id" method="POST" class="space-y-4" x-show="fee">
+        
+        <form id="feeForm" method="POST" action="{{ route('school.settings.admission-fee.store') }}">
             @csrf
-            @method('PUT')
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                <input type="text" x-bind:value="fee?.class?.name" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed focus:outline-none" disabled>
+            <input type="hidden" name="_method" id="formMethod" value="POST">
+            
+            <div class="mb-4">
+                <label for="class_id" class="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                <select name="class_id" id="class_id" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select Class</option>
+                    @foreach($classes as $class)
+                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div>
-                <label for="edit_amount" class="block text-sm font-medium text-gray-700 mb-1">Fee</label>
-                <input type="number" name="amount" id="edit_amount" step="0.01" min="0" x-bind:value="fee?.amount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+
+            <div class="mb-4">
+                <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">Fee</label>
+                <input type="number" name="amount" id="amount" step="0.01" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter Fee" required>
             </div>
-            <div class="flex justify-end space-x-3 pt-4">
-                <button type="button" @click="show = false" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-                    Close
-                </button>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Update
-                </button>
+
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Close</button>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
             </div>
         </form>
-    </x-modal>
-    
-    <!-- Hidden trigger to open the actual modal after setting data -->
-    <div @open-actual-edit-modal.window="$dispatch('open-modal', 'edit-admission-fee-modal-actual')"></div>
+    </div>
 </div>
+
+@push('scripts')
+<script>
+function openModal() {
+    document.getElementById('feeModal').classList.remove('hidden');
+    document.getElementById('modalTitle').textContent = 'Add Admission Fee';
+    document.getElementById('feeForm').action = "{{ route('school.settings.admission-fee.store') }}";
+    document.getElementById('formMethod').value = 'POST';
+    document.getElementById('class_id').value = '';
+    document.getElementById('amount').value = '';
+}
+
+function closeModal() {
+    document.getElementById('feeModal').classList.add('hidden');
+}
+
+function editFee(id, classId, amount) {
+    document.getElementById('feeModal').classList.remove('hidden');
+    document.getElementById('modalTitle').textContent = 'Edit Admission Fee';
+    document.getElementById('feeForm').action = "{{ url('school/settings/admission-fee') }}/" + id;
+    document.getElementById('formMethod').value = 'PUT';
+    document.getElementById('class_id').value = classId;
+    document.getElementById('amount').value = amount;
+}
+
+// Close modal when clicking outside
+document.getElementById('feeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+@endpush
 @endsection

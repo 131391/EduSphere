@@ -34,6 +34,8 @@ use App\Http\Controllers\School\Examination\ExamTypeController;
 use App\Http\Controllers\School\Examination\ExamController;
 use App\Http\Controllers\School\Examination\GradeController;
 use App\Http\Controllers\School\UserController;
+use App\Http\Controllers\School\UserFavoriteController;
+use App\Http\Controllers\School\AdmissionFeeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -175,6 +177,10 @@ Route::resource('student-enquiries', \App\Http\Controllers\School\StudentEnquiry
 
 // Student Registration Management
 Route::resource('student-registrations', \App\Http\Controllers\School\StudentRegistrationController::class);
+
+// Admission Management
+Route::resource('admission', \App\Http\Controllers\School\AdmissionController::class);
+Route::get('admission/class-data/{classId}', [\App\Http\Controllers\School\AdmissionController::class, 'getClassData'])->name('admission.class-data');
 
 // Other school admin routes...
 

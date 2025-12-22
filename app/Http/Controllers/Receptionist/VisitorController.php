@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Receptionist;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\Visitor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
-class VisitorController extends Controller
+class VisitorController extends TenantController
 {
     public function index(Request $request)
     {
-        $school = auth()->user()->school;
+        $schoolId = $this->getSchoolId();
         
-        $query = Visitor::where('school_id', $school->id);
+        $query = Visitor::where('school_id', $schoolId);
 
         // Filter by today if requested
         if ($request->has('today')) {
@@ -42,11 +42,11 @@ class VisitorController extends Controller
 
         // Statistics for the page
         $stats = [
-            'total' => Visitor::where('school_id', $school->id)->count(),
-            'online' => Visitor::where('school_id', $school->id)->where('meeting_type', 'online')->count(),
-            'offline' => Visitor::where('school_id', $school->id)->where('meeting_type', 'offline')->count(),
-            'office' => Visitor::where('school_id', $school->id)->where('meeting_type', 'office')->count(),
-            'cancelled' => Visitor::where('school_id', $school->id)->where('status', 'cancelled')->count(),
+            'total' => Visitor::where('school_id', $schoolId)->count(),
+            'online' => Visitor::where('school_id', $schoolId)->where('meeting_type', 'online')->count(),
+            'offline' => Visitor::where('school_id', $schoolId)->where('meeting_type', 'offline')->count(),
+            'office' => Visitor::where('school_id', $schoolId)->where('meeting_type', 'office')->count(),
+            'cancelled' => Visitor::where('school_id', $schoolId)->where('status', 'cancelled')->count(),
         ];
 
         return view('receptionist.visitors.index', compact('visitors', 'stats'));
@@ -72,9 +72,9 @@ class VisitorController extends Controller
             'id_proof' => 'nullable|file|max:2048',
         ]);
 
-        $school = auth()->user()->school;
-        $validated['school_id'] = $school->id;
-        $validated['visitor_no'] = Visitor::generateVisitorNo($school->id);
+        $schoolId = $this->getSchoolId();
+        $validated['school_id'] = $schoolId;
+        $validated['visitor_no'] = Visitor::generateVisitorNo($schoolId);
 
         // Handle file uploads
         if ($request->hasFile('visitor_photo')) {
@@ -182,7 +182,7 @@ class VisitorController extends Controller
 
     protected function authorizeAccess(Visitor $visitor)
     {
-        if ($visitor->school_id !== auth()->user()->school_id) {
+        if ($visitor->school_id !== $this->getSchoolId()) {
             abort(403);
         }
     }

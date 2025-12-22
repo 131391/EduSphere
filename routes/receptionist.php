@@ -27,3 +27,7 @@ Route::resource('student-enquiries', \App\Http\Controllers\Receptionist\StudentE
 
 // Student Registration Management
 Route::resource('student-registrations', \App\Http\Controllers\Receptionist\StudentRegistrationController::class);
+
+// Admission Management
+Route::resource('admission', \App\Http\Controllers\Receptionist\AdmissionController::class);
+Route::get('admission/class-data/{classId}', [\App\Http\Controllers\Receptionist\AdmissionController::class, 'getClassData'])->name('admission.class-data');

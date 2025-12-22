@@ -210,6 +210,40 @@
                         </a>
                     </li>
 
+                    <!-- Student -->
+                    <li class="pt-2">
+                        <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Student</p>
+                    </li>
+                    <li x-data="{ open: {{ request()->routeIs('school.student-enquiries.*') || request()->routeIs('school.student-registrations.*') || request()->routeIs('school.admission.*') ? 'true' : 'false' }} }">
+                        <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none">
+                            <div class="flex items-center">
+                                <i class="fas fa-user-graduate w-5 mr-3"></i>
+                                <span>Student</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'transform rotate-180': open }"></i>
+                        </button>
+                        <ul x-show="open" x-collapse class="pl-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('school.student-enquiries.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3 mr-3"></i>
+                                    <span>Enquiry</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.student-registrations.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3 mr-3"></i>
+                                    <span>Registration</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.admission.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3 mr-3"></i>
+                                    <span>Admission</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Student Masters -->
                     <li class="pt-2">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Student Masters</p>
@@ -218,18 +252,6 @@
                         <a href="{{ route('school.student-types.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-user-tag w-5 mr-3"></i>
                             <span>Student Type</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('school.student-enquiries.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-clipboard-list w-5 mr-3"></i>
-                            <span>Student Enquiry</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('school.student-registrations.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-user-plus w-5 mr-3"></i>
-                            <span>Student Registration</span>
                         </a>
                     </li>
                     <li>
