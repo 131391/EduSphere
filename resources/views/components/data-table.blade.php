@@ -49,6 +49,7 @@
                 <div class="flex items-center gap-2">
                     @foreach($filters as $filter)
                     <select 
+                        data-table-select
                         x-model="filters['{{ $filter['name'] }}']"
                         @change="applyFilters()"
                         class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -66,6 +67,7 @@
 
                 <!-- Per Page Selector -->
                 <select 
+                    data-table-select
                     x-model="perPage"
                     @change="changePerPage()"
                     class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"

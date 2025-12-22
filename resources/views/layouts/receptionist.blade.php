@@ -389,8 +389,8 @@
     <!-- Global Select2 Initialization -->
     <script>
         $(document).ready(function() {
-            // Initialize Select2 on all select elements
-            $('select').not('.no-select2').select2({
+            // Initialize Select2 on all select elements (except datatable selects)
+            $('select').not('.no-select2, .select2-hidden-accessible, [data-table-select]').select2({
                 placeholder: function() {
                     return $(this).data('placeholder') || 'Select an option';
                 },
@@ -402,7 +402,7 @@
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     if (mutation.addedNodes.length) {
-                        $(mutation.addedNodes).find('select').not('.no-select2, .select2-hidden-accessible').select2({
+                        $(mutation.addedNodes).find('select').not('.no-select2, .select2-hidden-accessible, [data-table-select]').select2({
                             placeholder: function() {
                                 return $(this).data('placeholder') || 'Select an option';
                             },
