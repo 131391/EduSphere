@@ -140,6 +140,7 @@
                         <div class="col-span-2">
                             <input 
                                 type="number" 
+                                step="0.01"
                                 name="range_start" 
                                 x-model="formData.range_start"
                                 placeholder="Enter Range Start %"
@@ -157,6 +158,7 @@
                         <div class="col-span-2">
                             <input 
                                 type="number" 
+                                step="0.01"
                                 name="range_end" 
                                 x-model="formData.range_end"
                                 placeholder="Enter Range end %"

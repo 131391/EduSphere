@@ -70,7 +70,7 @@
             <!-- Navigation -->
             <nav class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2" x-data="{ 
                 frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }},
-                studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') ? 'true' : 'false' }},
+                studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') ? 'true' : 'false' }},
                 toggleFrontDesk() {
                     this.frontDeskOpen = !this.frontDeskOpen;
                     if (this.frontDeskOpen) {
@@ -158,7 +158,8 @@
                             <span>Enquiry</span>
                         </a>
 
-                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                        <a href="{{ route('receptionist.student-registrations.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-user-plus w-5 mr-3"></i>
                             <span>Registration</span>
                         </a>

@@ -50,3 +50,8 @@ Route::prefix('parent')->name('parent.')->middleware(['auth', 'tenant', 'school.
     require __DIR__.'/parent.php';
 });
 
+// Receptionist routes (with tenant middleware)
+Route::prefix('receptionist')->name('receptionist.')->middleware(['auth', 'tenant', 'school.access', 'role:receptionist'])->group(function () {
+    require __DIR__.'/receptionist.php';
+});
+

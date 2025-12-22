@@ -151,7 +151,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Father Annual Income</label>
-                <input type="number" name="father_annual_income" value="{{ old('father_annual_income') }}" placeholder="Enter Father Annual Income"
+                <input type="number" step="0.01" name="father_annual_income" value="{{ old('father_annual_income') }}" placeholder="Enter Father Annual Income"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('father_annual_income') border-red-500 @enderror">
                 @error('father_annual_income')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -264,7 +264,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mother Annual Income</label>
-                <input type="number" name="mother_annual_income" value="{{ old('mother_annual_income') }}" placeholder="Enter Mother Annual Income"
+                <input type="number" step="0.01" name="mother_annual_income" value="{{ old('mother_annual_income') }}" placeholder="Enter Mother Annual Income"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('mother_annual_income') border-red-500 @enderror">
                 @error('mother_annual_income')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -434,7 +434,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Annual Income</label>
-                <input type="number" name="annual_income" value="{{ old('annual_income') }}" placeholder="Enter Annual Income"
+                <input type="number" step="0.01" name="annual_income" value="{{ old('annual_income') }}" placeholder="Enter Annual Income"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('annual_income') border-red-500 @enderror">
                 @error('annual_income')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -443,7 +443,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">No of Brother's</label>
-                <input type="number" name="no_of_brothers" value="{{ old('no_of_brothers', 0) }}" placeholder="Choose No of Brother's"
+                <input type="number" step="0.01" name="no_of_brothers" value="{{ old('no_of_brothers', 0) }}" placeholder="Choose No of Brother's"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('no_of_brothers') border-red-500 @enderror">
                 @error('no_of_brothers')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -452,7 +452,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">No of Sister's</label>
-                <input type="number" name="no_of_sisters" value="{{ old('no_of_sisters', 0) }}" placeholder="Choose No of Sister's"
+                <input type="number" step="0.01" name="no_of_sisters" value="{{ old('no_of_sisters', 0) }}" placeholder="Choose No of Sister's"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('no_of_sisters') border-red-500 @enderror">
                 @error('no_of_sisters')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
