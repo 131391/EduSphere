@@ -618,12 +618,18 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Father's Photo</label>
                 <div class="flex flex-col items-center">
-                    <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+                    <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
                         <img id="father-photo-preview" src="#" alt="Father's Photo" class="hidden w-full h-full object-cover">
                         <i class="fas fa-user text-gray-400 text-4xl" id="father-photo-icon"></i>
+                        <button type="button" 
+                                id="father-photo-remove" 
+                                onclick="removeImage(event, 'father_photo', 'father-photo-preview', 'father-photo-icon', 'father-photo-remove')"
+                                class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
                     </div>
                     <input type="file" name="father_photo" accept="image/*" 
-                           onchange="previewImage(event, 'father-photo-preview', 'father-photo-icon')"
+                           onchange="previewImage(event, 'father-photo-preview', 'father-photo-icon', 'father-photo-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                     @error('father_photo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -634,12 +640,18 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mother's Photo</label>
                 <div class="flex flex-col items-center">
-                    <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+                    <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
                         <img id="mother-photo-preview" src="#" alt="Mother's Photo" class="hidden w-full h-full object-cover">
                         <i class="fas fa-user text-gray-400 text-4xl" id="mother-photo-icon"></i>
+                        <button type="button" 
+                                id="mother-photo-remove" 
+                                onclick="removeImage(event, 'mother_photo', 'mother-photo-preview', 'mother-photo-icon', 'mother-photo-remove')"
+                                class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
                     </div>
                     <input type="file" name="mother_photo" accept="image/*" 
-                           onchange="previewImage(event, 'mother-photo-preview', 'mother-photo-icon')"
+                           onchange="previewImage(event, 'mother-photo-preview', 'mother-photo-icon', 'mother-photo-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                     @error('mother_photo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -650,12 +662,18 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Student Photo</label>
                 <div class="flex flex-col items-center">
-                    <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+                    <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
                         <img id="student-photo-preview" src="#" alt="Student Photo" class="hidden w-full h-full object-cover">
                         <i class="fas fa-user text-gray-400 text-4xl" id="student-photo-icon"></i>
+                        <button type="button" 
+                                id="student-photo-remove" 
+                                onclick="removeImage(event, 'student_photo', 'student-photo-preview', 'student-photo-icon', 'student-photo-remove')"
+                                class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
                     </div>
                     <input type="file" name="student_photo" accept="image/*" 
-                           onchange="previewImage(event, 'student-photo-preview', 'student-photo-icon')"
+                           onchange="previewImage(event, 'student-photo-preview', 'student-photo-icon', 'student-photo-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                     @error('student_photo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -667,18 +685,52 @@
 </div>
 
 <script>
-function previewImage(event, previewId, iconId) {
+function previewImage(event, previewId, iconId, removeBtnId) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const preview = document.getElementById(previewId);
             const icon = document.getElementById(iconId);
+            const removeBtn = document.getElementById(removeBtnId);
+            
             preview.src = e.target.result;
             preview.classList.remove('hidden');
-            icon.classList.add('hidden');
+            if (icon) {
+                icon.classList.add('hidden');
+            }
+            if (removeBtn) {
+                removeBtn.classList.remove('hidden');
+            }
         };
         reader.readAsDataURL(file);
+    }
+}
+
+function removeImage(event, inputName, previewId, iconId, removeBtnId) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const input = document.querySelector(`input[name="${inputName}"]`);
+    const preview = document.getElementById(previewId);
+    const icon = document.getElementById(iconId);
+    const removeBtn = document.getElementById(removeBtnId);
+    
+    // Reset file input
+    if (input) {
+        input.value = '';
+    }
+    
+    // Hide preview and show icon
+    if (preview) {
+        preview.src = '#';
+        preview.classList.add('hidden');
+    }
+    if (icon) {
+        icon.classList.remove('hidden');
+    }
+    if (removeBtn) {
+        removeBtn.classList.add('hidden');
     }
 }
 </script>

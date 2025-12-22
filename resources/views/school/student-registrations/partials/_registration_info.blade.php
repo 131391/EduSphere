@@ -21,7 +21,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Enquiry No
                 </label>
-                <select name="enquiry_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="enquiry_id" id="enquiry_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Select Enquiry No</option>
                     @foreach($enquiries as $enquiry)
                         <option value="{{ $enquiry->id }}" {{ (old('enquiry_id', $studentRegistration->enquiry_id ?? '') == $enquiry->id) ? 'selected' : '' }}>

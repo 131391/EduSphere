@@ -331,13 +331,39 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Photo</label>
-                            <input type="file" name="visitor_photo" accept="image/*"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                            <div class="flex flex-col items-center">
+                                <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
+                                    <img id="visitor-photo-preview" src="#" alt="Visitor's Photo" class="hidden w-full h-full object-cover">
+                                    <i class="fas fa-user text-gray-400 text-4xl" id="visitor-photo-icon"></i>
+                                    <button type="button" 
+                                            id="visitor-photo-remove" 
+                                            onclick="removeImage(event, 'visitor_photo', 'visitor-photo-preview', 'visitor-photo-icon', 'visitor-photo-remove')"
+                                            class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </div>
+                                <input type="file" name="visitor_photo" accept="image/*"
+                                       onchange="previewImage(event, 'visitor-photo-preview', 'visitor-photo-icon', 'visitor-photo-remove')"
+                                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">ID proof</label>
-                            <input type="file" name="id_proof" accept="image/*,application/pdf"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                            <div class="flex flex-col items-center">
+                                <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
+                                    <img id="id-proof-preview" src="#" alt="ID Proof" class="hidden w-full h-full object-cover">
+                                    <i class="fas fa-id-card text-gray-400 text-4xl" id="id-proof-icon"></i>
+                                    <button type="button" 
+                                            id="id-proof-remove" 
+                                            onclick="removeImage(event, 'id_proof', 'id-proof-preview', 'id-proof-icon', 'id-proof-remove')"
+                                            class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </div>
+                                <input type="file" name="id_proof" accept="image/*,application/pdf"
+                                       onchange="previewImage(event, 'id-proof-preview', 'id-proof-icon', 'id-proof-remove')"
+                                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -482,6 +508,55 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
+
+function previewImage(event, previewId, iconId, removeBtnId) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById(previewId);
+            const icon = document.getElementById(iconId);
+            const removeBtn = document.getElementById(removeBtnId);
+            
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+            if (icon) {
+                icon.classList.add('hidden');
+            }
+            if (removeBtn) {
+                removeBtn.classList.remove('hidden');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeImage(event, inputName, previewId, iconId, removeBtnId) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const input = document.querySelector(`input[name="${inputName}"]`);
+    const preview = document.getElementById(previewId);
+    const icon = document.getElementById(iconId);
+    const removeBtn = document.getElementById(removeBtnId);
+    
+    // Reset file input
+    if (input) {
+        input.value = '';
+    }
+    
+    // Hide preview and show icon
+    if (preview) {
+        preview.src = '#';
+        preview.classList.add('hidden');
+    }
+    if (icon) {
+        icon.classList.remove('hidden');
+    }
+    if (removeBtn) {
+        removeBtn.classList.add('hidden');
+    }
+}
 </script>
 @endpush
 @endsection

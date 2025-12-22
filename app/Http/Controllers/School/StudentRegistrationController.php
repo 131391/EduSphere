@@ -223,4 +223,38 @@ class StudentRegistrationController extends Controller
 
         return redirect()->route('school.student-registrations.index')->with('success', 'Registration deleted successfully.');
     }
+
+    public function getEnquiryData($id)
+    {
+        $school = Auth::user()->school;
+        $enquiry = StudentEnquiry::where('school_id', $school->id)
+            ->where('id', $id)
+            ->first();
+        
+        if (!$enquiry) {
+            return response()->json(['error' => 'Enquiry not found'], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $enquiry
+        ]);
+    }
+
+    public function getRegistrationFee($classId)
+    {
+        try {
+            $class = ClassModel::with('registrationFee')->findOrFail($classId);
+            
+            return response()->json([
+                'success' => true,
+                'fee' => $class->registrationFee->amount ?? 0
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch registration fee'
+            ], 404);
+        }
+    }
 }

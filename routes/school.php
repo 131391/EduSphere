@@ -176,6 +176,8 @@ Route::resource('users', UserController::class)->only(['index', 'store', 'update
 Route::resource('student-enquiries', \App\Http\Controllers\School\StudentEnquiryController::class);
 
 // Student Registration Management
+Route::get('student-registrations/enquiry/{id}', [\App\Http\Controllers\School\StudentRegistrationController::class, 'getEnquiryData'])->name('student-registrations.enquiry-data');
+Route::get('student-registrations/registration-fee/{classId}', [\App\Http\Controllers\School\StudentRegistrationController::class, 'getRegistrationFee'])->name('student-registrations.registration-fee');
 Route::resource('student-registrations', \App\Http\Controllers\School\StudentRegistrationController::class);
 
 // Admission Management

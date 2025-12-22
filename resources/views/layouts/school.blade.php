@@ -11,6 +11,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
@@ -63,6 +66,79 @@
         
         .sidebar-scroll::-webkit-scrollbar-thumb:hover {
             background: rgba(200, 200, 200, 0.7);
+        }
+        
+        /* Select2 Custom Styling */
+        .select2-container--default .select2-selection--single {
+            height: 42px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: white;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 26px;
+            color: #374151;
+            padding-left: 0;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 40px;
+            right: 8px;
+        }
+        
+        .select2-container--default .select2-selection--single:focus,
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            outline: none;
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        }
+        
+        /* Dark mode support for Select2 */
+        .dark .select2-container--default .select2-selection--single {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+        
+        .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #ffffff;
+        }
+        
+        .dark .select2-dropdown {
+            background-color: #374151;
+            border-color: #4b5563;
+        }
+        
+        .dark .select2-container--default .select2-results__option {
+            color: #ffffff;
+        }
+        
+        .dark .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #14b8a6;
+        }
+        
+        .dark .select2-container--default .select2-search--dropdown .select2-search__field {
+            background-color: #4b5563;
+            border-color: #6b7280;
+            color: #ffffff;
+        }
+        
+        /* Select2 dropdown styling */
+        .select2-dropdown {
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #14b8a6;
+        }
+        
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
         }
     </style>
 </head>
@@ -587,6 +663,47 @@
         </div>
     </div>
 
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- Global Select2 Initialization -->
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 on all select elements
+            $('select').not('.no-select2').select2({
+                placeholder: function() {
+                    return $(this).data('placeholder') || 'Select an option';
+                },
+                allowClear: true,
+                width: '100%'
+            });
+            
+            // Re-initialize Select2 when new content is loaded dynamically
+            // This handles cases where selects are added via AJAX or Alpine.js
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length) {
+                        $(mutation.addedNodes).find('select').not('.no-select2, .select2-hidden-accessible').select2({
+                            placeholder: function() {
+                                return $(this).data('placeholder') || 'Select an option';
+                            },
+                            allowClear: true,
+                            width: '100%'
+                        });
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+    
     @stack('scripts')
     <script>
         document.addEventListener('alpine:init', () => {
