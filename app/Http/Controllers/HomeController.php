@@ -20,6 +20,7 @@ class HomeController extends Controller
                 'teacher' => redirect()->route('teacher.dashboard'),
                 'student' => redirect()->route('student.dashboard'),
                 'parent' => redirect()->route('parent.dashboard'),
+                'receptionist' => redirect()->route('receptionist.dashboard'),
                 default => view('welcome'),
             };
         }
