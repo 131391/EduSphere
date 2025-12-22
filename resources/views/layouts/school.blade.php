@@ -324,6 +324,12 @@
                     <li class="pt-2">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">System</p>
                     </li>
+                    <li>
+                        <a href="{{ route('school.users.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.users.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-users w-5 mr-3"></i>
+                            <span>User Management</span>
+                        </a>
+                    </li>
                     <li x-data="{ open: {{ request()->routeIs('school.settings.*') || request()->routeIs('school.admission-news.*') || request()->routeIs('school.support') ? 'true' : 'false' }} }">
                         <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none">
                             <div class="flex items-center">

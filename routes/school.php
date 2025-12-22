@@ -33,6 +33,7 @@ use App\Http\Controllers\School\Examination\SubjectController as ExamSubjectCont
 use App\Http\Controllers\School\Examination\ExamTypeController;
 use App\Http\Controllers\School\Examination\ExamController;
 use App\Http\Controllers\School\Examination\GradeController;
+use App\Http\Controllers\School\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -165,6 +166,9 @@ Route::prefix('examination')->name('examination.')->group(function () {
 
 // Subject Management
 Route::resource('subjects', SubjectController::class)->only(['index', 'store', 'update', 'destroy']);
+
+// User Management
+Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Other school admin routes...
 

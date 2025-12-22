@@ -109,6 +109,21 @@ class User extends Authenticatable
         return $this->role === 'parent';
     }
 
+    public function isReceptionist(): bool
+    {
+        return $this->role === 'receptionist';
+    }
+
+    public function isAccountant(): bool
+    {
+        return $this->role === 'accountant';
+    }
+
+    public function isLibrarian(): bool
+    {
+        return $this->role === 'librarian';
+    }
+
     public function canAccessSchool($schoolId): bool
     {
         if ($this->isSuperAdmin()) {
