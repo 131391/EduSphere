@@ -221,11 +221,18 @@
 
     <!-- Add/Edit Enquiry Modal -->
     <div x-show="showModal" x-cloak 
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative mx-auto w-full max-w-6xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 my-8"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100">
+         class="fixed inset-0 z-50 overflow-y-auto" 
+         aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity"></div>
+
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl"
+                 @click.away="closeModal()"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100">
             
             <!-- Modal Header -->
             <div class="bg-teal-500 px-6 py-4 flex items-center justify-between rounded-t-xl">
@@ -239,7 +246,7 @@
             <form :action="editMode ? `/school/student-enquiries/${enquiryId}` : '{{ route('school.student-enquiries.store') }}'" 
                   method="POST" 
                   enctype="multipart/form-data"
-                  class="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+                  class="p-6">
                 @csrf
                 <input type="hidden" name="_method" x-bind:value="editMode ? 'PUT' : 'POST'">
 
