@@ -347,6 +347,11 @@ document.addEventListener('alpine:init', () => {
                     
                     const input = document.querySelector(`[name="${key}"]`);
                     if (input) {
+                        // Skip file inputs to prevent InvalidStateError
+                        if (input.type === 'file') {
+                            return;
+                        }
+
                         // Check if it's a Select2 dropdown
                         if ($(input).hasClass('select2-hidden-accessible')) {
                             // Use Select2 API to set value
