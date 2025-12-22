@@ -355,6 +355,23 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
+
+// Make functions globally accessible for datatable buttons
+window.openEditModal = function(enquiry) {
+    // Get the Alpine component instance
+    const component = Alpine.$data(document.querySelector('[x-data="enquiryManagement()"]'));
+    if (component) {
+        component.openEditModal(enquiry);
+    }
+};
+
+window.confirmDelete = function(enquiryId) {
+    // Get the Alpine component instance
+    const component = Alpine.$data(document.querySelector('[x-data="enquiryManagement()"]'));
+    if (component) {
+        component.confirmDelete(enquiryId);
+    }
+};
 </script>
 @endpush
 @endsection
