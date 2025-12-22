@@ -333,11 +333,54 @@ document.addEventListener('alpine:init', () => {
             // Populate form fields
             this.$nextTick(() => {
                 Object.keys(enquiry).forEach(key => {
+                    let value = enquiry[key];
+                    
+                    // Skip null values and nested objects
+                    if (value === null || typeof value === 'object') {
+                        return;
+                    }
+                    
                     const input = document.querySelector(`[name="${key}"]`);
-                    if (input && enquiry[key] !== null) {
-                        input.value = enquiry[key];
+                    if (input) {
+                        // Check if it's a Select2 dropdown
+                        if ($(input).hasClass('select2-hidden-accessible')) {
+                            // Use Select2 API to set value
+                            $(input).val(value).trigger('change');
+                        } else if (input.tagName === 'SELECT') {
+                            // Regular select
+                            input.value = value;
+                        } else if (input.type === 'date' && value) {
+                            // Format date for input
+                            input.value = value.split(' ')[0]; // Get just the date part
+                        } else {
+                            // Regular input/textarea
+                            input.value = value;
+                        }
                     }
                 });
+                
+                // Handle nested objects manually
+                if (enquiry.class_id) {
+                    const classInput = document.querySelector('[name="class_id"]');
+                    if (classInput) {
+                        if ($(classInput).hasClass('select2-hidden-accessible')) {
+                            $(classInput).val(enquiry.class_id).trigger('change');
+                        } else {
+                            classInput.value = enquiry.class_id;
+                        }
+                    }
+                }
+                
+                if (enquiry.academic_year_id) {
+                    const yearInput = document.querySelector('[name="academic_year_id"]');
+                    if (yearInput) {
+                        if ($(yearInput).hasClass('select2-hidden-accessible')) {
+                            $(yearInput).val(enquiry.academic_year_id).trigger('change');
+                        } else {
+                            yearInput.value = enquiry.academic_year_id;
+                        }
+                    }
+                }
             });
         },
         
