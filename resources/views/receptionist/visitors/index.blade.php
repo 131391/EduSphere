@@ -179,6 +179,15 @@
 
         $tableActions = [
             [
+                'type' => 'link',
+                'href' => function($row) {
+                    return route('receptionist.visitors.show', $row->id);
+                },
+                'icon' => 'fas fa-eye',
+                'class' => 'text-green-600 hover:text-green-900',
+                'title' => 'View',
+            ],
+            [
                 'type' => 'button',
                 'onclick' => function($row) {
                     return "openEditModal(JSON.parse(atob(this.getAttribute('data-visitor'))))";
@@ -523,6 +532,45 @@ document.addEventListener('alpine:init', () => {
                 meeting_type: visitor.meeting_type,
             };
             this.showModal = true;
+            
+            // Display existing photos after modal is shown
+            setTimeout(() => {
+                // Display visitor photo if exists
+                if (visitor.visitor_photo) {
+                    const visitorPhotoPreview = document.getElementById('visitor-photo-preview');
+                    const visitorPhotoIcon = document.getElementById('visitor-photo-icon');
+                    const visitorPhotoRemove = document.getElementById('visitor-photo-remove');
+                    
+                    if (visitorPhotoPreview) {
+                        visitorPhotoPreview.src = '/storage/' + visitor.visitor_photo;
+                        visitorPhotoPreview.classList.remove('hidden');
+                    }
+                    if (visitorPhotoIcon) {
+                        visitorPhotoIcon.classList.add('hidden');
+                    }
+                    if (visitorPhotoRemove) {
+                        visitorPhotoRemove.classList.remove('hidden');
+                    }
+                }
+                
+                // Display ID proof if exists
+                if (visitor.id_proof) {
+                    const idProofPreview = document.getElementById('id-proof-preview');
+                    const idProofIcon = document.getElementById('id-proof-icon');
+                    const idProofRemove = document.getElementById('id-proof-remove');
+                    
+                    if (idProofPreview) {
+                        idProofPreview.src = '/storage/' + visitor.id_proof;
+                        idProofPreview.classList.remove('hidden');
+                    }
+                    if (idProofIcon) {
+                        idProofIcon.classList.add('hidden');
+                    }
+                    if (idProofRemove) {
+                        idProofRemove.classList.remove('hidden');
+                    }
+                }
+            }, 100);
         },
         
         closeModal() {

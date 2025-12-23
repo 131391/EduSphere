@@ -52,6 +52,13 @@ class VisitorController extends TenantController
         return view('receptionist.visitors.index', compact('visitors', 'stats'));
     }
 
+    public function show(Visitor $visitor)
+    {
+        $this->authorizeAccess($visitor);
+        
+        return view('receptionist.visitors.show', compact('visitor'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
