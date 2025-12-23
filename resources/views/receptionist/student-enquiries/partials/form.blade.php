@@ -61,11 +61,11 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gender</label>
-                <select name="gender" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('gender') border-red-500 @enderror">
+                <select name="gender" id="gender" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('gender') border-red-500 @enderror">
                     <option value="">Choose Gender</option>
-                    <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
-                    <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
-                    <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>Other</option>
+                    @foreach(\App\Constants\Gender::getOptions() as $value => $label)
+                        <option value="{{ $value }}" {{ old('gender') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
                 </select>
                 @error('gender')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>

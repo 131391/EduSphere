@@ -35,9 +35,9 @@
                 </label>
                 <select name="gender" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Choose Gender</option>
-                    <option value="Male" {{ (old('gender', $studentRegistration->gender ?? '') == 'Male') ? 'selected' : '' }}>Male</option>
-                    <option value="Female" {{ (old('gender', $studentRegistration->gender ?? '') == 'Female') ? 'selected' : '' }}>Female</option>
-                    <option value="Other" {{ (old('gender', $studentRegistration->gender ?? '') == 'Other') ? 'selected' : '' }}>Other</option>
+                    @foreach(\App\Constants\Gender::getOptions() as $value => $label)
+                        <option value="{{ $value }}" {{ (old('gender', $studentRegistration->gender ?? '') == $value) ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
                 </select>
             </div>
 

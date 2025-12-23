@@ -1,19 +1,16 @@
 <div
     x-data="{
         show: false,
-        formId: null,
+        form: null,
         message: 'Are you sure you want to delete this record?',
         confirm() {
-            if (this.formId) {
-                const form = document.getElementById(this.formId);
-                if (form) {
-                    form.submit();
-                }
+            if (this.form) {
+                this.form.submit();
             }
             this.show = false;
         }
     }"
-    x-on:confirm-delete.window="formId = $event.detail.formId; message = $event.detail.message || 'Are you sure you want to delete this record?'; show = true"
+    x-on:confirm-delete.window="form = $event.detail.form; message = $event.detail.message || 'Are you sure you want to delete this record?'; show = true"
     x-show="show"
     class="fixed inset-0 z-[100] overflow-y-auto"
     style="display: none;"

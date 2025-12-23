@@ -28,8 +28,13 @@ Route::resource('student-enquiries', \App\Http\Controllers\Receptionist\StudentE
 // Student Registration Management
 Route::get('student-registrations/enquiry/{id}', [\App\Http\Controllers\Receptionist\StudentRegistrationController::class, 'getEnquiryData'])->name('student-registrations.enquiry-data');
 Route::get('student-registrations/registration-fee/{classId}', [\App\Http\Controllers\Receptionist\StudentRegistrationController::class, 'getRegistrationFee'])->name('student-registrations.registration-fee');
+Route::get('student-registrations/{id}/pdf', [\App\Http\Controllers\Receptionist\StudentRegistrationController::class, 'downloadPdf'])->name('student-registrations.pdf');
 Route::resource('student-registrations', \App\Http\Controllers\Receptionist\StudentRegistrationController::class);
 
-// Admission Management
-Route::resource('admission', \App\Http\Controllers\Receptionist\AdmissionController::class);
+// Admission// Student Admission
 Route::get('admission/class-data/{classId}', [\App\Http\Controllers\Receptionist\AdmissionController::class, 'getClassData'])->name('admission.class-data');
+Route::get('admission/registration/{id}', [\App\Http\Controllers\Receptionist\AdmissionController::class, 'getRegistrationData'])->name('admission.getRegistrationData');
+Route::get('admission/{id}/pdf', [\App\Http\Controllers\Receptionist\AdmissionController::class, 'downloadPdf'])->name('admission.pdf');
+Route::resource('admission', \App\Http\Controllers\Receptionist\AdmissionController::class)->parameters([
+    'admission' => 'student'
+]);

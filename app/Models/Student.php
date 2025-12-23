@@ -79,6 +79,7 @@ class Student extends Model
         'mother_designation',
         'permanent_address',
         'permanent_country',
+        'permanent_country_id',
         'permanent_state',
         'permanent_city',
         'permanent_pin',
@@ -87,9 +88,13 @@ class Student extends Model
         'longitude',
         'correspondence_address',
         'correspondence_country',
+        'correspondence_country_id',
         'correspondence_state',
         'correspondence_city',
         'correspondence_pin',
+        'father_pan',
+        'mother_pan',
+        'railway_airport',
         'distance_from_school',
     ];
 
@@ -97,6 +102,8 @@ class Student extends Model
         'date_of_birth' => 'date',
         'admission_date' => 'date',
         'additional_info' => 'array',
+        'permanent_country_id' => 'integer',
+        'correspondence_country_id' => 'integer',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -184,6 +191,64 @@ class Student extends Model
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    // Helper to split name
+    private function splitName($fullName)
+    {
+        $parts = explode(' ', $fullName);
+        $count = count($parts);
+        
+        if ($count === 1) {
+            return ['first' => $parts[0], 'middle' => '', 'last' => ''];
+        } elseif ($count === 2) {
+            return ['first' => $parts[0], 'middle' => '', 'last' => $parts[1]];
+        } else {
+            $first = array_shift($parts);
+            $last = array_pop($parts);
+            $middle = implode(' ', $parts);
+            return ['first' => $first, 'middle' => $middle, 'last' => $last];
+        }
+    }
+
+    public function getFatherFirstNameAttribute()
+    {
+        return $this->splitName($this->father_name)['first'];
+    }
+
+    public function getFatherMiddleNameAttribute()
+    {
+        return $this->splitName($this->father_name)['middle'];
+    }
+
+    public function getFatherLastNameAttribute()
+    {
+        return $this->splitName($this->father_name)['last'];
+    }
+
+    public function getMotherFirstNameAttribute()
+    {
+        return $this->splitName($this->mother_name)['first'];
+    }
+
+    public function getMotherMiddleNameAttribute()
+    {
+        return $this->splitName($this->mother_name)['middle'];
+    }
+
+    public function getMotherLastNameAttribute()
+    {
+        return $this->splitName($this->mother_name)['last'];
+    }
+
+    public function getGenderLabelAttribute()
+    {
+        return match((int)$this->gender) {
+            1 => 'Male',
+            2 => 'Female',
+            3 => 'Other',
+            default => 'Not Specified'
+        };
     }
 }
 

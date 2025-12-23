@@ -30,74 +30,93 @@
     </div>
     @endif
 
-    <!-- Visitor Statistics -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center space-x-3">
-            <div class="bg-teal-100 dark:bg-teal-900 p-3 rounded-lg">
-                <i class="fas fa-users text-teal-600 dark:text-teal-400 text-xl"></i>
-            </div>
-            <div>
-                <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ $stats['total'] }}</p>
-                <p class="text-xs text-gray-600 dark:text-gray-400">Total Visitor</p>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center space-x-3">
-            <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
-                <i class="fas fa-video text-blue-600 dark:text-blue-400 text-xl"></i>
-            </div>
-            <div>
-                <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ $stats['online'] }}</p>
-                <p class="text-xs text-gray-600 dark:text-gray-400">Online Visitor</p>
+    {{-- Visitor Statistics --}}
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-blue-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Total Visitors</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['total'] }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class="fas fa-users text-blue-600"></i>
+                </div>
             </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center space-x-3">
-            <div class="bg-green-100 dark:bg-green-900 p-3 rounded-lg">
-                <i class="fas fa-building text-green-600 dark:text-green-400 text-xl"></i>
-            </div>
-            <div>
-                <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ $stats['offline'] }}</p>
-                <p class="text-xs text-gray-600 dark:text-gray-400">Offline/Office</p>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center space-x-3">
-            <div class="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-lg">
-                <i class="fas fa-laptop text-yellow-600 dark:text-yellow-400 text-xl"></i>
-            </div>
-            <div>
-                <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ $stats['office'] }}</p>
-                <p class="text-xs text-gray-600 dark:text-gray-400">Online Meeting</p>
+
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-green-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Online Visitors</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['online'] }}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class="fas fa-video text-green-600"></i>
+                </div>
             </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center space-x-3">
-            <div class="bg-red-100 dark:bg-red-900 p-3 rounded-lg">
-                <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-xl"></i>
+
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-yellow-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Offline/Office</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['offline'] }}</p>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class="fas fa-building text-yellow-600"></i>
+                </div>
             </div>
-            <div>
-                <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ $stats['cancelled'] }}</p>
-                <p class="text-xs text-gray-600 dark:text-gray-400">Cancelled</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-red-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Cancelled</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['cancelled'] }}</p>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class="fas fa-times-circle text-red-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-purple-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Online Meetings</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['office'] }}</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class="fas fa-laptop text-purple-600"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Actions Bar -->
-    <div class="flex items-center justify-end bg-white dark:bg-gray-800 rounded-lg shadow p-4 gap-3">
-        <button @click="openAddModal()" 
-                class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-            <i class="fas fa-plus"></i>
-            <span>Add Visitor</span>
-        </button>
-        <a href="{{ route('receptionist.visitors.index', ['today' => 1]) }}" 
-           class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-            <i class="fas fa-calendar-day"></i>
-            <span>Today's Visitor</span>
-        </a>
-        <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-            <i class="fas fa-file-excel"></i>
-            <span>Export To Excel</span>
-        </button>
+    {{-- Page Header with Actions --}}
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <h2 class="text-xl font-bold text-gray-800">Visitor List</h2>
+            <div class="flex flex-wrap gap-2">
+                <button @click="openAddModal()" 
+                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    New Visitor
+                </button>
+                <a href="{{ route('receptionist.visitors.index', ['today' => 1]) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-calendar-day mr-2"></i>
+                    Today's Visitors
+                </a>
+                <button class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Export
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Visitors Table -->
+    {{-- Visitors Table --}}
     @php
         $tableColumns = [
             [
@@ -162,20 +181,26 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "openEditModal(" . htmlspecialchars(json_encode($row), ENT_QUOTES) . ")";
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-visitor'))))";
+                },
+                'data-visitor' => function($row) {
+                    return base64_encode(json_encode($row));
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',
                 'title' => 'Edit',
             ],
             [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    return "confirmDelete({$row->id})";
+                'type' => 'form',
+                'action' => function($row) {
+                    return route('receptionist.visitors.destroy', $row->id);
                 },
+                'method' => 'DELETE',
+                'confirm' => 'Are you sure you want to delete this visitor?',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
+                'dispatch' => 'confirm-delete',
             ],
         ];
     @endphp
@@ -458,7 +483,9 @@ document.addEventListener('alpine:init', () => {
             meeting_type: 'offline',
         },
         
-        init() {},
+        init() {
+            // Initialization code if needed
+        },
         
         openAddModal() {
             this.editMode = false;
@@ -508,6 +535,14 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
+
+// Global function to open edit modal (called from table action buttons)
+function openEditModal(visitor) {
+    const component = Alpine.$data(document.querySelector('[x-data*="visitorManagement"]'));
+    if (component) {
+        component.openEditModal(visitor);
+    }
+}
 
 function previewImage(event, previewId, iconId, removeBtnId) {
     const file = event.target.files[0];

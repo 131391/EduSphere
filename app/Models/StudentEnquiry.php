@@ -65,6 +65,7 @@ class StudentEnquiry extends Model
         'previous_class',
         'identity_marks',
         'permanent_address',
+        'country_id',
         'previous_school_name',
         'student_roll_no',
         'passing_year',
@@ -90,6 +91,8 @@ class StudentEnquiry extends Model
         'no_of_brothers' => 'integer',
         'no_of_sisters' => 'integer',
         'only_child' => 'boolean',
+        'passing_year' => 'integer',
+        'country_id' => 'integer',
     ];
 
     /**

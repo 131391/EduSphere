@@ -70,4 +70,27 @@ abstract class TenantController extends BaseController
     {
         return $query->where('school_id', $this->getSchoolId());
     }
+
+    /**
+     * Authorize that the model belongs to the current school
+     * 
+     * @param mixed $model The model instance to check
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException
+     */
+    protected function authorizeTenant($model): void
+    {
+        if (!$model) {
+            abort(404, 'Resource not found');
+        }
+
+        // Check if model has school_id attribute
+        if (!isset($model->school_id)) {
+            abort(403, 'Resource does not belong to a school');
+        }
+
+        // Check if model belongs to current school
+        if ($model->school_id !== $this->getSchoolId()) {
+            abort(403, 'You do not have permission to access this resource');
+        }
+    }
 }

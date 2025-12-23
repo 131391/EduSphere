@@ -178,10 +178,15 @@ Route::resource('student-enquiries', \App\Http\Controllers\School\StudentEnquiry
 // Student Registration Management
 Route::get('student-registrations/enquiry/{id}', [\App\Http\Controllers\School\StudentRegistrationController::class, 'getEnquiryData'])->name('student-registrations.enquiry-data');
 Route::get('student-registrations/registration-fee/{classId}', [\App\Http\Controllers\School\StudentRegistrationController::class, 'getRegistrationFee'])->name('student-registrations.registration-fee');
+Route::get('student-registrations/{id}/pdf', [\App\Http\Controllers\School\StudentRegistrationController::class, 'downloadPdf'])->name('student-registrations.pdf');
 Route::resource('student-registrations', \App\Http\Controllers\School\StudentRegistrationController::class);
 
 // Admission Management
-Route::resource('admission', \App\Http\Controllers\School\AdmissionController::class);
+Route::get('admission/registration/{id}', [\App\Http\Controllers\School\AdmissionController::class, 'getRegistrationData'])->name('admission.getRegistrationData');
+Route::get('admission/{id}/pdf', [\App\Http\Controllers\School\AdmissionController::class, 'downloadPdf'])->name('admission.pdf');
+Route::resource('admission', \App\Http\Controllers\School\AdmissionController::class)->parameters([
+    'admission' => 'student'
+]);
 Route::get('admission/class-data/{classId}', [\App\Http\Controllers\School\AdmissionController::class, 'getClassData'])->name('admission.class-data');
 
 // Other school admin routes...

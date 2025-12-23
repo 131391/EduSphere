@@ -708,6 +708,8 @@
     
     @stack('scripts')
     
+    <x-delete-confirmation />
+    
     <!-- Alpine.js with defer - standard approach that ensures DOM ready and proper initialization order -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     

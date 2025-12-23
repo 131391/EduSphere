@@ -33,8 +33,14 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Country <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="permanent_country" value="{{ old('permanent_country', $studentRegistration->permanent_country ?? 'India') }}" required
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="permanent_country_id" required
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    @foreach(config('countries') as $id => $name)
+                        <option value="{{ $id }}" {{ old('permanent_country_id', $studentRegistration->permanent_country_id ?? 1) == $id ? 'selected' : '' }}>
+                            {{ $name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <div>

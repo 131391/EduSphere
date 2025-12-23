@@ -266,11 +266,14 @@
             </form>
         </div>
     </div>
+</div>
 
-    <!-- Delete Confirmation Modal -->
+<!-- Delete Confirmation Modal (Outside main component for proper layering) -->
+<div x-data="{ showDeleteModal: false, deleteEnquiryId: null }" 
+     @delete-enquiry.window="showDeleteModal = true; deleteEnquiryId = $event.detail.id; document.body.style.overflow = 'hidden'">
     <div x-show="showDeleteModal" x-cloak 
          @close="document.body.style.overflow = ''"
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-[60] flex items-center justify-center"
          @click.self="showDeleteModal = false; document.body.style.overflow = ''">
         <div class="relative mx-auto w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-800 overflow-hidden"
              x-transition:enter="transition ease-out duration-300"
@@ -322,10 +325,8 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('enquiryManagement', () => ({
         showModal: false,
-        showDeleteModal: false,
         editMode: false,
         enquiryId: null,
-        deleteEnquiryId: null,
         
         openAddModal() {
             this.editMode = false;
@@ -399,6 +400,45 @@ document.addEventListener('alpine:init', () => {
                         }
                     }
                 }
+                
+                // Handle country_id dropdown
+                if (enquiry.country_id) {
+                    const countryInput = document.querySelector('[name="country_id"]');
+                    if (countryInput) {
+                        if ($(countryInput).hasClass('select2-hidden-accessible')) {
+                            $(countryInput).val(enquiry.country_id).trigger('change');
+                        } else {
+                            countryInput.value = enquiry.country_id;
+                        }
+                    }
+                }
+                
+                // Handle photo previews for existing images
+                const photoFields = [
+                    { field: 'father_photo', previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeBtnId: 'father-photo-remove' },
+                    { field: 'mother_photo', previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeBtnId: 'mother-photo-remove' },
+                    { field: 'student_photo', previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeBtnId: 'student-photo-remove' }
+                ];
+                
+                photoFields.forEach(photo => {
+                    if (enquiry[photo.field]) {
+                        const preview = document.getElementById(photo.previewId);
+                        const icon = document.getElementById(photo.iconId);
+                        const removeBtn = document.getElementById(photo.removeBtnId);
+                        
+                        if (preview) {
+                            // Set the image source to the stored photo path
+                            preview.src = `/storage/${enquiry[photo.field]}`;
+                            preview.classList.remove('hidden');
+                        }
+                        if (icon) {
+                            icon.classList.add('hidden');
+                        }
+                        if (removeBtn) {
+                            removeBtn.classList.remove('hidden');
+                        }
+                    }
+                });
             });
         },
         
@@ -406,13 +446,6 @@ document.addEventListener('alpine:init', () => {
             this.showModal = false;
             // Unlock body scroll
             document.body.style.overflow = '';
-        },
-
-        confirmDelete(enquiryId) {
-            this.deleteEnquiryId = enquiryId;
-            this.showDeleteModal = true;
-            // Lock body scroll
-            document.body.style.overflow = 'hidden';
         }
     }));
 });
@@ -427,11 +460,10 @@ window.openEditModal = function(enquiry) {
 };
 
 window.confirmDelete = function(enquiryId) {
-    // Get the Alpine component instance
-    const component = Alpine.$data(document.querySelector('[x-data="enquiryManagement()"]'));
-    if (component) {
-        component.confirmDelete(enquiryId);
-    }
+    // Dispatch custom event for delete modal
+    window.dispatchEvent(new CustomEvent('delete-enquiry', {
+        detail: { id: enquiryId }
+    }));
 };
 </script>
 @endpush

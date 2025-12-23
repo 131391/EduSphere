@@ -1,161 +1,189 @@
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    <div class="bg-teal-500 px-6 py-3">
-        <h3 class="text-white font-semibold">Personal Information</h3>
+{{-- Personal Information --}}
+<div class="mb-6">
+    <div class="bg-teal-500 text-white px-4 py-3 rounded-t-lg font-semibold">
+        Personal Information
     </div>
-    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
-            <input type="text" name="first_name" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter First Name" required>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
-            <input type="text" name="middle_name" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Middle Name">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-            <input type="text" name="last_name" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Last Name">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Gender <span class="text-red-500">*</span></label>
-            <select name="gender" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" required>
-                <option value="">Choose Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth <span class="text-red-500">*</span></label>
-            <input type="date" name="date_of_birth" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" required>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email Id</label>
-            <input type="email" name="email" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Email Id">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Student Type</label>
-            <select name="student_type" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="regular">Regular</option>
-                <option value="boarding">Boarding</option>
-                <option value="day_scholar">Day Scholar</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mobile No <span class="text-red-500">*</span></label>
-            <input type="text" name="phone" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Mobile No" required>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
-            <select name="blood_group" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="">Choose Blood Group</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">DOB Certificate No</label>
-            <input type="text" name="dob_certificate_no" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter DOB Certificate No">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Place of Birth</label>
-            <input type="text" name="place_of_birth" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Place of Birth">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Aadhaar No</label>
-            <input type="text" name="aadhaar_no" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Aadhaar No">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
-            <input type="text" name="nationality" value="India" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Religion</label>
-            <select name="religion" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="">Choose Religion</option>
-                <option value="Hindu">Hindu</option>
-                <option value="Muslim">Muslim</option>
-                <option value="Christian">Christian</option>
-                <option value="Sikh">Sikh</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <select name="category" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="">Choose Category</option>
-                <option value="General">General</option>
-                <option value="OBC">OBC</option>
-                <option value="SC">SC</option>
-                <option value="ST">ST</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Special Needs if any</label>
-            <input type="text" name="special_needs" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Special Needs if any">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mother Tongue</label>
-            <input type="text" name="mother_tongue" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Mother Tongue">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-            <input type="text" name="remarks" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Remarks">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Number of Brothers</label>
-            <input type="number" step="0.01" name="number_of_brothers" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Number of Brothers">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Is Single Parent</label>
-            <select name="is_single_parent" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="0">No</option>
-                <option value="1">Yes</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Number of Sister</label>
-            <input type="number" step="0.01" name="number_of_sisters" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Number of Sister">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Corresponding Relative</label>
-            <select name="corresponding_relative" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="">Choose Corresponding Relative</option>
-                <option value="Father">Father</option>
-                <option value="Mother">Mother</option>
-                <option value="Guardian">Guardian</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Transport Required</label>
-            <select name="transport_required" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="0">No</option>
-                <option value="1">Yes</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Bus Stop</label>
-            <select name="bus_stop" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="">Choose Bus Stop</option>
-                <!-- Populate dynamically -->
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Other Stop</label>
-            <input type="text" name="other_stop" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter Other Stop">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Boarding Type</label>
-            <select name="boarding_type" class="w-full border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500">
-                <option value="">Choose Boarding Type</option>
-                <option value="Self">Self</option>
-                <option value="School Bus">School Bus</option>
-            </select>
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-b-lg border border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    First Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="first_name" value="{{ old('first_name', isset($student) ? $student->first_name : '') }}" placeholder="Enter First Name"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('first_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Middle Name
+                </label>
+                <input type="text" name="middle_name" value="{{ old('middle_name', isset($student) ? $student->middle_name : '') }}" placeholder="Enter Middle Name"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Last Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="last_name" value="{{ old('last_name', isset($student) ? $student->last_name : '') }}" placeholder="Enter Last Name"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('last_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Gender <span class="text-red-500">*</span>
+                </label>
+                <select name="gender" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Choose Gender</option>
+                    @foreach(\App\Constants\Gender::getOptions() as $value => $label)
+                        <option value="{{ $value }}" {{ old('gender', isset($student) ? $student->gender : '') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('gender')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Date of Birth
+                </label>
+                <input type="date" name="date_of_birth" value="{{ old('date_of_birth', isset($student) && $student->date_of_birth ? $student->date_of_birth->format('Y-m-d') : '') }}"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email Id
+                </label>
+                <input type="email" name="email" value="{{ old('email', isset($student) ? $student->email : '') }}" placeholder="Enter Email Id"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Mobile No <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="phone" value="{{ old('phone', isset($student) ? $student->phone : '') }}" placeholder="Enter Mobile No"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('phone')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Student Type
+                </label>
+                <select name="student_type" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Choose Student Type</option>
+                    @foreach($studentTypes as $type)
+                        <option value="{{ $type->id }}" {{ old('student_type', isset($student) ? $student->student_type : '') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Blood Group
+                </label>
+                <select name="blood_group" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Choose Blood Group</option>
+                    @foreach($bloodGroups as $group)
+                        <option value="{{ $group->name }}" {{ old('blood_group', isset($student) ? $student->blood_group : '') == $group->name ? 'selected' : '' }}>{{ $group->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    DOB Certificate No
+                </label>
+                <input type="text" name="dob_certificate_no" value="{{ old('dob_certificate_no', isset($student) ? $student->dob_certificate_no : '') }}" placeholder="Enter DOB Certificate No"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Aadhaar No
+                </label>
+                <input type="text" name="aadhaar_no" value="{{ old('aadhaar_no', isset($student) ? $student->aadhaar_no : '') }}" placeholder="Enter Aadhaar No"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Place of Birth
+                </label>
+                <input type="text" name="place_of_birth" value="{{ old('place_of_birth', isset($student) ? $student->place_of_birth : '') }}" placeholder="Enter Place of Birth"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Nationality
+                </label>
+                <input type="text" name="nationality" value="{{ old('nationality', isset($student) ? $student->nationality : 'India') }}"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Religion
+                </label>
+                <select name="religion" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Choose Religion</option>
+                    @foreach($religions as $religion)
+                        <option value="{{ $religion->name }}" {{ old('religion', isset($student) ? $student->religion : '') == $religion->name ? 'selected' : '' }}>{{ $religion->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Category
+                </label>
+                <select name="category" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Choose Category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->name }}" {{ old('category', isset($student) ? $student->category : '') == $category->name ? 'selected' : '' }}>{{ $category->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Mother Tongue
+                </label>
+                <input type="text" name="mother_tongue" value="{{ old('mother_tongue', isset($student) ? $student->mother_tongue : '') }}" placeholder="Enter Mother Tongue"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Special Needs if any
+                </label>
+                <input type="text" name="special_needs" value="{{ old('special_needs', isset($student) ? $student->special_needs : '') }}" placeholder="Enter Special Needs if any"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Corresponding Relative
+                </label>
+                <select name="corresponding_relative" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Choose Corresponding Relative</option>
+                    @foreach($correspondingRelatives as $relative)
+                        <option value="{{ $relative->name }}" {{ old('corresponding_relative', isset($student) ? $student->corresponding_relative : '') == $relative->name ? 'selected' : '' }}>{{ $relative->name }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
 </div>

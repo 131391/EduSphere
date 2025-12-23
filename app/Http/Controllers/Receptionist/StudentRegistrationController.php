@@ -18,6 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use App\Enums\AdmissionStatus;
 
 class StudentRegistrationController extends TenantController
 {
@@ -164,7 +166,7 @@ class StudentRegistrationController extends TenantController
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'mobile_no' => 'required|string|max:20',
-            'admission_status' => 'required|in:Pending,Admitted,Cancelled',
+            'admission_status' => ['required', Rule::enum(AdmissionStatus::class)],
         ]);
 
         $data = $request->all();
@@ -232,5 +234,19 @@ class StudentRegistrationController extends TenantController
                 'message' => 'Failed to fetch registration fee'
             ], 404);
         }
+    }
+
+    public function downloadPdf($id)
+    {
+        $schoolId = $this->getSchoolId();
+        $school = $this->getSchool();
+        
+        $studentRegistration = StudentRegistration::with(['class', 'academicYear'])
+            ->where('school_id', $schoolId)
+            ->findOrFail($id);
+        
+        $pdf = \PDF::loadView('pdf.student-registration', compact('studentRegistration', 'school'));
+        
+        return $pdf->download('student-registration-' . $studentRegistration->registration_no . '.pdf');
     }
 }

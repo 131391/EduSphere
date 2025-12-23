@@ -187,6 +187,9 @@
                                         @if(isset($action['data-enquiry']))
                                         data-enquiry="{{ $action['data-enquiry']($row) }}"
                                         @endif
+                                        @if(isset($action['data-visitor']))
+                                        data-visitor="{{ $action['data-visitor']($row) }}"
+                                        @endif
                                         class="{{ $action['class'] ?? 'text-blue-600 hover:text-blue-900' }}"
                                         title="{{ $action['title'] ?? '' }}"
                                         type="button"
@@ -195,18 +198,13 @@
                                     </button>
                                     @elseif($action['type'] === 'form')
                                     <form 
-                                        action="{{ $action['url']($row) }}" 
+                                        action="{{ isset($action['url']) ? $action['url']($row) : $action['action']($row) }}" 
                                         method="POST" 
                                         class="inline" 
-                                        @if(isset($action['dispatch']))
-                                        @submit.prevent="$dispatch('{{ $action['dispatch']['event'] }}', { 
+                                        @submit.prevent="$dispatch('confirm-delete', { 
                                             form: $el, 
-                                            title: '{{ $action['dispatch']['title'] ?? 'Confirm Action' }}', 
-                                            message: '{{ $action['dispatch']['message'] ?? 'Are you sure?' }}' 
+                                            message: '{{ $action['confirm'] ?? 'Are you sure you want to delete this record?' }}' 
                                         })"
-                                        @else
-                                        onsubmit="return confirm('{{ $action['confirm'] ?? 'Are you sure?' }}');" 
-                                        @endif
                                         onclick="event.stopPropagation();"
                                     >
                                         @csrf

@@ -59,6 +59,28 @@
 
 @push('scripts')
 <script>
+// Helper function to load image preview from storage path
+function loadImagePreview(imagePath, previewId, iconId, removeBtnId) {
+    if (!imagePath) return;
+    
+    const preview = document.getElementById(previewId);
+    const icon = document.getElementById(iconId);
+    const removeBtn = document.getElementById(removeBtnId);
+    
+    if (preview) {
+        // Construct the full URL to the image
+        const imageUrl = `/storage/${imagePath}`;
+        preview.src = imageUrl;
+        preview.classList.remove('hidden');
+    }
+    if (icon) {
+        icon.classList.add('hidden');
+    }
+    if (removeBtn) {
+        removeBtn.classList.remove('hidden');
+    }
+}
+
 $(document).ready(function() {
     // Initialize Select2 on enquiry dropdown
     $('#enquiry_id').select2({
@@ -184,6 +206,28 @@ $(document).ready(function() {
                                 .catch(error => {
                                     console.error('Error fetching registration fee:', error);
                                 });
+                        }
+                        
+                        // Photos - Load from enquiry if available
+                        if (enquiry.father_photo) {
+                            loadImagePreview(enquiry.father_photo, 'father-photo-preview', 'father-photo-icon', 'father-photo-remove');
+                        }
+                        if (enquiry.mother_photo) {
+                            loadImagePreview(enquiry.mother_photo, 'mother-photo-preview', 'mother-photo-icon', 'mother-photo-remove');
+                        }
+                        if (enquiry.student_photo) {
+                            loadImagePreview(enquiry.student_photo, 'student-photo-preview', 'student-photo-icon', 'student-photo-remove');
+                        }
+                        
+                        // Signatures - Load from enquiry if available
+                        if (enquiry.father_signature) {
+                            loadImagePreview(enquiry.father_signature, 'father-signature-preview', 'father-signature-icon', 'father-signature-remove');
+                        }
+                        if (enquiry.mother_signature) {
+                            loadImagePreview(enquiry.mother_signature, 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove');
+                        }
+                        if (enquiry.student_signature) {
+                            loadImagePreview(enquiry.student_signature, 'student-signature-preview', 'student-signature-icon', 'student-signature-remove');
                         }
                         
                         console.log('Form auto-filled successfully from enquiry #' + enquiry.enquiry_no);

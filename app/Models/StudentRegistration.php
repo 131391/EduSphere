@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Enums\AdmissionStatus;
 
 class StudentRegistration extends Model
 {
@@ -39,12 +40,12 @@ class StudentRegistration extends Model
         'mother_age',
         
         // Permanent Address
-        'permanent_latitude', 'permanent_longitude', 'permanent_address', 'permanent_country',
+        'permanent_latitude', 'permanent_longitude', 'permanent_address', 'permanent_country', 'permanent_country_id',
         'permanent_state', 'permanent_city', 'permanent_pin', 'permanent_state_of_domicile',
         'permanent_railway_airport', 'permanent_correspondence_address',
         
         // Correspondence Address
-        'correspondence_address', 'correspondence_country', 'correspondence_state',
+        'correspondence_address', 'correspondence_country', 'correspondence_country_id', 'correspondence_state',
         'correspondence_city', 'correspondence_pin', 'correspondence_location',
         'correspondence_landmark', 'distance_from_school',
         
@@ -70,6 +71,9 @@ class StudentRegistration extends Model
         'number_of_sisters' => 'integer',
         'father_age' => 'integer',
         'mother_age' => 'integer',
+        'permanent_country_id' => 'integer',
+        'correspondence_country_id' => 'integer',
+        'admission_status' => AdmissionStatus::class,
     ];
 
     /**
@@ -139,17 +143,17 @@ class StudentRegistration extends Model
      */
     public function scopePending($query)
     {
-        return $query->where('admission_status', 'Pending');
+        return $query->where('admission_status', AdmissionStatus::Pending);
     }
 
     public function scopeAdmitted($query)
     {
-        return $query->where('admission_status', 'Admitted');
+        return $query->where('admission_status', AdmissionStatus::Admitted);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('admission_status', 'Cancelled');
+        return $query->where('admission_status', AdmissionStatus::Cancelled);
     }
 
     /**
@@ -168,5 +172,15 @@ class StudentRegistration extends Model
     public function getMotherFullNameAttribute()
     {
         return trim("{$this->mother_name_prefix} {$this->mother_first_name} {$this->mother_middle_name} {$this->mother_last_name}");
+    }
+
+    public function getGenderLabelAttribute()
+    {
+        return match($this->gender) {
+            'Male', 'male', 1 => 'Male',
+            'Female', 'female', 2 => 'Female',
+            'Other', 'other', 3 => 'Other',
+            default => $this->gender ?? 'Not Specified'
+        };
     }
 }
