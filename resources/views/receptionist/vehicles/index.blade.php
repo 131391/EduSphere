@@ -265,207 +265,189 @@
     </x-data-table>
 
     {{-- Add/Edit Vehicle Modal --}}
-    <div x-show="showModal" x-cloak 
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-        <div class="relative mx-auto w-full max-w-5xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 overflow-hidden max-h-[90vh] overflow-y-auto"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100">
-            
-            {{-- Modal Header --}}
-            <div class="bg-teal-500 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-                <h3 class="text-xl font-bold text-white" x-text="editMode ? 'Edit Vehicle' : 'Add New Vehicle'"></h3>
-                <button @click="closeModal()" class="text-white hover:text-teal-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
+    <x-modal name="vehicle-modal" alpineTitle="editMode ? 'Edit Vehicle' : 'Add New Vehicle'" maxWidth="5xl">
+        <form :action="editMode ? `/receptionist/vehicles/${vehicleId}` : '{{ route('receptionist.vehicles.store') }}'" 
+              method="POST" class="p-6">
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+
+            <div class="bg-teal-50 dark:bg-teal-900 p-4 rounded-lg mb-6">
+                <h4 class="font-bold text-gray-800 dark:text-white mb-4">Vehicle Information</h4>
+                
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Registration No <span class="text-red-500">*</span></label>
+                        <input type="text" name="registration_no" x-model="formData.registration_no"
+                               placeholder="Enter Vehicle Registration no"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('registration_no') border-red-500 @enderror">
+                        @error('registration_no')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle No</label>
+                        <input type="text" name="vehicle_no" x-model="formData.vehicle_no"
+                               placeholder="Enter Vehicle No"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_no') border-red-500 @enderror">
+                        @error('vehicle_no')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Fuel Type <span class="text-red-500">*</span></label>
+                        <select name="fuel_type" x-model="formData.fuel_type"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('fuel_type') border-red-500 @enderror">
+                            <option value="">Select Fuel Type</option>
+                            <option value="1">Diesel</option>
+                            <option value="2">Petrol</option>
+                            <option value="3">CNG</option>
+                            <option value="4">Electric</option>
+                        </select>
+                        @error('fuel_type')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Capacity</label>
+                        <input type="number" name="capacity" x-model="formData.capacity"
+                               placeholder="Enter Capacity"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('capacity') border-red-500 @enderror">
+                        @error('capacity')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Initial Reading</label>
+                        <input type="number" name="initial_reading" x-model="formData.initial_reading"
+                               placeholder="Enter Initial Reading"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('initial_reading') border-red-500 @enderror">
+                        @error('initial_reading')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Engine No</label>
+                        <input type="text" name="engine_no" x-model="formData.engine_no"
+                               placeholder="Enter Engine No"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('engine_no') border-red-500 @enderror">
+                        @error('engine_no')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Chassis No</label>
+                        <input type="text" name="chassis_no" x-model="formData.chassis_no"
+                               placeholder="Enter Chassis No"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('chassis_no') border-red-500 @enderror">
+                        @error('chassis_no')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle type</label>
+                        <select name="vehicle_type" x-model="formData.vehicle_type"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_type') border-red-500 @enderror">
+                            <option value="">Select Vehicle type</option>
+                            <option value="bus">Bus</option>
+                            <option value="van">Van</option>
+                            <option value="car">Car</option>
+                            <option value="truck">Truck</option>
+                        </select>
+                        @error('vehicle_type')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Model No</label>
+                        <input type="text" name="model_no" x-model="formData.model_no"
+                               placeholder="Enter model No"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('model_no') border-red-500 @enderror">
+                        @error('model_no')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Date of purchase</label>
+                        <input type="date" name="date_of_purchase" x-model="formData.date_of_purchase"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('date_of_purchase') border-red-500 @enderror">
+                        @error('date_of_purchase')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle Group</label>
+                        <input type="text" name="vehicle_group" x-model="formData.vehicle_group"
+                               placeholder="Vehicle Group"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_group') border-red-500 @enderror">
+                        @error('vehicle_group')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">IMEI NO of GPS Device</label>
+                        <input type="text" name="imei_gps_device" x-model="formData.imei_gps_device"
+                               placeholder="IMEI NO of GPS Device"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('imei_gps_device') border-red-500 @enderror">
+                        @error('imei_gps_device')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Tracking Url</label>
+                        <input type="url" name="tracking_url" x-model="formData.tracking_url"
+                               placeholder="Tracking Url"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('tracking_url') border-red-500 @enderror">
+                        @error('tracking_url')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Manufacturing Year</label>
+                        <input type="number" name="manufacturing_year" x-model="formData.manufacturing_year"
+                               placeholder="dd/mm/yyyy"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('manufacturing_year') border-red-500 @enderror">
+                        @error('manufacturing_year')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle Create Date</label>
+                        <input type="date" name="vehicle_create_date" x-model="formData.vehicle_create_date"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_create_date') border-red-500 @enderror">
+                        @error('vehicle_create_date')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
             </div>
 
-            <form :action="editMode ? `/receptionist/vehicles/${vehicleId}` : '{{ route('receptionist.vehicles.store') }}'" 
-                  method="POST" class="p-6">
-                @csrf
-                <template x-if="editMode">
-                    @method('PUT')
-                </template>
-
-                <div class="bg-teal-50 dark:bg-teal-900 p-4 rounded-lg mb-6">
-                    <h4 class="font-bold text-gray-800 dark:text-white mb-4">Vehicle Information</h4>
-                    
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Registration No *</label>
-                            <input type="text" name="registration_no" x-model="formData.registration_no" value="{{ old('registration_no') }}"
-                                   placeholder="Enter Vehicle Registration no"
-                                   @input="$el.nextElementSibling?.classList.add('hidden')"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('registration_no') border-red-500 @enderror">
-                            @error('registration_no')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle No</label>
-                            <input type="text" name="vehicle_no" x-model="formData.vehicle_no" value="{{ old('vehicle_no') }}"
-                                   placeholder="Enter Vehicle No"
-                                   @input="$el.nextElementSibling?.classList.add('hidden')"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_no') border-red-500 @enderror">
-                            @error('vehicle_no')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Fuel Type *</label>
-                            <select name="fuel_type" x-model="formData.fuel_type"
-                                    @change="$el.nextElementSibling?.classList.add('hidden')"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('fuel_type') border-red-500 @enderror">
-                                <option value="">Select Fuel Type</option>
-                                <option value="1" {{ old('fuel_type') == 1 ? 'selected' : '' }}>Diesel</option>
-                                <option value="2" {{ old('fuel_type') == 2 ? 'selected' : '' }}>Petrol</option>
-                                <option value="3" {{ old('fuel_type') == 3 ? 'selected' : '' }}>CNG</option>
-                                <option value="4" {{ old('fuel_type') == 4 ? 'selected' : '' }}>Electric</option>
-                            </select>
-                            @error('fuel_type')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 mt-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Capacity</label>
-                            <input type="number" name="capacity" x-model="formData.capacity" value="{{ old('capacity') }}"
-                                   placeholder="Enter Capacity"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('capacity') border-red-500 @enderror">
-                            @error('capacity')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Initial Reading</label>
-                            <input type="number" name="initial_reading" x-model="formData.initial_reading" value="{{ old('initial_reading') }}"
-                                   placeholder="Enter Initial Reading"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('initial_reading') border-red-500 @enderror">
-                            @error('initial_reading')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Engine No</label>
-                            <input type="text" name="engine_no" x-model="formData.engine_no" value="{{ old('engine_no') }}"
-                                   placeholder="Enter Engine No"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('engine_no') border-red-500 @enderror">
-                            @error('engine_no')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 mt-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Chassis No</label>
-                            <input type="text" name="chassis_no" x-model="formData.chassis_no" value="{{ old('chassis_no') }}"
-                                   placeholder="Enter Chassis No"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('chassis_no') border-red-500 @enderror">
-                            @error('chassis_no')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle type</label>
-                            <select name="vehicle_type" x-model="formData.vehicle_type"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_type') border-red-500 @enderror">
-                                <option value="">Select Vehicle type</option>
-                                <option value="bus" {{ old('vehicle_type') == 'bus' ? 'selected' : '' }}>Bus</option>
-                                <option value="van" {{ old('vehicle_type') == 'van' ? 'selected' : '' }}>Van</option>
-                                <option value="car" {{ old('vehicle_type') == 'car' ? 'selected' : '' }}>Car</option>
-                                <option value="truck" {{ old('vehicle_type') == 'truck' ? 'selected' : '' }}>Truck</option>
-                            </select>
-                            @error('vehicle_type')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Model No</label>
-                            <input type="text" name="model_no" x-model="formData.model_no" value="{{ old('model_no') }}"
-                                   placeholder="Enter model No"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('model_no') border-red-500 @enderror">
-                            @error('model_no')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 mt-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Date of purchase</label>
-                            <input type="date" name="date_of_purchase" x-model="formData.date_of_purchase" value="{{ old('date_of_purchase') }}"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('date_of_purchase') border-red-500 @enderror">
-                            @error('date_of_purchase')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle Group</label>
-                            <input type="text" name="vehicle_group" x-model="formData.vehicle_group" value="{{ old('vehicle_group') }}"
-                                   placeholder="Vehicle Group"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_group') border-red-500 @enderror">
-                            @error('vehicle_group')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">IMEI NO of GPS Device</label>
-                            <input type="text" name="imei_gps_device" x-model="formData.imei_gps_device" value="{{ old('imei_gps_device') }}"
-                                   placeholder="IMEI NO of GPS Device"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('imei_gps_device') border-red-500 @enderror">
-                            @error('imei_gps_device')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 mt-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Tracking Url</label>
-                            <input type="url" name="tracking_url" x-model="formData.tracking_url" value="{{ old('tracking_url') }}"
-                                   placeholder="Tracking Url"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('tracking_url') border-red-500 @enderror">
-                            @error('tracking_url')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Manufacturing Year</label>
-                            <input type="number" name="manufacturing_year" x-model="formData.manufacturing_year" value="{{ old('manufacturing_year') }}"
-                                   placeholder="dd/mm/yyyy"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('manufacturing_year') border-red-500 @enderror">
-                            @error('manufacturing_year')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle Create Date</label>
-                            <input type="date" name="vehicle_create_date" x-model="formData.vehicle_create_date" value="{{ old('vehicle_create_date') }}"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_create_date') border-red-500 @enderror">
-                            @error('vehicle_create_date')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Modal Footer --}}
-                <div class="flex items-center justify-center gap-4">
-                    <button type="button" @click="closeModal()"
-                            class="px-8 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
-                        Close
-                    </button>
-                    <button type="submit"
-                            class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-</div>
+            {{-- Modal Footer --}}
+            <div class="flex items-center justify-center gap-4">
+                <button type="button" @click="closeModal()"
+                        class="px-8 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
+                    Close
+                </button>
+                <button type="submit"
+                        class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 
 @push('scripts')
 <script>
@@ -495,6 +477,8 @@ document.addEventListener('alpine:init', () => {
         init() {
             // Check if there are validation errors and reopen modal with old data
             @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.vehicleId = '{{ old('vehicle_id') }}';
                 this.formData = {
                     registration_no: '{{ old('registration_no') }}',
                     vehicle_no: '{{ old('vehicle_no') }}',
@@ -512,7 +496,9 @@ document.addEventListener('alpine:init', () => {
                     manufacturing_year: '{{ old('manufacturing_year') }}',
                     vehicle_create_date: '{{ old('vehicle_create_date') }}',
                 };
-                this.showModal = true;
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'vehicle-modal');
+                });
             @endif
         },
         
@@ -536,7 +522,7 @@ document.addEventListener('alpine:init', () => {
                 manufacturing_year: '',
                 vehicle_create_date: '',
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'vehicle-modal');
         },
         
         openEditModal(vehicle) {
@@ -559,7 +545,7 @@ document.addEventListener('alpine:init', () => {
                 manufacturing_year: vehicle.manufacturing_year || '',
                 vehicle_create_date: vehicle.vehicle_create_date || '',
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'vehicle-modal');
             
             // Update Select2 dropdowns after modal is shown
             this.$nextTick(() => {
@@ -571,7 +557,7 @@ document.addEventListener('alpine:init', () => {
         },
         
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'vehicle-modal');
         },
     }));
 });

@@ -15,7 +15,8 @@ class RegistrationFeeController extends TenantController
     {
         $fees = RegistrationFee::where('school_id', $this->getSchoolId())
             ->with('class')
-            ->paginate(10);
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
             
         $classes = ClassModel::where('school_id', $this->getSchoolId())
             ->whereDoesntHave('registrationFee')

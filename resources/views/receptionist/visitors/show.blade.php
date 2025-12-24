@@ -52,8 +52,20 @@
                         {{ $visitor->visitor_no }}
                     </span>
                     <span class="px-3 py-1 bg-white/20 rounded-full text-sm font-medium capitalize">
-                        <i class="fas fa-circle mr-1 {{ $visitor->status == 'completed' ? 'text-green-300' : ($visitor->status == 'checked_in' ? 'text-blue-300' : 'text-yellow-300') }}"></i>
-                        {{ str_replace('_', ' ', $visitor->status ?? 'Scheduled') }}
+                        @php
+                            $status = $visitor->status instanceof \App\Enums\VisitorStatus 
+                                ? $visitor->status 
+                                : \App\Enums\VisitorStatus::Scheduled;
+                            $statusColor = match($status) {
+                                \App\Enums\VisitorStatus::Completed => 'text-green-300',
+                                \App\Enums\VisitorStatus::CheckedIn => 'text-blue-300',
+                                \App\Enums\VisitorStatus::Cancelled => 'text-red-300',
+                                default => 'text-yellow-300',
+                            };
+                            $statusLabel = $status->label();
+                        @endphp
+                        <i class="fas fa-circle mr-1 {{ $statusColor }}"></i>
+                        {{ $statusLabel }}
                     </span>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -81,12 +93,24 @@
             <div class="flex items-center">
                 <div class="flex-shrink-0">
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-{{ $visitor->meeting_type == 'online' ? 'video' : ($visitor->meeting_type == 'office' ? 'laptop' : 'building') }} text-blue-600 text-xl"></i>
+                        @php
+                            $meetingTypeValue = $visitor->meeting_type instanceof \App\Enums\VisitorMode 
+                                ? $visitor->meeting_type->value 
+                                : $visitor->meeting_type;
+                            $icon = match($meetingTypeValue) {
+                                1 => 'video', // Online
+                                3 => 'laptop', // Office
+                                default => 'building', // Offline
+                            };
+                        @endphp
+                        <i class="fas fa-{{ $icon }} text-blue-600 text-xl"></i>
                     </div>
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Meeting Type</p>
-                    <p class="text-lg font-semibold text-gray-900 capitalize">{{ $visitor->meeting_type }}</p>
+                    <p class="text-lg font-semibold text-gray-900">
+                        {{ $visitor->meeting_type instanceof \App\Enums\VisitorMode ? $visitor->meeting_type->label() : ($visitor->meeting_type ?? 'N/A') }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -101,7 +125,9 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Priority</p>
-                    <p class="text-lg font-semibold text-gray-900">{{ $visitor->priority }}</p>
+                    <p class="text-lg font-semibold text-gray-900">
+                        {{ $visitor->priority instanceof \App\Enums\VisitorPriority ? $visitor->priority->label() : ($visitor->priority ?? 'N/A') }}
+                    </p>
                 </div>
             </div>
         </div>

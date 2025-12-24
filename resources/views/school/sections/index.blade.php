@@ -103,11 +103,28 @@
 
         $tableActions = [
             [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-section'))))";
+                },
+                'data-section' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'class_id' => (string) $row->class_id, // Convert to string to match option values
+                        'name' => $row->name,
+                        'capacity' => $row->capacity,
+                    ]));
+                }
+            ],
+            [
                 'type' => 'form',
                 'url' => fn($row) => route('school.sections.destroy', $row->id),
                 'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
-                'class' => 'text-red-400 hover:text-red-600',
+                'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
                 'dispatch' => [
                     'event' => 'open-confirm-modal',
@@ -128,78 +145,80 @@
         Sections List
     </x-data-table>
 
-    <!-- Add Section Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
-    >
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Add Section</h3>
-                <button @click="closeAddModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form action="{{ route('school.sections.store') }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Class</label>
+    <!-- Add/Edit Section Modal -->
+    <x-modal name="section-modal" alpineTitle="editMode ? 'Edit Section' : 'Add Section'" maxWidth="md">
+        <form :action="editMode ? `/school/sections/${sectionId}` : '{{ route('school.sections.store') }}'" 
+              method="POST" class="p-6" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="section_id" x-model="sectionId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Class <span class="text-red-500">*</span></label>
                     <select 
                         name="class_id" 
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        x-model="formData.class_id"
+                        class="w-full px-4 py-2 border @error('class_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
                         <option value="">Select Class</option>
                         @foreach($classes as $class)
                         <option value="{{ $class->id }}">{{ $class->name }}</option>
                         @endforeach
                     </select>
+                    @error('class_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Section Name <span class="text-red-500">*</span></label>
                     <input 
                         type="text" 
                         name="name" 
-                        placeholder="Enter section"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        x-model="formData.name"
+                        placeholder="e.g. A, B, C"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Student Max Length</label>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Student Max Length <span class="text-red-500">*</span></label>
                     <input 
                         type="number" 
                         name="capacity" 
-                        placeholder="Enter max Length"
-                        required
-                        min="1"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        x-model="formData.capacity"
+                        placeholder="Enter max capacity"
+                        class="w-full px-4 py-2 border @error('capacity') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('capacity')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
+            </div>
 
-                <div class="flex items-center justify-end gap-3">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -209,17 +228,81 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('sectionManagement', () => ({
-        showAddModal: false,
-        
+        editMode: false,
+        sectionId: null,
+        formData: {
+            class_id: '',
+            name: '',
+            capacity: ''
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.sectionId = '{{ old('section_id') }}';
+                this.formData = {
+                    class_id: '{{ old('class_id') }}',
+                    name: '{{ old('name') }}',
+                    capacity: '{{ old('capacity') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'section-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.editMode = false;
+            this.sectionId = null;
+            this.formData = { class_id: '', name: '', capacity: '' };
+            this.$dispatch('open-modal', 'section-modal');
         },
         
-        closeAddModal() {
-            this.showAddModal = false;
+        openEditModal(section) {
+            console.log('Opening edit modal for section:', section);
+            this.editMode = true;
+            this.sectionId = section.id;
+            
+            // Ensure class_id is converted to string to match option values
+            const classId = String(section.class_id || '');
+            
+            // Set form data first
+            this.formData = {
+                class_id: classId,
+                name: section.name || '',
+                capacity: String(section.capacity || '')
+            };
+            
+            // Open modal
+            this.$dispatch('open-modal', 'section-modal');
+            
+            // Directly set select value after modal is rendered (same approach as user management)
+            setTimeout(() => {
+                const select = document.querySelector('[name="class_id"]');
+                if (select && classId) {
+                    console.log('Setting select value to:', classId);
+                    select.value = classId;
+                    // Trigger change event to ensure Alpine.js syncs
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    // Also ensure formData is synced
+                    this.formData.class_id = classId;
+                }
+            }, 100);
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'section-modal');
         }
     }));
 });
+
+// Global function for table actions
+function openEditModal(section) {
+    const component = Alpine.$data(document.querySelector('[x-data*="sectionManagement"]'));
+    if (component) {
+        component.openEditModal(section);
+    }
+}
 </script>
 @endpush
 @endsection

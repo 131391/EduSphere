@@ -6,6 +6,8 @@ use App\Http\Controllers\TenantController;
 use App\Models\TransportRoute;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Enums\RouteStatus;
 
 class RouteController extends TenantController
 {
@@ -80,7 +82,7 @@ class RouteController extends TenantController
             'route_name' => 'required|string|max:255',
             'vehicle_id' => 'nullable|exists:vehicles,id',
             'route_create_date' => 'nullable|date',
-            'status' => 'required|integer|in:0,1',
+            'status' => ['required', 'integer', Rule::enum(RouteStatus::class)],
         ]);
 
         $schoolId = $this->getSchoolId();

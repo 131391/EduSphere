@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Receptionist;
 
 use App\Http\Controllers\TenantController;
 use App\Models\Visitor;
+use App\Enums\VisitorPriority;
+use App\Enums\VisitorMode;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -49,7 +52,13 @@ class VisitorController extends TenantController
             'cancelled' => Visitor::where('school_id', $schoolId)->where('status', 'cancelled')->count(),
         ];
 
-        return view('receptionist.visitors.index', compact('visitors', 'stats'));
+        // Get priority options from enum
+        $priorities = VisitorPriority::cases();
+        
+        // Get meeting type options from enum
+        $meetingTypes = VisitorMode::cases();
+
+        return view('receptionist.visitors.index', compact('visitors', 'stats', 'priorities', 'meetingTypes'));
     }
 
     public function show(Visitor $visitor)
@@ -70,9 +79,9 @@ class VisitorController extends TenantController
             'visit_purpose' => 'required|string',
             'meeting_purpose' => 'nullable|string',
             'meeting_with' => 'required|string',
-            'priority' => 'required|in:Low,Medium,High,Urgent,low,medium,high,urgent',
+            'priority' => ['required', 'integer', Rule::enum(VisitorPriority::class)],
             'no_of_guests' => 'nullable|integer|min:1',
-            'meeting_type' => 'required|in:online,offline,office',
+            'meeting_type' => ['required', 'integer', Rule::enum(VisitorMode::class)],
             'source' => 'nullable|string',
             'meeting_scheduled' => 'nullable|date',
             'visitor_photo' => 'nullable|image|max:2048',
@@ -92,6 +101,12 @@ class VisitorController extends TenantController
             $validated['id_proof'] = $request->file('id_proof')->store('visitors/proofs', 'public');
         }
 
+        // Convert priority to integer (form sends as string, enum needs int)
+        $validated['priority'] = (int) $validated['priority'];
+        
+        // Convert meeting_type to integer (form sends as string, enum needs int)
+        $validated['meeting_type'] = (int) $validated['meeting_type'];
+
         Visitor::create($validated);
 
         return redirect()->route('receptionist.visitors.index')->with('success', 'Visitor added successfully.');
@@ -100,6 +115,9 @@ class VisitorController extends TenantController
     public function update(Request $request, Visitor $visitor)
     {
         $this->authorizeAccess($visitor);
+        
+        // Store visitor ID for redirect back on validation error
+        $request->merge(['visitor_id' => $visitor->id]);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -110,12 +128,11 @@ class VisitorController extends TenantController
             'visit_purpose' => 'required|string',
             'meeting_purpose' => 'nullable|string',
             'meeting_with' => 'required|string',
-            'priority' => 'required|in:Low,Medium,High,Urgent,low,medium,high,urgent',
+            'priority' => ['required', 'integer', Rule::enum(VisitorPriority::class)],
             'no_of_guests' => 'nullable|integer|min:1',
-            'meeting_type' => 'required|in:online,offline,office',
+            'meeting_type' => ['required', 'integer', Rule::enum(VisitorMode::class)],
             'source' => 'nullable|string',
             'meeting_scheduled' => 'nullable|date',
-            'status' => 'required|in:scheduled,checked_in,completed,cancelled',
             'visitor_photo' => 'nullable|image|max:2048',
             'id_proof' => 'nullable|file|max:2048',
         ]);
@@ -134,6 +151,12 @@ class VisitorController extends TenantController
             }
             $validated['id_proof'] = $request->file('id_proof')->store('visitors/proofs', 'public');
         }
+
+        // Convert priority to integer (form sends as string, enum needs int)
+        $validated['priority'] = (int) $validated['priority'];
+        
+        // Convert meeting_type to integer (form sends as string, enum needs int)
+        $validated['meeting_type'] = (int) $validated['meeting_type'];
 
         $visitor->update($validated);
 
@@ -193,4 +216,5 @@ class VisitorController extends TenantController
             abort(403);
         }
     }
+
 }

@@ -65,11 +65,29 @@
 
         $tableActions = [
             [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-year'))))";
+                },
+                'data-year' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'start_date' => $row->start_date->format('Y-m-d'),
+                        'end_date' => $row->end_date->format('Y-m-d'),
+                        'is_current' => $row->is_current,
+                    ]));
+                }
+            ],
+            [
                 'type' => 'form',
                 'url' => fn($row) => route('school.academic-years.destroy', $row->id),
                 'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
-                'class' => 'text-red-400 hover:text-red-600',
+                'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
                 'dispatch' => [
                     'event' => 'open-confirm-modal',
@@ -90,84 +108,87 @@
         Academic Years List
     </x-data-table>
 
-    <!-- Add Academic Year Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
-    >
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Add Academic Year</h3>
-                <button @click="closeAddModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form action="{{ route('school.academic-years.store') }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Academic Year Name</label>
+    <!-- Add/Edit Academic Year Modal -->
+    <x-modal name="academic-year-modal" alpineTitle="editMode ? 'Edit Academic Year' : 'Add Academic Year'" maxWidth="md">
+        <form :action="editMode ? `/school/academic-years/${yearId}` : '{{ route('school.academic-years.store') }}'" 
+              method="POST" class="p-6" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="year_id" x-model="yearId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Academic Year Name <span class="text-red-500">*</span></label>
                     <input 
                         type="text" 
                         name="name" 
+                        x-model="formData.name"
                         placeholder="e.g., 2025-2026"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Start Date <span class="text-red-500">*</span></label>
                     <input 
                         type="date" 
                         name="start_date" 
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        x-model="formData.start_date"
+                        class="w-full px-4 py-2 border @error('start_date') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('start_date')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">End Date <span class="text-red-500">*</span></label>
                     <input 
                         type="date" 
                         name="end_date" 
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        x-model="formData.end_date"
+                        class="w-full px-4 py-2 border @error('end_date') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('end_date')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="flex items-center">
-                        <input 
-                            type="checkbox" 
-                            name="is_current" 
-                            value="1"
-                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        >
-                        <span class="ml-2 text-sm text-gray-700">Set as current academic year</span>
-                    </label>
+                <div class="flex items-center">
+                    <input 
+                        type="checkbox" 
+                        name="is_current" 
+                        id="is_current"
+                        x-model="formData.is_current"
+                        :checked="formData.is_current"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    >
+                    <label for="is_current" class="ml-2 text-sm text-gray-700">Set as current academic year</label>
                 </div>
+            </div>
 
-                <div class="flex items-center justify-end gap-3">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -177,17 +198,63 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('academicYearManagement', () => ({
-        showAddModal: false,
-        
+        editMode: false,
+        yearId: null,
+        formData: {
+            name: '',
+            start_date: '',
+            end_date: '',
+            is_current: false
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.yearId = '{{ old('year_id') }}';
+                this.formData = {
+                    name: '{{ old('name') }}',
+                    start_date: '{{ old('start_date') }}',
+                    end_date: '{{ old('end_date') }}',
+                    is_current: {{ old('is_current') ? 'true' : 'false' }}
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'academic-year-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.editMode = false;
+            this.yearId = null;
+            this.formData = { name: '', start_date: '', end_date: '', is_current: false };
+            this.$dispatch('open-modal', 'academic-year-modal');
         },
         
-        closeAddModal() {
-            this.showAddModal = false;
+        openEditModal(year) {
+            this.editMode = true;
+            this.yearId = year.id;
+            this.formData = {
+                name: year.name,
+                start_date: year.start_date,
+                end_date: year.end_date,
+                is_current: !!year.is_current
+            };
+            this.$dispatch('open-modal', 'academic-year-modal');
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'academic-year-modal');
         }
     }));
 });
+
+// Global function for table actions
+function openEditModal(year) {
+    const component = Alpine.$data(document.querySelector('[x-data*="academicYearManagement"]'));
+    if (component) {
+        component.openEditModal(year);
+    }
+}
 </script>
 @endpush
 @endsection

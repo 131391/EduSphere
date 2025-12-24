@@ -61,11 +61,26 @@
 
         $tableActions = [
             [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-qualification'))))";
+                },
+                'data-qualification' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'name' => $row->name,
+                    ]));
+                }
+            ],
+            [
                 'type' => 'form',
                 'url' => fn($row) => route('school.qualifications.destroy', $row->id),
                 'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
-                'class' => 'text-red-400 hover:text-red-600',
+                'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
                 'dispatch' => [
                     'event' => 'open-confirm-modal',
@@ -86,52 +101,49 @@
         Qualifications List
     </x-data-table>
 
-    <!-- Add Qualification Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
-    >
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4 bg-blue-600 -mx-5 -mt-5 p-4 rounded-t-md">
-                <h3 class="text-lg font-semibold text-white">Qualification</h3>
-                <button @click="closeAddModal()" class="text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form action="{{ route('school.qualifications.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div class="flex items-center space-x-4">
-                    <label class="w-1/3 text-sm font-medium text-gray-700">Qualification</label>
+    <!-- Add/Edit Qualification Modal -->
+    <x-modal name="qualification-modal" alpineTitle="editMode ? 'Edit Qualification' : 'Add Qualification'" maxWidth="md">
+        <form :action="editMode ? `/school/qualifications/${qualificationId}` : '{{ route('school.qualifications.store') }}'" 
+              method="POST" class="p-6" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="qualification_id" x-model="qualificationId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Qualification Name <span class="text-red-500">*</span></label>
                     <input 
                         type="text" 
                         name="name" 
-                        placeholder="Enter Qualification"
-                        required
-                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        x-model="formData.name"
+                        placeholder="Enter Qualification Name"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
+            </div>
 
-                <div class="flex items-center justify-end gap-3 mt-6">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -141,17 +153,54 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('qualificationManagement', () => ({
-        showAddModal: false,
-        
+        editMode: false,
+        qualificationId: null,
+        formData: {
+            name: ''
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.qualificationId = '{{ old('qualification_id') }}';
+                this.formData = {
+                    name: '{{ old('name') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'qualification-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.editMode = false;
+            this.qualificationId = null;
+            this.formData = { name: '' };
+            this.$dispatch('open-modal', 'qualification-modal');
         },
         
-        closeAddModal() {
-            this.showAddModal = false;
+        openEditModal(qualification) {
+            this.editMode = true;
+            this.qualificationId = qualification.id;
+            this.formData = {
+                name: qualification.name
+            };
+            this.$dispatch('open-modal', 'qualification-modal');
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'qualification-modal');
         }
     }));
 });
+
+// Global function for table actions
+function openEditModal(qualification) {
+    const component = Alpine.$data(document.querySelector('[x-data*="qualificationManagement"]'));
+    if (component) {
+        component.openEditModal(qualification);
+    }
+}
 </script>
 @endpush
 @endsection

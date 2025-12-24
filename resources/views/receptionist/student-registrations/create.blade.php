@@ -40,16 +40,6 @@
         </a>
     </div>
 
-    @if ($errors->any())
-        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <ul class="list-disc list-inside text-sm text-red-600 dark:text-red-400">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <form action="{{ route('receptionist.student-registrations.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @include('receptionist.student-registrations.partials.form')
@@ -161,6 +151,14 @@ $(document).ready(function() {
                             $('select[name="category"]').val(enquiry.category).trigger('change');
                         }
                         
+                        // Number of Brothers and Sisters
+                        if (enquiry.no_of_brothers !== undefined && enquiry.no_of_brothers !== null) {
+                            $('input[name="number_of_brothers"]').val(enquiry.no_of_brothers);
+                        }
+                        if (enquiry.no_of_sisters !== undefined && enquiry.no_of_sisters !== null) {
+                            $('input[name="number_of_sisters"]').val(enquiry.no_of_sisters);
+                        }
+                        
                         // Father's Details
                         const fatherNameParts = (enquiry.father_name || '').split(' ');
                         $('input[name="father_first_name"]').val(fatherNameParts[0] || '');
@@ -169,6 +167,26 @@ $(document).ready(function() {
                         $('input[name="father_mobile_no"]').val(enquiry.father_contact || '');
                         $('input[name="father_occupation"]').val(enquiry.father_occupation || '');
                         $('input[name="father_email"]').val(enquiry.father_email || '');
+                        
+                        // Father's Additional Details
+                        if (enquiry.father_qualification) {
+                            $('select[name="father_qualification"]').val(enquiry.father_qualification).trigger('change');
+                        }
+                        if (enquiry.father_organization) {
+                            $('input[name="father_organization"]').val(enquiry.father_organization);
+                        }
+                        if (enquiry.father_office_address) {
+                            $('input[name="father_office_address"]').val(enquiry.father_office_address);
+                        }
+                        if (enquiry.father_department) {
+                            $('input[name="father_department"]').val(enquiry.father_department);
+                        }
+                        if (enquiry.father_designation) {
+                            $('input[name="father_designation"]').val(enquiry.father_designation);
+                        }
+                        if (enquiry.father_annual_income !== undefined && enquiry.father_annual_income !== null) {
+                            $('input[name="father_annual_income"]').val(enquiry.father_annual_income);
+                        }
                         
                         // Mother's Details
                         const motherNameParts = (enquiry.mother_name || '').split(' ');
@@ -179,17 +197,36 @@ $(document).ready(function() {
                         $('input[name="mother_occupation"]').val(enquiry.mother_occupation || '');
                         $('input[name="mother_email"]').val(enquiry.mother_email || '');
                         
-                        // Address
-                        $('textarea[name="permanent_address"]').val(enquiry.address || '');
-                        $('input[name="permanent_city"]').val(enquiry.city || '');
-                        $('input[name="permanent_state"]').val(enquiry.state || '');
-                        $('input[name="permanent_pin"]').val(enquiry.pincode || '');
+                        // Mother's Additional Details
+                        if (enquiry.mother_qualification) {
+                            $('select[name="mother_qualification"]').val(enquiry.mother_qualification).trigger('change');
+                        }
+                        if (enquiry.mother_organization) {
+                            $('input[name="mother_organization"]').val(enquiry.mother_organization);
+                        }
+                        if (enquiry.mother_office_address) {
+                            $('input[name="mother_office_address"]').val(enquiry.mother_office_address);
+                        }
+                        if (enquiry.mother_department) {
+                            $('input[name="mother_department"]').val(enquiry.mother_department);
+                        }
+                        if (enquiry.mother_designation) {
+                            $('input[name="mother_designation"]').val(enquiry.mother_designation);
+                        }
+                        if (enquiry.mother_annual_income !== undefined && enquiry.mother_annual_income !== null) {
+                            $('input[name="mother_annual_income"]').val(enquiry.mother_annual_income);
+                        }
                         
-                        // Copy to current address if checkbox exists
-                        $('textarea[name="current_address"]').val(enquiry.address || '');
-                        $('input[name="current_city"]').val(enquiry.city || '');
-                        $('input[name="current_state"]').val(enquiry.state || '');
-                        $('input[name="current_pin"]').val(enquiry.pincode || '');
+                        // Address
+                        if (enquiry.permanent_address) {
+                            $('input[name="permanent_address"]').val(enquiry.permanent_address);
+                        }
+                        if (enquiry.country_id) {
+                            $('select[name="permanent_country_id"]').val(enquiry.country_id).trigger('change');
+                        }
+                        
+                        // Note: Enquiry model doesn't have separate city, state, pincode fields
+                        // They would need to be parsed from permanent_address if needed
                         
                         // Class (if available)
                         if (enquiry.class_id) {

@@ -8,6 +8,9 @@ use App\Models\AcademicYear;
 use App\Models\ClassModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use App\Enums\EnquiryStatus;
+use App\Enums\Gender;
 
 class StudentEnquiryController extends Controller
 {
@@ -109,7 +112,7 @@ class StudentEnquiryController extends Controller
             'class_id' => 'nullable|exists:classes,id',
             'subject_name' => 'nullable|string|max:255',
             'student_name' => 'required|string|max:255',
-            'gender' => 'nullable|in:Male,Female,Other',
+            'gender' => ['nullable', 'integer', Rule::enum(Gender::class)],
             'follow_up_date' => 'nullable|date',
             
             // Father's Details
@@ -174,7 +177,7 @@ class StudentEnquiryController extends Controller
             'student_photo' => 'nullable|image|max:2048',
             
             // Status
-            'form_status' => 'nullable|in:pending,completed,cancelled,admitted',
+            'form_status' => ['nullable', 'integer', Rule::enum(EnquiryStatus::class)],
         ]);
     }
 

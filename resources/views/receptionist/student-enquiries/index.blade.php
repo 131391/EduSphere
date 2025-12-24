@@ -3,25 +3,11 @@
 @section('title', 'Student Enquiries')
 
 @section('content')
-<div class="space-y-6" x-data="enquiryManagement()">
+<div class="space-y-6" x-data="enquiryManagement()" x-init="init()">
     <!-- Success Message -->
     @if(session('success'))
     <div x-data="{ show: true }" x-show="show" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative">
         <span class="block sm:inline">{{ session('success') }}</span>
-        <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div x-data="{ show: true }" x-show="show" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative">
-        <strong class="font-bold">Whoops! Something went wrong.</strong>
-        <ul class="mt-2 list-disc list-inside">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
         <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
             <i class="fas fa-times"></i>
         </button>
@@ -168,15 +154,26 @@
                 'label' => 'Form Status',
                 'sortable' => true,
                 'render' => function($row) {
+                    // Convert enum to string for array key lookup
+                    $status = $row->form_status instanceof \App\Enums\EnquiryStatus 
+                        ? $row->form_status->name 
+                        : ($row->form_status ?? 'pending');
+                    
                     $colors = [
-                        'pending' => 'bg-orange-100 text-orange-800',
-                        'completed' => 'bg-blue-100 text-blue-800',
-                        'cancelled' => 'bg-red-100 text-red-800',
-                        'admitted' => 'bg-green-100 text-green-800',
+                        'Pending' => 'bg-orange-100 text-orange-800',
+                        'Completed' => 'bg-blue-100 text-blue-800',
+                        'Cancelled' => 'bg-red-100 text-red-800',
+                        'Admitted' => 'bg-green-100 text-green-800',
                     ];
-                    $color = $colors[$row->form_status] ?? 'bg-gray-100 text-gray-800';
+                    $color = $colors[$status] ?? 'bg-gray-100 text-gray-800';
+                    
+                    // Get label from enum if available
+                    $label = $row->form_status instanceof \App\Enums\EnquiryStatus 
+                        ? $row->form_status->label() 
+                        : ucfirst(strtolower($status));
+                    
                     return '<span class="px-2 py-1 text-xs font-semibold rounded-full ' . $color . '">' 
-                         . ucfirst($row->form_status) . '</span>';
+                         . $label . '</span>';
                 }
             ],
         ];
@@ -229,7 +226,6 @@
 
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
             <div class="relative transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl"
-                 @click.away="closeModal()"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                  x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100">
@@ -249,6 +245,7 @@
                   class="p-6">
                 @csrf
                 <input type="hidden" name="_method" x-bind:value="editMode ? 'PUT' : 'POST'">
+                <input type="hidden" name="enquiry_id" :value="enquiryId" x-show="editMode">
 
                 @include('school.student-enquiries.partials.form')
 
@@ -329,7 +326,126 @@ document.addEventListener('alpine:init', () => {
         editMode: false,
         enquiryId: null,
         
+        init() {
+            // Hide error banner when modal opens
+            this.$watch('showModal', (value) => {
+                if (value) {
+                    const errorBanner = document.getElementById('error-banner-enquiry');
+                    if (errorBanner) {
+                        errorBanner.style.display = 'none';
+                        if (errorBanner.__x) {
+                            errorBanner.__x.$data.show = false;
+                        }
+                    }
+                }
+            });
+            
+            // Check if there are validation errors and reopen modal
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' || request()->routeIs('receptionist.student-enquiries.update') ? 'true' : 'false' }};
+                this.enquiryId = '{{ old('enquiry_id', request()->route('studentEnquiry')?->id ?? request()->route('enquiry')?->id ?? '') }}';
+                this.$nextTick(() => {
+                    this.showModal = true;
+                    document.body.style.overflow = 'hidden';
+                    // Set select values after modal opens and ensure errors are visible
+                    setTimeout(() => {
+                        @php
+                            $selectFields = ['academic_year_id', 'class_id', 'country_id', 'gender'];
+                        @endphp
+                        const selects = @json($selectFields);
+                        const oldValues = {
+                            @foreach($selectFields as $field)
+                            '{{ $field }}': '{{ old($field, '') }}',
+                            @endforeach
+                        };
+                        selects.forEach(selectName => {
+                            const select = document.querySelector(`[name="${selectName}"]`);
+                            if (select) {
+                                // Set value if exists
+                                if (oldValues[selectName]) {
+                                    if ($(select).hasClass('select2-hidden-accessible')) {
+                                        $(select).val(oldValues[selectName]).trigger('change');
+                                    } else {
+                                        select.value = oldValues[selectName];
+                                    }
+                                }
+                                
+                                // Ensure error styling is applied to Select2 if there's an error
+                                if (select.classList.contains('border-red-500')) {
+                                    const select2Container = $(select).next('.select2-container');
+                                    if (select2Container.length) {
+                                        select2Container.find('.select2-selection').addClass('border-red-500');
+                                    }
+                                }
+                                
+                                // Ensure error message is visible
+                                let errorElement = select.nextElementSibling;
+                                if (!errorElement || !errorElement.classList.contains('text-red-500')) {
+                                    const parent = select.closest('div');
+                                    if (parent) {
+                                        errorElement = parent.querySelector('.text-red-500');
+                                    }
+                                }
+                                if (errorElement && errorElement.classList.contains('text-red-500')) {
+                                    errorElement.classList.remove('hidden');
+                                }
+                            }
+                        });
+                        
+                        // Restore image previews from sessionStorage if they exist
+                        const photoFields = [
+                            { field: 'father_photo', previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeBtnId: 'father-photo-remove' },
+                            { field: 'mother_photo', previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeBtnId: 'mother-photo-remove' },
+                            { field: 'student_photo', previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeBtnId: 'student-photo-remove' }
+                        ];
+                        
+                        photoFields.forEach(photo => {
+                            const storedImage = sessionStorage.getItem(`enquiry_${photo.field}`);
+                            if (storedImage) {
+                                const preview = document.getElementById(photo.previewId);
+                                const icon = document.getElementById(photo.iconId);
+                                const removeBtn = document.getElementById(photo.removeBtnId);
+                                
+                                if (preview) {
+                                    preview.src = storedImage;
+                                    preview.classList.remove('hidden');
+                                }
+                                if (icon) {
+                                    icon.classList.add('hidden');
+                                }
+                                if (removeBtn) {
+                                    removeBtn.classList.remove('hidden');
+                                }
+                            }
+                        });
+                    }, 200);
+                });
+            @endif
+        },
+        
         openAddModal() {
+            // Hide error banner when opening modal
+            const errorBanner = document.getElementById('error-banner-enquiry');
+            if (errorBanner) {
+                errorBanner.style.display = 'none';
+                if (errorBanner.__x) {
+                    errorBanner.__x.$data.show = false;
+                }
+            }
+            
+            // Clear sessionStorage for images when opening fresh modal (not from validation error)
+            @if(!$errors->any())
+                sessionStorage.removeItem('enquiry_father_photo');
+                sessionStorage.removeItem('enquiry_mother_photo');
+                sessionStorage.removeItem('enquiry_student_photo');
+                
+                // Reset form
+                const form = document.querySelector('form[action*="student-enquiries"]');
+                if (form) {
+                    form.reset();
+                }
+            @endif
+            
             this.editMode = false;
             this.enquiryId = null;
             this.showModal = true;
@@ -338,6 +454,15 @@ document.addEventListener('alpine:init', () => {
         },
         
         openEditModal(enquiry) {
+            // Hide error banner when opening modal
+            const errorBanner = document.getElementById('error-banner-enquiry');
+            if (errorBanner) {
+                errorBanner.style.display = 'none';
+                if (errorBanner.__x) {
+                    errorBanner.__x.$data.show = false;
+                }
+            }
+            
             this.editMode = true;
             this.enquiryId = enquiry.id;
             this.showModal = true;
@@ -466,6 +591,101 @@ window.confirmDelete = function(enquiryId) {
         detail: { id: enquiryId }
     }));
 };
+</script>
+
+<script>
+// Global script to hide validation errors when user starts typing or selecting
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to hide error banner
+    const hideErrorBanner = function() {
+        const errorBanner = document.getElementById('error-banner-enquiry');
+        if (errorBanner) {
+            errorBanner.style.display = 'none';
+            // Also update Alpine.js state if available
+            if (errorBanner.__x) {
+                errorBanner.__x.$data.show = false;
+            }
+        }
+    };
+    
+    // Hide error banner when clicking on any form field
+    document.addEventListener('click', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+            hideErrorBanner();
+        }
+    });
+    
+    // Add event listeners to all inputs and selects in the modal
+    const modal = document.querySelector('[x-data*="enquiryManagement"]');
+    if (modal) {
+        // Handle regular inputs
+        modal.addEventListener('input', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                hideErrorBanner();
+                // Find error element (could be next sibling or in parent)
+                let errorElement = e.target.nextElementSibling;
+                if (!errorElement || !errorElement.classList.contains('text-red-500')) {
+                    const parent = e.target.closest('div');
+                    if (parent) {
+                        errorElement = parent.querySelector('.text-red-500');
+                    }
+                }
+                if (errorElement && errorElement.classList.contains('text-red-500')) {
+                    errorElement.classList.add('hidden');
+                }
+                // Also remove red border
+                e.target.classList.remove('border-red-500');
+            }
+        });
+        
+        // Handle native selects - use change event
+        modal.addEventListener('change', function(e) {
+            if (e.target.tagName === 'SELECT') {
+                hideErrorBanner();
+                // Find error element (could be next sibling or in parent)
+                let errorElement = e.target.nextElementSibling;
+                if (!errorElement || !errorElement.classList.contains('text-red-500')) {
+                    const parent = e.target.closest('div');
+                    if (parent) {
+                        errorElement = parent.querySelector('.text-red-500');
+                    }
+                }
+                if (errorElement && errorElement.classList.contains('text-red-500')) {
+                    errorElement.classList.add('hidden');
+                }
+                // Also remove red border from select and Select2 container
+                e.target.classList.remove('border-red-500');
+                const select2Container = $(e.target).next('.select2-container');
+                if (select2Container.length) {
+                    select2Container.find('.select2-selection').removeClass('border-red-500');
+                }
+            }
+        });
+        
+        // Handle Select2 changes (for academic_year_id, class_id, country_id)
+        $(document).on('change', 'select.select2-hidden-accessible', function() {
+            hideErrorBanner();
+            const select = this;
+            // Find error element
+            let errorElement = select.nextElementSibling;
+            if (!errorElement || !errorElement.classList.contains('text-red-500')) {
+                const parent = select.closest('div');
+                if (parent) {
+                    errorElement = parent.querySelector('.text-red-500');
+                }
+            }
+            if (errorElement && errorElement.classList.contains('text-red-500')) {
+                errorElement.classList.add('hidden');
+            }
+            // Remove red border from select and Select2 container
+            $(select).removeClass('border-red-500');
+            const select2Container = $(select).next('.select2-container');
+            if (select2Container.length) {
+                select2Container.find('.select2-selection').removeClass('border-red-500');
+            }
+        });
+    }
+});
 </script>
 @endpush
 @endsection

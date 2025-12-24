@@ -116,91 +116,76 @@
     </x-data-table>
 
     {{-- Add/Edit Route Modal --}}
-    <div x-show="showModal" x-cloak 
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-        <div class="relative mx-auto w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-800 overflow-hidden"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100">
-            
-            {{-- Modal Header --}}
-            <div class="bg-teal-500 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white" x-text="editMode ? 'Edit Route' : 'Add New Route'"></h3>
-                <button @click="closeModal()" class="text-white hover:text-teal-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
+    <x-modal name="route-modal" alpineTitle="editMode ? 'Edit Route' : 'Add New Route'" maxWidth="md">
+        <form :action="editMode ? `/receptionist/routes/${routeId}` : '{{ route('receptionist.routes.store') }}'" 
+              method="POST" class="p-6">
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Route Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="route_name" x-model="formData.route_name"
+                           placeholder="Enter Route Name"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('route_name') border-red-500 @enderror">
+                    @error('route_name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Vehicle <span class="text-red-500">*</span></label>
+                    <select name="vehicle_id" x-model="formData.vehicle_id"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_id') border-red-500 @enderror">
+                        <option value="">Select Vehicle</option>
+                        <template x-for="vehicle in vehicles" :key="vehicle.id">
+                            <option :value="vehicle.id" x-text="`${vehicle.vehicle_no} (${vehicle.registration_no})`"></option>
+                        </template>
+                    </select>
+                    @error('vehicle_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Route Create Date <span class="text-red-500">*</span></label>
+                    <input type="date" name="route_create_date" x-model="formData.route_create_date"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('route_create_date') border-red-500 @enderror">
+                    @error('route_create_date')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <template x-if="editMode">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                        <select name="status" x-model="formData.status"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('status') border-red-500 @enderror">
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
+                        @error('status')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </template>
             </div>
 
-            <form :action="editMode ? `/receptionist/routes/${routeId}` : '{{ route('receptionist.routes.store') }}'" 
-                  method="POST" class="p-6">
-                @csrf
-                <template x-if="editMode">
-                    @method('PUT')
-                </template>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Route Name *</label>
-                        <input type="text" name="route_name" x-model="formData.route_name" value="{{ old('route_name') }}"
-                               placeholder="Enter Route Name"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('route_name') border-red-500 @enderror">
-                        @error('route_name')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Vehicle *</label>
-                        <select name="vehicle_id" x-model="formData.vehicle_id"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_id') border-red-500 @enderror">
-                            <option value="">Select Vehicle</option>
-                            <template x-for="vehicle in vehicles" :key="vehicle.id">
-                                <option :value="vehicle.id" x-text="`${vehicle.vehicle_no} (${vehicle.registration_no})`" :selected="vehicle.id == {{ old('vehicle_id', '') }}"></option>
-                            </template>
-                        </select>
-                        @error('vehicle_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Route Create Date *</label>
-                        <input type="date" name="route_create_date" x-model="formData.route_create_date" value="{{ old('route_create_date') }}"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('route_create_date') border-red-500 @enderror">
-                        @error('route_create_date')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <template x-if="editMode">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                            <select name="status" x-model="formData.status"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('status') border-red-500 @enderror">
-                                <option value="1" {{ old('status') == 1 ? 'selected' : '' }}>Active</option>
-                                <option value="0" {{ old('status') == 0 ? 'selected' : '' }}>Inactive</option>
-                            </select>
-                            @error('status')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </template>
-                </div>
-
-                {{-- Modal Footer --}}
-                <div class="mt-6 flex items-center justify-center gap-4">
-                    <button type="button" @click="closeModal()"
-                            class="px-8 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
-                        Close
-                    </button>
-                    <button type="submit"
-                            class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-</div>
+            {{-- Modal Footer --}}
+            <div class="mt-6 flex items-center justify-center gap-4">
+                <button type="button" @click="closeModal()"
+                        class="px-8 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
+                    Close
+                </button>
+                <button type="submit"
+                        class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 
 @push('scripts')
 <script>
@@ -223,13 +208,17 @@ document.addEventListener('alpine:init', () => {
             
             // Check if there are validation errors and reopen modal with old data
             @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.routeId = '{{ old('route_id') }}';
                 this.formData = {
                     route_name: '{{ old('route_name') }}',
                     vehicle_id: '{{ old('vehicle_id') }}',
                     route_create_date: '{{ old('route_create_date') }}',
                     status: {{ old('status', 1) }},
                 };
-                this.showModal = true;
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'route-modal');
+                });
             @endif
         },
         
@@ -253,7 +242,7 @@ document.addEventListener('alpine:init', () => {
                 route_create_date: '',
                 status: 1,
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'route-modal');
         },
         
         openEditModal(route) {
@@ -265,7 +254,7 @@ document.addEventListener('alpine:init', () => {
                 route_create_date: route.route_create_date || '',
                 status: route.status || 1,
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'route-modal');
             
             // Update Select2 dropdown after modal is shown
             this.$nextTick(() => {
@@ -277,7 +266,7 @@ document.addEventListener('alpine:init', () => {
         },
         
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'route-modal');
         },
     }));
 });

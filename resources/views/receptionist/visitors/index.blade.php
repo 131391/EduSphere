@@ -16,20 +16,6 @@
     </div>
     @endif
 
-    @if($errors->any())
-    <div x-data="{ show: true }" x-show="show" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative">
-        <strong class="font-bold">Whoops! Something went wrong.</strong>
-        <ul class="mt-2 list-disc list-inside">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    @endif
-
     {{-- Visitor Statistics --}}
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div class="bg-white rounded-lg shadow-sm border-l-4 border-blue-500 p-4">
@@ -118,6 +104,8 @@
 
     {{-- Visitors Table --}}
     @php
+        use App\Enums\VisitorPriority;
+        use App\Enums\VisitorMode;
         $tableColumns = [
             [
                 'key' => 'visitor_no',
@@ -147,8 +135,11 @@
                 'label' => 'Meeting Type',
                 'sortable' => true,
                 'render' => function($row) {
+                    $meetingType = $row->meeting_type instanceof \App\Enums\VisitorMode 
+                        ? $row->meeting_type->label() 
+                        : ($row->meeting_type ?? 'N/A');
                     return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">' 
-                         . ucfirst($row->meeting_type) . '</span>';
+                         . $meetingType . '</span>';
                 }
             ],
             [
@@ -209,7 +200,6 @@
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
-                'dispatch' => 'confirm-delete',
             ],
         ];
     @endphp
@@ -226,196 +216,208 @@
     </x-data-table>
 
     <!-- Add/Edit Visitor Modal -->
-    <div x-show="showModal" x-cloak 
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         @click.self="closeModal()">
-        <div class="relative mx-auto w-full max-w-4xl shadow-2xl rounded-xl bg-white dark:bg-gray-800 overflow-hidden"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100">
-            
-            <!-- Modal Header -->
-            <div class="bg-teal-500 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white" x-text="editMode ? 'Edit Visitor' : 'Add New Visitor'"></h3>
-                <button @click="closeModal()" class="text-white hover:text-teal-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
+    <x-modal name="visitor-modal" alpineTitle="editMode ? 'Edit Visitor' : 'Add New Visitor'" maxWidth="4xl">
+        <form :action="editMode ? `/receptionist/visitors/${visitorId}` : '{{ route('receptionist.visitors.store') }}'" 
+              method="POST" enctype="multipart/form-data" 
+              class="p-6"
+              >
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="visitor_id" :value="visitorId" x-show="editMode">
+
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Mobile Number <span class="text-red-500">*</span></label>
+                        <input type="text" name="mobile" x-model="formData.mobile"
+                               class="w-full px-4 py-2 border @error('mobile') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        @error('mobile')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visit Purpose <span class="text-red-500">*</span></label>
+                        <select name="visit_purpose" x-model="formData.visit_purpose"
+                                class="w-full px-4 py-2 border @error('visit_purpose') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                            <option value="">Select Purpose</option>
+                            <option value="Walk in">Walk in</option>
+                            <option value="General">General</option>
+                            <option value="Admission">Admission</option>
+                            <option value="Vendor">Vendor</option>
+                            <option value="Fee Deposit">Fee Deposit</option>
+                            <option value="Enquiry">Enquiry</option>
+                            <option value="For Discussion">For Discussion</option>
+                            <option value="Complain">Complain</option>
+                            <option value="Suggestion">Suggestion</option>
+                            <option value="For Document">For Document</option>
+                            <option value="Transfer Certificate">Transfer Certificate</option>
+                        </select>
+                        @error('visit_purpose')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email ID</label>
+                        <input type="email" name="email" x-model="formData.email"
+                               class="w-full px-4 py-2 border @error('email') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        @error('email')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Purpose</label>
+                        <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose"
+                               class="w-full px-4 py-2 border @error('meeting_purpose') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        @error('meeting_purpose')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Priority <span class="text-red-500">*</span></label>
+                        <select name="priority" 
+                                x-model="formData.priority"
+                                class="w-full px-4 py-2 border @error('priority') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                            <option value="">Select Priority</option>
+                            @foreach($priorities as $priority)
+                            <option value="{{ $priority->value }}">{{ $priority->label() }}</option>
+                            @endforeach
+                        </select>
+                        @error('priority')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" x-model="formData.name"
+                               class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        @error('name')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor Type <span class="text-red-500">*</span></label>
+                        <select name="visitor_type" x-model="formData.visitor_type"
+                                class="w-full px-4 py-2 border @error('visitor_type') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                            <option value="">Select Type</option>
+                            <option value="Parent">Parent</option>
+                            <option value="General Visitor">General Visitor</option>
+                        </select>
+                        @error('visitor_type')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Address</label>
+                        <input type="text" name="address" x-model="formData.address"
+                               class="w-full px-4 py-2 border @error('address') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        @error('address')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Meeting with <span class="text-red-500">*</span></label>
+                        <select name="meeting_with" x-model="formData.meeting_with"
+                                class="w-full px-4 py-2 border @error('meeting_with') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                            <option value="">Select Person</option>
+                            <option value="Principal">Principal</option>
+                            <option value="Teacher">Teacher</option>
+                            <option value="Accountant">Accountant</option>
+                            <option value="Student">Student</option>
+                            <option value="Non Teaching">Non Teaching</option>
+                        </select>
+                        @error('meeting_with')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">No. of Guest(s)</label>
+                        <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1"
+                               class="w-full px-4 py-2 border @error('no_of_guests') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        @error('no_of_guests')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
             </div>
 
-            <form :action="editMode ? `/receptionist/visitors/${visitorId}` : '{{ route('receptionist.visitors.store') }}'" 
-                  method="POST" enctype="multipart/form-data" class="p-6">
-                @csrf
-                <template x-if="editMode">
-                    @method('PUT')
-                </template>
+            <!-- Meeting Type -->
+            <div class="mt-4">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Type <span class="text-red-500">*</span></label>
+                <select name="meeting_type" x-model="formData.meeting_type"
+                        class="w-full px-4 py-2 border @error('meeting_type') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    <option value="">Select Meeting Type</option>
+                    @foreach($meetingTypes as $meetingType)
+                    <option value="{{ $meetingType->value }}">{{ $meetingType->label() }}</option>
+                    @endforeach
+                </select>
+                @error('meeting_type')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
 
-                <div class="grid grid-cols-2 gap-6">
-                    <!-- Left Column -->
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Mobile Number *</label>
-                            <input type="text" name="mobile" x-model="formData.mobile" required
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('mobile') border-red-500 @enderror">
-                            @error('mobile')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visit Purpose *</label>
-                            <select name="visit_purpose" x-model="formData.visit_purpose" required
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('visit_purpose') border-red-500 @enderror">
-                                <option value="">Select Purpose</option>
-                                <option value="Walk in">Walk in</option>
-                                <option value="General">General</option>
-                                <option value="Admission">Admission</option>
-                                <option value="Vendor">Vendor</option>
-                                <option value="Fee Deposit">Fee Deposit</option>
-                                <option value="Enquiry">Enquiry</option>
-                                <option value="For Discussion">For Discussion</option>
-                                <option value="Complain">Complain</option>
-                                <option value="Suggestion">Suggestion</option>
-                                <option value="For Document">For Document</option>
-                                <option value="Transfer Certificate">Transfer Certificate</option>
-                            </select>
-                            @error('visit_purpose')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email ID</label>
-                            <input type="email" name="email" x-model="formData.email"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Purpose</label>
-                            <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Priority *</label>
-                            <select name="priority" x-model="formData.priority" required
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">Select Priority</option>
-                                <option value="Urgent">Urgent</option>
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Right Column -->
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Name *</label>
-                            <input type="text" name="name" x-model="formData.name" required
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('name') border-red-500 @enderror">
-                            @error('name')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor Type *</label>
-                            <select name="visitor_type" x-model="formData.visitor_type" required
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">Select Type</option>
-                                <option value="Parent">Parent</option>
-                                <option value="General Visitor">General Visitor</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Address</label>
-                            <input type="text" name="address" x-model="formData.address"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Meeting with *</label>
-                            <select name="meeting_with" x-model="formData.meeting_with" required
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">Select Person</option>
-                                <option value="Principal">Principal</option>
-                                <option value="Teacher">Teacher</option>
-                                <option value="Accountant">Accountant</option>
-                                <option value="Student">Student</option>
-                                <option value="Non Teaching">Non Teaching</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">No. of Guest(s)</label>
-                            <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1" value="1"
-                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Meeting Type -->
-                <div class="mt-4">
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Type *</label>
-                    <select name="meeting_type" x-model="formData.meeting_type" required
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        <option value="offline">Offline</option>
-                        <option value="online">Online</option>
-                        <option value="office">Office</option>
-                    </select>
-                </div>
-
-                <!-- Upload Section -->
-                <div class="mt-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
-                    <h4 class="font-bold text-gray-800 dark:text-white mb-4">Upload Photo/ Document</h4>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Photo</label>
-                            <div class="flex flex-col items-center">
-                                <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
-                                    <img id="visitor-photo-preview" src="#" alt="Visitor's Photo" class="hidden w-full h-full object-cover">
-                                    <i class="fas fa-user text-gray-400 text-4xl" id="visitor-photo-icon"></i>
-                                    <button type="button" 
-                                            id="visitor-photo-remove" 
-                                            onclick="removeImage(event, 'visitor_photo', 'visitor-photo-preview', 'visitor-photo-icon', 'visitor-photo-remove')"
-                                            class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
-                                        <i class="fas fa-times text-xs"></i>
-                                    </button>
-                                </div>
-                                <input type="file" name="visitor_photo" accept="image/*"
-                                       onchange="previewImage(event, 'visitor-photo-preview', 'visitor-photo-icon', 'visitor-photo-remove')"
-                                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            <!-- Upload Section -->
+            <div class="mt-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                <h4 class="font-bold text-gray-800 dark:text-white mb-4">Upload Photo/ Document</h4>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Photo</label>
+                        <div class="flex flex-col items-center">
+                            <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
+                                <img id="visitor-photo-preview" src="#" alt="Visitor's Photo" class="hidden w-full h-full object-cover">
+                                <i class="fas fa-user text-gray-400 text-4xl" id="visitor-photo-icon"></i>
+                                <button type="button" 
+                                        id="visitor-photo-remove" 
+                                        onclick="removeImage(event, 'visitor_photo', 'visitor-photo-preview', 'visitor-photo-icon', 'visitor-photo-remove')"
+                                        class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
                             </div>
+                            <input type="file" name="visitor_photo" accept="image/*"
+                                   onchange="previewImage(event, 'visitor-photo-preview', 'visitor-photo-icon', 'visitor-photo-remove')"
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">ID proof</label>
-                            <div class="flex flex-col items-center">
-                                <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
-                                    <img id="id-proof-preview" src="#" alt="ID Proof" class="hidden w-full h-full object-cover">
-                                    <i class="fas fa-id-card text-gray-400 text-4xl" id="id-proof-icon"></i>
-                                    <button type="button" 
-                                            id="id-proof-remove" 
-                                            onclick="removeImage(event, 'id_proof', 'id-proof-preview', 'id-proof-icon', 'id-proof-remove')"
-                                            class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
-                                        <i class="fas fa-times text-xs"></i>
-                                    </button>
-                                </div>
-                                <input type="file" name="id_proof" accept="image/*,application/pdf"
-                                       onchange="previewImage(event, 'id-proof-preview', 'id-proof-icon', 'id-proof-remove')"
-                                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">ID proof</label>
+                        <div class="flex flex-col items-center">
+                            <div class="w-32 h-32 bg-gray-200 dark:bg-gray-600 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
+                                <img id="id-proof-preview" src="#" alt="ID Proof" class="hidden w-full h-full object-cover">
+                                <i class="fas fa-id-card text-gray-400 text-4xl" id="id-proof-icon"></i>
+                                <button type="button" 
+                                        id="id-proof-remove" 
+                                        onclick="removeImage(event, 'id_proof', 'id-proof-preview', 'id-proof-icon', 'id-proof-remove')"
+                                        class="hidden absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors duration-200 shadow-lg">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
                             </div>
+                            <input type="file" name="id_proof" accept="image/*,application/pdf"
+                                   onchange="previewImage(event, 'id-proof-preview', 'id-proof-icon', 'id-proof-remove')"
+                                   class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Modal Footer -->
-                <div class="mt-6 flex items-center justify-center gap-4">
-                    <button type="button" @click="closeModal()"
-                            class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
-                        Close
-                    </button>
-                    <button type="submit"
-                            class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <!-- Modal Footer -->
+            <div class="mt-6 flex items-center justify-center gap-4">
+                <button type="button" @click="closeModal()"
+                        class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
+                    Close
+                </button>
+                <button type="submit"
+                        class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 
     <!-- Delete Confirmation Modal -->
     <div x-show="showDeleteModal" x-cloak 
@@ -487,16 +489,69 @@ document.addEventListener('alpine:init', () => {
             visit_purpose: '',
             meeting_purpose: '',
             meeting_with: '',
-            priority: 'Medium',
+            priority: '{{ VisitorPriority::Medium->value }}',
             no_of_guests: 1,
-            meeting_type: 'offline',
+            meeting_type: '{{ VisitorMode::Offline->value }}', // Offline = 2
+            source: '',
+            meeting_scheduled: '',
         },
         
         init() {
-            // Initialization code if needed
+            // Hide error banner when modal opens
+            this.$watch('showModal', (value) => {
+                if (value) {
+                    const errorBanner = document.getElementById('error-banner');
+                    if (errorBanner) {
+                        errorBanner.style.display = 'none';
+                        if (errorBanner.__x) {
+                            errorBanner.__x.$data.show = false;
+                        }
+                    }
+                }
+            });
+            
+            // Check if there are validation errors and reopen modal with old data
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' || request()->routeIs('receptionist.visitors.update') ? 'true' : 'false' }};
+                this.visitorId = '{{ old('visitor_id', request()->route('visitor')?->id ?? '') }}';
+                this.formData = {
+                    name: '{{ old('name') }}',
+                    mobile: '{{ old('mobile') }}',
+                    email: '{{ old('email') }}',
+                    address: '{{ old('address') }}',
+                    visitor_type: '{{ old('visitor_type') }}',
+                    visit_purpose: '{{ old('visit_purpose') }}',
+                    meeting_purpose: '{{ old('meeting_purpose') }}',
+                    meeting_with: '{{ old('meeting_with') }}',
+                    priority: '{{ old('priority', VisitorPriority::Medium->value) }}',
+                    no_of_guests: {{ old('no_of_guests', 1) }},
+                    meeting_type: '{{ old('meeting_type', VisitorMode::Offline->value) }}',
+                    source: '{{ old('source') }}',
+                    meeting_scheduled: '{{ old('meeting_scheduled') }}',
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'visitor-modal');
+                    // Set select values after modal opens to ensure they're displayed
+                    setTimeout(() => {
+                        const selects = ['priority', 'visit_purpose', 'visitor_type', 'meeting_with', 'meeting_type'];
+                        selects.forEach(selectName => {
+                            const select = document.querySelector(`[name="${selectName}"]`);
+                            if (select && this.formData[selectName]) {
+                                select.value = this.formData[selectName];
+                            }
+                        });
+                    }, 100);
+                });
+            @endif
         },
         
         openAddModal() {
+            // Hide error banner when opening modal
+            const errorBanner = document.getElementById('error-banner');
+            if (errorBanner) {
+                errorBanner.style.display = 'none';
+            }
+            
             this.editMode = false;
             this.visitorId = null;
             this.formData = {
@@ -508,14 +563,30 @@ document.addEventListener('alpine:init', () => {
                 visit_purpose: '',
                 meeting_purpose: '',
                 meeting_with: '',
-                priority: 'Medium',
+                priority: '{{ VisitorPriority::Medium->value }}',
                 no_of_guests: 1,
-                meeting_type: 'offline',
+                meeting_type: '{{ VisitorMode::Offline->value }}', // Offline = 2
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'visitor-modal');
+            // Ensure select value is set after modal opens
+            this.$nextTick(() => {
+                const select = document.querySelector('[name="priority"]');
+                if (select) {
+                    select.value = this.formData.priority;
+                }
+            });
         },
         
         openEditModal(visitor) {
+            // Hide error banner when opening modal
+            const errorBanner = document.getElementById('error-banner');
+            if (errorBanner) {
+                errorBanner.style.display = 'none';
+                if (errorBanner.__x) {
+                    errorBanner.__x.$data.show = false;
+                }
+            }
+            
             this.editMode = true;
             this.visitorId = visitor.id;
             this.formData = {
@@ -527,11 +598,26 @@ document.addEventListener('alpine:init', () => {
                 visit_purpose: visitor.visit_purpose || '',
                 meeting_purpose: visitor.meeting_purpose || '',
                 meeting_with: visitor.meeting_with || '',
-                priority: visitor.priority,
+                priority: String(visitor.priority?.value || visitor.priority || '{{ VisitorPriority::Medium->value }}'), // Convert enum to integer string
                 no_of_guests: visitor.no_of_guests,
-                meeting_type: visitor.meeting_type,
+                meeting_type: String(visitor.meeting_type?.value || visitor.meeting_type || '{{ VisitorMode::Offline->value }}'), // Convert enum to integer string
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'visitor-modal');
+            
+            // Set select values after modal opens
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    const selects = ['priority', 'visit_purpose', 'visitor_type', 'meeting_with', 'meeting_type'];
+                    selects.forEach(selectName => {
+                        const select = document.querySelector(`[name="${selectName}"]`);
+                        if (select && this.formData[selectName]) {
+                            select.value = this.formData[selectName];
+                            // Trigger change event to update Alpine.js
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                }, 100);
+            });
             
             // Display existing photos after modal is shown
             setTimeout(() => {
@@ -574,7 +660,7 @@ document.addEventListener('alpine:init', () => {
         },
         
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'visitor-modal');
         },
 
         confirmDelete(visitorId) {
@@ -640,6 +726,73 @@ function removeImage(event, inputName, previewId, iconId, removeBtnId) {
         removeBtn.classList.add('hidden');
     }
 }
+</script>
+
+<script>
+// Global script to hide validation errors when user starts typing or selecting
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to hide error banner
+    const hideErrorBanner = function() {
+        const errorBanner = document.getElementById('error-banner');
+        if (errorBanner) {
+            errorBanner.style.display = 'none';
+            // Also update Alpine.js state if available
+            if (errorBanner.__x) {
+                errorBanner.__x.$data.show = false;
+            }
+        }
+    };
+    
+    // Hide error banner when clicking on any form field
+    document.addEventListener('click', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+            hideErrorBanner();
+        }
+    });
+    
+    // Add event listeners to all inputs and selects in the modal
+    const modal = document.querySelector('[x-data*="visitorManagement"]');
+    if (modal) {
+        // Handle regular inputs
+        modal.addEventListener('input', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                hideErrorBanner();
+                const errorElement = e.target.nextElementSibling;
+                if (errorElement && errorElement.classList.contains('text-red-500')) {
+                    errorElement.classList.add('hidden');
+                }
+                // Also remove red border
+                e.target.classList.remove('border-red-500');
+            }
+        });
+        
+        // Handle native selects - use change event
+        modal.addEventListener('change', function(e) {
+            if (e.target.tagName === 'SELECT') {
+                hideErrorBanner();
+                const errorElement = e.target.nextElementSibling;
+                if (errorElement && errorElement.classList.contains('text-red-500')) {
+                    errorElement.classList.add('hidden');
+                }
+                // Also remove red border
+                e.target.classList.remove('border-red-500');
+            }
+        });
+        
+        // Also listen for input events on selects (some browsers fire input on select change)
+        modal.addEventListener('input', function(e) {
+            if (e.target.tagName === 'SELECT') {
+                hideErrorBanner();
+                const errorElement = e.target.nextElementSibling;
+                if (errorElement && errorElement.classList.contains('text-red-500')) {
+                    errorElement.classList.add('hidden');
+                }
+                // Also remove red border
+                e.target.classList.remove('border-red-500');
+            }
+        });
+    }
+});
 </script>
 @endpush
 @endsection

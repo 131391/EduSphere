@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\School;
 use App\Enums\SchoolStatus;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 
 class SchoolController extends Controller
@@ -153,7 +154,7 @@ class SchoolController extends Controller
             'pincode' => 'nullable|string|max:10',
             'website' => 'nullable|url|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => 'required|in:active,inactive,suspended',
+            'status' => ['required', 'integer', Rule::enum(SchoolStatus::class)],
             'subscription_start_date' => 'nullable|date',
             'subscription_end_date' => 'nullable|date|after:subscription_start_date',
 
@@ -245,7 +246,7 @@ class SchoolController extends Controller
             'pincode' => 'nullable|string|max:10',
             'website' => 'nullable|url|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => 'required|in:active,inactive,suspended',
+            'status' => ['required', 'integer', Rule::enum(SchoolStatus::class)],
             'subscription_start_date' => 'nullable|date',
             'subscription_end_date' => 'nullable|date|after:subscription_start_date',
         ]);

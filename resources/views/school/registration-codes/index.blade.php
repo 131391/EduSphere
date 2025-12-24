@@ -1,9 +1,9 @@
 @extends('layouts.school')
 
-@section('title', 'Admission Codes')
+@section('title', 'Registration Codes')
 
 @section('content')
-<div class="space-y-6" x-data="admissionCodeManagement">
+<div class="space-y-6" x-data="registrationCodeManagement">
     @if(session('success'))
     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative">
         <span class="block sm:inline">{{ session('success') }}</span>
@@ -18,12 +18,12 @@
 
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Admission Code</h1>
-            <p class="text-gray-600 mt-1">Manage admission codes</p>
+            <h1 class="text-2xl font-bold text-gray-800">Registration Code</h1>
+            <p class="text-gray-600 mt-1">Manage registration codes</p>
         </div>
         <button 
             @click="openAddModal()" 
-            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center shadow-md transition-all active:scale-95"
         >
             <i class="fas fa-plus mr-2"></i>
             ADD
@@ -43,7 +43,7 @@
             ],
             [
                 'key' => 'code',
-                'label' => 'ADMISSION CODE',
+                'label' => 'REGISTRATION CODE',
                 'sortable' => true,
                 'render' => function($row) {
                     return '<span class="font-medium text-gray-900">' . e($row->code) . '</span>';
@@ -62,15 +62,15 @@
         $tableActions = [
             [
                 'type' => 'form',
-                'url' => fn($row) => route('school.admission-codes.destroy', $row->id),
+                'url' => fn($row) => route('school.registration-codes.destroy', $row->id),
                 'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-400 hover:text-red-600',
                 'title' => 'Delete',
                 'dispatch' => [
                     'event' => 'open-confirm-modal',
-                    'title' => 'Delete Admission Code',
-                    'message' => 'Are you sure you want to delete this admission code?'
+                    'title' => 'Delete Registration Code',
+                    'message' => 'Are you sure you want to delete this registration code?'
                 ]
             ],
         ];
@@ -80,18 +80,18 @@
         :columns="$tableColumns"
         :data="$codes"
         :actions="$tableActions"
-        empty-message="No admission codes found"
+        empty-message="No registration codes found"
         empty-icon="fas fa-code"
     >
-        Admission Codes List
+        Registration Codes List
     </x-data-table>
 
     <!-- Add Code Modal -->
-    <x-modal name="add-admission-code-modal" title="Admission Code">
-        <form action="{{ route('school.admission-codes.store') }}" method="POST" class="space-y-6">
+    <x-modal name="add-registration-code-modal" title="Registration Code">
+        <form action="{{ route('school.registration-codes.store') }}" method="POST" class="space-y-6">
             @csrf
             <div>
-                <label for="code" class="block text-sm font-semibold text-gray-700 mb-2">Admission Code</label>
+                <label for="code" class="block text-sm font-semibold text-gray-700 mb-2">Registration Code</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="fas fa-key text-gray-400"></i>
@@ -101,7 +101,7 @@
                         name="code" 
                         id="code"
                         value="{{ old('code') }}"
-                        placeholder="e.g. ADM-2024-001"
+                        placeholder="e.g. REG-2024-001"
                         class="block w-full pl-10 pr-3 py-3 border @error('code') border-red-500 @else border-gray-300 @enderror rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
                     >
                 </div>
@@ -138,17 +138,17 @@
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('admissionCodeManagement', () => ({
+    Alpine.data('registrationCodeManagement', () => ({
         init() {
             @if($errors->any())
                 this.$nextTick(() => {
-                    this.$dispatch('open-modal', 'add-admission-code-modal');
+                    this.$dispatch('open-modal', 'add-registration-code-modal');
                 });
             @endif
         },
         
         openAddModal() {
-            this.$dispatch('open-modal', 'add-admission-code-modal');
+            this.$dispatch('open-modal', 'add-registration-code-modal');
         }
     }));
 });

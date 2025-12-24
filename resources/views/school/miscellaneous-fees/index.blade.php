@@ -30,142 +30,151 @@
         </button>
     </div>
 
-    <!-- Fees Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sr No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fee Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($fees as $index => $fee)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $fees->firstItem() + $index }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $fee->name }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ number_format($fee->amount, 2) }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <form 
-                                action="{{ route('school.miscellaneous-fees.destroy', $fee->id) }}" 
-                                method="POST" 
-                                class="inline"
-                                @submit.prevent="$dispatch('open-confirm-modal', { 
-                                    form: $el, 
-                                    title: 'Delete Fee', 
-                                    message: 'Are you sure you want to delete this fee?' 
-                                })"
-                            >
-                                @csrf
-                                @method('DELETE')
-                                <button 
-                                    type="submit" 
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-coins text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-lg text-gray-500">No fees found</p>
-                                <p class="text-sm text-gray-400 mt-1">Click "Add Fee" to create your first miscellaneous fee</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'id',
+                'label' => 'SR NO',
+                'sortable' => true,
+                'render' => function($row) use ($fees) {
+                    static $index = 0;
+                    return $fees->firstItem() + $index++;
+                }
+            ],
+            [
+                'key' => 'name',
+                'label' => 'FEE NAME',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<span class="font-medium text-gray-900">' . e($row->name) . '</span>';
+                }
+            ],
+            [
+                'key' => 'amount',
+                'label' => 'AMOUNT',
+                'sortable' => true,
+                'render' => function($row) {
+                    return number_format($row->amount, 2);
+                }
+            ],
+        ];
 
-        @if($fees->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $fees->links() }}
-        </div>
-        @endif
-    </div>
+        $tableActions = [
+            [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-fee'))))";
+                },
+                'data-fee' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'amount' => $row->amount,
+                        'description' => $row->description,
+                    ]));
+                }
+            ],
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.miscellaneous-fees.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-600 hover:text-red-900',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete Fee',
+                    'message' => 'Are you sure you want to delete this fee?'
+                ]
+            ],
+        ];
+    @endphp
 
-    <!-- Add Fee Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$fees"
+        :actions="$tableActions"
+        empty-message="No fees found"
+        empty-icon="fas fa-coins"
     >
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Add Miscellaneous Fee</h3>
-                <button @click="closeAddModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form action="{{ route('school.miscellaneous-fees.store') }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Fee Name</label>
+        Miscellaneous Fees List
+    </x-data-table>
+
+    <!-- Add/Edit Fee Modal -->
+    <x-modal name="misc-fee-modal" alpineTitle="editMode ? 'Edit Miscellaneous Fee' : 'Add Miscellaneous Fee'" maxWidth="md">
+        <form :action="editMode ? `/school/miscellaneous-fees/${feeId}` : '{{ route('school.miscellaneous-fees.store') }}'" 
+              method="POST" class="p-6" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="fee_id" x-model="feeId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Fee Name <span class="text-red-500">*</span></label>
                     <input 
                         type="text" 
                         name="name" 
+                        x-model="formData.name"
                         placeholder="Enter fee name"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Amount <span class="text-red-500">*</span></label>
                     <input 
                         type="number" 
                         step="0.01"
                         name="amount" 
+                        x-model="formData.amount"
                         placeholder="0.00"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-2 border @error('amount') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('amount')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Description</label>
                     <textarea 
                         name="description" 
+                        x-model="formData.description"
                         rows="3"
                         placeholder="Optional description"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-2 border @error('description') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     ></textarea>
+                    @error('description')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
+            </div>
 
-                <div class="flex items-center justify-end gap-3">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -175,17 +184,60 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('miscFeeManagement', () => ({
-        showAddModal: false,
-        
+        editMode: false,
+        feeId: null,
+        formData: {
+            name: '',
+            amount: '',
+            description: ''
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.feeId = '{{ old('fee_id') }}';
+                this.formData = {
+                    name: '{{ old('name') }}',
+                    amount: '{{ old('amount') }}',
+                    description: '{{ old('description') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'misc-fee-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.editMode = false;
+            this.feeId = null;
+            this.formData = { name: '', amount: '', description: '' };
+            this.$dispatch('open-modal', 'misc-fee-modal');
         },
         
-        closeAddModal() {
-            this.showAddModal = false;
+        openEditModal(fee) {
+            this.editMode = true;
+            this.feeId = fee.id;
+            this.formData = {
+                name: fee.name,
+                amount: fee.amount,
+                description: fee.description || ''
+            };
+            this.$dispatch('open-modal', 'misc-fee-modal');
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'misc-fee-modal');
         }
     }));
 });
+
+// Global function for table actions
+function openEditModal(fee) {
+    const component = Alpine.$data(document.querySelector('[x-data*="miscFeeManagement"]'));
+    if (component) {
+        component.openEditModal(fee);
+    }
+}
 </script>
 @endpush
 @endsection

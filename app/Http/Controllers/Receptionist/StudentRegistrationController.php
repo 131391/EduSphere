@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
+use App\Enums\EnquiryStatus;
+use App\Enums\Gender;
 
 class StudentRegistrationController extends TenantController
 {
@@ -72,7 +74,7 @@ class StudentRegistrationController extends TenantController
         $classes = ClassModel::where('school_id', $schoolId)->with('registrationFee')->get();
         $academicYears = AcademicYear::where('school_id', $schoolId)->get();
         $enquiries = StudentEnquiry::where('school_id', $schoolId)
-            ->where('form_status', 'pending')
+            ->pending()
             ->get();
             
         $studentTypes = StudentType::where('school_id', $schoolId)->get();
@@ -99,7 +101,7 @@ class StudentRegistrationController extends TenantController
             'class_id' => 'required|exists:classes,id',
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
-            'gender' => 'required|in:Male,Female,Other',
+            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
             'mobile_no' => 'required|string|max:20',
             'father_first_name' => 'required|string|max:100',
             'father_last_name' => 'required|string|max:100',
@@ -213,9 +215,21 @@ class StudentRegistrationController extends TenantController
             return response()->json(['error' => 'Enquiry not found'], 404);
         }
         
+        // Format dates for JavaScript
+        $data = $enquiry->toArray();
+        if ($enquiry->dob) {
+            $data['dob'] = $enquiry->dob->format('Y-m-d');
+        }
+        if ($enquiry->follow_up_date) {
+            $data['follow_up_date'] = $enquiry->follow_up_date->format('Y-m-d');
+        }
+        if ($enquiry->enquiry_date) {
+            $data['enquiry_date'] = $enquiry->enquiry_date->format('Y-m-d');
+        }
+        
         return response()->json([
             'success' => true,
-            'data' => $enquiry
+            'data' => $data
         ]);
     }
 

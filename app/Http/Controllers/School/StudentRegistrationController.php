@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
+use App\Enums\Gender;
 
 class StudentRegistrationController extends Controller
 {
@@ -72,7 +73,7 @@ class StudentRegistrationController extends Controller
         $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
         $academicYears = AcademicYear::where('school_id', $school->id)->get();
         $enquiries = StudentEnquiry::where('school_id', $school->id)
-            ->where('form_status', 'pending')
+            ->pending()
             ->get();
             
         $studentTypes = StudentType::where('school_id', $school->id)->get();
@@ -105,7 +106,7 @@ class StudentRegistrationController extends Controller
             'first_name' => 'required|string|max:100',
             'middle_name' => 'nullable|string|max:100',
             'last_name' => 'required|string|max:100',
-            'gender' => 'required|in:Male,Female,Other',
+            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
             'dob' => 'nullable|date',
             'email' => 'nullable|email|max:150',
             'mobile_no' => 'required|string|max:20',

@@ -149,7 +149,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @if($data && $data->count() > 0)
                     @foreach($data as $row)
-                    <tr class="hover:bg-gray-50 transition-colors" @click.self.stop>
+                    <tr class="hover:bg-gray-50 transition-colors" @click.self.stop x-data="{ row: {{ json_encode($row) }} }">
                         @foreach($columns as $column)
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             @if(isset($column['render']))
@@ -184,21 +184,11 @@
                                         @elseif(isset($action['onClick']))
                                         onclick="event.stopPropagation();" @click="{{ $action['onClick'] }}"
                                         @endif
-                                        @if(isset($action['data-enquiry']))
-                                        data-enquiry="{{ $action['data-enquiry']($row) }}"
-                                        @endif
-                                        @if(isset($action['data-visitor']))
-                                        data-visitor="{{ $action['data-visitor']($row) }}"
-                                        @endif
-                                        @if(isset($action['data-vehicle']))
-                                        data-vehicle="{{ $action['data-vehicle']($row) }}"
-                                        @endif
-                                        @if(isset($action['data-route']))
-                                        data-route="{{ $action['data-route']($row) }}"
-                                        @endif
-                                        @if(isset($action['data-busstop']))
-                                        data-busstop="{{ $action['data-busstop']($row) }}"
-                                        @endif
+                                        @foreach($action as $key => $value)
+                                            @if(str_starts_with($key, 'data-') && is_callable($value))
+                                            {{ $key }}="{{ $value($row) }}"
+                                            @endif
+                                        @endforeach
                                         class="{{ $action['class'] ?? 'text-blue-600 hover:text-blue-900' }}"
                                         title="{{ $action['title'] ?? '' }}"
                                         type="button"

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Receptionist;
 use App\Http\Controllers\TenantController;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Enums\FuelType;
 
 class VehicleController extends TenantController
 {
@@ -57,7 +59,7 @@ class VehicleController extends TenantController
         $validated = $request->validate([
             'registration_no' => 'required|string|max:255',
             'vehicle_no' => 'nullable|string|max:255',
-            'fuel_type' => 'required|integer|in:1,2,3,4',
+            'fuel_type' => ['required', 'integer', Rule::enum(FuelType::class)],
             'capacity' => 'nullable|integer|min:1',
             'initial_reading' => 'nullable|integer|min:0',
             'engine_no' => 'nullable|string|max:255',
@@ -95,7 +97,7 @@ class VehicleController extends TenantController
         $validated = $request->validate([
             'registration_no' => 'required|string|max:255',
             'vehicle_no' => 'nullable|string|max:255',
-            'fuel_type' => 'required|integer|in:1,2,3,4',
+            'fuel_type' => ['required', 'integer', Rule::enum(FuelType::class)],
             'capacity' => 'nullable|integer|min:1',
             'initial_reading' => 'nullable|integer|min:0',
             'engine_no' => 'nullable|string|max:255',

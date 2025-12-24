@@ -89,67 +89,50 @@
     </x-data-table>
 
     <!-- Add/Edit Exam Type Modal -->
-    <div 
-        x-show="showModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-        @click.self="closeModal()"
-    >
-        <div 
-            class="relative mx-auto w-full max-w-lg shadow-2xl rounded-xl bg-white overflow-hidden"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-        >
-            <!-- Modal Header -->
-            <div class="bg-blue-600 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white" x-text="editMode ? 'Edit Exam Type' : 'Add Exam Type'"></h3>
-                <button @click="closeModal()" class="text-white hover:text-blue-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
-            </div>
-            
-            <form :action="editMode ? `/school/examination/exam-types/${examTypeId}` : '{{ route('school.examination.exam-types.store') }}'" method="POST" class="p-6">
-                @csrf
-                <template x-if="editMode">
-                    @method('PUT')
-                </template>
+    <x-modal name="exam-type-modal" alpineTitle="editMode ? 'Edit Exam Type' : 'Add Exam Type'" maxWidth="lg">
+        <form :action="editMode ? `/school/examination/exam-types/${examTypeId}` : '{{ route('school.examination.exam-types.store') }}'" method="POST" class="p-6">
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
 
-                <div class="space-y-5">
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Exam Type</label>
-                        <div class="col-span-2">
-                            <input 
-                                type="text" 
-                                name="name" 
-                                x-model="formData.name"
-                                placeholder="Enter Exam Type"
-                                required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                        </div>
+            <div class="space-y-5">
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Exam Type</label>
+                    <div class="col-span-2">
+                        <input 
+                            type="text" 
+                            name="name" 
+                            x-model="formData.name"
+                            placeholder="Enter Exam Type"
+                            required
+                            class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                        @error('name')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
+            </div>
 
-                <!-- Modal Footer -->
-                <div class="mt-8 flex items-center justify-center gap-4">
-                    <button 
-                        type="button" 
-                        @click="closeModal()"
-                        class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <!-- Modal Footer -->
+            <div class="mt-8 flex items-center justify-center gap-4">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 
     <!-- Confirmation Modal -->
     <x-confirm-modal />
@@ -166,11 +149,24 @@ document.addEventListener('alpine:init', () => {
             name: ''
         },
         
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.examTypeId = {{ old('exam_type_id', 'null') }};
+                this.formData = {
+                    name: '{{ old('name') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'exam-type-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
             this.editMode = false;
             this.examTypeId = null;
             this.formData = { name: '' };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'exam-type-modal');
         },
         
         openEditModal(examType) {
@@ -179,11 +175,11 @@ document.addEventListener('alpine:init', () => {
             this.formData = {
                 name: examType.name
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'exam-type-modal');
         },
         
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'exam-type-modal');
         }
     }));
 });

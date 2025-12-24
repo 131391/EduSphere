@@ -8,6 +8,9 @@ use App\Models\AcademicYear;
 use App\Models\ClassModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use App\Enums\Gender;
+use App\Enums\EnquiryStatus;
 
 class StudentEnquiryController extends TenantController
 {
@@ -72,6 +75,9 @@ class StudentEnquiryController extends TenantController
     public function update(Request $request, StudentEnquiry $studentEnquiry)
     {
         $this->authorizeTenant($studentEnquiry);
+        
+        // Store enquiry ID for redirect back on validation error
+        $request->merge(['enquiry_id' => $studentEnquiry->id]);
 
         $validated = $this->validateEnquiry($request, $studentEnquiry->id);
 
@@ -108,7 +114,7 @@ class StudentEnquiryController extends TenantController
             'class_id' => 'nullable|exists:classes,id',
             'subject_name' => 'nullable|string|max:255',
             'student_name' => 'required|string|max:255',
-            'gender' => 'nullable|in:Male,Female,Other',
+            'gender' => ['nullable', 'integer', Rule::enum(Gender::class)],
             'follow_up_date' => 'nullable|date',
             
             // Father's Details
@@ -173,7 +179,7 @@ class StudentEnquiryController extends TenantController
             'student_photo' => 'nullable|image|max:2048',
             
             // Status
-            'form_status' => 'nullable|in:pending,completed,cancelled,admitted',
+            'form_status' => ['nullable', 'integer', Rule::enum(EnquiryStatus::class)],
         ]);
     }
 

@@ -61,11 +61,27 @@
 
         $tableActions = [
             [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-method'))))";
+                },
+                'data-method' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'code' => $row->code,
+                    ]));
+                }
+            ],
+            [
                 'type' => 'form',
                 'url' => fn($row) => route('school.payment-methods.destroy', $row->id),
                 'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
-                'class' => 'text-red-400 hover:text-red-600',
+                'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
                 'dispatch' => [
                     'event' => 'open-confirm-modal',
@@ -86,62 +102,63 @@
         Payment Methods List
     </x-data-table>
 
-    <!-- Add Payment Method Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
-    >
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Add Payment Method</h3>
-                <button @click="closeAddModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form action="{{ route('school.payment-methods.store') }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method Name</label>
+    <!-- Add/Edit Payment Method Modal -->
+    <x-modal name="payment-method-modal" alpineTitle="editMode ? 'Edit Payment Method' : 'Add Payment Method'" maxWidth="md">
+        <form :action="editMode ? `/school/payment-methods/${methodId}` : '{{ route('school.payment-methods.store') }}'" 
+              method="POST" class="p-6" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="method_id" x-model="methodId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Payment Method Name <span class="text-red-500">*</span></label>
                     <input 
                         type="text" 
                         name="name" 
+                        x-model="formData.name"
                         placeholder="Enter payment method name"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Code</label>
                     <input 
                         type="text" 
                         name="code" 
+                        x-model="formData.code"
                         placeholder="Optional code"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-2 border @error('code') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
+                    @error('code')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
+            </div>
 
-                <div class="flex items-center justify-end gap-3">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -151,16 +168,57 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('paymentMethodManagement', () => ({
-        showAddModal: false,
-        
+        editMode: false,
+        methodId: null,
+        formData: {
+            name: '',
+            code: ''
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.methodId = '{{ old('method_id') }}';
+                this.formData = {
+                    name: '{{ old('name') }}',
+                    code: '{{ old('code') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'payment-method-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.editMode = false;
+            this.methodId = null;
+            this.formData = { name: '', code: '' };
+            this.$dispatch('open-modal', 'payment-method-modal');
         },
         
-        closeAddModal() {
-            this.showAddModal = false;
+        openEditModal(method) {
+            this.editMode = true;
+            this.methodId = method.id;
+            this.formData = {
+                name: method.name,
+                code: method.code || ''
+            };
+            this.$dispatch('open-modal', 'payment-method-modal');
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'payment-method-modal');
         }
     }));
+});
+
+// Global function for table actions
+function openEditModal(method) {
+    const component = Alpine.$data(document.querySelector('[x-data*="paymentMethodManagement"]'));
+    if (component) {
+        component.openEditModal(method);
+    }
+}
 });
 </script>
 @endpush

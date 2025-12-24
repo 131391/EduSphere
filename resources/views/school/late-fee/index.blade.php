@@ -77,12 +77,18 @@
 </div>
 
 <!-- Update Modal -->
-<div x-data="{ 
-    fee: { id: null, late_fee_amount: '', fine_date: '' },
+    fee: { id: '{{ old('fee_id') }}', late_fee_amount: '{{ old('late_fee_amount') }}', fine_date: '{{ old('fine_date') }}' },
     get action() {
         return this.fee.id ? '{{ route('school.late-fee.update', ':id') }}'.replace(':id', this.fee.id) : '{{ route('school.late-fee.store') }}';
+    },
+    init() {
+        @if($errors->any())
+            this.$nextTick(() => {
+                this.$dispatch('open-modal', 'update-late-fee-modal');
+            });
+        @endif
     }
-}" @open-modal.window="if ($event.detail.name === 'update-late-fee-modal') { fee = { ...$event.detail.fee }; } else if ($event.detail === 'update-late-fee-modal') { fee = { id: null, late_fee_amount: '', fine_date: '' }; }">
+} @open-modal.window="if ($event.detail.name === 'update-late-fee-modal') { fee = { ...$event.detail.fee }; } else if ($event.detail === 'update-late-fee-modal') { fee = { id: null, late_fee_amount: '', fine_date: '' }; }">
     <x-modal name="update-late-fee-modal" title="Late Fee Configuration" maxWidth="xl">
         <form :action="action" method="POST" class="p-6 space-y-6">
             @csrf
@@ -94,24 +100,31 @@
                 <div class="flex items-center">
                     <label for="late_fee_amount" class="w-32 text-sm font-bold text-gray-700">Late Fee</label>
                     <div class="flex-1">
-                        <input type="number" name="late_fee_amount" id="late_fee_amount" step="0.01" min="0" x-model="fee.late_fee_amount" placeholder="Enter Late Fee" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" required>
+                        <input type="number" name="late_fee_amount" id="late_fee_amount" step="0.01" min="0" x-model="fee.late_fee_amount" placeholder="Enter Late Fee" class="w-full px-4 py-2 border @error('late_fee_amount') border-red-500 @else border-gray-300 @enderror rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                        @error('late_fee_amount')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
                 
                 <div class="flex items-center">
                     <label for="fine_date" class="w-32 text-sm font-bold text-gray-700">Select Late Fine Date</label>
                     <div class="flex-1">
-                        <select name="fine_date" id="fine_date" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" required x-model="fee.fine_date">
+                        <select name="fine_date" id="fine_date" class="w-full px-4 py-2 border @error('fine_date') border-red-500 @else border-gray-300 @enderror rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" x-model="fee.fine_date">
                             <option value="">Select Late Fine Date</option>
                             @for($i = 1; $i <= 31; $i++)
                             <option value="{{ $i }}">{{ $i }}</option>
                             @endfor
                         </select>
+                        @error('fine_date')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
             </div>
 
             <div class="flex justify-end space-x-3 pt-4 border-t">
+                <input type="hidden" name="fee_id" x-model="fee.id">
                 <button type="button" @click="$dispatch('close-modal', 'update-late-fee-modal')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded transition-colors">
                     Close
                 </button>

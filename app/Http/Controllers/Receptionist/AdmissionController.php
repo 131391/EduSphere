@@ -12,7 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
+use App\Enums\Gender;
 
 class AdmissionController extends TenantController
 {
@@ -106,7 +108,7 @@ class AdmissionController extends TenantController
             'section_id' => 'required|exists:sections,id',
             'academic_year_id' => 'required|exists:academic_years,id',
             'admission_date' => 'required|date',
-            'gender' => 'required|integer|in:1,2,3',
+            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
             'permanent_address' => 'required|string',
             'correspondence_address' => 'required|string',
             'father_first_name' => 'required|string|max:255',
@@ -304,7 +306,7 @@ class AdmissionController extends TenantController
             'section_id' => 'required|exists:sections,id',
             'academic_year_id' => 'required|exists:academic_years,id',
             'admission_date' => 'required|date',
-            'gender' => 'required|integer|in:1,2,3',
+            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
             'permanent_address' => 'required|string',
             'correspondence_address' => 'required|string',
             'father_first_name' => 'required|string|max:255',

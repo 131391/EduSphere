@@ -7,14 +7,18 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Enums\SchoolStatus;
 
 class UserController extends Controller
 {
     public function index()
     {
         $school = auth()->user()->school;
-        $users = User::where('school_id', $school->id)
-            ->whereIn('role', ['teacher', 'receptionist', 'accountant', 'librarian'])
+        $users = User::with('role')
+            ->where('school_id', $school->id)
+            ->whereHas('role', function($q) {
+                $q->whereIn('slug', ['teacher', 'receptionist', 'accountant', 'librarian']);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -40,14 +44,16 @@ class UserController extends Controller
 
         $school = auth()->user()->school;
 
+        $role = \App\Models\Role::where('slug', $request->role)->firstOrFail();
+
         User::create([
             'school_id' => $school->id,
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role_id' => $role->id,
             'phone' => $request->phone,
-            'status' => 'active',
+            'status' => User::STATUS_ACTIVE,
         ]);
 
         return redirect()->route('school.users.index')->with('success', 'User created successfully.');
@@ -63,15 +69,23 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8',
             'role' => 'required|in:teacher,receptionist,accountant,librarian',
             'phone' => 'nullable|string|max:20',
-            'status' => 'required|in:active,inactive,suspended',
+            'status' => ['required', 'integer', Rule::enum(SchoolStatus::class)],
         ]);
+
+        $role = \App\Models\Role::where('slug', $request->role)->firstOrFail();
+
+        $statusMap = [
+            'active' => \App\Models\User::STATUS_ACTIVE,
+            'inactive' => \App\Models\User::STATUS_INACTIVE,
+            'suspended' => \App\Models\User::STATUS_SUSPENDED,
+        ];
 
         $data = [
             'name' => $request->name,
             'email' => $request->email,
-            'role' => $request->role,
+            'role_id' => $role->id,
             'phone' => $request->phone,
-            'status' => $request->status,
+            'status' => $statusMap[$request->status] ?? \App\Models\User::STATUS_ACTIVE,
         ];
 
         if ($request->filled('password')) {
@@ -88,7 +102,8 @@ class UserController extends Controller
         $this->authorizeAccess($user);
         
         // Prevent deleting school admin
-        if ($user->role === 'school_admin') {
+        // Prevent deleting school admin
+        if ($user->hasRole('school_admin')) {
             return back()->with('error', 'Cannot delete school admin user.');
         }
 

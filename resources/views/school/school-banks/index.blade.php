@@ -74,11 +74,29 @@
 
         $tableActions = [
             [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-bank'))))";
+                },
+                'data-bank' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'bank_name' => $row->bank_name,
+                        'account_number' => $row->account_number,
+                        'branch_name' => $row->branch_name,
+                        'ifsc_code' => $row->ifsc_code,
+                    ]));
+                }
+            ],
+            [
                 'type' => 'form',
                 'url' => fn($row) => route('school.school-banks.destroy', $row->id),
                 'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
-                'class' => 'text-red-400 hover:text-red-600',
+                'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
                 'dispatch' => [
                     'event' => 'open-confirm-modal',
@@ -99,85 +117,89 @@
         School Banks List
     </x-data-table>
 
-    <!-- Add Bank Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
-    >
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4 bg-green-500 -mx-5 -mt-5 p-4 rounded-t-md">
-                <h3 class="text-lg font-semibold text-white">Add Bank Name</h3>
-                <button @click="closeAddModal()" class="text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
+    <!-- Add/Edit Bank Modal -->
+    <x-modal name="school-bank-modal" alpineTitle="editMode ? 'Edit School Bank' : 'Add School Bank'" maxWidth="md">
+        <form :action="editMode ? `/school/school-banks/${bankId}` : '{{ route('school.school-banks.store') }}'" 
+              method="POST" class="p-6 space-y-4" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="bank_id" x-model="bankId">
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Bank Name <span class="text-red-500">*</span></label>
+                <input 
+                    type="text" 
+                    name="bank_name" 
+                    x-model="formData.bank_name"
+                    placeholder="Enter Bank Name"
+                    class="w-full px-4 py-2 border @error('bank_name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                >
+                @error('bank_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Account Number <span class="text-red-500">*</span></label>
+                <input 
+                    type="text" 
+                    name="account_number" 
+                    x-model="formData.account_number"
+                    placeholder="Enter Account Number"
+                    class="w-full px-4 py-2 border @error('account_number') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                >
+                @error('account_number')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Branch Name</label>
+                <input 
+                    type="text" 
+                    name="branch_name" 
+                    x-model="formData.branch_name"
+                    placeholder="Enter Branch Name"
+                    class="w-full px-4 py-2 border @error('branch_name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                >
+                @error('branch_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">IFSC Code</label>
+                <input 
+                    type="text" 
+                    name="ifsc_code" 
+                    x-model="formData.ifsc_code"
+                    placeholder="Enter IFSC Code"
+                    class="w-full px-4 py-2 border @error('ifsc_code') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                >
+                @error('ifsc_code')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
                 </button>
             </div>
-            
-            <form action="{{ route('school.school-banks.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <input 
-                        type="text" 
-                        name="bank_name" 
-                        placeholder="Enter Bank Name"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    >
-                </div>
-
-                <div>
-                    <input 
-                        type="text" 
-                        name="account_number" 
-                        placeholder="Enter Account Number"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    >
-                </div>
-
-                <div>
-                    <input 
-                        type="text" 
-                        name="branch_name" 
-                        placeholder="Enter Branch Name"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    >
-                </div>
-
-                <div>
-                    <input 
-                        type="text" 
-                        name="ifsc_code" 
-                        placeholder="Enter IFSC Code"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    >
-                </div>
-
-                <div class="flex items-center justify-end gap-3 mt-6">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Save and Add
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -187,17 +209,63 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('schoolBankManagement', () => ({
-        showAddModal: false,
-        
+        editMode: false,
+        bankId: null,
+        formData: {
+            bank_name: '',
+            account_number: '',
+            branch_name: '',
+            ifsc_code: ''
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.bankId = '{{ old('bank_id') }}';
+                this.formData = {
+                    bank_name: '{{ old('bank_name') }}',
+                    account_number: '{{ old('account_number') }}',
+                    branch_name: '{{ old('branch_name') }}',
+                    ifsc_code: '{{ old('ifsc_code') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'school-bank-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.editMode = false;
+            this.bankId = null;
+            this.formData = { bank_name: '', account_number: '', branch_name: '', ifsc_code: '' };
+            this.$dispatch('open-modal', 'school-bank-modal');
         },
         
-        closeAddModal() {
-            this.showAddModal = false;
+        openEditModal(bank) {
+            this.editMode = true;
+            this.bankId = bank.id;
+            this.formData = {
+                bank_name: bank.bank_name,
+                account_number: bank.account_number,
+                branch_name: bank.branch_name || '',
+                ifsc_code: bank.ifsc_code || ''
+            };
+            this.$dispatch('open-modal', 'school-bank-modal');
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'school-bank-modal');
         }
     }));
 });
+
+// Global function for table actions
+function openEditModal(bank) {
+    const component = Alpine.$data(document.querySelector('[x-data*="schoolBankManagement"]'));
+    if (component) {
+        component.openEditModal(bank);
+    }
+}
 </script>
 @endpush
 @endsection

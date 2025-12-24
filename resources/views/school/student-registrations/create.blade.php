@@ -40,16 +40,6 @@
         </a>
     </div>
 
-    @if ($errors->any())
-        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <ul class="list-disc list-inside text-sm text-red-600 dark:text-red-400">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <form action="{{ route('school.student-registrations.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         @include('school.student-registrations.partials.form')

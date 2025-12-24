@@ -53,11 +53,26 @@
 
         $tableActions = [
             [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-type'))))";
+                },
+                'data-type' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'name' => $row->name,
+                    ]));
+                }
+            ],
+            [
                 'type' => 'form',
                 'url' => fn($row) => route('school.fee-types.destroy', $row->id),
                 'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
-                'class' => 'text-red-400 hover:text-red-600',
+                'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
                 'dispatch' => [
                     'event' => 'open-confirm-modal',
@@ -78,55 +93,49 @@
         Fee Types List
     </x-data-table>
 
-    <!-- Add Fee Type Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
-    >
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Add Fee Type</h3>
-                <button @click="closeAddModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form action="{{ route('school.fee-types.store') }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Fee Type Name</label>
+    <!-- Add/Edit Fee Type Modal -->
+    <x-modal name="fee-type-modal" alpineTitle="editMode ? 'Edit Fee Type' : 'Add Fee Type'" maxWidth="md">
+        <form :action="editMode ? `/school/fee-types/${typeId}` : '{{ route('school.fee-types.store') }}'" 
+              method="POST" class="p-6" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="type_id" x-model="typeId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Fee Type Name <span class="text-red-500">*</span></label>
                     <input 
                         type="text" 
                         name="name" 
+                        x-model="formData.name"
                         placeholder="Enter fee type name"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all"
                     >
                     @error('name')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+            </div>
 
-                <div class="flex items-center justify-end gap-3">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -136,17 +145,54 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('feeTypeManagement', () => ({
-        showAddModal: false,
-        
+        editMode: false,
+        typeId: null,
+        formData: {
+            name: ''
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.typeId = '{{ old('type_id') }}';
+                this.formData = {
+                    name: '{{ old('name') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'fee-type-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.editMode = false;
+            this.typeId = null;
+            this.formData = { name: '' };
+            this.$dispatch('open-modal', 'fee-type-modal');
         },
         
-        closeAddModal() {
-            this.showAddModal = false;
+        openEditModal(type) {
+            this.editMode = true;
+            this.typeId = type.id;
+            this.formData = {
+                name: type.name
+            };
+            this.$dispatch('open-modal', 'fee-type-modal');
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'fee-type-modal');
         }
     }));
 });
+
+// Global function for table actions
+function openEditModal(type) {
+    const component = Alpine.$data(document.querySelector('[x-data*="feeTypeManagement"]'));
+    if (component) {
+        component.openEditModal(type);
+    }
+}
 </script>
 @endpush
 @endsection

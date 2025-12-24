@@ -9,6 +9,9 @@ use App\Models\Qualification;
 use App\Models\StudentType;
 use App\Models\BoardingType;
 use App\Models\Category;
+use App\Models\PaymentMethod;
+use App\Models\FeeName;
+use App\Models\FeeType;
 
 class MasterDataSeeder extends Seeder
 {
@@ -70,5 +73,34 @@ class MasterDataSeeder extends Seeder
         foreach ($categories as $name) {
             Category::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
         }
+
+        // Payment Methods
+        $paymentMethods = [
+            'CASH', 'ONLINE', 'QR.CODE'
+        ];
+        foreach ($paymentMethods as $name) {
+            PaymentMethod::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
+        }
+
+        // Fee Names
+        $feeNames = [
+            'April', 'MAY 2', 'JUNE 3', 'JULY 4', 'AUGUST 5', 'SEPTEMBER 6', 
+            'OCTOBER 7', 'NOVEMBER 8', 'DECEMBER 9', 'JANUARY 10', 
+            'FEBRUARY 11', 'MARCH 12', 'EXAM FEE'
+        ];
+        foreach ($feeNames as $name) {
+            FeeName::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
+        }
+
+        // Fee Types
+        $feeTypes = [
+            'Monthly', 'Qtrly', 'Haf-Yearly', 'Yearly'
+        ];
+        foreach ($feeTypes as $name) {
+            FeeType::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
+        }
+
+        // Classes
+        (new ClassSeeder())->run($school);
     }
 }

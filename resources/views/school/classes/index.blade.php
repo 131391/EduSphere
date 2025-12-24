@@ -112,127 +112,103 @@
                     return '<span class="px-2 py-1 text-xs font-semibold rounded-full ' . $color . '">' . $text . '</span>';
                 }
             ],
+        ];
+
+        $tableActions = [
             [
-                'key' => 'actions',
-                'label' => 'ACTION',
-                'render' => function($row) {
-                    $route = route('school.classes.toggle-availability', $row->id);
-                    $csrf = csrf_field();
-                    $method = method_field('PATCH');
-                    
-                    return '<div class="flex items-center space-x-3">
-                        <div class="relative" x-data="{ open: false }">
-                            <button 
-                                @click="open = !open" 
-                                class="text-gray-600 hover:text-gray-900 px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 text-xs"
-                            >
-                                Is available <i class="fas fa-chevron-down ml-1 text-[10px]"></i>
-                            </button>
-                            <div 
-                                x-show="open" 
-                                @click.away="open = false"
-                                x-transition
-                                class="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 border border-gray-200"
-                            >
-                                <form action="' . $route . '" method="POST">
-                                    ' . $csrf . '
-                                    ' . $method . '
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        Yes
-                                    </button>
-                                </form>
-                                <form action="' . $route . '" method="POST">
-                                    ' . $csrf . '
-                                    ' . $method . '
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        No
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                        <form 
-                            action="' . route('school.classes.destroy', $row->id) . '" 
-                            method="POST" 
-                            class="inline"
-                            @submit.prevent="$dispatch(\'open-confirm-modal\', { 
-                                form: $el, 
-                                title: \'Delete Class\', 
-                                message: \'Are you sure you want to delete this class? This will also delete all associated sections and data.\' 
-                            })"
-                        >
-                            ' . $csrf . '
-                            ' . method_field('DELETE') . '
-                            <button type="submit" class="text-red-400 hover:text-red-600" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </div>';
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-class'))))";
+                },
+                'data-class' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'name' => $row->name,
+                    ]));
                 }
-            ]
+            ],
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.classes.toggle-availability', $row->id),
+                'method' => 'PATCH',
+                'icon' => 'fas fa-toggle-on',
+                'class' => 'text-teal-600 hover:text-teal-900',
+                'title' => 'Toggle Availability',
+            ],
+            [
+                'type' => 'form',
+                'url' => fn($row) => route('school.classes.destroy', $row->id),
+                'method' => 'DELETE',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-600 hover:text-red-900',
+                'title' => 'Delete',
+                'dispatch' => [
+                    'event' => 'open-confirm-modal',
+                    'title' => 'Delete Class',
+                    'message' => 'Are you sure you want to delete this class? This will also delete all associated sections and data.'
+                ]
+            ],
         ];
     @endphp
 
     <x-data-table 
         :columns="$tableColumns"
         :data="$classes"
+        :actions="$tableActions"
         empty-message="No classes found"
         empty-icon="fas fa-chalkboard"
     >
         Classes List
     </x-data-table>
 
-    <!-- Add Class Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
-    >
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Add Class</h3>
-                <button @click="closeAddModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form action="{{ route('school.classes.store') }}" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label for="class_name" class="block text-sm font-medium text-gray-700 mb-2">
-                        Class Name
+    <!-- Add/Edit Class Modal -->
+    <x-modal name="class-modal" alpineTitle="editMode ? 'Edit Class' : 'Add Class'" maxWidth="md">
+        <form :action="editMode ? `/school/classes/${classId}` : '{{ route('school.classes.store') }}'" 
+              method="POST" class="p-6" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="class_id" x-model="classId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">
+                        Class Name *
                     </label>
                     <input 
                         type="text" 
-                        id="class_name" 
                         name="name" 
+                        x-model="formData.name"
                         placeholder="Enter Class Name"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     >
                     @error('name')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+            </div>
 
-                <div class="flex items-center justify-end gap-3">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -242,17 +218,54 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('classManagement', () => ({
-        showAddModal: false,
-        
+        editMode: false,
+        classId: null,
+        formData: {
+            name: ''
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.classId = '{{ old('class_id') }}';
+                this.formData = {
+                    name: '{{ old('name') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'class-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.editMode = false;
+            this.classId = null;
+            this.formData = { name: '' };
+            this.$dispatch('open-modal', 'class-modal');
         },
         
-        closeAddModal() {
-            this.showAddModal = false;
+        openEditModal(classData) {
+            this.editMode = true;
+            this.classId = classData.id;
+            this.formData = {
+                name: classData.name
+            };
+            this.$dispatch('open-modal', 'class-modal');
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'class-modal');
         }
     }));
 });
+
+// Global function for table actions
+function openEditModal(classData) {
+    const component = Alpine.$data(document.querySelector('[x-data*="classManagement"]'));
+    if (component) {
+        component.openEditModal(classData);
+    }
+}
 </script>
 @endpush
 @endsection

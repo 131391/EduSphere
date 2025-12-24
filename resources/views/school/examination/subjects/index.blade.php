@@ -85,99 +85,88 @@
     </x-data-table>
 
     <!-- Add Subject Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-        @click.self="closeAddModal()"
-    >
-        <div 
-            class="relative mx-auto w-full max-w-lg shadow-2xl rounded-xl bg-white overflow-hidden"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-        >
-            <!-- Modal Header -->
-            <div class="bg-blue-600 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white">Add Subject</h3>
-                <button @click="closeAddModal()" class="text-white hover:text-blue-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+    <x-modal name="exam-subject-modal" title="Add Subject" maxWidth="lg">
+        <form action="{{ route('school.examination.subjects.store') }}" method="POST" class="p-6">
+            @csrf
+            <div class="space-y-5">
+                <!-- Select Class -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Select Class</label>
+                    <div class="col-span-2">
+                        <select 
+                            name="class_id" 
+                            required
+                            class="w-full px-4 py-2 border @error('class_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option value="">Select Class</option>
+                            @foreach($classes as $class)
+                            <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('class_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Subject Name -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Subject Name</label>
+                    <div class="col-span-2">
+                        <select 
+                            name="subject_id" 
+                            required
+                            class="w-full px-4 py-2 border @error('subject_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option value="">Select Subject</option>
+                            @foreach($subjects as $subject)
+                            <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>{{ $subject->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('subject_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Full Marks -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Full Marks</label>
+                    <div class="col-span-2">
+                        <input 
+                            type="number" 
+                            name="full_marks" 
+                            placeholder="Enter Full Marks"
+                            required
+                            min="1"
+                            value="{{ old('full_marks', 100) }}"
+                            class="w-full px-4 py-2 border @error('full_marks') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                        @error('full_marks')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="mt-8 flex items-center justify-center gap-4">
+                <button 
+                    type="button" 
+                    @click="closeAddModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
                 </button>
             </div>
-            
-            <form action="{{ route('school.examination.subjects.store') }}" method="POST" class="p-6">
-                @csrf
-                <div class="space-y-5">
-                    <!-- Select Class -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Select Class</label>
-                        <div class="col-span-2">
-                            <select 
-                                name="class_id" 
-                                required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                                <option value="">Select Class</option>
-                                @foreach($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Subject Name -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Subject Name</label>
-                        <div class="col-span-2">
-                            <select 
-                                name="subject_id" 
-                                required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                                <option value="">Select Subject</option>
-                                @foreach($subjects as $subject)
-                                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Full Marks -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Full Marks</label>
-                        <div class="col-span-2">
-                            <input 
-                                type="number" 
-                                name="full_marks" 
-                                placeholder="Enter Full Marks"
-                                required
-                                min="1"
-                                value="100"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="mt-8 flex items-center justify-center gap-4">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+        </form>
+    </x-modal>
 
     <!-- Confirmation Modal -->
     <x-confirm-modal />
@@ -187,14 +176,20 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('subjectManagement', () => ({
-        showAddModal: false,
-        
+        init() {
+            @if($errors->any())
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'exam-subject-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.$dispatch('open-modal', 'exam-subject-modal');
         },
         
         closeAddModal() {
-            this.showAddModal = false;
+            this.$dispatch('close-modal', 'exam-subject-modal');
         }
     }));
 });

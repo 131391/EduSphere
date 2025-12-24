@@ -25,46 +25,61 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Address <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="permanent_address" value="{{ old('permanent_address', $studentRegistration->permanent_address ?? '') }}" required placeholder="Enter Address"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="permanent_address" value="{{ old('permanent_address', $studentRegistration->permanent_address ?? '') }}" placeholder="Enter Address"
+                       class="w-full px-4 py-2 border {{ $errors->has('permanent_address') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('permanent_address')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Country <span class="text-red-500">*</span>
                 </label>
-                <select name="permanent_country_id" required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="permanent_country_id"
+                        class="w-full px-4 py-2 border {{ $errors->has('permanent_country_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     @foreach(config('countries') as $id => $name)
                         <option value="{{ $id }}" {{ old('permanent_country_id', $studentRegistration->permanent_country_id ?? 1) == $id ? 'selected' : '' }}>
                             {{ $name }}
                         </option>
                     @endforeach
                 </select>
+                @error('permanent_country_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     State <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="permanent_state" value="{{ old('permanent_state', $studentRegistration->permanent_state ?? '') }}" required placeholder="Enter State"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="permanent_state" value="{{ old('permanent_state', $studentRegistration->permanent_state ?? '') }}" placeholder="Enter State"
+                       class="w-full px-4 py-2 border {{ $errors->has('permanent_state') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('permanent_state')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     City <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="permanent_city" value="{{ old('permanent_city', $studentRegistration->permanent_city ?? '') }}" required placeholder="Enter City Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="permanent_city" value="{{ old('permanent_city', $studentRegistration->permanent_city ?? '') }}" placeholder="Enter City Name"
+                       class="w-full px-4 py-2 border {{ $errors->has('permanent_city') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('permanent_city')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Pin <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="permanent_pin" value="{{ old('permanent_pin', $studentRegistration->permanent_pin ?? '') }}" required placeholder="Enter Pin"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="permanent_pin" value="{{ old('permanent_pin', $studentRegistration->permanent_pin ?? '') }}" placeholder="Enter Pin"
+                       class="w-full px-4 py-2 border {{ $errors->has('permanent_pin') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('permanent_pin')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>

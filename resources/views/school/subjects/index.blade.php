@@ -63,7 +63,17 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',
                 'title' => 'Edit',
-                'onClick' => 'openEditModal(row)'
+                'onclick' => function($row) {
+                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-subject'))))";
+                },
+                'data-subject' => function($row) {
+                    return base64_encode(json_encode([
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'code' => $row->code,
+                        'description' => $row->description,
+                    ]));
+                }
             ],
             [
                 'type' => 'form',
@@ -92,87 +102,76 @@
     </x-data-table>
 
     <!-- Add/Edit Subject Modal -->
-    <div 
-        x-show="showModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-        @click.self="closeModal()"
-    >
-        <div 
-            class="relative mx-auto w-full max-w-md shadow-2xl rounded-xl bg-white overflow-hidden"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-        >
-            <!-- Modal Header -->
-            <div class="bg-blue-600 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white" x-text="editMode ? 'Edit Subject' : 'Add Subject'"></h3>
-                <button @click="closeModal()" class="text-white hover:text-blue-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+    <x-modal name="subject-modal" alpineTitle="editMode ? 'Edit Subject' : 'Add Subject'" maxWidth="md">
+        <form :action="editMode ? `/school/subjects/${subjectId}` : '{{ route('school.subjects.store') }}'" 
+              method="POST" class="p-6" novalidate>
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+            <input type="hidden" name="subject_id" x-model="subjectId">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Subject Name <span class="text-red-500">*</span></label>
+                    <input 
+                        type="text" 
+                        name="name" 
+                        x-model="formData.name"
+                        placeholder="e.g., Mathematics"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    >
+                    @error('name')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Subject Code</label>
+                    <input 
+                        type="text" 
+                        name="code" 
+                        x-model="formData.code"
+                        placeholder="e.g., MATH101"
+                        class="w-full px-4 py-2 border @error('code') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    >
+                    @error('code')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Description</label>
+                    <textarea 
+                        name="description" 
+                        x-model="formData.description"
+                        placeholder="Enter subject description"
+                        rows="3"
+                        class="w-full px-4 py-2 border @error('description') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    ></textarea>
+                    @error('description')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="flex items-center justify-center gap-4 mt-8">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
                 </button>
             </div>
-            
-            <form :action="editMode ? `/school/subjects/${subjectId}` : '{{ route('school.subjects.store') }}'" method="POST" class="p-6">
-                @csrf
-                <template x-if="editMode">
-                    @method('PUT')
-                </template>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Subject Name</label>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            x-model="formData.name"
-                            placeholder="e.g., Mathematics"
-                            required
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                        >
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Subject Code</label>
-                        <input 
-                            type="text" 
-                            name="code" 
-                            x-model="formData.code"
-                            placeholder="e.g., MATH101"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                        >
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Description</label>
-                        <textarea 
-                            name="description" 
-                            x-model="formData.description"
-                            placeholder="Enter subject description"
-                            rows="3"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                        ></textarea>
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="mt-8 flex items-center justify-end gap-3">
-                    <button 
-                        type="button" 
-                        @click="closeModal()"
-                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
-                    >
-                        <span x-text="editMode ? 'Update' : 'Submit'"></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+        </form>
+    </x-modal>
 
     <!-- Confirmation Modal -->
     <x-confirm-modal />
@@ -182,7 +181,6 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('subjectMaster', () => ({
-        showModal: false,
         editMode: false,
         subjectId: null,
         formData: {
@@ -191,11 +189,26 @@ document.addEventListener('alpine:init', () => {
             description: ''
         },
         
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.subjectId = {{ old('subject_id', 'null') }};
+                this.formData = {
+                    name: '{{ old('name') }}',
+                    code: '{{ old('code') }}',
+                    description: '{{ old('description') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'subject-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
             this.editMode = false;
             this.subjectId = null;
             this.formData = { name: '', code: '', description: '' };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'subject-modal');
         },
         
         openEditModal(subject) {
@@ -206,14 +219,22 @@ document.addEventListener('alpine:init', () => {
                 code: subject.code || '',
                 description: subject.description || ''
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'subject-modal');
         },
         
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'subject-modal');
         }
     }));
 });
+
+// Global function for table actions
+function openEditModal(subject) {
+    const component = Alpine.$data(document.querySelector('[x-data*="subjectMaster"]'));
+    if (component) {
+        component.openEditModal(subject);
+    }
+}
 </script>
 @endpush
 @endsection

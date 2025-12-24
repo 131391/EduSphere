@@ -3,146 +3,180 @@
 @section('title', 'Registration Fee')
 
 @section('content')
-<div class="container mx-auto px-4 py-6" x-data>
-    <div class="flex justify-between items-center mb-6">
+<div x-data="registrationFeeManager()">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Registration Fee</h1>
-        <button @click="$dispatch('open-modal', 'add-registration-fee-modal')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center">
+        <button @click="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center shadow-sm">
             <i class="fas fa-plus mr-2"></i> ADD
         </button>
     </div>
 
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-        <span class="block sm:inline">{{ session('success') }}</span>
-    </div>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-6 shadow-sm" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
     @endif
 
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600">
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        SR NO
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        CLASS
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        FEE
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        DATE
-                    </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ACTION
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($fees as $index => $fee)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600">
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $fees->firstItem() + $index }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ $fee->class->name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ number_format($fee->amount, 2) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $fee->created_at->format('F j, Y, g:i a') }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            <button @click="$dispatch('open-modal', {name: 'edit-registration-fee-modal', fee: {{ $fee }}})" class="text-indigo-600 hover:text-indigo-900">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <form id="delete-reg-fee-{{ $fee->id }}" action="{{ route('school.settings.registration-fee.destroy', $fee->id) }}" method="POST" class="inline-block">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" @click="$dispatch('confirm-delete', { formId: 'delete-reg-fee-{{ $fee->id }}', message: 'Are you sure you want to delete this registration fee?' })" class="text-red-600 hover:text-red-900">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                        No registration fees found.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-        <div class="px-6 py-4 border-t border-gray-200">
-            {{ $fees->links() }}
-        </div>
-    </div>
-</div>
+    <!-- Table -->
+    <x-data-table 
+        :columns="[
+            ['key' => 'id', 'label' => 'SR NO', 'render' => fn($row, $index) => $fees->firstItem() + $index],
+            ['key' => 'class_name', 'label' => 'CLASS', 'render' => fn($row) => $row->class->name ?? 'N/A'],
+            ['key' => 'amount', 'label' => 'FEE', 'render' => fn($row) => number_format($row->amount, 2)],
+            ['key' => 'created_at', 'label' => 'DATE', 'render' => fn($row) => $row->created_at->format('M d, Y, g:i a')],
+        ]"
+        :data="$fees"
+        :actions="[
+            [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onClick' => 'openEditModal(row)'
+            ],
+            [
+                'type' => 'form',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-600 hover:text-red-900',
+                'title' => 'Delete',
+                'action' => fn($row) => route('school.settings.registration-fee.destroy', $row->id),
+                'confirm' => 'Are you sure you want to delete this registration fee?'
+            ]
+        ]"
+    >
+        Registration Fee List
+    </x-data-table>
 
-<!-- Add Modal -->
-<x-modal name="add-registration-fee-modal" title="Registration Fee">
-    <form action="{{ route('school.settings.registration-fee.store') }}" method="POST" class="space-y-4">
-        @csrf
-        <div>
-            <label for="class_id" class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-            <select name="class_id" id="class_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                <option value="">Select Class</option>
-                @foreach($classes as $class)
-                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Fee</label>
-            <input type="number" name="amount" id="amount" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter Fee" required>
-        </div>
-        <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" @click="show = false" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-                Close
-            </button>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Submit
-            </button>
-        </div>
-    </form>
-</x-modal>
-
-<!-- Edit Modal -->
-<div x-data="{ fee: null }" @open-modal.window="if ($event.detail.name === 'edit-registration-fee-modal') { fee = $event.detail.fee; $dispatch('open-actual-edit-modal'); }">
-    <x-modal name="edit-registration-fee-modal-actual" title="Edit Registration Fee" focusable>
-        <form x-bind:action="'{{ route('school.settings.registration-fee.update', '') }}/' + fee.id" method="POST" class="space-y-4" x-show="fee">
+    <!-- Modal -->
+    <x-modal name="registration-fee-modal" alpineTitle="editMode ? 'Edit Registration Fee' : 'Add Registration Fee'">
+        <form :action="editMode ? '{{ url('school/settings/registration-fee') }}/' + feeId : '{{ route('school.settings.registration-fee.store') }}'" 
+              method="POST" 
+              class="p-6 space-y-4">
             @csrf
-            @method('PUT')
+            <template x-if="editMode">
+                <input type="hidden" name="_method" value="PUT">
+            </template>
+            <input type="hidden" name="fee_id" x-model="feeId">
+            
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                <input type="text" x-bind:value="fee?.class?.name" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed focus:outline-none" disabled>
+                <label for="class_id" class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                <template x-if="!editMode">
+                    <div>
+                        <select name="class_id" id="class_id" class="w-full border @error('class_id') border-red-500 @else border-gray-300 @enderror rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                            <option value="">Select Class</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('class_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </template>
+                <template x-if="editMode">
+                    <input type="text" x-model="formData.class_name" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 cursor-not-allowed focus:outline-none" disabled>
+                </template>
             </div>
+
             <div>
-                <label for="edit_amount" class="block text-sm font-medium text-gray-700 mb-1">Fee</label>
-                <input type="number" name="amount" id="edit_amount" step="0.01" min="0" x-bind:value="fee?.amount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Fee</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                    <input type="number" name="amount" id="amount" step="0.01" x-model="formData.amount" class="w-full border @error('amount') border-red-500 @else border-gray-300 @enderror rounded-lg pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="0.00">
+                </div>
+                @error('amount')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
-            <div class="flex justify-end space-x-3 pt-4">
-                <button type="button" @click="show = false" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" @click="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                     Close
                 </button>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Update
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md">
+                    Submit
                 </button>
             </div>
         </form>
     </x-modal>
-    
-    <!-- Hidden trigger to open the actual modal after setting data -->
-    <div @open-actual-edit-modal.window="$dispatch('open-modal', 'edit-registration-fee-modal-actual')"></div>
 </div>
+
+@push('scripts')
+<script>
+function registrationFeeManager() {
+    return {
+        showModal: false,
+        editMode: false,
+        feeId: null,
+        formData: {
+            class_id: '{{ old('class_id') }}',
+            class_name: '{{ old('class_name') }}',
+            amount: '{{ old('amount') }}'
+        },
+
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.feeId = '{{ old('fee_id') }}';
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'registration-fee-modal');
+                    this.updateSelect2('{{ old('class_id') }}');
+                });
+            @endif
+        },
+
+        openAddModal() {
+            this.editMode = false;
+            this.feeId = null;
+            this.formData = {
+                class_id: '',
+                class_name: '',
+                amount: ''
+            };
+            this.$dispatch('open-modal', 'registration-fee-modal');
+            this.updateSelect2();
+        },
+
+        openEditModal(fee) {
+            console.log('Opening edit modal for fee:', fee);
+            this.editMode = true;
+            this.feeId = fee.id;
+            this.formData = {
+                class_id: fee.class_id,
+                class_name: fee.class ? fee.class.name : 'N/A',
+                amount: fee.amount
+            };
+            this.$dispatch('open-modal', 'registration-fee-modal');
+            this.updateSelect2();
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'registration-fee-modal');
+        },
+
+        updateSelect2() {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    const select = $('select[name="class_id"]');
+                    if (select.length) {
+                        select.val(this.formData.class_id).trigger('change');
+                    }
+                }
+            });
+            
+            // Backup with setTimeout for slower rendering
+            setTimeout(() => {
+                if (typeof $ !== 'undefined') {
+                    const select = $('select[name="class_id"]');
+                    if (select.length) {
+                        select.val(this.formData.class_id).trigger('change');
+                    }
+                }
+            }, 100);
+        }
+    }
+}
+</script>
+@endpush
 @endsection

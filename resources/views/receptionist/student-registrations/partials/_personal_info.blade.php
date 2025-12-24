@@ -9,8 +9,11 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     First Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="first_name" value="{{ old('first_name', $studentRegistration->first_name ?? '') }}" required placeholder="Enter First Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="first_name" value="{{ old('first_name', $studentRegistration->first_name ?? '') }}" placeholder="Enter First Name"
+                       class="w-full px-4 py-2 border {{ $errors->has('first_name') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('first_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -25,20 +28,26 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Last Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="last_name" value="{{ old('last_name', $studentRegistration->last_name ?? '') }}" required placeholder="Enter Last Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="last_name" value="{{ old('last_name', $studentRegistration->last_name ?? '') }}" placeholder="Enter Last Name"
+                       class="w-full px-4 py-2 border {{ $errors->has('last_name') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('last_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Gender <span class="text-red-500">*</span>
                 </label>
-                <select name="gender" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="gender" class="w-full px-4 py-2 border {{ $errors->has('gender') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Choose Gender</option>
                     @foreach(\App\Constants\Gender::getOptions() as $value => $label)
                         <option value="{{ $value }}" {{ (old('gender', $studentRegistration->gender ?? '') == $value) ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
+                @error('gender')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -61,8 +70,11 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mobile No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="mobile_no" value="{{ old('mobile_no', $studentRegistration->mobile_no ?? '') }}" required placeholder="Enter Mobile No"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="mobile_no" value="{{ old('mobile_no', $studentRegistration->mobile_no ?? '') }}" placeholder="Enter Mobile No"
+                       class="w-full px-4 py-2 border {{ $errors->has('mobile_no') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mobile_no')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -117,11 +129,14 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nationality <span class="text-red-500">*</span>
                 </label>
-                <select name="nationality" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="nationality" class="w-full px-4 py-2 border {{ $errors->has('nationality') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="Indian" {{ (old('nationality', $studentRegistration->nationality ?? 'Indian') == 'Indian') ? 'selected' : '' }}>Indian</option>
                     <option value="Nepal" {{ (old('nationality', $studentRegistration->nationality ?? '') == 'Nepal') ? 'selected' : '' }}>Nepal</option>
                     <option value="Pakistan" {{ (old('nationality', $studentRegistration->nationality ?? '') == 'Pakistan') ? 'selected' : '' }}>Pakistan</option>
                 </select>
+                @error('nationality')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>

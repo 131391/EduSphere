@@ -125,7 +125,7 @@
                     <div class="row">
                         <!-- Student Selection -->
                         <div class="col-md-6 mb-3">
-                            <label for="student_id" class="form-label">Student <span class="text-danger">*</span></label>
+                            <label for="student_id" class="form-label">Student <span class="text-red-500">*</span></label>
                             <select class="form-select" id="student_id" name="student_id" required>
                                 <option value="">Select Student</option>
                                 @foreach($students as $student)
@@ -137,13 +137,13 @@
                                 @endforeach
                             </select>
                             @error('student_id')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <div class="text-red-500 small">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <!-- Route Selection -->
                         <div class="col-md-6 mb-3">
-                            <label for="route_id" class="form-label">Route <span class="text-danger">*</span></label>
+                            <label for="route_id" class="form-label">Route <span class="text-red-500">*</span></label>
                             <select class="form-select" id="route_id" name="route_id" required>
                                 <option value="">Select Route</option>
                                 @foreach($routes as $route)
@@ -151,18 +151,18 @@
                                 @endforeach
                             </select>
                             @error('route_id')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <div class="text-red-500 small">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <!-- Bus Stop Selection (Filtered by Route) -->
                         <div class="col-md-6 mb-3">
-                            <label for="bus_stop_id" class="form-label">Bus Stop <span class="text-danger">*</span></label>
+                            <label for="bus_stop_id" class="form-label">Bus Stop <span class="text-red-500">*</span></label>
                             <select class="form-select" id="bus_stop_id" name="bus_stop_id" required disabled>
                                 <option value="">Select Route First</option>
                             </select>
                             @error('bus_stop_id')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <div class="text-red-500 small">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -179,10 +179,10 @@
 
                         <!-- Fee Per Month (Auto-filled, Read-only) -->
                         <div class="col-md-6 mb-3">
-                            <label for="fee_per_month" class="form-label">Fee Per Month (₹) <span class="text-danger">*</span></label>
+                            <label for="fee_per_month" class="form-label">Fee Per Month (₹) <span class="text-red-500">*</span></label>
                             <input type="number" class="form-control bg-light" id="fee_per_month" name="fee_per_month" step="0.01" readonly required>
                             @error('fee_per_month')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <div class="text-red-500 small">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>

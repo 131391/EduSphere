@@ -220,53 +220,30 @@
     </x-data-table>
 
     <!-- Add/Edit Enquiry Modal -->
-    <div x-show="showModal" x-cloak 
-         class="fixed inset-0 z-50 overflow-y-auto" 
-         aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity"></div>
+    <x-modal name="enquiry-modal" alpineTitle="editMode ? 'Edit Enquiry' : 'Add New Enquiry'" maxWidth="6xl">
+        <form :action="editMode ? `/school/student-enquiries/${enquiryId}` : '{{ route('school.student-enquiries.store') }}'" 
+              method="POST" 
+              enctype="multipart/form-data"
+              class="p-6">
+            @csrf
+            <input type="hidden" name="_method" x-bind:value="editMode ? 'PUT' : 'POST'">
+            <input type="hidden" name="enquiry_id" x-model="enquiryId">
 
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl"
-                 @click.away="closeModal()"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100">
-            
-            <!-- Modal Header -->
-            <div class="bg-teal-500 px-6 py-4 flex items-center justify-between rounded-t-xl">
-                <h3 class="text-xl font-bold text-white" x-text="editMode ? 'Edit Enquiry' : 'Add New Enquiry'"></h3>
-                <button @click="closeModal()" class="text-white hover:text-teal-100 transition-colors">
-                    <i class="fas fa-times text-2xl"></i>
+            @include('school.student-enquiries.partials.form')
+
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" @click="closeModal()"
+                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
+                    <span x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
                 </button>
             </div>
-
-            <!-- Modal Body -->
-            <form :action="editMode ? `/school/student-enquiries/${enquiryId}` : '{{ route('school.student-enquiries.store') }}'" 
-                  method="POST" 
-                  enctype="multipart/form-data"
-                  class="p-6">
-                @csrf
-                <input type="hidden" name="_method" x-bind:value="editMode ? 'PUT' : 'POST'">
-
-                @include('school.student-enquiries.partials.form')
-
-                <!-- Modal Footer -->
-                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" @click="closeModal()"
-                            class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                            class="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
-                        <span x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+        </form>
+    </x-modal>
 
 <!-- Delete Confirmation Modal (Outside main component for proper layering) -->
 <div x-data="{ showDeleteModal: false, deleteEnquiryId: null }" 
@@ -324,24 +301,35 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('enquiryManagement', () => ({
-        showModal: false,
         editMode: false,
         enquiryId: null,
         
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.enquiryId = {{ old('enquiry_id', 'null') }};
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'enquiry-modal');
+                });
+            @endif
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'enquiry-modal');
+            this.editMode = false;
+            this.enquiryId = null;
+        },
+
         openAddModal() {
             this.editMode = false;
             this.enquiryId = null;
-            this.showModal = true;
-            // Lock body scroll
-            document.body.style.overflow = 'hidden';
+            this.$dispatch('open-modal', 'enquiry-modal');
         },
         
         openEditModal(enquiry) {
             this.editMode = true;
             this.enquiryId = enquiry.id;
-            this.showModal = true;
-            // Lock body scroll
-            document.body.style.overflow = 'hidden';
+            this.$dispatch('open-modal', 'enquiry-modal');
             
             // Populate form fields
             this.$nextTick(() => {

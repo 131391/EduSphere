@@ -92,70 +92,67 @@
     </div>
 
     <!-- Add News Modal -->
-    <div 
-        x-show="showAddModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        @click.self="closeAddModal()"
-    >
-        <div class="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
-            <div class="flex items-center justify-between mb-4 bg-blue-600 -mx-5 -mt-5 p-4 rounded-t-md">
-                <h3 class="text-lg font-semibold text-white">Add Admission News</h3>
-                <button @click="closeAddModal()" class="text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
+    <x-modal name="admission-news-modal" title="Add Admission News" maxWidth="2xl">
+        <form action="{{ route('school.admission-news.store') }}" method="POST" class="p-6 space-y-4">
+            @csrf
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input 
+                    type="text" 
+                    name="title" 
+                    required
+                    value="{{ old('title') }}"
+                    class="w-full px-3 py-2 border @error('title') border-red-500 @else border-gray-300 @enderror rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                @error('title')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Publish Date</label>
+                <input 
+                    type="date" 
+                    name="publish_date" 
+                    required
+                    value="{{ old('publish_date') }}"
+                    class="w-full px-3 py-2 border @error('publish_date') border-red-500 @else border-gray-300 @enderror rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                @error('publish_date')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                <textarea 
+                    name="content" 
+                    rows="5"
+                    required
+                    class="w-full px-3 py-2 border @error('content') border-red-500 @else border-gray-300 @enderror rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >{{ old('content') }}</textarea>
+                @error('content')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button 
+                    type="button" 
+                    @click="closeAddModal()"
+                    class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                    Submit
                 </button>
             </div>
-            
-            <form action="{{ route('school.admission-news.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                    <input 
-                        type="text" 
-                        name="title" 
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Publish Date</label>
-                    <input 
-                        type="date" 
-                        name="publish_date" 
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                    <textarea 
-                        name="content" 
-                        rows="5"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    ></textarea>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 mt-6">
-                    <button 
-                        type="button" 
-                        @click="closeAddModal()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+        </form>
+    </x-modal>
 </div>
 
 <!-- Confirmation Modal -->
@@ -165,14 +162,20 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('admissionNewsManagement', () => ({
-        showAddModal: false,
-        
+        init() {
+            @if($errors->any())
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'admission-news-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showAddModal = true;
+            this.$dispatch('open-modal', 'admission-news-modal');
         },
         
         closeAddModal() {
-            this.showAddModal = false;
+            this.$dispatch('close-modal', 'admission-news-modal');
         }
     }));
 });

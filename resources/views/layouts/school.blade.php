@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'School Dashboard - ' . config('app.name'))</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -191,7 +192,7 @@
                     <li>
                         <a href="{{ route('school.registrations.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-file-import w-5 mr-3"></i>
-                            <span>Import Registration</span>
+                            <span class="whitespace-nowrap">Import Registration</span>
                         </a>
                     </li>
                     <li>
@@ -214,7 +215,7 @@
                     <li>
                         <a href="{{ route('school.late-fee.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.late-fee.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-clock w-5 mr-3"></i>
-                            <span>Manage Late Fee</span>
+                            <span class="whitespace-nowrap">Manage Late Fee</span>
                         </a>
                     </li>
                     <li>
@@ -249,7 +250,7 @@
                     <li>
                         <a href="{{ route('school.subjects.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.subjects.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-book w-5 mr-3"></i>
-                            <span>Subject Master</span>
+                            <span class="whitespace-nowrap">Subject Master</span>
                         </a>
                     </li>
 
@@ -266,7 +267,7 @@
                     <li>
                         <a href="{{ route('school.miscellaneous-fees.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.miscellaneous-fees.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-coins w-5 mr-3"></i>
-                            <span>Miscellaneous Fee</span>
+                            <span class="whitespace-nowrap">Miscellaneous Fee</span>
                         </a>
                     </li>
                     <li>
@@ -341,7 +342,7 @@
                     <li>
                         <a href="{{ route('school.corresponding-relatives.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.corresponding-relatives.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-users w-5 mr-3"></i>
-                            <span>Corresponding Relatives</span>
+                            <span class="whitespace-nowrap">Corresponding Relatives</span>
                         </a>
                     </li>
                     <li>
@@ -377,6 +378,12 @@
                         <a href="{{ route('school.admission-codes.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-codes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-code w-5 mr-3"></i>
                             <span>Admission Code</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('school.registration-codes.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.registration-codes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-barcode w-5 mr-3"></i>
+                            <span>Registration Code</span>
                         </a>
                     </li>
                     <li>
@@ -439,7 +446,7 @@
                     <li>
                         <a href="{{ route('school.users.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.users.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                             <i class="fas fa-users w-5 mr-3"></i>
-                            <span>User Management</span>
+                            <span class="whitespace-nowrap">User Management</span>
                         </a>
                     </li>
                     <li x-data="{ open: {{ request()->routeIs('school.settings.*') || request()->routeIs('school.admission-news.*') || request()->routeIs('school.support') ? 'true' : 'false' }} }">
@@ -709,6 +716,9 @@
     @stack('scripts')
     
     <x-delete-confirmation />
+    
+    <!-- Alpine.js Plugins -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     
     <!-- Alpine.js with defer - standard approach that ensures DOM ready and proper initialization order -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

@@ -1,4 +1,19 @@
-@props(['name', 'title', 'focusable' => false])
+@props(['name', 'title', 'alpineTitle' => null, 'focusable' => false, 'maxWidth' => 'lg'])
+
+@php
+$maxWidthClass = [
+    'sm' => 'sm:max-w-sm',
+    'md' => 'sm:max-w-md',
+    'lg' => 'sm:max-w-lg',
+    'xl' => 'sm:max-w-xl',
+    '2xl' => 'sm:max-w-2xl',
+    '3xl' => 'sm:max-w-3xl',
+    '4xl' => 'sm:max-w-4xl',
+    '5xl' => 'sm:max-w-5xl',
+    '6xl' => 'sm:max-w-6xl',
+    '7xl' => 'sm:max-w-7xl',
+][$maxWidth] ?? 'sm:max-w-lg';
+@endphp
 
 <div
     x-data="{
@@ -21,6 +36,16 @@
             {{ $focusable ? 'setTimeout(() => firstFocusable().focus(), 100)' : '' }}
         } else {
             document.body.classList.remove('overflow-y-hidden');
+            // Clear validation errors when modal is closed
+            $el.querySelectorAll('.text-red-500, .text-red-600').forEach(el => {
+                if (el.tagName === 'P' || el.tagName === 'SPAN' || el.tagName === 'DIV') {
+                    el.style.display = 'none';
+                }
+            });
+            $el.querySelectorAll('.border-red-500, .border-red-600').forEach(el => {
+                el.classList.remove('border-red-500', 'border-red-600');
+                el.classList.add('border-gray-300');
+            });
         }
     })"
     x-on:open-modal.window="if (typeof $event.detail === 'string' && $event.detail == '{{ $name }}') { show = true } else if (typeof $event.detail === 'object' && $event.detail.name == '{{ $name }}') { show = true }"
@@ -29,7 +54,7 @@
     x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"
     x-on:keydown.shift.tab.prevent="prevFocusable().focus()"
     x-show="show"
-    class="fixed inset-0 z-50 overflow-y-auto"
+    class="fixed inset-0 z-[100] overflow-y-auto"
     style="display: none;"
 >
     <!-- Backdrop -->
@@ -43,7 +68,7 @@
     </div>
 
     <!-- Modal -->
-    <div x-show="show" class="mb-6 bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:mx-auto sm:max-w-lg mt-20"
+    <div x-show="show" class="mb-6 bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:mx-auto {{ $maxWidthClass }} mt-20"
                     x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -51,10 +76,11 @@
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
         
-        @if(isset($title))
+        @if(isset($title) || isset($alpineTitle))
         <div class="bg-blue-600 px-4 py-3 flex justify-between items-center">
-            <h3 class="text-lg font-medium text-white">
-                {{ $title }}
+            <h3 class="text-lg font-medium text-white" 
+                @if($alpineTitle) x-text="{{ $alpineTitle }}" @endif>
+                {{ $title ?? '' }}
             </h3>
             <button x-on:click="show = false" class="text-white hover:text-gray-200 focus:outline-none">
                 <i class="fas fa-times"></i>

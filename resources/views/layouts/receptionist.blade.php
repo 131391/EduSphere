@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Receptionist Dashboard - ' . config('app.name'))</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -214,12 +215,12 @@
 
                         <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-file-alt w-5 mr-3"></i>
-                            <span>Online Application Report</span>
+                            <span class="whitespace-nowrap">Online Application Report</span>
                         </a>
 
                         <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-comments w-5 mr-3"></i>
-                            <span>Complain & Suggestions</span>
+                            <span class="whitespace-nowrap">Complain & Suggestions</span>
                         </a>
                     </div>
                 </div>
@@ -266,7 +267,7 @@
 
                         <a href="{{ route('receptionist.transport-assignments.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.transport-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-bus w-5 mr-3"></i>
-                            <span>Assign Transport Facility</span>
+                            <span class="whitespace-nowrap">Assign Transport Facility</span>
                         </a>
                     </div>
                 </div>
@@ -277,7 +278,7 @@
                             class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors">
                         <div class="flex items-center">
                             <i class="fas fa-bus w-5 mr-3"></i>
-                            <span>Transport Management</span>
+                            <span class="whitespace-nowrap">Transport Management</span>
                         </div>
                         <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': transportOpen }"></i>
                     </button>
@@ -484,6 +485,9 @@
     @stack('scripts')
     
     <x-delete-confirmation />
+    
+    <!-- Alpine.js Plugins -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     
     <!-- Alpine.js with defer - standard approach that ensures DOM ready and proper initialization order -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

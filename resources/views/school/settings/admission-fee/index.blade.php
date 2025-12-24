@@ -3,130 +3,170 @@
 @section('title', 'Admission Fee')
 
 @section('content')
-<div class="space-y-6">
+<div x-data="admissionFeeManager()">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Admission Fee</h1>
-        <button onclick="openModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            ADD
+        <button @click="openAddModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center shadow-sm">
+            <i class="fas fa-plus mr-2"></i> ADD
         </button>
     </div>
 
     @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-            {{ session('success') }}
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative mb-6 shadow-sm" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
         </div>
     @endif
 
     <!-- Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SR NO</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CLASS</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">FEE</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ACTION</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($fees as $index => $fee)
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $index + 1 }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $fee->class->name ?? 'N/A' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($fee->amount, 2) }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $fee->created_at->format('M d, Y, g:i a') }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="editFee({{ $fee->id }}, {{ $fee->class_id }}, {{ $fee->amount }})" class="text-blue-600 hover:text-blue-900 mr-3">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <form action="{{ route('school.settings.admission-fee.destroy', $fee->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-900">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No admission fees found.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
+    <x-data-table 
+        :columns="[
+            ['key' => 'id', 'label' => 'SR NO', 'render' => fn($row, $index) => $fees->firstItem() + $index],
+            ['key' => 'class_name', 'label' => 'CLASS', 'render' => fn($row) => $row->class->name ?? 'N/A'],
+            ['key' => 'amount', 'label' => 'FEE', 'render' => fn($row) => number_format($row->amount, 2)],
+            ['key' => 'created_at', 'label' => 'DATE', 'render' => fn($row) => $row->created_at->format('M d, Y, g:i a')],
+        ]"
+        :data="$fees"
+        :actions="[
+            [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+                'onClick' => 'openEditModal(row)'
+            ],
+            [
+                'type' => 'form',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-600 hover:text-red-900',
+                'title' => 'Delete',
+                'action' => fn($row) => route('school.settings.admission-fee.destroy', $row->id),
+                'confirm' => 'Are you sure you want to delete this admission fee?'
+            ]
+        ]"
+    >
+        Admission Fee List
+    </x-data-table>
 
-<!-- Modal -->
-<div id="feeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-gray-900" id="modalTitle">Admission Fee</h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <form id="feeForm" method="POST" action="{{ route('school.settings.admission-fee.store') }}">
+    <!-- Modal -->
+    <x-modal name="admission-fee-modal" alpineTitle="editMode ? 'Edit Admission Fee' : 'Add Admission Fee'">
+        <form :action="editMode ? '{{ url('school/settings/admission-fee') }}/' + feeId : '{{ route('school.settings.admission-fee.store') }}'" 
+              method="POST" 
+              class="p-6 space-y-4">
             @csrf
-            <input type="hidden" name="_method" id="formMethod" value="POST">
+            <template x-if="editMode">
+                <input type="hidden" name="_method" value="PUT">
+            </template>
+            <input type="hidden" name="fee_id" x-model="feeId">
             
-            <div class="mb-4">
-                <label for="class_id" class="block text-sm font-medium text-gray-700 mb-2">Class</label>
-                <select name="class_id" id="class_id" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            <div>
+                <label for="class_id" class="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                <select name="class_id" id="class_id" class="w-full border @error('class_id') border-red-500 @else border-gray-300 @enderror rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                     <option value="">Select Class</option>
                     @foreach($classes as $class)
-                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                        <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
                     @endforeach
                 </select>
+                @error('class_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
-            <div class="mb-4">
-                <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">Fee</label>
-                <input type="number" name="amount" id="amount" step="0.01" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter Fee" required>
+            <div>
+                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Fee</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                    <input type="number" name="amount" id="amount" step="0.01" x-model="formData.amount" class="w-full border @error('amount') border-red-500 @else border-gray-300 @enderror rounded-lg pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="0.00">
+                </div>
+                @error('amount')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Close</button>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" @click="closeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    Close
+                </button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md">
+                    Submit
+                </button>
             </div>
         </form>
-    </div>
+    </x-modal>
 </div>
 
 @push('scripts')
 <script>
-function openModal() {
-    document.getElementById('feeModal').classList.remove('hidden');
-    document.getElementById('modalTitle').textContent = 'Add Admission Fee';
-    document.getElementById('feeForm').action = "{{ route('school.settings.admission-fee.store') }}";
-    document.getElementById('formMethod').value = 'POST';
-    document.getElementById('class_id').value = '';
-    document.getElementById('amount').value = '';
-}
+function admissionFeeManager() {
+    return {
+        showModal: false,
+        editMode: false,
+        feeId: null,
+        formData: {
+            class_id: '{{ old('class_id') }}',
+            amount: '{{ old('amount') }}'
+        },
 
-function closeModal() {
-    document.getElementById('feeModal').classList.add('hidden');
-}
+        init() {
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.feeId = '{{ old('fee_id') }}';
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'admission-fee-modal');
+                    this.updateSelect2('{{ old('class_id') }}');
+                });
+            @endif
+        },
 
-function editFee(id, classId, amount) {
-    document.getElementById('feeModal').classList.remove('hidden');
-    document.getElementById('modalTitle').textContent = 'Edit Admission Fee';
-    document.getElementById('feeForm').action = "{{ url('school/settings/admission-fee') }}/" + id;
-    document.getElementById('formMethod').value = 'PUT';
-    document.getElementById('class_id').value = classId;
-    document.getElementById('amount').value = amount;
-}
+        openAddModal() {
+            this.editMode = false;
+            this.feeId = null;
+            this.formData = {
+                class_id: '',
+                amount: ''
+            };
+            this.$dispatch('open-modal', 'admission-fee-modal');
+            this.updateSelect2();
+        },
 
-// Close modal when clicking outside
-document.getElementById('feeModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
+        openEditModal(fee) {
+            console.log('Opening edit modal for fee:', fee);
+            this.editMode = true;
+            this.feeId = fee.id;
+            this.formData = {
+                class_id: fee.class_id,
+                amount: fee.amount
+            };
+            this.$dispatch('open-modal', 'admission-fee-modal');
+            this.updateSelect2();
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'admission-fee-modal');
+        },
+
+        updateSelect2() {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    const select = $('select[name="class_id"]');
+                    if (select.length) {
+                        select.val(this.formData.class_id).trigger('change');
+                    }
+                }
+            });
+            
+            // Backup with setTimeout for slower rendering
+            setTimeout(() => {
+                if (typeof $ !== 'undefined') {
+                    const select = $('select[name="class_id"]');
+                    if (select.length) {
+                        select.val(this.formData.class_id).trigger('change');
+                    }
+                }
+            }, 100);
+        }
     }
-});
+}
 </script>
 @endpush
 @endsection

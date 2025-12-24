@@ -715,6 +715,10 @@ function previewImage(event, previewId, iconId, removeBtnId) {
             if (removeBtn) {
                 removeBtn.classList.remove('hidden');
             }
+            
+            // Store image in sessionStorage to preserve on validation errors
+            const inputName = event.target.name;
+            sessionStorage.setItem(`enquiry_${inputName}`, e.target.result);
         };
         reader.readAsDataURL(file);
     }
@@ -733,6 +737,9 @@ function removeImage(event, inputName, previewId, iconId, removeBtnId) {
     if (input) {
         input.value = '';
     }
+    
+    // Remove from sessionStorage
+    sessionStorage.removeItem(`enquiry_${inputName}`);
     
     // Hide preview and show icon
     if (preview) {

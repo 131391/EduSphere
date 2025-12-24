@@ -36,6 +36,7 @@ use App\Http\Controllers\School\Examination\GradeController;
 use App\Http\Controllers\School\UserController;
 use App\Http\Controllers\School\UserFavoriteController;
 use App\Http\Controllers\School\AdmissionFeeController;
+use App\Http\Controllers\School\RegistrationCodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,6 +53,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 Route::get('/registrations', [RegistrationController::class, 'index'])->name('registrations.index');
 Route::post('/registrations/import', [RegistrationController::class, 'import'])->name('registrations.import');
 Route::get('/registrations/download-template', [RegistrationController::class, 'downloadTemplate'])->name('registrations.download-template');
+
+// Registration Code Management
+Route::resource('registration-codes', RegistrationCodeController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Student Management
 Route::resource('students', StudentController::class);

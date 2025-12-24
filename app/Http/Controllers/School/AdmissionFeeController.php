@@ -13,7 +13,8 @@ class AdmissionFeeController extends TenantController
     {
         $fees = AdmissionFee::with('class')
             ->where('school_id', $this->getSchoolId())
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
         
         $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
         

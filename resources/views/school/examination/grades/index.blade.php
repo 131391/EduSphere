@@ -107,104 +107,93 @@
     </x-data-table>
 
     <!-- Add/Edit Grade Modal -->
-    <div 
-        x-show="showModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-        @click.self="closeModal()"
-    >
-        <div 
-            class="relative mx-auto w-full max-w-lg shadow-2xl rounded-xl bg-white overflow-hidden"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-        >
-            <!-- Modal Header -->
-            <div class="bg-blue-600 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white" x-text="editMode ? 'Edit Student Grade' : 'Student Grade'"></h3>
-                <button @click="closeModal()" class="text-white hover:text-blue-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+    <x-modal name="grade-modal" alpineTitle="editMode ? 'Edit Student Grade' : 'Student Grade'" maxWidth="lg">
+        <form :action="editMode ? `/school/examination/grades/${gradeId}` : '{{ route('school.examination.grades.store') }}'" method="POST" class="p-6">
+            @csrf
+            <template x-if="editMode">
+                @method('PUT')
+            </template>
+
+            <div class="space-y-5">
+                <!-- Range Start -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Range Start</label>
+                    <div class="col-span-2">
+                        <input 
+                            type="number" 
+                            step="0.01"
+                            name="range_start" 
+                            x-model="formData.range_start"
+                            placeholder="Enter Range Start %"
+                            required
+                            min="0"
+                            max="100"
+                            class="w-full px-4 py-2 border @error('range_start') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                        @error('range_start')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Range End -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Range End</label>
+                    <div class="col-span-2">
+                        <input 
+                            type="number" 
+                            step="0.01"
+                            name="range_end" 
+                            x-model="formData.range_end"
+                            placeholder="Enter Range end %"
+                            required
+                            min="0"
+                            max="100"
+                            class="w-full px-4 py-2 border @error('range_end') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                        @error('range_end')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Grade -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Grade</label>
+                    <div class="col-span-2">
+                        <input 
+                            type="text" 
+                            name="grade" 
+                            x-model="formData.grade"
+                            placeholder="Enter Grade"
+                            required
+                            class="w-full px-4 py-2 border @error('grade') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                        @error('grade')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="mt-8 flex items-center justify-center gap-4">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
                 </button>
             </div>
-            
-            <form :action="editMode ? `/school/examination/grades/${gradeId}` : '{{ route('school.examination.grades.store') }}'" method="POST" class="p-6">
-                @csrf
-                <template x-if="editMode">
-                    @method('PUT')
-                </template>
-
-                <div class="space-y-5">
-                    <!-- Range Start -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Range Start</label>
-                        <div class="col-span-2">
-                            <input 
-                                type="number" 
-                                step="0.01"
-                                name="range_start" 
-                                x-model="formData.range_start"
-                                placeholder="Enter Range Start %"
-                                required
-                                min="0"
-                                max="100"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                        </div>
-                    </div>
-
-                    <!-- Range End -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Range End</label>
-                        <div class="col-span-2">
-                            <input 
-                                type="number" 
-                                step="0.01"
-                                name="range_end" 
-                                x-model="formData.range_end"
-                                placeholder="Enter Range end %"
-                                required
-                                min="0"
-                                max="100"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                        </div>
-                    </div>
-
-                    <!-- Grade -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Grade</label>
-                        <div class="col-span-2">
-                            <input 
-                                type="text" 
-                                name="grade" 
-                                x-model="formData.grade"
-                                placeholder="Enter Grade"
-                                required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="mt-8 flex items-center justify-center gap-4">
-                    <button 
-                        type="button" 
-                        @click="closeModal()"
-                        class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+        </form>
+    </x-modal>
 
     <!-- Confirmation Modal -->
     <x-confirm-modal />
@@ -224,14 +213,25 @@ document.addEventListener('alpine:init', () => {
         },
         
         init() {
-            // Initialization logic if needed
+            @if($errors->any())
+                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
+                this.gradeId = {{ old('grade_id', 'null') }};
+                this.formData = {
+                    range_start: '{{ old('range_start') }}',
+                    range_end: '{{ old('range_end') }}',
+                    grade: '{{ old('grade') }}'
+                };
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'grade-modal');
+                });
+            @endif
         },
         
         openAddModal() {
             this.editMode = false;
             this.gradeId = null;
             this.formData = { range_start: '', range_end: '', grade: '' };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'grade-modal');
         },
         
         openEditModal(grade) {
@@ -242,11 +242,11 @@ document.addEventListener('alpine:init', () => {
                 range_end: grade.range_end,
                 grade: grade.grade
             };
-            this.showModal = true;
+            this.$dispatch('open-modal', 'grade-modal');
         },
         
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'grade-modal');
         }
     }));
 });

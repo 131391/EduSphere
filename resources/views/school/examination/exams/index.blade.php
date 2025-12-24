@@ -103,100 +103,89 @@
     </x-data-table>
 
     <!-- Create Exams Modal -->
-    <div 
-        x-show="showModal" 
-        x-cloak
-        class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-        @click.self="closeModal()"
-    >
-        <div 
-            class="relative mx-auto w-full max-w-lg shadow-2xl rounded-xl bg-white overflow-hidden"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-        >
-            <!-- Modal Header -->
-            <div class="bg-blue-600 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white">Create Exams</h3>
-                <button @click="closeModal()" class="text-white hover:text-blue-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+    <x-modal name="exam-modal" title="Create Exams" maxWidth="lg">
+        <form action="{{ route('school.examination.exams.store') }}" method="POST" class="p-6">
+            @csrf
+            <div class="space-y-5">
+                <!-- Select Class -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Select Class</label>
+                    <div class="col-span-2">
+                        <select 
+                            name="class_id" 
+                            required
+                            class="w-full px-4 py-2 border @error('class_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option value="">Select Class</option>
+                            @foreach($classes as $class)
+                            <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('class_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Exam Type -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Exam Type</label>
+                    <div class="col-span-2">
+                        <select 
+                            name="exam_type_id" 
+                            required
+                            class="w-full px-4 py-2 border @error('exam_type_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option value="">Select Exam Type</option>
+                            @foreach($examTypes as $type)
+                            <option value="{{ $type->id }}" {{ old('exam_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('exam_type_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Select Month -->
+                <div class="grid grid-cols-3 gap-4 items-center">
+                    <label class="text-sm font-bold text-gray-700">Select Month</label>
+                    <div class="col-span-2">
+                        <select 
+                            name="month" 
+                            required
+                            class="w-full px-4 py-2 border @error('month') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option value="">Select Month</option>
+                            @foreach($months as $month)
+                            <option value="{{ $month }}" {{ old('month') == $month ? 'selected' : '' }}>{{ $month }}</option>
+                            @endforeach
+                        </select>
+                        @error('month')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="mt-8 flex items-center justify-center gap-4">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                    Close
+                </button>
+                <button 
+                    type="submit"
+                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                >
+                    Submit
                 </button>
             </div>
-            
-            <form action="{{ route('school.examination.exams.store') }}" method="POST" class="p-6">
-                @csrf
-                <div class="space-y-5">
-                    <!-- Select Class -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Select Class</label>
-                        <div class="col-span-2">
-                            <select 
-                                name="class_id" 
-                                required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                                <option value="">Select Class</option>
-                                @foreach($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Exam Type -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Exam Type</label>
-                        <div class="col-span-2">
-                            <select 
-                                name="exam_type_id" 
-                                required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                                <option value="">Select Exam Type</option>
-                                @foreach($examTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Select Month -->
-                    <div class="grid grid-cols-3 gap-4 items-center">
-                        <label class="text-sm font-bold text-gray-700">Select Month</label>
-                        <div class="col-span-2">
-                            <select 
-                                name="month" 
-                                required
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                                <option value="">Select Month</option>
-                                @foreach($months as $month)
-                                <option value="{{ $month }}">{{ $month }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="mt-8 flex items-center justify-center gap-4">
-                    <button 
-                        type="button" 
-                        @click="closeModal()"
-                        class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
-                    >
-                        Close
-                    </button>
-                    <button 
-                        type="submit"
-                        class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
-                    >
-                        Submit
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+        </form>
+    </x-modal>
 
     <!-- Confirmation Modal -->
     <x-confirm-modal />
@@ -206,14 +195,20 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('examManagement', () => ({
-        showModal: false,
-        
+        init() {
+            @if($errors->any())
+                this.$nextTick(() => {
+                    this.$dispatch('open-modal', 'exam-modal');
+                });
+            @endif
+        },
+
         openAddModal() {
-            this.showModal = true;
+            this.$dispatch('open-modal', 'exam-modal');
         },
         
         closeModal() {
-            this.showModal = false;
+            this.$dispatch('close-modal', 'exam-modal');
         }
     }));
 });
