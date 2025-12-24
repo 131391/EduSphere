@@ -55,14 +55,13 @@
             'label' => 'Status',
             'sortable' => true,
             'render' => function($school) {
-                $statusColors = [
-                    'active' => 'bg-green-100 text-green-800',
-                    'inactive' => 'bg-gray-100 text-gray-800',
-                    'suspended' => 'bg-yellow-100 text-yellow-800',
-                ];
-                $color = $statusColors[$school->status] ?? 'bg-gray-100 text-gray-800';
+                $color = match($school->status) {
+                    \App\Enums\SchoolStatus::Active => 'bg-green-100 text-green-800',
+                    \App\Enums\SchoolStatus::Inactive => 'bg-gray-100 text-gray-800',
+                    \App\Enums\SchoolStatus::Suspended => 'bg-yellow-100 text-yellow-800',
+                };
                 return '<span class="px-2 py-1 text-xs font-semibold rounded-full ' . $color . '">' . 
-                       ucfirst($school->status) . '</span>';
+                       $school->status->label() . '</span>';
             }
         ],
         [

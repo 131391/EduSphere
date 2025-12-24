@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\School;
+use App\Enums\SchoolStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,7 +30,14 @@ class SchoolController extends Controller
 
         // Filter by status
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $statusMap = [
+                'active' => SchoolStatus::Active->value,
+                'inactive' => SchoolStatus::Inactive->value,
+                'suspended' => SchoolStatus::Suspended->value,
+            ];
+            if (isset($statusMap[$request->status])) {
+                $query->where('status', $statusMap[$request->status]);
+            }
         }
 
         // Filter by subscription status
@@ -70,9 +78,9 @@ class SchoolController extends Controller
 
         // Get statistics (before pagination)
         $totalSchools = School::withTrashed()->count();
-        $activeSchools = School::withTrashed()->where('status', 'active')->count();
-        $inactiveSchools = School::withTrashed()->where('status', 'inactive')->count();
-        $suspendedSchools = School::withTrashed()->where('status', 'suspended')->count();
+        $activeSchools = School::withTrashed()->where('status', SchoolStatus::Active->value)->count();
+        $inactiveSchools = School::withTrashed()->where('status', SchoolStatus::Inactive->value)->count();
+        $suspendedSchools = School::withTrashed()->where('status', SchoolStatus::Suspended->value)->count();
 
         // Paginate results
         $schools = $query->paginate($perPage);
@@ -141,7 +149,7 @@ class SchoolController extends Controller
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
+            'country_id' => 'nullable|integer',
             'pincode' => 'nullable|string|max:10',
             'website' => 'nullable|url|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -165,7 +173,19 @@ class SchoolController extends Controller
 
             // Create School
             $schoolData = collect($validated)->except(['admin_name', 'admin_email', 'admin_password', 'admin_password_confirmation'])->toArray();
+            
+            // Map string status to enum integer
+            $statusMap = [
+                'active' => SchoolStatus::Active->value,
+                'inactive' => SchoolStatus::Inactive->value,
+                'suspended' => SchoolStatus::Suspended->value,
+            ];
+            $schoolData['status'] = $statusMap[$validated['status']] ?? SchoolStatus::Active->value;
+
             $school = School::create($schoolData);
+
+            // Seed Master Data for the new school
+            (new \Database\Seeders\MasterDataSeeder())->run($school);
 
             // Create School Admin User
             $schoolAdminRole = \App\Models\Role::where('slug', \App\Models\Role::SCHOOL_ADMIN)->firstOrFail();
@@ -221,7 +241,7 @@ class SchoolController extends Controller
             'address' => 'nullable|string',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
+            'country_id' => 'nullable|integer',
             'pincode' => 'nullable|string|max:10',
             'website' => 'nullable|url|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -237,6 +257,16 @@ class SchoolController extends Controller
                 Storage::disk('public')->delete($school->logo);
             }
             $validated['logo'] = $request->file('logo')->store('schools/logos', 'public');
+        }
+
+        // Map string status to enum integer
+        if (isset($validated['status'])) {
+            $statusMap = [
+                'active' => SchoolStatus::Active->value,
+                'inactive' => SchoolStatus::Inactive->value,
+                'suspended' => SchoolStatus::Suspended->value,
+            ];
+            $validated['status'] = $statusMap[$validated['status']] ?? $school->status->value;
         }
 
         $school->update($validated);

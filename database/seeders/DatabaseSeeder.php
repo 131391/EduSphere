@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
         $this->call(RoleSeeder::class);
         
         // Seed master data
-        $this->call(MasterDataSeeder::class);
+        // Seed master data
+        // $this->call(MasterDataSeeder::class); // Removed to prevent global seeding
 
         // Create super admin only
         $this->createSuperAdmin();

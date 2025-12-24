@@ -15,6 +15,7 @@ class SchoolFactory extends Factory
         return [
             'name' => $this->faker->company,
             'code' => $this->faker->unique()->bothify('SCH###'),
+            'subdomain' => $this->faker->unique()->slug,
             'email' => $this->faker->unique()->companyEmail,
             'status' => SchoolStatus::Active,
         ];

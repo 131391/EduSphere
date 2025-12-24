@@ -15,14 +15,20 @@ class MasterDataSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run(\App\Models\School $school = null): void
     {
+        if (!$school) {
+            return;
+        }
+
+        $schoolId = $school->id;
+
         // Religions
         $religions = [
             'Hindu', 'Muslim', 'Christian', 'Sikh', 'Jain', 'Buddhist', 'Parsi', 'Other'
         ];
         foreach ($religions as $name) {
-            Religion::firstOrCreate(['name' => $name, 'school_id' => null]);
+            Religion::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
         }
 
         // Blood Groups
@@ -30,7 +36,7 @@ class MasterDataSeeder extends Seeder
             'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
         ];
         foreach ($bloodGroups as $name) {
-            BloodGroup::firstOrCreate(['name' => $name, 'school_id' => null]);
+            BloodGroup::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
         }
 
         // Qualifications
@@ -38,7 +44,7 @@ class MasterDataSeeder extends Seeder
             'High School', 'Intermediate', 'Graduate', 'Post Graduate', 'Doctorate', 'Other'
         ];
         foreach ($qualifications as $name) {
-            Qualification::firstOrCreate(['name' => $name, 'school_id' => null]);
+            Qualification::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
         }
 
         // Student Types
@@ -46,7 +52,7 @@ class MasterDataSeeder extends Seeder
             'HIGHER ACHIEVERS', 'AVERAGE PERFORMANCE', 'STRUGLING LEARNER', 'N/A'
         ];
         foreach ($studentTypes as $name) {
-            StudentType::firstOrCreate(['name' => $name, 'school_id' => null]);
+            StudentType::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
         }
 
         // Boarding Types
@@ -54,7 +60,7 @@ class MasterDataSeeder extends Seeder
             'DAILY BOARDING', 'FULL BOARDING', 'N/A'
         ];
         foreach ($boardingTypes as $name) {
-            BoardingType::firstOrCreate(['name' => $name, 'school_id' => null]);
+            BoardingType::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
         }
 
         // Categories
@@ -62,7 +68,7 @@ class MasterDataSeeder extends Seeder
             'GEN', 'OBC', 'SC', 'ST'
         ];
         foreach ($categories as $name) {
-            Category::firstOrCreate(['name' => $name, 'school_id' => null]);
+            Category::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
         }
     }
 }

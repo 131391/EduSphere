@@ -175,10 +175,25 @@
                             </div>
 
                             <div class="space-y-2">
-                                <label for="country" class="text-sm font-bold text-gray-700 ml-1">Country</label>
-                                <input type="text" name="country" id="country" value="{{ old('country', $school->country) }}"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
-                                    placeholder="Enter country">
+                                <label for="country_id" class="text-sm font-bold text-gray-700 ml-1">Country</label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-globe text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
+                                    </div>
+                                    <select name="country_id" id="country_id"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none appearance-none cursor-pointer">
+                                        <option value="">Select Country</option>
+                                        @foreach(config('countries') as $id => $name)
+                                            <option value="{{ $id }}" {{ old('country_id', $school->country_id) == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-chevron-down text-gray-400"></i>
+                                    </div>
+                                </div>
+                                @error('country_id')
+                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div class="space-y-2">

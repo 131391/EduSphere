@@ -210,10 +210,18 @@
                                         action="{{ isset($action['url']) ? $action['url']($row) : $action['action']($row) }}" 
                                         method="POST" 
                                         class="inline" 
+                                        @if(isset($action['dispatch']))
+                                        @submit.prevent="$dispatch('{{ $action['dispatch']['event'] }}', { 
+                                            form: $el, 
+                                            title: '{{ $action['dispatch']['title'] ?? 'Delete' }}',
+                                            message: '{{ $action['dispatch']['message'] ?? 'Are you sure?' }}' 
+                                        })"
+                                        @else
                                         @submit.prevent="$dispatch('confirm-delete', { 
                                             form: $el, 
                                             message: '{{ $action['confirm'] ?? 'Are you sure you want to delete this record?' }}' 
                                         })"
+                                        @endif
                                         onclick="event.stopPropagation();"
                                     >
                                         @csrf
@@ -332,9 +340,7 @@
         applyFilters() {
             const params = { page: 1 };
             Object.keys(this.filters).forEach(key => {
-                if (this.filters[key]) {
-                    params[key] = this.filters[key];
-                }
+                params[key] = this.filters[key];
             });
             this.submitWithParams(params);
         },

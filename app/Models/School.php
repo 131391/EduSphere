@@ -126,5 +126,10 @@ class School extends Model
 
         return now()->lte($this->subscription_end_date);
     }
+    public function getCountryNameAttribute()
+    {
+        $countries = config('countries');
+        return $countries[$this->country_id] ?? null;
+    }
 }
 
