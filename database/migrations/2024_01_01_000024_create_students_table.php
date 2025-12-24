@@ -71,7 +71,7 @@ return new class extends Migration
             $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
             $table->foreignId('section_id')->constrained('sections')->onDelete('cascade');
             $table->unsignedBigInteger('student_type')->nullable(); // consolidated from change_student_type (changed from ENUM to BIGINT)
-            $table->enum('status', ['active', 'inactive', 'graduated', 'transferred'])->default('active');
+            $table->tinyInteger('status')->default(1)->comment('1=Active, 2=Graduated, 3=Transferred, 4=Inactive');
             $table->date('admission_date');
             
             // Transport Info

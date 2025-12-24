@@ -12,20 +12,34 @@ class HomeController extends Controller
      */
     public function index()
     {
-        if (Auth::check()) {
-            $user = Auth::user();
-            return match ($user->role) {
-                'super_admin' => redirect()->route('admin.dashboard'),
-                'school_admin' => redirect()->route('school.dashboard'),
-                'teacher' => redirect()->route('teacher.dashboard'),
-                'student' => redirect()->route('student.dashboard'),
-                'parent' => redirect()->route('parent.dashboard'),
-                'receptionist' => redirect()->route('receptionist.dashboard'),
-                default => view('welcome'),
-            };
+        return view('welcome');
+    }
+
+    /**
+     * Redirect to the appropriate dashboard based on role.
+     */
+    public function dashboard()
+    {
+        $user = Auth::user();
+        
+        // Ensure role relation is loaded
+        if (!$user->relationLoaded('role')) {
+            $user->load('role');
         }
 
-        return redirect()->route('login');
+        if (!$user->role) {
+            return redirect('/');
+        }
+
+        return match ($user->role->slug) {
+            \App\Models\Role::SUPER_ADMIN => redirect()->route('admin.dashboard'),
+            \App\Models\Role::SCHOOL_ADMIN => redirect()->route('school.dashboard'),
+            \App\Models\Role::TEACHER => redirect()->route('teacher.dashboard'),
+            \App\Models\Role::STUDENT => redirect()->route('student.dashboard'),
+            \App\Models\Role::PARENT => redirect()->route('parent.dashboard'),
+            \App\Models\Role::RECEPTIONIST => redirect()->route('receptionist.dashboard'),
+            default => redirect('/'),
+        };
     }
 }
 

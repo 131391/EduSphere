@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Enums\EnquiryStatus;
+
 class StudentEnquiry extends Model
 {
     use HasFactory;
@@ -93,6 +95,7 @@ class StudentEnquiry extends Model
         'only_child' => 'boolean',
         'passing_year' => 'integer',
         'country_id' => 'integer',
+        'form_status' => EnquiryStatus::class,
     ];
 
     /**
@@ -158,21 +161,21 @@ class StudentEnquiry extends Model
      */
     public function scopePending($query)
     {
-        return $query->where('form_status', 'pending');
+        return $query->where('form_status', EnquiryStatus::Pending);
     }
 
     public function scopeCompleted($query)
     {
-        return $query->where('form_status', 'completed');
+        return $query->where('form_status', EnquiryStatus::Completed);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->where('form_status', 'cancelled');
+        return $query->where('form_status', EnquiryStatus::Cancelled);
     }
 
     public function scopeAdmitted($query)
     {
-        return $query->where('form_status', 'admitted');
+        return $query->where('form_status', EnquiryStatus::Admitted);
     }
 }

@@ -320,7 +320,7 @@
             </tr>
             <tr>
                 <td>Country, PIN</td>
-                <td>{{ $studentRegistration->permanent_country }} - {{ $studentRegistration->permanent_pin }}</td>
+                <td>{{ config('countries')[$studentRegistration->permanent_country_id] ?? 'N/A' }} - {{ $studentRegistration->permanent_pin }}</td>
             </tr>
             <tr>
                 <td colspan="2" style="background-color: #e5e7eb; font-weight: bold;">Correspondence Address</td>
@@ -336,7 +336,7 @@
             </tr>
             <tr>
                 <td>Country, PIN</td>
-                <td>{{ $studentRegistration->correspondence_country }} - {{ $studentRegistration->correspondence_pin }}</td>
+                <td>{{ config('countries')[$studentRegistration->correspondence_country_id] ?? 'N/A' }} - {{ $studentRegistration->correspondence_pin }}</td>
             </tr>
             @else
             <tr>

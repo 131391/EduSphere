@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Parent extends Model
+use App\Enums\ParentStatus;
+use App\Enums\RelationType;
+
+class StudentParent extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -29,6 +32,8 @@ class Parent extends Model
 
     protected $casts = [
         'additional_info' => 'array',
+        'status' => ParentStatus::class,
+        'relation' => RelationType::class,
     ];
 
     // Relationships
@@ -45,6 +50,7 @@ class Parent extends Model
     public function students()
     {
         return $this->belongsToMany(Student::class, 'student_parent')
+            ->using(StudentParentPivot::class)
             ->withPivot('relation', 'is_primary')
             ->withTimestamps();
     }

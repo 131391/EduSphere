@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
+use App\Enums\StudentStatus;
+
 class Student extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
@@ -78,7 +80,6 @@ class Student extends Model
         'mother_annual_income',
         'mother_designation',
         'permanent_address',
-        'permanent_country',
         'permanent_country_id',
         'permanent_state',
         'permanent_city',
@@ -87,7 +88,6 @@ class Student extends Model
         'latitude',
         'longitude',
         'correspondence_address',
-        'correspondence_country',
         'correspondence_country_id',
         'correspondence_state',
         'correspondence_city',
@@ -104,6 +104,7 @@ class Student extends Model
         'additional_info' => 'array',
         'permanent_country_id' => 'integer',
         'correspondence_country_id' => 'integer',
+        'status' => StudentStatus::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -141,7 +142,8 @@ class Student extends Model
 
     public function parents()
     {
-        return $this->belongsToMany(Parent::class, 'student_parent')
+        return $this->belongsToMany(StudentParent::class, 'student_parent')
+            ->using(StudentParentPivot::class)
             ->withPivot('relation', 'is_primary')
             ->withTimestamps();
     }
@@ -174,7 +176,7 @@ class Student extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', StudentStatus::Active);
     }
 
     public function scopeByClass($query, $classId)

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('qualification')->nullable();
             $table->string('experience_years')->nullable();
             $table->string('photo')->nullable();
-            $table->enum('status', ['active', 'inactive', 'on_leave'])->default('active');
+            $table->tinyInteger('status')->default(1)->comment('1=Active, 2=Inactive, 3=OnLeave');
             $table->date('joining_date')->nullable();
             $table->json('additional_info')->nullable();
             $table->timestamps();

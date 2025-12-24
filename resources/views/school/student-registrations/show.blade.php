@@ -292,7 +292,7 @@
                     <div class="mt-4 space-y-2">
                         <p class="text-sm text-gray-900">{{ $studentRegistration->permanent_address }}</p>
                         <p class="text-sm text-gray-600">{{ $studentRegistration->permanent_city }}, {{ $studentRegistration->permanent_state }}</p>
-                        <p class="text-sm text-gray-600">{{ $studentRegistration->permanent_country }} - {{ $studentRegistration->permanent_pin }}</p>
+                        <p class="text-sm text-gray-600">{{ config('countries')[$studentRegistration->permanent_country_id] ?? 'N/A' }} - {{ $studentRegistration->permanent_pin }}</p>
                     </div>
                 </div>
                 <div>
@@ -303,7 +303,7 @@
                         @if($studentRegistration->correspondence_address)
                             <p class="text-sm text-gray-900">{{ $studentRegistration->correspondence_address }}</p>
                             <p class="text-sm text-gray-600">{{ $studentRegistration->correspondence_city }}, {{ $studentRegistration->correspondence_state }}</p>
-                            <p class="text-sm text-gray-600">{{ $studentRegistration->correspondence_country }} - {{ $studentRegistration->correspondence_pin }}</p>
+                            <p class="text-sm text-gray-600">{{ config('countries')[$studentRegistration->correspondence_country_id] ?? 'N/A' }} - {{ $studentRegistration->correspondence_pin }}</p>
                         @else
                             <p class="text-sm text-gray-500 italic">Same as Permanent Address</p>
                         @endif

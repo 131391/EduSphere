@@ -23,14 +23,14 @@ return new class extends Migration
             $table->string('visit_purpose')->nullable();
             $table->string('meeting_purpose')->nullable();
             $table->string('meeting_with')->nullable();
-            $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
+            $table->tinyInteger('priority')->default(2)->comment('1=Low, 2=Medium, 3=High, 4=Urgent');
             $table->integer('no_of_guests')->default(1);
-            $table->enum('meeting_type', ['online', 'offline', 'office'])->default('offline');
+            $table->tinyInteger('meeting_type')->default(2)->comment('1=Online, 2=Offline, 3=Office');
             $table->string('source')->nullable();
             $table->dateTime('check_in')->nullable();
             $table->dateTime('check_out')->nullable();
             $table->dateTime('meeting_scheduled')->nullable();
-            $table->enum('status', ['scheduled', 'checked_in', 'completed', 'cancelled'])->default('scheduled');
+            $table->tinyInteger('status')->default(1)->comment('1=Scheduled, 2=CheckedIn, 3=Completed, 4=Cancelled');
             $table->string('visitor_photo')->nullable();
             $table->string('id_proof')->nullable();
             $table->text('notes')->nullable();

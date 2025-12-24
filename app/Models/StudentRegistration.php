@@ -40,12 +40,12 @@ class StudentRegistration extends Model
         'mother_age',
         
         // Permanent Address
-        'permanent_latitude', 'permanent_longitude', 'permanent_address', 'permanent_country', 'permanent_country_id',
+        'permanent_latitude', 'permanent_longitude', 'permanent_address', 'permanent_country_id',
         'permanent_state', 'permanent_city', 'permanent_pin', 'permanent_state_of_domicile',
         'permanent_railway_airport', 'permanent_correspondence_address',
         
         // Correspondence Address
-        'correspondence_address', 'correspondence_country', 'correspondence_country_id', 'correspondence_state',
+        'correspondence_address', 'correspondence_country_id', 'correspondence_state',
         'correspondence_city', 'correspondence_pin', 'correspondence_location',
         'correspondence_landmark', 'distance_from_school',
         

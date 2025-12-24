@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->text('description')->nullable();
-            $table->enum('status', ['scheduled', 'ongoing', 'completed', 'cancelled'])->default('scheduled');
+            $table->tinyInteger('status')->default(1)->comment('1=Scheduled, 2=Ongoing, 3=Completed, 4=Cancelled');
             $table->timestamps();
             $table->softDeletes();
 

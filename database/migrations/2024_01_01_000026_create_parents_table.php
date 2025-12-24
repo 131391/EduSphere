@@ -14,13 +14,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('first_name');
             $table->string('last_name')->nullable();
-            $table->enum('relation', ['father', 'mother', 'guardian', 'other']);
+            $table->tinyInteger('relation')->comment('1=Father, 2=Mother, 3=Guardian, 4=Other');
             $table->string('phone');
             $table->string('email')->nullable();
             $table->string('occupation')->nullable();
             $table->text('address')->nullable();
             $table->string('photo')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->tinyInteger('status')->default(1)->comment('1=Active, 2=Inactive');
             $table->json('additional_info')->nullable();
             $table->timestamps();
             $table->softDeletes();

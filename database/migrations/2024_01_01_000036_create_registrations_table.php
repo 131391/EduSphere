@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('registration_fee', 10, 2)->default(0);
             $table->date('registration_date');
             $table->string('photo')->nullable();
-            $table->enum('status', ['pending', 'admitted', 'rejected', 'cancelled'])->default('pending');
+            $table->tinyInteger('status')->default(1)->comment('1=Pending, 2=Admitted, 3=Rejected, 4=Cancelled');
             $table->text('remarks')->nullable();
             $table->timestamps();
             $table->softDeletes();

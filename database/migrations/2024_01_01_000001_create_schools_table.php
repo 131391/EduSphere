@@ -19,12 +19,12 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('city')->nullable();
             $table->string('state')->nullable();
-            $table->string('country')->default('India');
+            $table->integer('country_id')->default(1);
             $table->string('pincode')->nullable();
             $table->string('logo')->nullable();
             $table->string('site_icon')->nullable();
             $table->string('website')->nullable();
-            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
+            $table->tinyInteger('status')->default(1)->comment('1=Active, 2=Inactive, 3=Suspended');
             $table->date('subscription_start_date')->nullable();
             $table->date('subscription_end_date')->nullable();
             $table->json('settings')->nullable(); // School-specific settings

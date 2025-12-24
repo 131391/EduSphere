@@ -86,7 +86,7 @@ return new class extends Migration
             $table->string('student_photo')->nullable();
             
             // Status & Dates
-            $table->enum('form_status', ['pending', 'completed', 'cancelled', 'admitted'])->default('pending');
+            $table->tinyInteger('form_status')->default(1)->comment('1=Pending, 2=Completed, 3=Cancelled, 4=Admitted');
             $table->date('enquiry_date');
             
             $table->timestamps();

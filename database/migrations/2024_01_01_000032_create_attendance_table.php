@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('section_id')->constrained('sections')->onDelete('cascade');
             $table->foreignId('academic_year_id')->constrained('academic_years')->onDelete('cascade');
             $table->date('date');
-            $table->enum('status', ['present', 'absent', 'late', 'excused', 'half_day'])->default('present');
+            $table->tinyInteger('status')->default(1)->comment('1=Present, 2=Absent, 3=Late, 4=Excused, 5=HalfDay');
             $table->text('remarks')->nullable();
             $table->foreignId('marked_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();

@@ -9,7 +9,7 @@ use App\Models\User;
 
 abstract class TestCase extends BaseTestCase
 {
-    use CreatesApplication, RefreshDatabase;
+    use CreatesApplication;
 
     /**
      * Create a school for testing

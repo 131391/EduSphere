@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Enums\TeacherStatus;
+
 class Teacher extends Model
 {
     use HasFactory, SoftDeletes;
@@ -33,6 +35,7 @@ class Teacher extends Model
         'date_of_birth' => 'date',
         'joining_date' => 'date',
         'additional_info' => 'array',
+        'status' => TeacherStatus::class,
     ];
 
     // Relationships
@@ -73,7 +76,7 @@ class Teacher extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', TeacherStatus::Active);
     }
 
     // Accessors

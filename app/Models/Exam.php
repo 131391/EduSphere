@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Enums\ExamStatus;
+
 class Exam extends Model
 {
     use HasFactory, SoftDeletes;
@@ -27,6 +29,7 @@ class Exam extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'status' => ExamStatus::class,
     ];
 
     // Relationships

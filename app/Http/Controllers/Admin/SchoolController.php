@@ -131,6 +131,7 @@ class SchoolController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            // School Details
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:schools,code',
             'subdomain' => 'required|string|max:255|unique:schools,subdomain',
@@ -147,17 +148,51 @@ class SchoolController extends Controller
             'status' => 'required|in:active,inactive,suspended',
             'subscription_start_date' => 'nullable|date',
             'subscription_end_date' => 'nullable|date|after:subscription_start_date',
+
+            // Admin Details
+            'admin_name' => 'required|string|max:255',
+            'admin_email' => 'required|email|max:255|unique:users,email',
+            'admin_password' => 'required|string|min:8|confirmed',
         ]);
 
-        // Handle logo upload
-        if ($request->hasFile('logo')) {
-            $validated['logo'] = $request->file('logo')->store('schools/logos', 'public');
+        try {
+            \DB::beginTransaction();
+
+            // Handle logo upload
+            if ($request->hasFile('logo')) {
+                $validated['logo'] = $request->file('logo')->store('schools/logos', 'public');
+            }
+
+            // Create School
+            $schoolData = collect($validated)->except(['admin_name', 'admin_email', 'admin_password', 'admin_password_confirmation'])->toArray();
+            $school = School::create($schoolData);
+
+            // Create School Admin User
+            $schoolAdminRole = \App\Models\Role::where('slug', \App\Models\Role::SCHOOL_ADMIN)->firstOrFail();
+
+            \App\Models\User::create([
+                'school_id' => $school->id,
+                'role_id' => $schoolAdminRole->id,
+                'name' => $validated['admin_name'],
+                'email' => $validated['admin_email'],
+                'password' => \Hash::make($validated['admin_password']),
+                'status' => \App\Models\User::STATUS_ACTIVE,
+            ]);
+
+            \DB::commit();
+
+            return redirect()->route('admin.schools.index')
+                ->with('success', 'School and Administrator account created successfully.');
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            // If logo was uploaded but transaction failed, delete the file
+            if (isset($validated['logo'])) {
+                Storage::disk('public')->delete($validated['logo']);
+            }
+            
+            return back()->withInput()->with('error', 'Failed to create school: ' . $e->getMessage());
         }
-
-        $school = School::create($validated);
-
-        return redirect()->route('admin.schools.index')
-            ->with('success', 'School created successfully.');
     }
 
     public function show($id)

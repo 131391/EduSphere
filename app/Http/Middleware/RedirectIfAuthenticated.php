@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
+use App\Models\Role;
+
 class RedirectIfAuthenticated
 {
     /**
@@ -24,13 +26,23 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 $user = Auth::guard($guard)->user();
                 
+                // Ensure role relation is loaded
+                if (!$user->relationLoaded('role')) {
+                    $user->load('role');
+                }
+
+                if (!$user->role) {
+                    return redirect('/');
+                }
+                
                 // Redirect based on role
-                return match ($user->role) {
-                    'super_admin' => redirect()->route('admin.dashboard'),
-                    'school_admin' => redirect()->route('school.dashboard'),
-                    'teacher' => redirect()->route('teacher.dashboard'),
-                    'student' => redirect()->route('student.dashboard'),
-                    'parent' => redirect()->route('parent.dashboard'),
+                return match ($user->role->slug) {
+                    Role::SUPER_ADMIN => redirect()->route('admin.dashboard'),
+                    Role::SCHOOL_ADMIN => redirect()->route('school.dashboard'),
+                    Role::RECEPTIONIST => redirect()->route('receptionist.dashboard'),
+                    Role::TEACHER => redirect()->route('teacher.dashboard'),
+                    Role::STUDENT => redirect()->route('student.dashboard'),
+                    Role::PARENT => redirect()->route('parent.dashboard'),
                     default => redirect('/'),
                 };
             }

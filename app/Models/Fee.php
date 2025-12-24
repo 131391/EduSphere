@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
+use App\Enums\FeeStatus;
+
 class Fee extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
@@ -43,6 +45,7 @@ class Fee extends Model
         'discount_amount' => 'decimal:2',
         'due_date' => 'date',
         'payment_date' => 'date',
+        'payment_status' => FeeStatus::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -86,19 +89,19 @@ class Fee extends Model
 
     public function scopePaid($query)
     {
-        return $query->where('payment_status', 'paid');
+        return $query->where('payment_status', FeeStatus::Paid);
     }
 
     public function scopePending($query)
     {
-        return $query->where('payment_status', 'pending');
+        return $query->where('payment_status', FeeStatus::Pending);
     }
 
     public function scopeOverdue($query)
     {
-        return $query->where('payment_status', 'overdue')
+        return $query->where('payment_status', FeeStatus::Overdue)
             ->orWhere(function ($q) {
-                $q->where('payment_status', 'pending')
+                $q->where('payment_status', FeeStatus::Pending)
                   ->where('due_date', '<', now());
             });
     }
@@ -108,7 +111,7 @@ class Fee extends Model
     {
         $this->paid_amount = $amount;
         $this->due_amount = $this->payable_amount - $amount - ($this->waiver_amount ?? 0) - ($this->discount_amount ?? 0);
-        $this->payment_status = $this->due_amount > 0 ? 'partial' : 'paid';
+        $this->payment_status = $this->due_amount > 0 ? FeeStatus::Partial : FeeStatus::Paid;
         $this->payment_date = now();
         $this->payment_mode = $paymentMode;
         $this->transaction_id = $transactionId;

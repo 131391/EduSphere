@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('parent_id')->constrained('parents')->onDelete('cascade');
-            $table->enum('relation', ['father', 'mother', 'guardian', 'other'])->default('guardian');
+            $table->tinyInteger('relation')->default(3)->comment('1=Father, 2=Mother, 3=Guardian, 4=Other');
             $table->boolean('is_primary')->default(false);
             $table->timestamps();
 

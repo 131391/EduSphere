@@ -25,7 +25,7 @@ return new class extends Migration
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->date('due_date')->nullable();
             $table->date('payment_date')->nullable();
-            $table->enum('payment_status', ['pending', 'partial', 'paid', 'overdue'])->default('pending');
+            $table->tinyInteger('payment_status')->default(1)->comment('1=Pending, 2=Partial, 3=Paid, 4=Overdue');
             $table->enum('payment_mode', ['cash', 'online', 'cheque', 'bank_transfer'])->nullable();
             $table->string('transaction_id')->nullable();
             $table->text('remarks')->nullable();

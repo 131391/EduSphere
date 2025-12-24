@@ -91,7 +91,6 @@ return new class extends Migration
             $table->string('permanent_longitude', 50)->nullable();
             $table->text('permanent_address');
             $table->unsignedTinyInteger('permanent_country_id')->default(1); // consolidated from add_country_id_fields
-            $table->string('permanent_country', 100)->default('India');
             $table->string('permanent_state', 100);
             $table->string('permanent_city', 100);
             $table->string('permanent_pin', 20);
@@ -102,7 +101,6 @@ return new class extends Migration
             // Correspondence Address
             $table->text('correspondence_address')->nullable();
             $table->unsignedTinyInteger('correspondence_country_id')->default(1); // consolidated from add_country_id_fields
-            $table->string('correspondence_country', 100)->nullable();
             $table->string('correspondence_state', 100)->nullable();
             $table->string('correspondence_city', 100)->nullable();
             $table->string('correspondence_pin', 20)->nullable();

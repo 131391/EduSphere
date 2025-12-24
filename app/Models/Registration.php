@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Enums\RegistrationStatus;
+
 class Registration extends Model
 {
     use HasFactory, SoftDeletes;
@@ -30,6 +32,7 @@ class Registration extends Model
         'date_of_birth' => 'date',
         'registration_date' => 'date',
         'registration_fee' => 'decimal:2',
+        'status' => RegistrationStatus::class,
     ];
 
     // Relationships

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
+use App\Enums\SchoolStatus;
+
 class School extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
@@ -22,7 +24,7 @@ class School extends Model
         'address',
         'city',
         'state',
-        'country',
+        'country_id',
         'pincode',
         'logo',
         'site_icon',
@@ -39,6 +41,7 @@ class School extends Model
         'features' => 'array',
         'subscription_start_date' => 'date',
         'subscription_end_date' => 'date',
+        'status' => SchoolStatus::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -66,7 +69,7 @@ class School extends Model
 
     public function parents()
     {
-        return $this->hasMany(Parent::class);
+        return $this->hasMany(StudentParent::class);
     }
 
     public function classes()
@@ -107,12 +110,12 @@ class School extends Model
     // Scopes
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', SchoolStatus::Active);
     }
 
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === SchoolStatus::Active;
     }
 
     public function isSubscriptionActive(): bool

@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Enums\VisitorPriority;
+use App\Enums\VisitorMode;
+use App\Enums\VisitorStatus;
+
 class Visitor extends Model
 {
     use HasFactory;
@@ -37,6 +41,9 @@ class Visitor extends Model
         'check_in' => 'datetime',
         'check_out' => 'datetime',
         'meeting_scheduled' => 'datetime',
+        'priority' => VisitorPriority::class,
+        'meeting_type' => VisitorMode::class,
+        'status' => VisitorStatus::class,
     ];
 
     public function school()
