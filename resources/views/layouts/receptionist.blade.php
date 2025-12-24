@@ -149,16 +149,26 @@
             <nav class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2" x-data="{ 
                 frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }},
                 studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*') ? 'true' : 'false' }},
+                transportOpen: {{ request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') ? 'true' : 'false' }},
                 toggleFrontDesk() {
                     this.frontDeskOpen = !this.frontDeskOpen;
                     if (this.frontDeskOpen) {
                         this.studentOpen = false;
+                        this.transportOpen = false;
                     }
                 },
                 toggleStudent() {
                     this.studentOpen = !this.studentOpen;
                     if (this.studentOpen) {
                         this.frontDeskOpen = false;
+                        this.transportOpen = false;
+                    }
+                },
+                toggleTransport() {
+                    this.transportOpen = !this.transportOpen;
+                    if (this.transportOpen) {
+                        this.frontDeskOpen = false;
+                        this.studentOpen = false;
                     }
                 }
             }">
@@ -255,6 +265,38 @@
                         <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-bus w-5 mr-3"></i>
                             <span>Assign Transport Facility</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Transport Management Collapsible Menu -->
+                <div>
+                    <button @click="toggleTransport()" 
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors">
+                        <div class="flex items-center">
+                            <i class="fas fa-bus w-5 mr-3"></i>
+                            <span>Transport Management</span>
+                        </div>
+                        <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': transportOpen }"></i>
+                    </button>
+                    
+                    <!-- Submenu -->
+                    <div x-show="transportOpen" 
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="ml-4 mt-1 space-y-1">
+                        <a href="{{ route('receptionist.vehicles.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-car w-5 mr-3"></i>
+                            <span>Vehicle</span>
+                        </a>
+
+                        <a href="{{ route('receptionist.routes.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-route w-5 mr-3"></i>
+                            <span>Route</span>
                         </a>
                     </div>
                 </div>

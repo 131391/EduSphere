@@ -38,3 +38,12 @@ Route::get('admission/{id}/pdf', [\App\Http\Controllers\Receptionist\AdmissionCo
 Route::resource('admission', \App\Http\Controllers\Receptionist\AdmissionController::class)->parameters([
     'admission' => 'student'
 ]);
+
+// Vehicle Management
+Route::resource('vehicles', \App\Http\Controllers\Receptionist\VehicleController::class);
+Route::get('vehicles-export', [\App\Http\Controllers\Receptionist\VehicleController::class, 'export'])->name('vehicles.export');
+
+// Route Management
+Route::get('routes/vehicles', [\App\Http\Controllers\Receptionist\RouteController::class, 'getVehicles'])->name('routes.vehicles');
+Route::resource('routes', \App\Http\Controllers\Receptionist\RouteController::class);
+Route::get('routes-export', [\App\Http\Controllers\Receptionist\RouteController::class, 'export'])->name('routes.export');
