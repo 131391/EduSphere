@@ -47,3 +47,7 @@ Route::get('vehicles-export', [\App\Http\Controllers\Receptionist\VehicleControl
 Route::get('routes/vehicles', [\App\Http\Controllers\Receptionist\RouteController::class, 'getVehicles'])->name('routes.vehicles');
 Route::resource('routes', \App\Http\Controllers\Receptionist\RouteController::class);
 Route::get('routes-export', [\App\Http\Controllers\Receptionist\RouteController::class, 'export'])->name('routes.export');
+
+// Bus Stop Management
+Route::resource('bus-stops', \App\Http\Controllers\Receptionist\BusStopController::class);
+Route::get('bus-stops-export', [\App\Http\Controllers\Receptionist\BusStopController::class, 'export'])->name('bus-stops.export');

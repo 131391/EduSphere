@@ -196,6 +196,9 @@
                                         @if(isset($action['data-route']))
                                         data-route="{{ $action['data-route']($row) }}"
                                         @endif
+                                        @if(isset($action['data-busstop']))
+                                        data-busstop="{{ $action['data-busstop']($row) }}"
+                                        @endif
                                         class="{{ $action['class'] ?? 'text-blue-600 hover:text-blue-900' }}"
                                         title="{{ $action['title'] ?? '' }}"
                                         type="button"
