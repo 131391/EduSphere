@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('religions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_id')->constrained('schools')->onDelete('cascade');
+            $table->foreignId('school_id')->nullable()->constrained('schools')->onDelete('cascade');
             $table->string('name');
             $table->boolean('is_active')->default(true);
             $table->timestamps();

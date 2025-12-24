@@ -15,6 +15,9 @@ class DatabaseSeeder extends Seeder
     {
         // Seed roles first
         $this->call(RoleSeeder::class);
+        
+        // Seed master data
+        $this->call(MasterDataSeeder::class);
 
         // Create super admin only
         $this->createSuperAdmin();
