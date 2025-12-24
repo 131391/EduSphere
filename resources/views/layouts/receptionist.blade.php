@@ -197,28 +197,27 @@
                          x-transition:enter-end="opacity-100 translate-y-0"
                          class="ml-4 mt-1 space-y-1">
                         <a href="{{ route('receptionist.visitors.index') }}" 
-                           @click.stop
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-users w-5 mr-3"></i>
                             <span>Visitor Entry</span>
                         </a>
 
-                        <a href="#" @click.stop class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-envelope w-5 mr-3"></i>
                             <span>Postal Enquiry</span>
                         </a>
 
-                        <a href="#" @click.stop class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-phone w-5 mr-3"></i>
                             <span>Phone Enquiry</span>
                         </a>
 
-                        <a href="#" @click.stop class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-file-alt w-5 mr-3"></i>
                             <span>Online Application Report</span>
                         </a>
 
-                        <a href="#" @click.stop class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-comments w-5 mr-3"></i>
                             <span>Complain & Suggestions</span>
                         </a>
@@ -244,30 +243,28 @@
                          x-transition:enter-end="opacity-100 translate-y-0"
                          class="ml-4 mt-1 space-y-1">
                         <a href="{{ route('receptionist.student-enquiries.index') }}" 
-                           @click.stop
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-clipboard-list w-5 mr-3"></i>
                             <span>Enquiry</span>
                         </a>
 
                         <a href="{{ route('receptionist.student-registrations.index') }}" 
-                           @click.stop
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-user-plus w-5 mr-3"></i>
                             <span>Registration</span>
                         </a>
 
-                        <a href="{{ route('receptionist.admission.index') }}" @click.stop class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.admission.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                        <a href="{{ route('receptionist.admission.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.admission.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-graduation-cap w-5 mr-3"></i>
                             <span>Admission</span>
                         </a>
 
-                        <a href="#" @click.stop class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                        <a href="#" class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
                             <i class="fas fa-id-card w-5 mr-3"></i>
                             <span>ID Card</span>
                         </a>
 
-                        <a href="#" @click.stop class="flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors text-sm">
+                        <a href="{{ route('receptionist.transport-assignments.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.transport-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-bus w-5 mr-3"></i>
                             <span>Assign Transport Facility</span>
                         </a>
@@ -293,21 +290,18 @@
                          x-transition:enter-end="opacity-100 translate-y-0"
                          class="ml-4 mt-1 space-y-1">
                         <a href="{{ route('receptionist.vehicles.index') }}" 
-                           @click.stop
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-car w-5 mr-3"></i>
                             <span>Vehicle</span>
                         </a>
 
                         <a href="{{ route('receptionist.routes.index') }}" 
-                           @click.stop
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-route w-5 mr-3"></i>
                             <span>Route</span>
                         </a>
 
                         <a href="{{ route('receptionist.bus-stops.index') }}" 
-                           @click.stop
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.bus-stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-map-marker-alt w-5 mr-3"></i>
                             <span>Bus Stop</span>

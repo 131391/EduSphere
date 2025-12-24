@@ -15,12 +15,26 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes, HasApiTokens, HasRoles, LogsActivity;
 
+    // Status constants
+    const STATUS_INACTIVE = 0;
+    const STATUS_ACTIVE = 1;
+    const STATUS_SUSPENDED = 2;
+    const STATUS_PENDING = 3;
+
+    // Status labels for display
+    const STATUS_LABELS = [
+        self::STATUS_INACTIVE => 'Inactive',
+        self::STATUS_ACTIVE => 'Active',
+        self::STATUS_SUSPENDED => 'Suspended',
+        self::STATUS_PENDING => 'Pending',
+    ];
+
     protected $fillable = [
         'school_id',
+        'role_id',
         'name',
         'email',
         'password',
-        'role',
         'phone',
         'avatar',
         'status',
@@ -37,12 +51,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_login_at' => 'datetime',
+        'status' => 'integer',
     ];
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email', 'role', 'status'])
+            ->logOnly(['name', 'email', 'role_id', 'status'])
             ->logOnlyDirty();
     }
 
@@ -50,6 +65,11 @@ class User extends Authenticatable
     public function school()
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
     }
 
     public function student()
@@ -64,7 +84,7 @@ class User extends Authenticatable
 
     public function parent()
     {
-        return $this->hasOne(Parent::class);
+        return $this->hasOne(ParentModel::class);
     }
 
     // Scopes
@@ -73,55 +93,93 @@ class User extends Authenticatable
         return $query->where('school_id', $schoolId);
     }
 
-    public function scopeByRole($query, $role)
+    public function scopeByRole($query, $roleSlug)
     {
-        return $query->where('role', $role);
+        return $query->whereHas('role', function ($q) use ($roleSlug) {
+            $q->where('slug', $roleSlug);
+        });
     }
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', self::STATUS_ACTIVE);
     }
 
-    // Helper methods
+    public function scopeInactive($query)
+    {
+        return $query->where('status', self::STATUS_INACTIVE);
+    }
+
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', self::STATUS_SUSPENDED);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', self::STATUS_PENDING);
+    }
+
+    // Status helper methods
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isInactive(): bool
+    {
+        return $this->status === self::STATUS_INACTIVE;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === self::STATUS_SUSPENDED;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? 'Unknown';
+    }
+
+    // Role helper methods
+    public function hasRole(string $roleSlug): bool
+    {
+        return $this->role && $this->role->slug === $roleSlug;
+    }
+
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'super_admin' && is_null($this->school_id);
+        return $this->hasRole(Role::SUPER_ADMIN) && is_null($this->school_id);
     }
 
     public function isSchoolAdmin(): bool
     {
-        return $this->role === 'school_admin';
+        return $this->hasRole(Role::SCHOOL_ADMIN);
     }
 
     public function isTeacher(): bool
     {
-        return $this->role === 'teacher';
+        return $this->hasRole(Role::TEACHER);
     }
 
     public function isStudent(): bool
     {
-        return $this->role === 'student';
+        return $this->hasRole(Role::STUDENT);
     }
 
     public function isParent(): bool
     {
-        return $this->role === 'parent';
+        return $this->hasRole(Role::PARENT);
     }
 
     public function isReceptionist(): bool
     {
-        return $this->role === 'receptionist';
-    }
-
-    public function isAccountant(): bool
-    {
-        return $this->role === 'accountant';
-    }
-
-    public function isLibrarian(): bool
-    {
-        return $this->role === 'librarian';
+        return $this->hasRole(Role::RECEPTIONIST);
     }
 
     public function canAccessSchool($schoolId): bool

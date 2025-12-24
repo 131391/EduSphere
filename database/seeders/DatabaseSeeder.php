@@ -5,11 +5,10 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\School;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\AcademicYear;
 use App\Models\ClassModel;
 use App\Models\Section;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,8 +17,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create roles
-        $this->createRoles();
+        // Seed roles first
+        $this->call(RoleSeeder::class);
 
         // Create super admin
         $this->createSuperAdmin();
@@ -28,28 +27,19 @@ class DatabaseSeeder extends Seeder
         $this->createDemoSchool();
     }
 
-    protected function createRoles(): void
-    {
-        $roles = ['super_admin', 'school_admin', 'teacher', 'student', 'parent'];
-
-        foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
-        }
-    }
-
     protected function createSuperAdmin(): void
     {
+        $superAdminRole = Role::where('slug', Role::SUPER_ADMIN)->first();
+
         $admin = User::firstOrCreate(
             ['email' => 'admin@edusphere.com'],
             [
                 'name' => 'Super Admin',
                 'password' => bcrypt('password'),
-                'role' => 'super_admin',
-                'status' => 'active',
+                'role_id' => $superAdminRole->id,
+                'status' => User::STATUS_ACTIVE,
             ]
         );
-
-        $admin->assignRole('super_admin');
     }
 
     protected function createDemoSchool(): void
@@ -65,6 +55,10 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Get roles
+        $schoolAdminRole = Role::where('slug', Role::SCHOOL_ADMIN)->first();
+        $receptionistRole = Role::where('slug', Role::RECEPTIONIST)->first();
+
         // Create school admin
         $schoolAdmin = User::firstOrCreate(
             ['email' => 'admin@demo.school.com'],
@@ -72,12 +66,22 @@ class DatabaseSeeder extends Seeder
                 'school_id' => $school->id,
                 'name' => 'School Admin',
                 'password' => bcrypt('password'),
-                'role' => 'school_admin',
-                'status' => 'active',
+                'role_id' => $schoolAdminRole->id,
+                'status' => User::STATUS_ACTIVE,
             ]
         );
 
-        $schoolAdmin->assignRole('school_admin');
+        // Create receptionist
+        $receptionist = User::firstOrCreate(
+            ['email' => 'receptionist@demo.school.com'],
+            [
+                'school_id' => $school->id,
+                'name' => 'Receptionist',
+                'password' => bcrypt('password'),
+                'role_id' => $receptionistRole->id,
+                'status' => User::STATUS_ACTIVE,
+            ]
+        );
 
         // Create academic year
         AcademicYear::firstOrCreate(

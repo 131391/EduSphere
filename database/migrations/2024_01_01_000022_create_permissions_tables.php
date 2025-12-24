@@ -23,6 +23,8 @@ return new class extends Migration
         Schema::create($tableNames['roles'], function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
+            $table->string('slug', 50)->unique();
+            $table->text('description')->nullable();
             $table->string('guard_name');
             $table->timestamps();
 

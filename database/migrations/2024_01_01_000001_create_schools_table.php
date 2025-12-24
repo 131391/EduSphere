@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('country')->default('India');
             $table->string('pincode')->nullable();
             $table->string('logo')->nullable();
+            $table->string('site_icon')->nullable();
             $table->string('website')->nullable();
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->date('subscription_start_date')->nullable();

@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('first_name', 100);
             $table->string('middle_name', 100)->nullable();
             $table->string('last_name', 100);
-            $table->enum('gender', ['Male', 'Female', 'Other'])->nullable();
+            $table->integer('gender')->nullable()->comment('1=Male, 2=Female, 3=Other'); // consolidated from change_gender
             $table->date('dob')->nullable();
             $table->string('email', 150)->nullable();
             $table->string('mobile_no', 20);
@@ -90,6 +90,7 @@ return new class extends Migration
             $table->string('permanent_latitude', 50)->nullable();
             $table->string('permanent_longitude', 50)->nullable();
             $table->text('permanent_address');
+            $table->unsignedTinyInteger('permanent_country_id')->default(1); // consolidated from add_country_id_fields
             $table->string('permanent_country', 100)->default('India');
             $table->string('permanent_state', 100);
             $table->string('permanent_city', 100);
@@ -100,6 +101,7 @@ return new class extends Migration
             
             // Correspondence Address
             $table->text('correspondence_address')->nullable();
+            $table->unsignedTinyInteger('correspondence_country_id')->default(1); // consolidated from add_country_id_fields
             $table->string('correspondence_country', 100)->nullable();
             $table->string('correspondence_state', 100)->nullable();
             $table->string('correspondence_city', 100)->nullable();
@@ -119,7 +121,7 @@ return new class extends Migration
             $table->text('student_signature')->nullable();
             
             // Status & Metadata
-            $table->enum('admission_status', ['Pending', 'Admitted', 'Cancelled'])->default('Pending');
+            $table->unsignedTinyInteger('admission_status')->default(1)->comment('1=Pending, 2=Admitted, 3=Cancelled'); // consolidated from change_admission_status
             $table->timestamps();
             
             // Indexes

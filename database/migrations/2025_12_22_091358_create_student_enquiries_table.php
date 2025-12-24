@@ -21,7 +21,7 @@ return new class extends Migration
             // Enquiry Form
             $table->string('subject_name')->nullable();
             $table->string('student_name');
-            $table->enum('gender', ['Male', 'Female', 'Other'])->nullable();
+            $table->integer('gender')->nullable()->comment('1=Male, 2=Female, 3=Other'); // consolidated from change_gender
             $table->date('follow_up_date')->nullable();
             
             // Father's Details
@@ -72,6 +72,7 @@ return new class extends Migration
             $table->string('previous_class')->nullable();
             $table->text('identity_marks')->nullable();
             $table->text('permanent_address')->nullable();
+            $table->unsignedTinyInteger('country_id')->default(1); // consolidated from add_country_id
             $table->string('previous_school_name')->nullable();
             $table->string('student_roll_no')->nullable();
             $table->string('passing_year')->nullable();

@@ -51,3 +51,7 @@ Route::get('routes-export', [\App\Http\Controllers\Receptionist\RouteController:
 // Bus Stop Management
 Route::resource('bus-stops', \App\Http\Controllers\Receptionist\BusStopController::class);
 Route::get('bus-stops-export', [\App\Http\Controllers\Receptionist\BusStopController::class, 'export'])->name('bus-stops.export');
+
+// Transport Assignment Management
+Route::resource('transport-assignments', \App\Http\Controllers\Receptionist\StudentTransportAssignmentController::class);
+

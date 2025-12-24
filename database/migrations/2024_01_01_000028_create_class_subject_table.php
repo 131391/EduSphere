@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
             $table->foreignId('teacher_id')->nullable()->constrained('teachers')->onDelete('set null');
             $table->integer('weekly_hours')->default(0);
+            $table->integer('full_marks')->default(100);
             $table->timestamps();
 
             $table->unique(['class_id', 'subject_id']);
