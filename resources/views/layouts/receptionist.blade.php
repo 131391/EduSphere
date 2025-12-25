@@ -149,7 +149,7 @@
             <!-- Navigation -->
             <nav class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2" x-data="{ 
                 frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }},
-                studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*') ? 'true' : 'false' }},
+                studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*') || request()->routeIs('receptionist.transport-assignments.*') ? 'true' : 'false' }},
                 transportOpen: {{ request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*') ? 'true' : 'false' }},
                 toggleFrontDesk() {
                     this.frontDeskOpen = !this.frontDeskOpen;

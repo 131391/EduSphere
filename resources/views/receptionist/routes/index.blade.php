@@ -91,7 +91,7 @@
             ],
             [
                 'type' => 'form',
-                'action' => function($row) {
+                'url' => function($row) {
                     return route('receptionist.routes.destroy', $row->id);
                 },
                 'method' => 'DELETE',
@@ -99,7 +99,6 @@
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
-                'dispatch' => 'confirm-delete',
             ],
         ];
     @endphp

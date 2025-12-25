@@ -153,7 +153,19 @@
                         @foreach($columns as $column)
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             @if(isset($column['render']))
-                                {!! $column['render']($row) !!}
+                                @php
+                                    // Support both old signature (row only) and new signature (row, index, data)
+                                    $reflection = new ReflectionFunction($column['render']);
+                                    $paramCount = $reflection->getNumberOfParameters();
+                                    if ($paramCount >= 3) {
+                                        $renderResult = $column['render']($row, $loop->index, $data);
+                                    } elseif ($paramCount >= 2) {
+                                        $renderResult = $column['render']($row, $loop->index);
+                                    } else {
+                                        $renderResult = $column['render']($row);
+                                    }
+                                @endphp
+                                {!! $renderResult !!}
                             @elseif(isset($column['component']))
                                 @include($column['component'], ['row' => $row, 'column' => $column])
                             @else
