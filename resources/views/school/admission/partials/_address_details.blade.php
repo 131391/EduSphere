@@ -10,7 +10,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Latitude
                 </label>
-                <input type="text" name="permanent_latitude" value="{{ old('permanent_latitude', isset($student) ? $student->latitude : '') }}" placeholder="Enter Latitude"
+                <input type="text" name="latitude" value="{{ old('latitude', isset($student) ? $student->latitude : '') }}" placeholder="Enter Latitude"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
 
@@ -18,7 +18,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Longitude
                 </label>
-                <input type="text" name="permanent_longitude" value="{{ old('permanent_longitude', isset($student) ? $student->longitude : '') }}" placeholder="Enter Longitude"
+                <input type="text" name="longitude" value="{{ old('longitude', isset($student) ? $student->longitude : '') }}" placeholder="Enter Longitude"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
 
@@ -27,7 +27,7 @@
                     Address <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="permanent_address" value="{{ old('permanent_address', isset($student) ? $student->permanent_address : '') }}" placeholder="Enter Address"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border {{ $errors->has('permanent_address') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 @error('permanent_address')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -83,7 +83,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Railway / Airport
                 </label>
-                <input type="text" name="railway_airport" value="{{ old('railway_airport') }}" placeholder="Enter Nearest Railway Station / Airport"
+                <input type="text" name="railway_airport" value="{{ old('railway_airport', isset($student) ? $student->railway_airport : '') }}" placeholder="Enter Nearest Railway Station / Airport"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
 

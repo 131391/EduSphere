@@ -4,6 +4,10 @@
         Photo Details
     </div>
     <div class="bg-white dark:bg-gray-800 p-6 rounded-b-lg border border-gray-200 dark:border-gray-700">
+        {{-- Hidden fields to store photo paths from enquiry --}}
+        <input type="hidden" name="enquiry_father_photo" id="enquiry_father_photo" value="">
+        <input type="hidden" name="enquiry_mother_photo" id="enquiry_mother_photo" value="">
+        <input type="hidden" name="enquiry_student_photo" id="enquiry_student_photo" value="">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -101,6 +105,16 @@ function previewImage(event, previewId, iconId, removeBtnId) {
             if (removeBtn) {
                 removeBtn.classList.remove('hidden');
             }
+            
+            // Clear hidden enquiry field when new file is selected
+            const inputName = event.target.name;
+            const enquiryField = document.getElementById(`enquiry_${inputName}`);
+            if (enquiryField) {
+                enquiryField.value = '';
+            }
+            
+            // Clear from sessionStorage when new file is selected
+            sessionStorage.removeItem(`registration_${inputName}`);
         };
         reader.readAsDataURL(file);
     }
@@ -119,6 +133,15 @@ function removeImage(event, inputName, previewId, iconId, removeBtnId) {
     if (input) {
         input.value = '';
     }
+    
+    // Clear hidden enquiry field if it exists
+    const enquiryField = document.getElementById(`enquiry_${inputName}`);
+    if (enquiryField) {
+        enquiryField.value = '';
+    }
+    
+    // Clear from sessionStorage
+    sessionStorage.removeItem(`registration_${inputName}`);
     
     // Hide preview and show icon
     if (preview) {

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Enums\AdmissionStatus;
+use App\Enums\Gender;
 
 class StudentRegistration extends Model
 {
@@ -74,6 +75,7 @@ class StudentRegistration extends Model
         'permanent_country_id' => 'integer',
         'correspondence_country_id' => 'integer',
         'admission_status' => AdmissionStatus::class,
+        'gender' => Gender::class,
     ];
 
     /**
@@ -176,11 +178,22 @@ class StudentRegistration extends Model
 
     public function getGenderLabelAttribute()
     {
-        return match($this->gender) {
-            'Male', 'male', 1 => 'Male',
-            'Female', 'female', 2 => 'Female',
-            'Other', 'other', 3 => 'Other',
-            default => $this->gender ?? 'Not Specified'
+        if ($this->gender instanceof \App\Enums\Gender) {
+            return $this->gender->label();
+        }
+        
+        if ($this->gender === null) {
+            return 'Not Specified';
+        }
+        
+        // Handle legacy string or integer values
+        $genderValue = is_numeric($this->gender) ? (int)$this->gender : strtolower((string)$this->gender);
+        
+        return match($genderValue) {
+            1, 'male' => 'Male',
+            2, 'female' => 'Female',
+            3, 'other' => 'Other',
+            default => 'Not Specified'
         };
     }
 }

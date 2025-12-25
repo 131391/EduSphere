@@ -43,10 +43,20 @@ return new class extends Migration
             $table->string('father_name');
             $table->string('father_aadhaar')->nullable();
             $table->string('father_pan')->nullable(); // consolidated from add_pan_and_railway
+            $table->string('father_email')->nullable();
+            $table->string('father_mobile')->nullable();
+            $table->string('father_occupation')->nullable();
+            $table->string('father_qualification')->nullable();
+            $table->decimal('father_annual_income', 12, 2)->nullable();
 
             $table->string('mother_name');
             $table->string('mother_aadhaar')->nullable();
             $table->string('mother_pan')->nullable(); // consolidated from add_pan_and_railway
+            $table->string('mother_email')->nullable();
+            $table->string('mother_mobile')->nullable();
+            $table->string('mother_occupation')->nullable();
+            $table->string('mother_qualification')->nullable();
+            $table->decimal('mother_annual_income', 12, 2)->nullable();
             $table->integer('number_of_brothers')->nullable();
             $table->integer('number_of_sisters')->nullable();
             $table->boolean('is_single_parent')->default(false);
@@ -54,8 +64,20 @@ return new class extends Migration
             
             // Address Info
             $table->text('address')->nullable();
+            $table->text('permanent_address')->nullable();
+            $table->string('permanent_state')->nullable();
+            $table->string('permanent_city')->nullable();
+            $table->string('permanent_pin')->nullable();
+            $table->string('latitude')->nullable();
+            $table->string('longitude')->nullable();
             $table->unsignedTinyInteger('permanent_country_id')->default(1)->nullable(); // consolidated from add_country_id
             $table->unsignedTinyInteger('correspondence_country_id')->default(1)->nullable(); // consolidated from add_country_id
+            $table->text('correspondence_address')->nullable();
+            $table->string('correspondence_state')->nullable();
+            $table->string('correspondence_city')->nullable();
+            $table->string('correspondence_pin')->nullable();
+            $table->string('correspondence_location')->nullable();
+            $table->string('distance_from_school')->nullable();
             $table->string('state_of_domicile')->nullable();
             $table->string('railway_airport')->nullable(); // consolidated from add_pan_and_railway
             
@@ -65,7 +87,11 @@ return new class extends Migration
             
             // Documents
             $table->string('photo')->nullable();
+            $table->string('father_photo')->nullable();
+            $table->string('mother_photo')->nullable();
             $table->string('signature')->nullable(); // consolidated from add_photo_and_signature
+            $table->string('father_signature')->nullable();
+            $table->string('mother_signature')->nullable();
             
             // Academic Info
             $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');

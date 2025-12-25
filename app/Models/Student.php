@@ -9,6 +9,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
 use App\Enums\StudentStatus;
+use App\Enums\Gender;
 
 class Student extends Model
 {
@@ -35,9 +36,21 @@ class Student extends Model
         'religion',
         'category',
         'address',
+        'permanent_address',
+        'permanent_country_id',
+        'permanent_state',
+        'permanent_city',
+        'permanent_pin',
+        'latitude',
+        'longitude',
         'phone',
         'email',
         'photo',
+        'father_photo',
+        'mother_photo',
+        'signature',
+        'father_signature',
+        'mother_signature',
         'class_id',
         'section_id',
         'student_type',
@@ -59,42 +72,27 @@ class Student extends Model
         'bus_stop',
         'other_stop',
         'boarding_type',
-        'father_occupation',
-        'father_organization',
-        'father_office_address',
-        'father_qualification',
+        'father_aadhaar',
+        'father_pan',
         'father_email',
         'father_mobile',
-        'father_landline',
-        'father_aadhaar',
+        'father_occupation',
+        'father_qualification',
         'father_annual_income',
-        'father_designation',
-        'mother_occupation',
-        'mother_organization',
-        'mother_office_address',
-        'mother_qualification',
+        'mother_aadhaar',
+        'mother_pan',
         'mother_email',
         'mother_mobile',
-        'mother_landline',
-        'mother_aadhaar',
+        'mother_occupation',
+        'mother_qualification',
         'mother_annual_income',
-        'mother_designation',
-        'permanent_address',
-        'permanent_country_id',
-        'permanent_state',
-        'permanent_city',
-        'permanent_pin',
         'state_of_domicile',
-        'latitude',
-        'longitude',
+        'railway_airport',
         'correspondence_address',
-        'correspondence_country_id',
         'correspondence_state',
         'correspondence_city',
         'correspondence_pin',
-        'father_pan',
-        'mother_pan',
-        'railway_airport',
+        'correspondence_location',
         'distance_from_school',
     ];
 
@@ -105,6 +103,7 @@ class Student extends Model
         'permanent_country_id' => 'integer',
         'correspondence_country_id' => 'integer',
         'status' => StudentStatus::class,
+        'gender' => Gender::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -245,7 +244,18 @@ class Student extends Model
 
     public function getGenderLabelAttribute()
     {
-        return match((int)$this->gender) {
+        if ($this->gender instanceof \App\Enums\Gender) {
+            return $this->gender->label();
+        }
+        
+        if ($this->gender === null) {
+            return 'Not Specified';
+        }
+        
+        // Handle legacy integer values
+        $genderValue = (int)$this->gender;
+        
+        return match($genderValue) {
             1 => 'Male',
             2 => 'Female',
             3 => 'Other',

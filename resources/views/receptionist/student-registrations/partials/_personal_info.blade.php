@@ -42,7 +42,11 @@
                 <select name="gender" class="w-full px-4 py-2 border {{ $errors->has('gender') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Choose Gender</option>
                     @foreach(\App\Constants\Gender::getOptions() as $value => $label)
-                        <option value="{{ $value }}" {{ (old('gender', $studentRegistration->gender ?? '') == $value) ? 'selected' : '' }}>{{ $label }}</option>
+                        @php
+                            $currentGender = old('gender', $studentRegistration->gender ?? '');
+                            $currentValue = $currentGender instanceof \App\Enums\Gender ? $currentGender->value : $currentGender;
+                        @endphp
+                        <option value="{{ $value }}" {{ $currentValue == $value ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
                 @error('gender')

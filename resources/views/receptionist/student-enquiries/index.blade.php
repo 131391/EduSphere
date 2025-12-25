@@ -82,25 +82,29 @@
         </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <div class="flex items-center space-x-3">
-            <button @click="openAddModal()" 
-                    class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-plus"></i>
-                <span>Add Enquiry</span>
-            </button>
-            <button @click="window.location.href='{{ route('receptionist.student-enquiries.index', ['today' => 1]) }}'" 
-                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-calendar-day"></i>
-                <span>Today Follow Up Data</span>
-            </button>
+    {{-- Page Header with Actions --}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Enquiry List</h2>
+            <div class="flex flex-wrap gap-2">
+                <button @click="openAddModal()" 
+                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Enquiry
+                </button>
+                <a href="{{ route('receptionist.student-enquiries.index', ['today' => 1]) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-calendar-day mr-2"></i>
+                    Today Follow Up Data
+                </a>
+                <button class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Export To Excel
+                </button>
+            </div>
         </div>
-        <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-            <i class="fas fa-file-excel"></i>
-            <span>Export To Excel</span>
-        </button>
     </div>
+
 
     <!-- Enquiries Table -->
     @php
@@ -179,6 +183,15 @@
         ];
 
         $tableActions = [
+            [
+                'type' => 'link',
+                'href' => function($row) {
+                    return route('receptionist.student-enquiries.show', $row->id);
+                },
+                'icon' => 'fas fa-eye',
+                'class' => 'text-green-600 hover:text-green-900',
+                'title' => 'View',
+            ],
             [
                 'type' => 'button',
                 'onclick' => function($row) {
@@ -423,6 +436,57 @@ document.addEventListener('alpine:init', () => {
             @endif
         },
         
+        resetForm() {
+            // Reset form
+            const form = document.querySelector('form[action*="student-enquiries"]');
+            if (form) {
+                form.reset();
+            }
+            
+            // Reset Select2 dropdowns
+            setTimeout(() => {
+                $('select[name="academic_year_id"]').val(null).trigger('change');
+                $('select[name="class_id"]').val(null).trigger('change');
+                $('select[name="country_id"]').val(null).trigger('change');
+                $('select[name="gender"]').val(null).trigger('change');
+            }, 50);
+            
+            // Reset image previews
+            const photoFields = [
+                { previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeBtnId: 'father-photo-remove' },
+                { previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeBtnId: 'mother-photo-remove' },
+                { previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeBtnId: 'student-photo-remove' }
+            ];
+            
+            photoFields.forEach(photo => {
+                const preview = document.getElementById(photo.previewId);
+                const icon = document.getElementById(photo.iconId);
+                const removeBtn = document.getElementById(photo.removeBtnId);
+                
+                if (preview) {
+                    preview.src = '#';
+                    preview.classList.add('hidden');
+                }
+                if (icon) {
+                    icon.classList.remove('hidden');
+                }
+                if (removeBtn) {
+                    removeBtn.classList.add('hidden');
+                }
+            });
+            
+            // Clear sessionStorage for images
+            sessionStorage.removeItem('enquiry_father_photo');
+            sessionStorage.removeItem('enquiry_mother_photo');
+            sessionStorage.removeItem('enquiry_student_photo');
+            
+            // Reset file inputs
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.value = '';
+            });
+        },
+        
         openAddModal() {
             // Hide error banner when opening modal
             const errorBanner = document.getElementById('error-banner-enquiry');
@@ -433,18 +497,8 @@ document.addEventListener('alpine:init', () => {
                 }
             }
             
-            // Clear sessionStorage for images when opening fresh modal (not from validation error)
-            @if(!$errors->any())
-                sessionStorage.removeItem('enquiry_father_photo');
-                sessionStorage.removeItem('enquiry_mother_photo');
-                sessionStorage.removeItem('enquiry_student_photo');
-                
-                // Reset form
-                const form = document.querySelector('form[action*="student-enquiries"]');
-                if (form) {
-                    form.reset();
-                }
-            @endif
+            // Reset form to ensure clean state
+            this.resetForm();
             
             this.editMode = false;
             this.enquiryId = null;
@@ -569,6 +623,7 @@ document.addEventListener('alpine:init', () => {
         },
         
         closeModal() {
+            this.resetForm();
             this.showModal = false;
             // Unlock body scroll
             document.body.style.overflow = '';

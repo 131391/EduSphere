@@ -5,7 +5,7 @@
 @section('page-description', 'Manage visitor entries and appointments')
 
 @section('content')
-<div class="space-y-6" x-data="visitorManagement" x-init="init()">
+<div class="space-y-6" x-data="visitorManagement" x-init="init()" @close-modal.window="if ($event.detail === 'visitor-modal') { resetForm(); }">
     <!-- Success/Error Messages -->
     @if(session('success'))
     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative">
@@ -497,6 +497,13 @@ document.addEventListener('alpine:init', () => {
         },
         
         init() {
+            // Listen for modal close event to reset form
+            window.addEventListener('close-modal', (event) => {
+                if (event.detail === 'visitor-modal') {
+                    this.resetForm();
+                }
+            });
+            
             // Hide error banner when modal opens
             this.$watch('showModal', (value) => {
                 if (value) {
@@ -523,35 +530,39 @@ document.addEventListener('alpine:init', () => {
                     visit_purpose: '{{ old('visit_purpose') }}',
                     meeting_purpose: '{{ old('meeting_purpose') }}',
                     meeting_with: '{{ old('meeting_with') }}',
-                    priority: '{{ old('priority', VisitorPriority::Medium->value) }}',
-                    no_of_guests: {{ old('no_of_guests', 1) }},
-                    meeting_type: '{{ old('meeting_type', VisitorMode::Offline->value) }}',
+                    priority: '{{ old('priority') }}',
+                    no_of_guests: '{{ old('no_of_guests') }}',
+                    meeting_type: '{{ old('meeting_type') }}',
                     source: '{{ old('source') }}',
                     meeting_scheduled: '{{ old('meeting_scheduled') }}',
                 };
                 this.$nextTick(() => {
                     this.$dispatch('open-modal', 'visitor-modal');
-                    // Set select values after modal opens to ensure they're displayed
+                    // Set Select2 values after modal opens to ensure they're displayed properly
                     setTimeout(() => {
-                        const selects = ['priority', 'visit_purpose', 'visitor_type', 'meeting_with', 'meeting_type'];
-                        selects.forEach(selectName => {
-                            const select = document.querySelector(`[name="${selectName}"]`);
-                            if (select && this.formData[selectName]) {
-                                select.value = this.formData[selectName];
-                            }
-                        });
-                    }, 100);
+                        // Set Select2 dropdowns using jQuery
+                        if (this.formData.visit_purpose) {
+                            $('select[name="visit_purpose"]').val(this.formData.visit_purpose).trigger('change');
+                        }
+                        if (this.formData.visitor_type) {
+                            $('select[name="visitor_type"]').val(this.formData.visitor_type).trigger('change');
+                        }
+                        if (this.formData.meeting_with) {
+                            $('select[name="meeting_with"]').val(this.formData.meeting_with).trigger('change');
+                        }
+                        if (this.formData.priority) {
+                            $('select[name="priority"]').val(this.formData.priority).trigger('change');
+                        }
+                        if (this.formData.meeting_type) {
+                            $('select[name="meeting_type"]').val(this.formData.meeting_type).trigger('change');
+                        }
+                    }, 200);
                 });
             @endif
         },
         
-        openAddModal() {
-            // Hide error banner when opening modal
-            const errorBanner = document.getElementById('error-banner');
-            if (errorBanner) {
-                errorBanner.style.display = 'none';
-            }
-            
+        resetForm() {
+            // Reset form data to defaults
             this.editMode = false;
             this.visitorId = null;
             this.formData = {
@@ -563,18 +574,78 @@ document.addEventListener('alpine:init', () => {
                 visit_purpose: '',
                 meeting_purpose: '',
                 meeting_with: '',
-                priority: '{{ VisitorPriority::Medium->value }}',
-                no_of_guests: 1,
-                meeting_type: '{{ VisitorMode::Offline->value }}', // Offline = 2
+                priority: '',
+                no_of_guests: '',
+                meeting_type: '',
+                source: '',
+                meeting_scheduled: '',
             };
-            this.$dispatch('open-modal', 'visitor-modal');
-            // Ensure select value is set after modal opens
-            this.$nextTick(() => {
-                const select = document.querySelector('[name="priority"]');
-                if (select) {
-                    select.value = this.formData.priority;
-                }
+            
+            // Reset Select2 dropdowns
+            setTimeout(() => {
+                $('select[name="visit_purpose"]').val(null).trigger('change');
+                $('select[name="visitor_type"]').val(null).trigger('change');
+                $('select[name="meeting_with"]').val(null).trigger('change');
+                $('select[name="priority"]').val(null).trigger('change');
+                $('select[name="meeting_type"]').val(null).trigger('change');
+            }, 50);
+            
+            // Reset image previews
+            this.resetImagePreviews();
+            
+            // Reset file inputs
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.value = '';
             });
+        },
+        
+        resetImagePreviews() {
+            // Reset visitor photo preview
+            const visitorPhotoPreview = document.getElementById('visitor-photo-preview');
+            const visitorPhotoIcon = document.getElementById('visitor-photo-icon');
+            const visitorPhotoRemove = document.getElementById('visitor-photo-remove');
+            
+            if (visitorPhotoPreview) {
+                visitorPhotoPreview.src = '#';
+                visitorPhotoPreview.classList.add('hidden');
+            }
+            if (visitorPhotoIcon) {
+                visitorPhotoIcon.classList.remove('hidden');
+            }
+            if (visitorPhotoRemove) {
+                visitorPhotoRemove.classList.add('hidden');
+            }
+            
+            // Reset ID proof preview
+            const idProofPreview = document.getElementById('id-proof-preview');
+            const idProofIcon = document.getElementById('id-proof-icon');
+            const idProofRemove = document.getElementById('id-proof-remove');
+            
+            if (idProofPreview) {
+                idProofPreview.src = '#';
+                idProofPreview.classList.add('hidden');
+            }
+            if (idProofIcon) {
+                idProofIcon.classList.remove('hidden');
+            }
+            if (idProofRemove) {
+                idProofRemove.classList.add('hidden');
+            }
+        },
+        
+        openAddModal() {
+            // Hide error banner when opening modal
+            const errorBanner = document.getElementById('error-banner');
+            if (errorBanner) {
+                errorBanner.style.display = 'none';
+            }
+            
+            // Reset form to ensure clean state
+            this.resetForm();
+            
+            // Open the modal
+            this.$dispatch('open-modal', 'visitor-modal');
         },
         
         openEditModal(visitor) {
@@ -660,6 +731,7 @@ document.addEventListener('alpine:init', () => {
         },
         
         closeModal() {
+            this.resetForm();
             this.$dispatch('close-modal', 'visitor-modal');
         },
 

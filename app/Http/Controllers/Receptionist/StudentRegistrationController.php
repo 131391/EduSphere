@@ -122,8 +122,23 @@ class StudentRegistrationController extends TenantController
         $fileFields = ['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
+                // New file uploaded - store it
                 $path = $request->file($field)->store("registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
                 $data[$field] = $path;
+            } elseif ($request->filled("enquiry_{$field}")) {
+                // Photo from enquiry - copy it to registration storage
+                $enquiryPath = $request->input("enquiry_{$field}");
+                if ($enquiryPath && Storage::disk('public')->exists($enquiryPath)) {
+                    // Determine destination directory
+                    $destinationDir = "registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures');
+                    // Generate new filename to avoid conflicts
+                    $filename = basename($enquiryPath);
+                    $newPath = $destinationDir . '/' . time() . '_' . $filename;
+                    
+                    // Copy file from enquiry storage to registration storage
+                    Storage::disk('public')->copy($enquiryPath, $newPath);
+                    $data[$field] = $newPath;
+                }
             }
         }
 
@@ -177,11 +192,30 @@ class StudentRegistrationController extends TenantController
         $fileFields = ['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
+                // New file uploaded - store it
                 if ($studentRegistration->$field) {
                     Storage::disk('public')->delete($studentRegistration->$field);
                 }
                 $path = $request->file($field)->store("registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
                 $data[$field] = $path;
+            } elseif ($request->filled("enquiry_{$field}")) {
+                // Photo from enquiry - copy it to registration storage
+                $enquiryPath = $request->input("enquiry_{$field}");
+                if ($enquiryPath && Storage::disk('public')->exists($enquiryPath)) {
+                    // Delete old file if exists
+                    if ($studentRegistration->$field) {
+                        Storage::disk('public')->delete($studentRegistration->$field);
+                    }
+                    // Determine destination directory
+                    $destinationDir = "registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures');
+                    // Generate new filename to avoid conflicts
+                    $filename = basename($enquiryPath);
+                    $newPath = $destinationDir . '/' . time() . '_' . $filename;
+                    
+                    // Copy file from enquiry storage to registration storage
+                    Storage::disk('public')->copy($enquiryPath, $newPath);
+                    $data[$field] = $newPath;
+                }
             }
         }
 

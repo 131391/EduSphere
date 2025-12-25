@@ -129,7 +129,25 @@ class AdmissionController extends TenantController
             $student = new Student();
             $student->school_id = $this->getSchoolId();
             $student->user_id = Auth::id(); // Ideally create a new user for student
-            $student->fill($request->except(['student_photo', 'father_photo', 'mother_photo']));
+            
+            // Exclude fields that don't exist in students table or need special handling
+            $excludedFields = [
+                'student_photo', 'father_photo', 'mother_photo',
+                'student_signature', 'father_signature', 'mother_signature',
+                'father_first_name', 'father_middle_name', 'father_last_name',
+                'father_mobile_no', 'father_landline', 'father_landline_no',
+                'father_organization', 'father_office_address',
+                'father_designation',
+                'mother_first_name', 'mother_middle_name', 'mother_last_name',
+                'mother_mobile_no', 'mother_landline', 'mother_landline_no',
+                'mother_organization', 'mother_office_address',
+                'mother_designation',
+                'father_name_prefix', 'mother_name_prefix',
+                'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
+                'student_signature_path', 'father_signature_path', 'mother_signature_path'
+            ];
+            
+            $student->fill($request->except($excludedFields));
             
             // Handle Student Photo
             if ($request->hasFile('student_photo')) {
@@ -216,11 +234,11 @@ class AdmissionController extends TenantController
             }
             
             // Concatenate Father Name
-            $fatherName = trim($request->father_first_name . ' ' . $request->father_middle_name . ' ' . $request->father_last_name);
+            $fatherName = trim(($request->father_first_name ?? '') . ' ' . ($request->father_middle_name ?? '') . ' ' . ($request->father_last_name ?? ''));
             $student->father_name = $fatherName;
 
             // Concatenate Mother Name
-            $motherName = trim($request->mother_first_name . ' ' . $request->mother_middle_name . ' ' . $request->mother_last_name);
+            $motherName = trim(($request->mother_first_name ?? '') . ' ' . ($request->mother_middle_name ?? '') . ' ' . ($request->mother_last_name ?? ''));
             $student->mother_name = $motherName;
             
             // Generate Admission No if not provided
@@ -318,7 +336,24 @@ class AdmissionController extends TenantController
 
         DB::beginTransaction();
         try {
-            $student->fill($request->except(['student_photo', 'father_photo', 'mother_photo']));
+            // Exclude fields that don't exist in students table or need special handling
+            $excludedFields = [
+                'student_photo', 'father_photo', 'mother_photo',
+                'student_signature', 'father_signature', 'mother_signature',
+                'father_first_name', 'father_middle_name', 'father_last_name',
+                'father_mobile_no', 'father_landline', 'father_landline_no',
+                'father_organization', 'father_office_address',
+                'father_designation',
+                'mother_first_name', 'mother_middle_name', 'mother_last_name',
+                'mother_mobile_no', 'mother_landline', 'mother_landline_no',
+                'mother_organization', 'mother_office_address',
+                'mother_designation',
+                'father_name_prefix', 'mother_name_prefix',
+                'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
+                'student_signature_path', 'father_signature_path', 'mother_signature_path'
+            ];
+            
+            $student->fill($request->except($excludedFields));
 
             // Concatenate Father Name
             $fatherName = trim($request->father_first_name . ' ' . $request->father_middle_name . ' ' . $request->father_last_name);
@@ -344,6 +379,14 @@ class AdmissionController extends TenantController
                 }
                 $path = $request->file('father_photo')->store('parent_photos', 'public');
                 $student->father_photo = $path;
+            } elseif ($request->filled('father_photo_path')) {
+                $sourcePath = $request->father_photo_path;
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
+                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
+                    $newPath = 'parent_photos/' . Str::random(40) . '.' . $extension;
+                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
+                    $student->father_photo = $newPath;
+                }
             }
 
             // Handle Mother Photo
@@ -353,6 +396,14 @@ class AdmissionController extends TenantController
                 }
                 $path = $request->file('mother_photo')->store('parent_photos', 'public');
                 $student->mother_photo = $path;
+            } elseif ($request->filled('mother_photo_path')) {
+                $sourcePath = $request->mother_photo_path;
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
+                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
+                    $newPath = 'parent_photos/' . Str::random(40) . '.' . $extension;
+                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
+                    $student->mother_photo = $newPath;
+                }
             }
 
             // Handle Student Signature
@@ -362,6 +413,14 @@ class AdmissionController extends TenantController
                 }
                 $path = $request->file('student_signature')->store('student_signatures', 'public');
                 $student->signature = $path;
+            } elseif ($request->filled('student_signature_path')) {
+                $sourcePath = $request->student_signature_path;
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
+                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
+                    $newPath = 'student_signatures/' . Str::random(40) . '.' . $extension;
+                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
+                    $student->signature = $newPath;
+                }
             }
 
             // Handle Father Signature
@@ -371,6 +430,14 @@ class AdmissionController extends TenantController
                 }
                 $path = $request->file('father_signature')->store('parent_signatures', 'public');
                 $student->father_signature = $path;
+            } elseif ($request->filled('father_signature_path')) {
+                $sourcePath = $request->father_signature_path;
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
+                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
+                    $newPath = 'parent_signatures/' . Str::random(40) . '.' . $extension;
+                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
+                    $student->father_signature = $newPath;
+                }
             }
 
             // Handle Mother Signature
@@ -380,6 +447,14 @@ class AdmissionController extends TenantController
                 }
                 $path = $request->file('mother_signature')->store('parent_signatures', 'public');
                 $student->mother_signature = $path;
+            } elseif ($request->filled('mother_signature_path')) {
+                $sourcePath = $request->mother_signature_path;
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
+                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
+                    $newPath = 'parent_signatures/' . Str::random(40) . '.' . $extension;
+                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
+                    $student->mother_signature = $newPath;
+                }
             }
 
             $student->save();

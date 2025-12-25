@@ -23,7 +23,7 @@
                     <input type="file" name="father_signature" accept="image/*" 
                            onchange="previewImage(event, 'father-signature-preview', 'father-signature-icon', 'father-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
-                    <input type="hidden" name="father_signature_path" id="father_signature_path">
+                    <input type="hidden" name="father_signature_path" id="father_signature_path" value="">
                 </div>
             </div>
 
@@ -45,7 +45,7 @@
                     <input type="file" name="mother_signature" accept="image/*" 
                            onchange="previewImage(event, 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
-                    <input type="hidden" name="mother_signature_path" id="mother_signature_path">
+                    <input type="hidden" name="mother_signature_path" id="mother_signature_path" value="">
                 </div>
             </div>
 
@@ -67,7 +67,7 @@
                     <input type="file" name="student_signature" accept="image/*" 
                            onchange="previewImage(event, 'student-signature-preview', 'student-signature-icon', 'student-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
-                    <input type="hidden" name="student_signature_path" id="student_signature_path">
+                    <input type="hidden" name="student_signature_path" id="student_signature_path" value="">
                 </div>
             </div>
         </div>
@@ -77,6 +77,7 @@
 <script>
 function previewImage(event, previewId, iconId, removeBtnId) {
     const file = event.target.files[0];
+    const inputName = event.target.name; // e.g., 'father_signature'
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -92,6 +93,9 @@ function previewImage(event, previewId, iconId, removeBtnId) {
             if (removeBtn) {
                 removeBtn.classList.remove('hidden');
             }
+            
+            // Clear hidden path field when a new file is selected
+            $(`#${inputName}_path`).val('');
         };
         reader.readAsDataURL(file);
     }
@@ -110,6 +114,9 @@ function removeImage(event, inputName, previewId, iconId, removeBtnId) {
     if (input) {
         input.value = '';
     }
+    
+    // Clear hidden path field
+    $(`#${inputName}_path`).val('');
     
     // Hide preview and show icon
     if (preview) {

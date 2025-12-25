@@ -57,6 +57,15 @@ class StudentEnquiryController extends TenantController
         return view('receptionist.student-enquiries.index', compact('enquiries', 'stats', 'academicYears', 'classes'));
     }
 
+    public function show(StudentEnquiry $studentEnquiry)
+    {
+        $this->authorizeTenant($studentEnquiry);
+        
+        $studentEnquiry->load(['academicYear', 'class']);
+        
+        return view('receptionist.student-enquiries.show', compact('studentEnquiry'));
+    }
+
     public function store(Request $request)
     {
         $validated = $this->validateEnquiry($request);

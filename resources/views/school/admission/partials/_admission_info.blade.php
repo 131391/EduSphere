@@ -37,7 +37,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Academic Year <span class="text-red-500">*</span>
                 </label>
-                <select name="academic_year_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="academic_year_id" class="w-full px-4 py-2 border {{ $errors->has('academic_year_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Select Academic Year</option>
                     @foreach($academicYears as $year)
                         <option value="{{ $year->id }}" {{ old('academic_year_id', isset($student) ? $student->academic_year_id : '') == $year->id ? 'selected' : '' }}>{{ $year->name }}</option>
@@ -52,7 +52,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Class <span class="text-red-500">*</span>
                 </label>
-                <select name="class_id" id="class_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="class_id" id="class_id" class="w-full px-4 py-2 border {{ $errors->has('class_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Select Class</option>
                     @foreach($classes as $class)
                         <option value="{{ $class->id }}" {{ old('class_id', isset($student) ? $student->class_id : '') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
@@ -67,7 +67,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Section <span class="text-red-500">*</span>
                 </label>
-                <select name="section_id" id="section_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="section_id" id="section_id" class="w-full px-4 py-2 border {{ $errors->has('section_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Select Section</option>
                 </select>
                 @error('section_id')
@@ -79,7 +79,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Roll No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="roll_no" value="{{ old('roll_no', isset($student) ? $student->roll_no : '') }}" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white" placeholder="Enter Roll No">
+                <input type="text" name="roll_no" value="{{ old('roll_no', isset($student) ? $student->roll_no : '') }}" class="w-full px-4 py-2 border {{ $errors->has('roll_no') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white" placeholder="Enter Roll No">
                 @error('roll_no')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -89,7 +89,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Receipt No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="receipt_no" value="{{ old('receipt_no', isset($student) ? $student->receipt_no : '') }}" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white" placeholder="Enter Receipt No">
+                <input type="text" name="receipt_no" value="{{ old('receipt_no', isset($student) ? $student->receipt_no : '') }}" class="w-full px-4 py-2 border {{ $errors->has('receipt_no') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white" placeholder="Enter Receipt No">
                 @error('receipt_no')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -99,7 +99,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Registration Date <span class="text-red-500">*</span>
                 </label>
-                <input type="date" name="admission_date" value="{{ old('admission_date', isset($student) && $student->admission_date ? $student->admission_date->format('Y-m-d') : '') }}" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="date" name="admission_date" value="{{ old('admission_date', isset($student) && $student->admission_date ? $student->admission_date->format('Y-m-d') : '') }}" class="w-full px-4 py-2 border {{ $errors->has('admission_date') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 @error('admission_date')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -109,7 +109,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Admission Fee <span class="text-red-500">*</span>
                 </label>
-                <input type="number" step="0.01" name="admission_fee" id="admission_fee" value="{{ old('admission_fee', isset($student) ? $student->admission_fee : '') }}" readonly class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-100 dark:bg-gray-600 dark:text-white" placeholder="Admission Fee">
+                <input type="number" step="0.01" name="admission_fee" id="admission_fee" value="{{ old('admission_fee', isset($student) ? $student->admission_fee : '') }}" readonly class="w-full px-4 py-2 border {{ $errors->has('admission_fee') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-100 dark:bg-gray-600 dark:text-white" placeholder="Admission Fee">
                 @error('admission_fee')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -156,6 +156,16 @@ $(document).ready(function() {
                     
                     // Set admission fee
                     admissionFeeInput.val(data.admission_fee);
+                    
+                    // Clear errors for section and admission fee when they're populated
+                    if (data.sections.length > 0) {
+                        sectionSelect.removeClass('border-red-500');
+                        sectionSelect.closest('div').find('p.text-red-500').remove();
+                    }
+                    if (data.admission_fee) {
+                        admissionFeeInput.removeClass('border-red-500');
+                        admissionFeeInput.closest('div').find('p.text-red-500').remove();
+                    }
                 },
                 error: function(xhr) {
                     console.error('Error loading class data:', xhr);

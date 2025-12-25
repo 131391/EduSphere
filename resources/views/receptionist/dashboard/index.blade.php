@@ -144,15 +144,16 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $visitor->visit_purpose ?? 'N/A' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
-                                $statusColors = [
-                                    'scheduled' => 'bg-blue-100 text-blue-800',
-                                    'checked_in' => 'bg-green-100 text-green-800',
-                                    'completed' => 'bg-gray-100 text-gray-800',
-                                    'cancelled' => 'bg-red-100 text-red-800',
-                                ];
+                                $colorClass = match($visitor->status) {
+                                    \App\Enums\VisitorStatus::Scheduled => 'bg-blue-100 text-blue-800',
+                                    \App\Enums\VisitorStatus::CheckedIn => 'bg-yellow-100 text-yellow-800',
+                                    \App\Enums\VisitorStatus::Completed => 'bg-green-100 text-green-800',
+                                    \App\Enums\VisitorStatus::Cancelled => 'bg-red-100 text-red-800',
+                                    default => 'bg-gray-100 text-gray-800',
+                                };
                             @endphp
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $statusColors[$visitor->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ ucfirst($visitor->status) }}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $colorClass }}">
+                                {{ $visitor->status->label() }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $visitor->created_at->format('d M, Y') }}</td>

@@ -20,7 +20,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Initial <span class="text-red-500">*</span>
                 </label>
-                <select name="mother_name_prefix" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="mother_name_prefix" class="w-full px-4 py-2 border {{ $errors->has('mother_name_prefix') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="Mrs" {{ old('mother_name_prefix') == 'Mrs' ? 'selected' : '' }}>Mrs</option>
                     <option value="Ms" {{ old('mother_name_prefix') == 'Ms' ? 'selected' : '' }}>Ms</option>
                     <option value="Dr" {{ old('mother_name_prefix') == 'Dr' ? 'selected' : '' }}>Dr</option>
@@ -36,7 +36,7 @@
                     First Name <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="mother_first_name" value="{{ old('mother_first_name', isset($student) ? $student->mother_first_name : '') }}" placeholder="Enter First Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border {{ $errors->has('mother_first_name') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 @error('mother_first_name')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -55,7 +55,7 @@
                     Last Name <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="mother_last_name" value="{{ old('mother_last_name', isset($student) ? $student->mother_last_name : '') }}" placeholder="Enter Last Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border {{ $errors->has('mother_last_name') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 @error('mother_last_name')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -74,7 +74,7 @@
                     Mobile No <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="mother_mobile" value="{{ old('mother_mobile', isset($student) ? $student->mother_mobile : '') }}" placeholder="Enter Mobile No"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border {{ $errors->has('mother_mobile') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 @error('mother_mobile')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -120,7 +120,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     PAN No
                 </label>
-                <input type="text" name="mother_pan" value="{{ old('mother_pan') }}" placeholder="Enter PAN No"
+                <input type="text" name="mother_pan" value="{{ old('mother_pan', isset($student) ? $student->mother_pan : '') }}" placeholder="Enter PAN No"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
         </div>

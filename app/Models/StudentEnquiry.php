@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 use App\Enums\EnquiryStatus;
+use App\Enums\Gender;
 
 class StudentEnquiry extends Model
 {
@@ -96,6 +97,7 @@ class StudentEnquiry extends Model
         'passing_year' => 'integer',
         'country_id' => 'integer',
         'form_status' => EnquiryStatus::class,
+        'gender' => Gender::class,
     ];
 
     /**

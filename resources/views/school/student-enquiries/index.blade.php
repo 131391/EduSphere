@@ -96,24 +96,27 @@
         </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <div class="flex items-center space-x-3">
-            <button @click="openAddModal()" 
-                    class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-plus"></i>
-                <span>Add Enquiry</span>
-            </button>
-            <button @click="window.location.href='{{ route('school.student-enquiries.index', ['today' => 1]) }}'" 
-                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                <i class="fas fa-calendar-day"></i>
-                <span>Today Follow Up Data</span>
-            </button>
+    {{-- Page Header with Actions --}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Enquiry List</h2>
+            <div class="flex flex-wrap gap-2">
+                <button @click="openAddModal()" 
+                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Enquiry
+                </button>
+                <a href="{{ route('school.student-enquiries.index', ['today' => 1]) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-calendar-day mr-2"></i>
+                    Today Follow Up Data
+                </a>
+                <button class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md transition-colors">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Export To Excel
+                </button>
+            </div>
         </div>
-        <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-            <i class="fas fa-file-excel"></i>
-            <span>Export To Excel</span>
-        </button>
     </div>
 
     <!-- Enquiries Table -->

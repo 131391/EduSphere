@@ -111,23 +111,53 @@ $(document).ready(function() {
             url: `/school/admission/registration/${registrationId}`,
             method: 'GET',
             success: function(data) {
+                // Helper function to clear errors for a field ONLY if it has a value
+                function clearFieldError(fieldName) {
+                    const field = $(`[name="${fieldName}"]`);
+                    // Only clear errors if the field has a value
+                    if (field.length && field.val()) {
+                        // Remove red border
+                        field.removeClass('border-red-500');
+                        // Remove error message (only <p> tags with text-red-500, not asterisks in labels)
+                        field.closest('div').find('p.text-red-500').remove();
+                        // For Select2 fields, also remove error styling from container
+                        if (field.hasClass('select2-hidden-accessible')) {
+                            field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
+                        }
+                    }
+                }
+                
                 // Personal Information
-                $('input[name="first_name"]').val(data.first_name || '');
+                if (data.first_name) {
+                    $('input[name="first_name"]').val(data.first_name);
+                    clearFieldError('first_name');
+                }
                 $('input[name="middle_name"]').val(data.middle_name || '');
-                $('input[name="last_name"]').val(data.last_name || '');
-                $('select[name="gender"]').val(data.gender || '').trigger('change');
+                if (data.last_name) {
+                    $('input[name="last_name"]').val(data.last_name);
+                    clearFieldError('last_name');
+                }
+                if (data.gender) {
+                    $('select[name="gender"]').val(data.gender).trigger('change');
+                    clearFieldError('gender');
+                }
                 $('input[name="date_of_birth"]').val(data.dob || '');
                 $('input[name="email"]').val(data.email || '');
-                $('input[name="phone"]').val(data.mobile_no || '');
+                if (data.mobile_no) {
+                    $('input[name="phone"]').val(data.mobile_no);
+                    clearFieldError('phone');
+                }
                 
                 // Registration Date
                 if (data.registration_date) {
                     $('input[name="admission_date"]').val(data.registration_date);
+                    clearFieldError('admission_date');
                 }
                 
                 // Academic Information
                 if (data.academic_year_id) {
                     $('select[name="academic_year_id"]').val(data.academic_year_id).trigger('change');
+                    clearFieldError('academic_year_id');
                 }
                 if (data.class_id) {
                     // Set class and wait for sections/admission fee to load
@@ -135,7 +165,10 @@ $(document).ready(function() {
                     if ($('select[name="class_id"]').val() != data.class_id) {
                         $('select[name="class_id"]').val(data.class_id).trigger('change');
                     }
+                    clearFieldError('class_id');
                 }
+                // Note: section_id will be populated when class data loads via AJAX
+                // Don't clear its error here as it might not be set yet
                 
                 // Additional Personal Details
                 $('select[name="student_type"]').val(data.student_type || '').trigger('change');
@@ -143,6 +176,7 @@ $(document).ready(function() {
                 $('input[name="aadhar_no"]').val(data.aadhar_no || '');
                 $('input[name="place_of_birth"]').val(data.place_of_birth || '');
                 $('input[name="nationality"]').val(data.nationality || '');
+                clearFieldError('nationality');
                 $('select[name="religion"]').val(data.religion || '').trigger('change');
                 $('select[name="category"]').val(data.category || '').trigger('change');
                 $('input[name="mother_tongue"]').val(data.mother_tongue || '');
@@ -152,34 +186,64 @@ $(document).ready(function() {
                 $('input[name="number_of_sisters"]').val(data.number_of_sisters || '');
                 
                 // Father's Details
-                $('input[name="father_first_name"]').val(data.father_first_name || '');
+                if (data.father_first_name) {
+                    $('input[name="father_first_name"]').val(data.father_first_name);
+                    clearFieldError('father_first_name');
+                }
                 $('input[name="father_middle_name"]').val(data.father_middle_name || '');
-                $('input[name="father_last_name"]').val(data.father_last_name || '');
+                if (data.father_last_name) {
+                    $('input[name="father_last_name"]').val(data.father_last_name);
+                    clearFieldError('father_last_name');
+                }
                 $('input[name="father_email"]').val(data.father_email || '');
-                $('input[name="father_mobile_no"]').val(data.father_mobile_no || '');
+                if (data.father_mobile_no) {
+                    $('input[name="father_mobile"]').val(data.father_mobile_no);
+                    clearFieldError('father_mobile');
+                }
                 $('input[name="father_occupation"]').val(data.father_occupation || '');
                 $('input[name="father_organization"]').val(data.father_organization || '');
                 $('input[name="father_qualification"]').val(data.father_qualification || '');
                 $('input[name="father_annual_income"]').val(data.father_annual_income || '');
                 
                 // Mother's Details
-                $('input[name="mother_first_name"]').val(data.mother_first_name || '');
+                if (data.mother_first_name) {
+                    $('input[name="mother_first_name"]').val(data.mother_first_name);
+                    clearFieldError('mother_first_name');
+                }
                 $('input[name="mother_middle_name"]').val(data.mother_middle_name || '');
-                $('input[name="mother_last_name"]').val(data.mother_last_name || '');
+                if (data.mother_last_name) {
+                    $('input[name="mother_last_name"]').val(data.mother_last_name);
+                    clearFieldError('mother_last_name');
+                }
                 $('input[name="mother_email"]').val(data.mother_email || '');
-                $('input[name="mother_mobile_no"]').val(data.mother_mobile_no || '');
+                if (data.mother_mobile_no) {
+                    $('input[name="mother_mobile"]').val(data.mother_mobile_no);
+                    clearFieldError('mother_mobile');
+                }
                 $('input[name="mother_occupation"]').val(data.mother_occupation || '');
                 $('input[name="mother_organization"]').val(data.mother_organization || '');
                 $('input[name="mother_qualification"]').val(data.mother_qualification || '');
                 $('input[name="mother_annual_income"]').val(data.mother_annual_income || '');
                 
                 // Permanent Address
-                $('input[name="permanent_address"]').val(data.permanent_address || '');
-                $('textarea[name="permanent_address"]').val(data.permanent_address || '');
+                if (data.permanent_address) {
+                    $('input[name="permanent_address"]').val(data.permanent_address);
+                    $('textarea[name="permanent_address"]').val(data.permanent_address);
+                    clearFieldError('permanent_address');
+                }
                 $('select[name="permanent_country_id"]').val(data.permanent_country_id || 1).trigger('change');
-                $('input[name="permanent_state"]').val(data.permanent_state || '');
-                $('input[name="permanent_city"]').val(data.permanent_city || '');
-                $('input[name="permanent_pin"]').val(data.permanent_pin || '');
+                if (data.permanent_state) {
+                    $('input[name="permanent_state"]').val(data.permanent_state);
+                    clearFieldError('permanent_state');
+                }
+                if (data.permanent_city) {
+                    $('input[name="permanent_city"]').val(data.permanent_city);
+                    clearFieldError('permanent_city');
+                }
+                if (data.permanent_pin) {
+                    $('input[name="permanent_pin"]').val(data.permanent_pin);
+                    clearFieldError('permanent_pin');
+                }
                 
                 // Correspondence Address
                 $('input[name="correspondence_address"]').val(data.correspondence_address || '');
@@ -188,6 +252,19 @@ $(document).ready(function() {
                 $('input[name="correspondence_state"]').val(data.correspondence_state || '');
                 $('input[name="correspondence_city"]').val(data.correspondence_city || '');
                 $('input[name="correspondence_pin"]').val(data.correspondence_pin || '');
+                
+                // Clear errors for admission-specific fields ONLY if they have values
+                // Don't clear errors for empty fields - they should show validation errors if required
+                if (data.roll_no) {
+                    $('input[name="roll_no"]').val(data.roll_no);
+                    clearFieldError('roll_no');
+                }
+                if (data.receipt_no) {
+                    $('input[name="receipt_no"]').val(data.receipt_no);
+                    clearFieldError('receipt_no');
+                }
+                // section_id will be set when class data loads, don't clear it here
+                // admission_fee will be set when class data loads, don't clear it here
                 
                 // Photos - Load from registration if available
                 if (data.father_photo) {
@@ -216,6 +293,32 @@ $(document).ready(function() {
                     loadImagePreview(data.student_signature, 'student-signature-preview', 'student-signature-icon', 'student-signature-remove');
                     $('#student_signature_path').val(data.student_signature);
                 }
+                
+                // Clear all error messages and red borders after a short delay to ensure Select2 is updated
+                // This only clears errors for fields that were populated from registration data
+                setTimeout(function() {
+                    // List of fields that were populated from registration
+                    const populatedFields = [
+                        'first_name', 'last_name', 'gender', 'phone', 'admission_date',
+                        'academic_year_id', 'class_id', 'nationality',
+                        'father_first_name', 'father_last_name', 'father_mobile_no',
+                        'mother_first_name', 'mother_last_name', 'mother_mobile_no',
+                        'permanent_address', 'permanent_state', 'permanent_city', 'permanent_pin'
+                    ];
+                    
+                    // Clear errors only for fields that were populated
+                    populatedFields.forEach(function(fieldName) {
+                        const $field = $(`[name="${fieldName}"]`);
+                        if ($field.length && $field.val()) {
+                            $field.removeClass('border-red-500');
+                            $field.closest('div').find('p.text-red-500').remove();
+                            // Also clear Select2 error styling
+                            if ($field.hasClass('select2-hidden-accessible')) {
+                                $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
+                            }
+                        }
+                    });
+                }, 300);
             },
             error: function(xhr) {
                 alert('Error fetching registration data');
@@ -228,6 +331,44 @@ $(document).ready(function() {
     if ($('#registration_select').val()) {
         $('#registration_select').trigger('change');
     }
+    
+    // Global error clearing - clear errors when fields are interacted with (but not on page load)
+    // Use a flag to track if this is user interaction vs page load
+    let isUserInteraction = false;
+    let pageLoadComplete = false;
+    
+    // Mark page load as complete after a delay
+    setTimeout(function() {
+        pageLoadComplete = true;
+        // Only enable user interaction clearing after page is fully loaded
+        setTimeout(function() {
+            isUserInteraction = true;
+        }, 100);
+    }, 1000);
+    
+    $(document).on('input change', 'input, select, textarea', function(e) {
+        // Only clear errors if this is actual user interaction, not page load or programmatic change
+        if (!isUserInteraction || !pageLoadComplete) return;
+        
+        // Don't clear if this was triggered programmatically (e.g., by Select2 initialization)
+        if (e.originalEvent === undefined) return;
+        
+        const $field = $(this);
+        const fieldName = $field.attr('name');
+        
+        if (fieldName && $field.val()) {
+            // Remove red border
+            $field.removeClass('border-red-500');
+            
+            // Remove error message (only <p> tags with text-red-500, not asterisks in labels)
+            $field.closest('div').find('p.text-red-500').remove();
+            
+            // For Select2 fields, also remove error styling from container
+            if ($field.hasClass('select2-hidden-accessible')) {
+                $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
+            }
+        }
+    });
 });
 </script>
 @endpush

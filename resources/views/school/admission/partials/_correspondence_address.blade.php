@@ -11,7 +11,7 @@
                     Address <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="correspondence_address" value="{{ old('correspondence_address', isset($student) ? $student->correspondence_address : '') }}" placeholder="Enter Address"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border {{ $errors->has('correspondence_address') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 @error('correspondence_address')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -59,7 +59,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Location
                 </label>
-                <input type="text" name="correspondence_location" placeholder="Enter Location"
+                <input type="text" name="correspondence_location" value="{{ old('correspondence_location', isset($student) ? $student->correspondence_location : '') }}" placeholder="Enter Location"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
 

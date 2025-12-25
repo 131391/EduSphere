@@ -40,7 +40,7 @@
         </a>
     </div>
 
-    <form action="{{ route('receptionist.student-registrations.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('receptionist.student-registrations.store') }}" method="POST" enctype="multipart/form-data" id="registration-form">
         @csrf
         @include('receptionist.student-registrations.partials.form')
     </form>
@@ -72,6 +72,26 @@ function loadImagePreview(imagePath, previewId, iconId, removeBtnId) {
 }
 
 $(document).ready(function() {
+    // Restore photos from sessionStorage if validation errors occurred
+    @if($errors->any())
+        const photoFields = [
+            { field: 'father_photo', previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeBtnId: 'father-photo-remove', hiddenId: 'enquiry_father_photo' },
+            { field: 'mother_photo', previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeBtnId: 'mother-photo-remove', hiddenId: 'enquiry_mother_photo' },
+            { field: 'student_photo', previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeBtnId: 'student-photo-remove', hiddenId: 'enquiry_student_photo' },
+            { field: 'father_signature', previewId: 'father-signature-preview', iconId: 'father-signature-icon', removeBtnId: 'father-signature-remove', hiddenId: 'enquiry_father_signature' },
+            { field: 'mother_signature', previewId: 'mother-signature-preview', iconId: 'mother-signature-icon', removeBtnId: 'mother-signature-remove', hiddenId: 'enquiry_mother_signature' },
+            { field: 'student_signature', previewId: 'student-signature-preview', iconId: 'student-signature-icon', removeBtnId: 'student-signature-remove', hiddenId: 'enquiry_student_signature' }
+        ];
+        
+        photoFields.forEach(photo => {
+            const storedPath = sessionStorage.getItem(`registration_${photo.field}`);
+            if (storedPath) {
+                loadImagePreview(storedPath, photo.previewId, photo.iconId, photo.removeBtnId);
+                $(`#${photo.hiddenId}`).val(storedPath);
+            }
+        });
+    @endif
+    
     // Initialize Select2 on enquiry dropdown
     $('#enquiry_id').select2({
         placeholder: 'Search Enquiry by No or Student Name',
@@ -79,6 +99,9 @@ $(document).ready(function() {
         width: '100%'
     });
 
+    // Clear sessionStorage on successful form submission (when redirected away)
+    // Photos will persist if validation errors occur and page reloads
+    
     // Update registration fee when class is manually changed
     $('select[name="class_id"]').on('change', function() {
         const classId = $(this).val();
@@ -102,6 +125,38 @@ $(document).ready(function() {
     // Auto-fill form when enquiry is selected
     $('#enquiry_id').on('change', function() {
         const enquiryId = $(this).val();
+        
+        // Clear previous enquiry photos from sessionStorage if enquiry is cleared
+        if (!enquiryId) {
+            const photoFields = [
+                { field: 'father_photo', previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeBtnId: 'father-photo-remove' },
+                { field: 'mother_photo', previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeBtnId: 'mother-photo-remove' },
+                { field: 'student_photo', previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeBtnId: 'student-photo-remove' },
+                { field: 'father_signature', previewId: 'father-signature-preview', iconId: 'father-signature-icon', removeBtnId: 'father-signature-remove' },
+                { field: 'mother_signature', previewId: 'mother-signature-preview', iconId: 'mother-signature-icon', removeBtnId: 'mother-signature-remove' },
+                { field: 'student_signature', previewId: 'student-signature-preview', iconId: 'student-signature-icon', removeBtnId: 'student-signature-remove' }
+            ];
+            photoFields.forEach(photo => {
+                sessionStorage.removeItem(`registration_${photo.field}`);
+                // Clear previews
+                const preview = document.getElementById(photo.previewId);
+                const icon = document.getElementById(photo.iconId);
+                const removeBtn = document.getElementById(photo.removeBtnId);
+                if (preview) {
+                    preview.src = '#';
+                    preview.classList.add('hidden');
+                }
+                if (icon) {
+                    icon.classList.remove('hidden');
+                }
+                if (removeBtn) {
+                    removeBtn.classList.add('hidden');
+                }
+                // Clear hidden fields
+                $(`#enquiry_${photo.field}`).val('');
+            });
+            return;
+        }
         
         if (enquiryId) {
             fetch(`/receptionist/student-registrations/enquiry/${enquiryId}`)
@@ -248,23 +303,47 @@ $(document).ready(function() {
                         // Photos - Load from enquiry if available
                         if (enquiry.father_photo) {
                             loadImagePreview(enquiry.father_photo, 'father-photo-preview', 'father-photo-icon', 'father-photo-remove');
+                            // Store the photo path in hidden field for form submission
+                            $('#enquiry_father_photo').val(enquiry.father_photo);
+                            // Store in sessionStorage for persistence across page reloads
+                            sessionStorage.setItem('registration_father_photo', enquiry.father_photo);
                         }
                         if (enquiry.mother_photo) {
                             loadImagePreview(enquiry.mother_photo, 'mother-photo-preview', 'mother-photo-icon', 'mother-photo-remove');
+                            // Store the photo path in hidden field for form submission
+                            $('#enquiry_mother_photo').val(enquiry.mother_photo);
+                            // Store in sessionStorage for persistence across page reloads
+                            sessionStorage.setItem('registration_mother_photo', enquiry.mother_photo);
                         }
                         if (enquiry.student_photo) {
                             loadImagePreview(enquiry.student_photo, 'student-photo-preview', 'student-photo-icon', 'student-photo-remove');
+                            // Store the photo path in hidden field for form submission
+                            $('#enquiry_student_photo').val(enquiry.student_photo);
+                            // Store in sessionStorage for persistence across page reloads
+                            sessionStorage.setItem('registration_student_photo', enquiry.student_photo);
                         }
                         
                         // Signatures - Load from enquiry if available
                         if (enquiry.father_signature) {
                             loadImagePreview(enquiry.father_signature, 'father-signature-preview', 'father-signature-icon', 'father-signature-remove');
+                            // Store the signature path in hidden field for form submission
+                            $('#enquiry_father_signature').val(enquiry.father_signature);
+                            // Store in sessionStorage for persistence across page reloads
+                            sessionStorage.setItem('registration_father_signature', enquiry.father_signature);
                         }
                         if (enquiry.mother_signature) {
                             loadImagePreview(enquiry.mother_signature, 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove');
+                            // Store the signature path in hidden field for form submission
+                            $('#enquiry_mother_signature').val(enquiry.mother_signature);
+                            // Store in sessionStorage for persistence across page reloads
+                            sessionStorage.setItem('registration_mother_signature', enquiry.mother_signature);
                         }
                         if (enquiry.student_signature) {
                             loadImagePreview(enquiry.student_signature, 'student-signature-preview', 'student-signature-icon', 'student-signature-remove');
+                            // Store the signature path in hidden field for form submission
+                            $('#enquiry_student_signature').val(enquiry.student_signature);
+                            // Store in sessionStorage for persistence across page reloads
+                            sessionStorage.setItem('registration_student_signature', enquiry.student_signature);
                         }
                         
                         console.log('Form auto-filled successfully from enquiry #' + enquiry.enquiry_no);
