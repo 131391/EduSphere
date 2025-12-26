@@ -691,6 +691,7 @@ document.addEventListener('alpine:init', () => {
                     higher_qualification_id: '{{ old('higher_qualification_id') }}',
                     previous_school_company_name: '{{ old('previous_school_company_name') }}',
                 };
+                // Load sections if class is selected and is teacher
                 if (this.formData.class_id && this.isTeacher) {
                     this.loadSections();
                 }
@@ -699,6 +700,37 @@ document.addEventListener('alpine:init', () => {
                     this.$dispatch('open-modal', 'staff-modal');
                 });
             @endif
+            
+            // Sync Select2 with Alpine.js formData
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    // Post select
+                    $('#post').on('change', (e) => {
+                        this.formData.post = e.target.value;
+                    });
+                    
+                    // Class select
+                    $('#class_id').on('change', (e) => {
+                        this.formData.class_id = e.target.value;
+                        this.loadSections(); // Load sections when class changes
+                    });
+                    
+                    // Gender select
+                    $('select[name="gender"]').on('change', (e) => {
+                        this.formData.gender = e.target.value;
+                    });
+                    
+                    // Country select
+                    $('select[name="country_id"]').on('change', (e) => {
+                        this.formData.country_id = e.target.value;
+                    });
+                    
+                    // Higher Qualification select
+                    $('select[name="higher_qualification_id"]').on('change', (e) => {
+                        this.formData.higher_qualification_id = e.target.value;
+                    });
+                }
+            });
         },
         
         updateSelect2DisabledState() {
@@ -783,6 +815,8 @@ document.addEventListener('alpine:init', () => {
         
         loadSections() {
             const classId = this.formData.class_id;
+            // Store current section_id before clearing
+            const currentSectionId = this.formData.section_id;
             this.sections = [];
             this.formData.section_id = '';
             
@@ -791,9 +825,9 @@ document.addEventListener('alpine:init', () => {
                     .then(response => response.json())
                     .then(data => {
                         this.sections = data.sections || [];
-                        // Restore section_id if it was set
-                        if (this.formData.section_id && this.sections.find(s => s.id == this.formData.section_id)) {
-                            // Section is already set, keep it
+                        // Restore section_id if it was set and exists in the loaded sections
+                        if (currentSectionId && this.sections.find(s => s.id == currentSectionId)) {
+                            this.formData.section_id = currentSectionId;
                         }
                     })
                     .catch(error => {
