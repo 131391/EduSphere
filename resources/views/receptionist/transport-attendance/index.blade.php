@@ -288,7 +288,7 @@ function transportAttendanceManagement() {
                                 // Initialize Select2 if not already initialized
                                 $routeSelect.select2({
                                     placeholder: 'Select Route',
-                                    allowClear: true,
+                                    allowClear: false,
                                     width: '100%'
                                 });
                             }
@@ -472,7 +472,7 @@ function transportAttendanceManagement() {
                 try {
                     $select.select2({
                         placeholder: 'Select Route',
-                        allowClear: true,
+                        allowClear: false,
                         width: '100%'
                     });
                     

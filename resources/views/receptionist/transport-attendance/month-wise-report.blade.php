@@ -304,17 +304,23 @@ function transportAttendanceReport() {
             this.$nextTick(() => {
                 setTimeout(() => {
                     if (typeof $ !== 'undefined') {
-                        $('#vehicle_id').select2({
-                            placeholder: 'Select Vehicle',
-                            allowClear: true,
-                            width: '100%'
-                        });
+                        const $vehicleSelect = $('#vehicle_id');
+                        if ($vehicleSelect.length && !$vehicleSelect.hasClass('select2-hidden-accessible')) {
+                            $vehicleSelect.select2({
+                                placeholder: 'Select Vehicle',
+                                allowClear: false,
+                                width: '100%'
+                            });
+                        }
 
-                        $('#route_id').select2({
-                            placeholder: 'Select Route',
-                            allowClear: true,
-                            width: '100%'
-                        });
+                        const $routeSelect = $('#route_id');
+                        if ($routeSelect.length && !$routeSelect.hasClass('select2-hidden-accessible')) {
+                            $routeSelect.select2({
+                                placeholder: 'Select Route',
+                                allowClear: false,
+                                width: '100%'
+                            });
+                        }
 
                         // Handle vehicle change
                         $('#vehicle_id').on('select2:select select2:change', (e) => {
@@ -457,7 +463,7 @@ function transportAttendanceReport() {
                 try {
                     $select.select2({
                         placeholder: 'Select Route',
-                        allowClear: true,
+                        allowClear: false,
                         width: '100%'
                     });
                     

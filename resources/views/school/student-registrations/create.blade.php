@@ -65,12 +65,15 @@ $(document).ready(function() {
         });
     @endif
     
-    // Initialize Select2 on enquiry dropdown
-    $('#enquiry_id').select2({
-        placeholder: 'Search Enquiry by No or Student Name',
-        allowClear: true,
-        width: '100%'
-    });
+    // Initialize Select2 on enquiry dropdown (only if not already initialized)
+    const $enquirySelect = $('#enquiry_id');
+    if ($enquirySelect.length && !$enquirySelect.hasClass('select2-hidden-accessible')) {
+        $enquirySelect.select2({
+            placeholder: 'Search Enquiry by No or Student Name',
+            allowClear: false,
+            width: '100%'
+        });
+    }
 
     // Update registration fee when class is manually changed
     $('select[name="class_id"]').on('change', function() {

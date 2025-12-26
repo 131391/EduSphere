@@ -88,12 +88,15 @@ function loadImagePreview(imagePath, previewId, iconId, removeBtnId) {
 }
 
 $(document).ready(function() {
-    // Initialize Select2 for registration dropdown
-    $('#registration_select').select2({
-        placeholder: 'Select a registration',
-        allowClear: true,
-        width: '100%'
-    });
+    // Initialize Select2 for registration dropdown (only if not already initialized)
+    const $registrationSelect = $('#registration_select');
+    if ($registrationSelect.length && !$registrationSelect.hasClass('select2-hidden-accessible')) {
+        $registrationSelect.select2({
+            placeholder: 'Select a registration',
+            allowClear: false,
+            width: '100%'
+        });
+    }
     
     // Auto-fill form when registration is selected
     $('#registration_select').on('change', function() {

@@ -477,29 +477,62 @@
     
     <!-- Global Select2 Initialization -->
     <script>
-        $(document).ready(function() {
-            // Initialize Select2 on all select elements (except datatable selects)
-            $('select').not('.no-select2, .select2-hidden-accessible, [data-table-select]').select2({
+        // Helper function to safely initialize Select2
+        function initSelect2($select) {
+            // Skip if already initialized or should be excluded
+            if ($select.hasClass('select2-hidden-accessible') || 
+                $select.hasClass('no-select2') || 
+                $select.attr('data-table-select')) {
+                return;
+            }
+            
+            // Initialize Select2
+            $select.select2({
                 placeholder: function() {
                     return $(this).data('placeholder') || 'Select an option';
                 },
-                allowClear: true,
+                allowClear: $(this).data('allow-clear') !== undefined ? $(this).data('allow-clear') : false,
                 width: '100%'
             });
+        }
+        
+        $(document).ready(function() {
+            // Initialize Select2 on all select elements (except datatable selects)
+            $('select').each(function() {
+                initSelect2($(this));
+            });
+            
+            // Debounce function to prevent multiple rapid initializations
+            let initTimeout;
+            function debouncedInitSelect2($selects) {
+                clearTimeout(initTimeout);
+                initTimeout = setTimeout(function() {
+                    $selects.each(function() {
+                        initSelect2($(this));
+                    });
+                }, 100);
+            }
             
             // Re-initialize Select2 when new content is loaded dynamically
             const observer = new MutationObserver(function(mutations) {
+                const newSelects = $();
                 mutations.forEach(function(mutation) {
                     if (mutation.addedNodes.length) {
-                        $(mutation.addedNodes).find('select').not('.no-select2, .select2-hidden-accessible, [data-table-select]').select2({
-                            placeholder: function() {
-                                return $(this).data('placeholder') || 'Select an option';
-                            },
-                            allowClear: true,
-                            width: '100%'
+                        $(mutation.addedNodes).find('select').each(function() {
+                            const $select = $(this);
+                            if (!$select.hasClass('select2-hidden-accessible') && 
+                                !$select.hasClass('no-select2') && 
+                                !$select.attr('data-table-select')) {
+                                newSelects.push(this);
+                            }
                         });
                     }
                 });
+                
+                // Debounce initialization to prevent double loading
+                if (newSelects.length > 0) {
+                    debouncedInitSelect2(newSelects);
+                }
             });
             
             observer.observe(document.body, {

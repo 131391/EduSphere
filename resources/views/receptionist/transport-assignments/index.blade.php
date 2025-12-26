@@ -641,7 +641,7 @@ document.addEventListener('alpine:init', () => {
                         // Reinitialize Select2
                         $select.select2({
                             placeholder: 'Select Bus Stop',
-                            allowClear: true,
+                            allowClear: false,
                             width: '100%'
                         });
                     }
@@ -781,7 +781,7 @@ document.addEventListener('alpine:init', () => {
             try {
                 $select.select2({
                     placeholder: 'Select Bus Stop',
-                    allowClear: true,
+                    allowClear: false,
                     width: '100%'
                 });
                 

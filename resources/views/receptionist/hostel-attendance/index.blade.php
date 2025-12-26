@@ -216,7 +216,7 @@ function hostelAttendanceManagement() {
                         
                         $hostelSelect.select2({
                             placeholder: 'Select Hostel',
-                            allowClear: true,
+                            allowClear: false,
                             width: '100%'
                         }).on('select2:select select2:change', (e) => {
                             this.formData.hostel_id = e.target.value || $hostelSelect.val();

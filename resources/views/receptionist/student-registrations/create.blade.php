@@ -65,12 +65,15 @@ $(document).ready(function() {
         });
     @endif
     
-    // Initialize Select2 on enquiry dropdown
-    $('#enquiry_id').select2({
-        placeholder: 'Search Enquiry by No or Student Name',
-        allowClear: true,
-        width: '100%'
-    });
+    // Initialize Select2 on enquiry dropdown (only if not already initialized)
+    const $enquirySelect = $('#enquiry_id');
+    if ($enquirySelect.length && !$enquirySelect.hasClass('select2-hidden-accessible')) {
+        $enquirySelect.select2({
+            placeholder: 'Search Enquiry by No or Student Name',
+            allowClear: false,
+            width: '100%'
+        });
+    }
 
     // Clear sessionStorage on successful form submission (when redirected away)
     // Photos will persist if validation errors occur and page reloads
