@@ -26,51 +26,6 @@
         }
     </script>
     
-    <style>
-        /* Hide elements until Alpine.js is ready */
-        [x-cloak] {
-            display: none !important;
-        }
-        
-        /* Custom Scrollbar for Sidebar */
-        .sidebar-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(200, 200, 200, 0.3) rgba(200, 200, 200, 0.1);
-        }
-        
-        .sidebar-scroll:hover {
-            scrollbar-color: rgba(200, 200, 200, 0.5) rgba(200, 200, 200, 0.2);
-        }
-        
-        /* Webkit browsers (Chrome, Safari, Edge) */
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: rgba(200, 200, 200, 0.1);
-            border-radius: 4px;
-        }
-        
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(200, 200, 200, 0.3);
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-        
-        .sidebar-scroll:hover::-webkit-scrollbar-thumb {
-            background: rgba(200, 200, 200, 0.5);
-        }
-        
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(200, 200, 200, 0.7);
-        }
-        
-        /* Prevent double scrollbar */
-        body {
-            overflow: hidden;
-        }
-    </style>
 </head>
 <body class="bg-gray-100">
     @php
