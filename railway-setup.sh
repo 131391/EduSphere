@@ -24,4 +24,9 @@ fi
 php artisan config:clear || true
 php artisan cache:clear || true
 
+# Ensure APP_URL is set correctly (force HTTPS in production)
+if [ -z "$APP_URL" ] || [[ ! "$APP_URL" =~ ^https:// ]]; then
+    echo "Warning: APP_URL should be set to HTTPS URL in Railway environment variables"
+fi
+
 echo "Storage directories created and permissions set."

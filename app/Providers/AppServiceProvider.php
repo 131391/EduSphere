@@ -14,7 +14,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Force HTTPS in production (must be in register to affect asset URLs)
+        if (app()->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 
     /**
@@ -25,11 +28,14 @@ class AppServiceProvider extends ServiceProvider
         // Set default string length for MySQL
         Schema::defaultStringLength(191);
 
-        // Force HTTPS in production (for Railway, Vercel, etc.)
-        if (app()->environment('production')) {
+        // Force HTTPS in production or when behind HTTPS proxy (Railway, Vercel, etc.)
+        if (app()->environment('production') || request()->header('X-Forwarded-Proto') === 'https') {
             URL::forceScheme('https');
+        }
+        
+        // Prevent lazy loading in production
+        if (app()->environment('production')) {
             Model::preventLazyLoading();
         }
     }
 }
-
