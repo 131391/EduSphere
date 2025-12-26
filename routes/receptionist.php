@@ -82,5 +82,6 @@ Route::resource('hostel-bed-assignments', \App\Http\Controllers\Receptionist\Hos
 
 // Hostel Attendance
 Route::post('hostel-attendance/get-students', [\App\Http\Controllers\Receptionist\HostelAttendanceController::class, 'getStudents'])->name('hostel-attendance.get-students');
+Route::get('hostel-attendance/report', [\App\Http\Controllers\Receptionist\HostelAttendanceController::class, 'report'])->name('hostel-attendance.report');
 Route::resource('hostel-attendance', \App\Http\Controllers\Receptionist\HostelAttendanceController::class)->only(['index', 'store']);
 

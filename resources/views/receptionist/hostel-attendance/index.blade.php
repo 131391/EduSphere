@@ -338,6 +338,37 @@ function hostelAttendanceManagement() {
         },
     };
 }
+
+// Close date picker when clicking outside or on sidebar
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('attendance_date');
+    const sidebar = document.querySelector('aside');
+    
+    if (dateInput && sidebar) {
+        // Close date picker when clicking on sidebar
+        sidebar.addEventListener('click', function(e) {
+            // Only blur if clicking on a link or button
+            if (e.target.closest('a') || e.target.closest('button')) {
+                dateInput.blur();
+            }
+        });
+        
+        // Close date picker when clicking outside the input
+        document.addEventListener('click', function(e) {
+            if (!dateInput.contains(e.target) && !e.target.closest('aside')) {
+                // Only blur if the date input is focused
+                if (document.activeElement === dateInput) {
+                    // Small delay to allow date selection
+                    setTimeout(() => {
+                        if (document.activeElement === dateInput) {
+                            dateInput.blur();
+                        }
+                    }, 100);
+                }
+            }
+        });
+    }
+});
 </script>
 @endpush
 @endsection

@@ -37,7 +37,7 @@
 
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-64 bg-[#1a237e] text-white flex flex-col">
+        <aside class="w-64 bg-[#1a237e] text-white flex flex-col relative z-50">
             <!-- Logo Section -->
             <div class="p-4 border-b border-[#283593] flex-shrink-0">
                 <div class="flex items-center justify-center mb-2">
@@ -302,9 +302,15 @@
                         </a>
 
                         <a href="{{ route('receptionist.hostel-attendance.index') }}" 
-                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.hostel-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.hostel-attendance.index') || request()->routeIs('receptionist.hostel-attendance.store') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-clipboard-check w-5 mr-3"></i>
                             <span>Student Attendance</span>
+                        </a>
+
+                        <a href="{{ route('receptionist.hostel-attendance.report') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.hostel-attendance.report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-chart-bar w-5 mr-3"></i>
+                            <span>Hostel Attendance Report</span>
                         </a>
                     </div>
                 </div>

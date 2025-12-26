@@ -152,6 +152,47 @@ input[type="month"]:focus {
     pointer-events: none;
 }
 
+/* Custom date input styling to match Select2 */
+input[type="date"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none;
+}
+
+/* Hide default calendar picker icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 1;
+}
+
+/* Hover effect */
+input[type="date"]:hover {
+    border-color: #14b8a6;
+}
+
+/* Focus effect matching Select2 */
+input[type="date"]:focus {
+    outline: none;
+    border-color: #14b8a6;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+/* Dark mode support */
+.dark input[type="date"] {
+    color-scheme: dark;
+}
+
+/* Ensure icons don't interfere with click */
+.relative input[type="date"] + div {
+    pointer-events: none;
+}
+
 /* Hide select element when Select2 is initialized */
 select.select2-hidden-accessible {
     display: none !important;
@@ -160,4 +201,31 @@ select.select2-hidden-accessible {
 /* Prevent double scrollbar on body */
 body {
     overflow: hidden;
+}
+
+/* Fix date picker overlay z-index issue */
+input[type="date"]:focus {
+    position: relative;
+    z-index: 10;
+}
+
+/* Ensure sidebar is always above date picker overlays */
+aside {
+    position: relative;
+    z-index: 50 !important;
+}
+
+/* Close date picker when clicking outside */
+input[type="date"] {
+    position: relative;
+}
+
+/* Prevent date picker overlay from blocking sidebar */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    z-index: 1;
+}
+
+/* Ensure date picker doesn't create blocking overlay */
+input[type="date"]:not(:focus) {
+    z-index: auto;
 }
