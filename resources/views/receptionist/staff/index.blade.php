@@ -206,8 +206,8 @@
                                     id="class_id"
                                     x-model="formData.class_id"
                                     @change="loadSections()"
-                                    :disabled="!isTeacher"
-                                    :class="!isTeacher ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60' : ''"
+                                    :disabled="!canSelectClass"
+                                    :class="!canSelectClass ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60' : ''"
                                     class="w-full px-4 py-2 border {{ $errors->has('class_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                                 <option value="">Select Class</option>
                                 @foreach($classes as $class)
@@ -410,8 +410,8 @@
                             <select name="section_id" 
                                     id="section_id"
                                     x-model="formData.section_id"
-                                    :disabled="!isTeacher"
-                                    :class="!isTeacher ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60' : ''"
+                                    :disabled="!canSelectSection"
+                                    :class="!canSelectSection ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60' : ''"
                                     class="w-full px-4 py-2 border {{ $errors->has('section_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                                 <option value="">Select Section</option>
                                 <template x-for="section in sections" :key="section.id">
@@ -589,6 +589,12 @@ document.addEventListener('alpine:init', () => {
         get isTeacher() {
             return this.formData.post == '2'; // Teacher enum value
         },
+        get canSelectClass() {
+            return this.isTeacher;
+        },
+        get canSelectSection() {
+            return this.isTeacher && !!this.formData.class_id;
+        },
         formData: {
             post: '',
             class_id: '',
@@ -677,12 +683,12 @@ document.addEventListener('alpine:init', () => {
                 const $sectionSelect = $('#section_id');
                 
                 if ($classSelect.hasClass('select2-hidden-accessible')) {
-                    $classSelect.prop('disabled', !this.isTeacher);
+                    $classSelect.prop('disabled', !this.canSelectClass);
                     $classSelect.trigger('change.select2');
                 }
                 
                 if ($sectionSelect.hasClass('select2-hidden-accessible')) {
-                    $sectionSelect.prop('disabled', !this.isTeacher);
+                    $sectionSelect.prop('disabled', !this.canSelectSection);
                     $sectionSelect.trigger('change.select2');
                 }
             }
