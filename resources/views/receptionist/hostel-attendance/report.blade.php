@@ -126,9 +126,26 @@
                 'key' => 'class',
                 'label' => 'CLASS',
                 'render' => function($row) {
-                    if (!$row->student || !$row->student->class) return 'N/A';
-                    $class = $row->student->class->class_name ?? 'N/A';
-                    $section = $row->student->section ? $row->student->section->section_name : '';
+                    if (!$row->student) {
+                        return 'N/A';
+                    }
+                    
+                    // Ensure class relationship is loaded
+                    if (!$row->student->relationLoaded('class')) {
+                        $row->student->load('class');
+                    }
+                    if (!$row->student->relationLoaded('section')) {
+                        $row->student->load('section');
+                    }
+                    
+                    if (!$row->student->class) {
+                        return 'N/A';
+                    }
+                    
+                    // ClassModel uses 'name' attribute, not 'class_name'
+                    // Section also uses 'name' attribute, not 'section_name'
+                    $class = $row->student->class->name ?? 'N/A';
+                    $section = $row->student->section ? $row->student->section->name : '';
                     return $class . ($section ? ' - ' . $section : '');
                 }
             ],

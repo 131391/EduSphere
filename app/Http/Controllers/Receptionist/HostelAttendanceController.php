@@ -9,6 +9,7 @@ use App\Models\Hostel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class HostelAttendanceController extends TenantController
 {
@@ -68,8 +69,8 @@ class HostelAttendanceController extends TenantController
                 'id' => $student->id,
                 'admission_no' => $student->admission_no,
                 'name' => trim($student->first_name . ' ' . ($student->middle_name ?? '') . ' ' . ($student->last_name ?? '')),
-                'class_name' => $student->class && $student->class->class_name ? $student->class->class_name : 'N/A',
-                'section_name' => $student->section && $student->section->section_name ? $student->section->section_name : '',
+                'class_name' => $student->class ? $student->class->name : 'N/A',
+                'section_name' => $student->section ? $student->section->name : '',
                 'floor_name' => $assignment->floor ? $assignment->floor->floor_name : 'N/A',
                 'room_name' => $assignment->room ? $assignment->room->room_name : 'N/A',
                 'bed_no' => $assignment->bed_no ?? 'N/A',
@@ -208,7 +209,7 @@ class HostelAttendanceController extends TenantController
             });
         }
 
-        // Sorting
+        // Sorting - use joins but ensure we select the primary key to preserve model hydration
         $sortColumn = $request->get('sort', 'attendance_date');
         $sortDirection = $request->get('direction', 'desc');
         $allowedSortColumns = ['attendance_date', 'admission_no', 'hostel_name'];
@@ -222,11 +223,15 @@ class HostelAttendanceController extends TenantController
                       ->orderBy('hostels.hostel_name', $sortDirection)
                       ->select('hostel_attendances.*');
             } else {
-                $query->orderBy('attendance_date', $sortDirection);
+                $query->orderBy('hostel_attendances.attendance_date', $sortDirection);
             }
         } else {
-            $query->orderBy('attendance_date', 'desc');
+            $query->orderBy('hostel_attendances.attendance_date', 'desc');
         }
+        
+        // Debug: Log query before pagination
+        Log::info('Hostel Attendance Report - Query SQL: ' . $query->toSql());
+        Log::info('Hostel Attendance Report - Query Bindings: ' . json_encode($query->getBindings()));
 
         // Export functionality
         if ($request->has('export') && $request->export === 'excel') {
@@ -239,9 +244,24 @@ class HostelAttendanceController extends TenantController
         $perPage = $request->get('per_page', 15);
         $attendances = $query->paginate($perPage)->withQueryString();
 
+        // Debug logging
+        Log::info('Hostel Attendance Report - Total records: ' . $attendances->total());
+        Log::info('Hostel Attendance Report - Current page records: ' . $attendances->count());
+        
+        // Reload relationships after pagination to ensure they're available
+        $attendances->load([
+            'student' => function($q) {
+                $q->with(['class', 'section']);
+            },
+            'hostel'
+        ]);
+        
         // Load bed assignments for all students in the current page
         $studentIds = $attendances->pluck('student_id')->unique();
         $hostelIds = $attendances->pluck('hostel_id')->unique();
+        
+        Log::info('Hostel Attendance Report - Student IDs: ' . $studentIds->implode(', '));
+        Log::info('Hostel Attendance Report - Hostel IDs: ' . $hostelIds->implode(', '));
         
         $bedAssignments = HostelBedAssignment::where('school_id', $schoolId)
             ->whereIn('student_id', $studentIds)
@@ -253,7 +273,9 @@ class HostelAttendanceController extends TenantController
                 return $assignment->student_id . '_' . $assignment->hostel_id;
             });
 
-        // Attach bed assignments to attendance records
+        Log::info('Hostel Attendance Report - Bed assignments found: ' . $bedAssignments->count());
+
+        // Attach bed assignments to attendance records and debug class loading
         $attendances->getCollection()->transform(function($attendance) use ($bedAssignments) {
             $key = $attendance->student_id . '_' . $attendance->hostel_id;
             $assignment = $bedAssignments->get($key);
@@ -263,6 +285,30 @@ class HostelAttendanceController extends TenantController
                 $attendance->floor_name = $assignment->floor ? $assignment->floor->floor_name : null;
                 $attendance->room_name = $assignment->room ? $assignment->room->room_name : null;
             }
+            
+            // Debug class loading
+            Log::info('Hostel Attendance Report - Attendance ID: ' . $attendance->id);
+            Log::info('Hostel Attendance Report - Student ID: ' . $attendance->student_id);
+            if ($attendance->student) {
+                Log::info('Hostel Attendance Report - Student exists: ' . $attendance->student->admission_no);
+                Log::info('Hostel Attendance Report - Student class_id: ' . ($attendance->student->class_id ?? 'NULL'));
+                if ($attendance->student->class) {
+                    // ClassModel uses 'name' attribute, not 'class_name'
+                    Log::info('Hostel Attendance Report - Class loaded: ' . $attendance->student->class->name);
+                } else {
+                    Log::warning('Hostel Attendance Report - Class NOT loaded for student: ' . $attendance->student_id . ', class_id: ' . ($attendance->student->class_id ?? 'NULL'));
+                    // Try to reload the relationship
+                    $attendance->student->load('class', 'section');
+                    if ($attendance->student->class) {
+                        Log::info('Hostel Attendance Report - Class reloaded: ' . $attendance->student->class->name);
+                    } else {
+                        Log::error('Hostel Attendance Report - Class still not loaded after reload attempt');
+                    }
+                }
+            } else {
+                Log::warning('Hostel Attendance Report - Student NOT loaded for attendance: ' . $attendance->id);
+            }
+            
             return $attendance;
         });
 
@@ -314,7 +360,7 @@ class HostelAttendanceController extends TenantController
                     $srNo++,
                     $student->admission_no ?? '',
                     trim(($student->first_name ?? '') . ' ' . ($student->middle_name ?? '') . ' ' . ($student->last_name ?? '')),
-                    $student->class ? $student->class->class_name : 'N/A',
+                    $student->class ? $student->class->name : 'N/A',
                     $attendance->hostel ? $attendance->hostel->hostel_name : 'N/A',
                     $attendance->floor_name ?? 'N/A',
                     $attendance->room_name ?? 'N/A',
