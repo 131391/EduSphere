@@ -641,6 +641,31 @@ document.addEventListener('alpine:init', () => {
                 });
             });
             
+            // Watch for canSelectClass changes
+            this.$watch('canSelectClass', (newValue) => {
+                this.$nextTick(() => {
+                    this.updateSelect2DisabledState();
+                });
+            });
+            
+            // Watch for canSelectSection changes
+            this.$watch('canSelectSection', (newValue) => {
+                this.$nextTick(() => {
+                    this.updateSelect2DisabledState();
+                });
+            });
+            
+            // Watch for class_id changes to update section state
+            this.$watch('formData.class_id', (newValue, oldValue) => {
+                // Clear section when class changes
+                if (newValue !== oldValue) {
+                    this.formData.section_id = '';
+                }
+                this.$nextTick(() => {
+                    this.updateSelect2DisabledState();
+                });
+            });
+            
             // Check if there are validation errors and reopen modal with old data
             @if($errors->any())
                 this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
@@ -682,14 +707,22 @@ document.addEventListener('alpine:init', () => {
                 const $classSelect = $('#class_id');
                 const $sectionSelect = $('#section_id');
                 
-                if ($classSelect.hasClass('select2-hidden-accessible')) {
-                    $classSelect.prop('disabled', !this.canSelectClass);
-                    $classSelect.trigger('change.select2');
+                // Update class select disabled state
+                if ($classSelect.length) {
+                    const shouldDisableClass = !this.canSelectClass;
+                    $classSelect.prop('disabled', shouldDisableClass);
+                    if ($classSelect.hasClass('select2-hidden-accessible')) {
+                        $classSelect.trigger('change.select2');
+                    }
                 }
                 
-                if ($sectionSelect.hasClass('select2-hidden-accessible')) {
-                    $sectionSelect.prop('disabled', !this.canSelectSection);
-                    $sectionSelect.trigger('change.select2');
+                // Update section select disabled state
+                if ($sectionSelect.length) {
+                    const shouldDisableSection = !this.canSelectSection;
+                    $sectionSelect.prop('disabled', shouldDisableSection);
+                    if ($sectionSelect.hasClass('select2-hidden-accessible')) {
+                        $sectionSelect.trigger('change.select2');
+                    }
                 }
             }
         },
