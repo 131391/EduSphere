@@ -17,3 +17,9 @@ yarn-error.log
 /.idea
 /.vscode
 
+# Deployment files (keep these)
+# railway.json
+# Procfile
+# render.yaml
+# .platform.app.yaml
+
