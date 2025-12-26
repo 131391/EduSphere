@@ -61,4 +61,6 @@ Route::get('transport-attendance', [\App\Http\Controllers\Receptionist\Transport
 Route::post('transport-attendance/get-routes', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'getRoutes'])->name('transport-attendance.get-routes');
 Route::post('transport-attendance/get-students', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'getStudents'])->name('transport-attendance.get-students');
 Route::post('transport-attendance', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'store'])->name('transport-attendance.store');
+Route::get('transport-attendance/month-wise-report', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'monthWiseReport'])->name('transport-attendance.month-wise-report');
+Route::post('transport-attendance/get-routes-for-report', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'getRoutesForReport'])->name('transport-attendance.get-routes-for-report');
 

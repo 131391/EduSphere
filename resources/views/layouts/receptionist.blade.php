@@ -151,11 +151,13 @@
                 frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }},
                 studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*') || request()->routeIs('receptionist.transport-assignments.*') ? 'true' : 'false' }},
                 transportOpen: {{ request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*') || request()->routeIs('receptionist.transport-assign-history.*') || request()->routeIs('receptionist.transport-attendance.*') ? 'true' : 'false' }},
+                reportsOpen: {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'true' : 'false' }},
                 toggleFrontDesk() {
                     this.frontDeskOpen = !this.frontDeskOpen;
                     if (this.frontDeskOpen) {
                         this.studentOpen = false;
                         this.transportOpen = false;
+                        this.reportsOpen = false;
                     }
                 },
                 toggleStudent() {
@@ -163,6 +165,7 @@
                     if (this.studentOpen) {
                         this.frontDeskOpen = false;
                         this.transportOpen = false;
+                        this.reportsOpen = false;
                     }
                 },
                 toggleTransport() {
@@ -170,6 +173,15 @@
                     if (this.transportOpen) {
                         this.frontDeskOpen = false;
                         this.studentOpen = false;
+                        this.reportsOpen = false;
+                    }
+                },
+                toggleReports() {
+                    this.reportsOpen = !this.reportsOpen;
+                    if (this.reportsOpen) {
+                        this.frontDeskOpen = false;
+                        this.studentOpen = false;
+                        this.transportOpen = false;
                     }
                 }
             }">
@@ -318,6 +330,32 @@
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.transport-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-clipboard-check w-5 mr-3"></i>
                             <span class="whitespace-nowrap">Student Attendance</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Reports Collapsible Menu -->
+                <div>
+                    <button @click="toggleReports()" 
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors">
+                        <div class="flex items-center">
+                            <i class="fas fa-chart-bar w-5 mr-3"></i>
+                            <span>Reports</span>
+                        </div>
+                        <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': reportsOpen }"></i>
+                    </button>
+                    
+                    <!-- Submenu -->
+                    <div x-show="reportsOpen" 
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="ml-4 mt-1 space-y-1">
+                        <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-calendar-alt w-5 mr-3"></i>
+                            <span class="whitespace-nowrap">Transport Attendance Month Wise</span>
                         </a>
                     </div>
                 </div>

@@ -297,5 +297,173 @@ class TransportAttendanceController extends TenantController
             return back()->withErrors(['error' => $errorMessage])->withInput();
         }
     }
+
+    /**
+     * Display transport attendance month-wise report.
+     */
+    public function monthWiseReport(Request $request)
+    {
+        $schoolId = $this->getSchoolId();
+        
+        // Get all vehicles for the school
+        $vehicles = Vehicle::where('school_id', $schoolId)
+            ->orderBy('vehicle_no')
+            ->get();
+
+        $selectedVehicle = null;
+        $selectedRoute = null;
+        $selectedMonth = $request->get('month', date('Y-m'));
+        $attendanceData = [];
+        $students = [];
+
+        // If filters are provided, fetch data
+        if ($request->filled('vehicle_id') && $request->filled('route_id') && $request->filled('month')) {
+            $vehicleId = $request->get('vehicle_id');
+            $routeId = $request->get('route_id');
+            $month = $request->get('month');
+
+            // Validate vehicle and route
+            $selectedVehicle = Vehicle::where('school_id', $schoolId)
+                ->where('id', $vehicleId)
+                ->firstOrFail();
+
+            $selectedRoute = TransportRoute::where('school_id', $schoolId)
+                ->where('id', $routeId)
+                ->where('vehicle_id', $vehicleId)
+                ->firstOrFail();
+
+            // Get current academic year
+            $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
+                ->where('is_current', true)
+                ->first();
+
+            if (!$currentAcademicYear) {
+                $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
+                    ->latest('start_date')
+                    ->first();
+            }
+
+            if ($currentAcademicYear) {
+                // Get all students assigned to this route
+                $assignments = StudentTransportAssignment::with(['student'])
+                    ->where('school_id', $schoolId)
+                    ->where('route_id', $routeId)
+                    ->where('academic_year_id', $currentAcademicYear->id)
+                    ->whereNull('deleted_at')
+                    ->get();
+
+                $studentIds = $assignments->pluck('student_id')->toArray();
+
+                // Parse month (format: Y-m)
+                $year = (int)substr($month, 0, 4);
+                $monthNum = (int)substr($month, 5, 2);
+                $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $monthNum, $year);
+
+                // Get all attendance records for this route, month, and students
+                $startDate = "{$year}-{$monthNum}-01";
+                $endDate = "{$year}-{$monthNum}-{$daysInMonth}";
+
+                $attendances = TransportAttendance::with(['student'])
+                    ->where('school_id', $schoolId)
+                    ->where('vehicle_id', $vehicleId)
+                    ->where('route_id', $routeId)
+                    ->whereIn('student_id', $studentIds)
+                    ->whereBetween('attendance_date', [$startDate, $endDate])
+                    ->where('is_present', true)
+                    ->get();
+
+                // Build student list with attendance data
+                foreach ($assignments as $assignment) {
+                    $student = $assignment->student;
+                    $studentData = [
+                        'id' => $student->id,
+                        'admission_no' => $student->admission_no,
+                        'name' => trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name),
+                        'days' => []
+                    ];
+
+                    // Initialize all days as empty
+                    for ($day = 1; $day <= $daysInMonth; $day++) {
+                        $studentData['days'][$day] = [];
+                    }
+
+                    // Fill in attendance data
+                    $studentAttendances = $attendances->where('student_id', $student->id);
+                    foreach ($studentAttendances as $attendance) {
+                        $day = (int)$attendance->attendance_date->format('d');
+                        if ($day >= 1 && $day <= $daysInMonth) {
+                            // Get attendance type code
+                            $typeCode = $this->getAttendanceTypeCode($attendance->attendance_type);
+                            $studentData['days'][$day][] = $typeCode;
+                        }
+                    }
+
+                    $students[] = $studentData;
+                }
+            }
+        }
+
+        return view('receptionist.transport-attendance.month-wise-report', compact(
+            'vehicles',
+            'selectedVehicle',
+            'selectedRoute',
+            'selectedMonth',
+            'students',
+            'attendanceData'
+        ));
+    }
+
+    /**
+     * Get attendance type code (PBS, DSC, PSC, DBS).
+     */
+    private function getAttendanceTypeCode(TransportAttendanceType $type): string
+    {
+        return match($type) {
+            TransportAttendanceType::PickupFromBusStop => 'PBS',
+            TransportAttendanceType::DropAtSchoolCampus => 'DSC',
+            TransportAttendanceType::PickupFromSchoolCampus => 'PSC',
+            TransportAttendanceType::DropAtBusStop => 'DBS',
+        };
+    }
+
+    /**
+     * Get routes for a selected vehicle (AJAX) - for month-wise report.
+     */
+    public function getRoutesForReport(Request $request)
+    {
+        $schoolId = $this->getSchoolId();
+        
+        $request->validate([
+            'vehicle_id' => 'required|exists:vehicles,id',
+        ]);
+
+        $vehicle = Vehicle::findOrFail($request->vehicle_id);
+        
+        // Verify tenant ownership
+        if ($vehicle->school_id !== $schoolId) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Get routes for this vehicle
+        $routes = TransportRoute::where('school_id', $schoolId)
+            ->where('vehicle_id', $request->vehicle_id)
+            ->where('status', TransportRoute::STATUS_ACTIVE)
+            ->orderBy('route_name')
+            ->get(['id', 'route_name']);
+        
+        $routesArray = $routes->map(function($route) {
+                return [
+                    'id' => $route->id,
+                    'route_name' => $route->route_name,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'routes' => $routesArray,
+        ]);
+    }
 }
 
