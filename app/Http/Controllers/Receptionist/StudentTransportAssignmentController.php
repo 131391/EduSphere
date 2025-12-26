@@ -281,4 +281,76 @@ class StudentTransportAssignmentController extends TenantController
         return redirect()->route('receptionist.transport-assignments.index')
             ->with('success', 'Transport assignment deleted successfully.');
     }
+
+    /**
+     * Display transport assignment history (including soft-deleted records).
+     */
+    public function history(Request $request)
+    {
+        $schoolId = $this->getSchoolId();
+
+        $query = StudentTransportAssignment::withTrashed()
+            ->with([
+                'student.class',
+                'route',
+                'busStop',
+                'vehicle',
+                'academicYear'
+            ])
+            ->where('school_id', $schoolId);
+
+        // Apply filters
+        if ($request->filled('class_id')) {
+            $query->whereHas('student', function($q) use ($request) {
+                $q->where('class_id', $request->class_id);
+            });
+        }
+
+        if ($request->filled('vehicle_id')) {
+            $query->where('vehicle_id', $request->vehicle_id);
+        }
+
+        if ($request->filled('route_id')) {
+            $query->where('route_id', $request->route_id);
+        }
+
+        if ($request->filled('bus_stop_id')) {
+            $query->where('bus_stop_id', $request->bus_stop_id);
+        }
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('student', function($sq) use ($search) {
+                    $sq->where('first_name', 'like', "%{$search}%")
+                       ->orWhere('middle_name', 'like', "%{$search}%")
+                       ->orWhere('last_name', 'like', "%{$search}%")
+                       ->orWhere('admission_no', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Paginate the results
+        $perPage = $request->get('per_page', 15);
+        $assignments = $query->latest()->paginate($perPage)->withQueryString();
+
+        // Get data for dropdowns
+        $routes = TransportRoute::where('school_id', $schoolId)->get();
+        $vehicles = Vehicle::where('school_id', $schoolId)->get();
+        $busStops = BusStop::where('school_id', $schoolId)->get();
+        
+        // Get classes for filter
+        $classes = ClassModel::where('school_id', $schoolId)
+            ->orderBy('name')
+            ->get();
+
+        return view('receptionist.transport-assign-history.index', compact(
+            'assignments',
+            'routes',
+            'vehicles',
+            'busStops',
+            'classes'
+        ));
+    }
 }

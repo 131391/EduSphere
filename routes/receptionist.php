@@ -54,4 +54,11 @@ Route::get('bus-stops-export', [\App\Http\Controllers\Receptionist\BusStopContro
 
 // Transport Assignment Management
 Route::resource('transport-assignments', \App\Http\Controllers\Receptionist\StudentTransportAssignmentController::class);
+Route::get('transport-assign-history', [\App\Http\Controllers\Receptionist\StudentTransportAssignmentController::class, 'history'])->name('transport-assign-history.index');
+
+// Transport Attendance Management
+Route::get('transport-attendance', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'index'])->name('transport-attendance.index');
+Route::post('transport-attendance/get-routes', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'getRoutes'])->name('transport-attendance.get-routes');
+Route::post('transport-attendance/get-students', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'getStudents'])->name('transport-attendance.get-students');
+Route::post('transport-attendance', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'store'])->name('transport-attendance.store');
 
