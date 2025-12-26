@@ -30,7 +30,8 @@ APP_NAME=EduSphere
 APP_ENV=production
 APP_KEY=base64:YOUR_APP_KEY_HERE
 APP_DEBUG=false
-APP_URL=https://your-app.railway.app
+APP_URL=https://web-production-df4f.up.railway.app
+# Important: Use your actual Railway URL with https://
 
 DB_CONNECTION=mysql
 DB_HOST=${{MySQL.HOSTNAME}}
