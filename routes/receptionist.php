@@ -80,3 +80,7 @@ Route::post('hostel-bed-assignments/get-rooms', [\App\Http\Controllers\Reception
 Route::get('hostel-bed-assignments-export', [\App\Http\Controllers\Receptionist\HostelBedAssignmentController::class, 'export'])->name('hostel-bed-assignments.export');
 Route::resource('hostel-bed-assignments', \App\Http\Controllers\Receptionist\HostelBedAssignmentController::class);
 
+// Hostel Attendance
+Route::post('hostel-attendance/get-students', [\App\Http\Controllers\Receptionist\HostelAttendanceController::class, 'getStudents'])->name('hostel-attendance.get-students');
+Route::resource('hostel-attendance', \App\Http\Controllers\Receptionist\HostelAttendanceController::class)->only(['index', 'store']);
+

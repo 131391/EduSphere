@@ -1,32 +1,5 @@
 @extends('layouts.receptionist')
 
-@push('styles')
-<!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<style>
-    .select2-container--default .select2-selection--single {
-        height: 42px;
-        border: 1px solid #d1d5db;
-        border-radius: 0.5rem;
-        padding: 0.5rem 1rem;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 26px;
-        color: #374151;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 40px;
-    }
-    .dark .select2-container--default .select2-selection--single {
-        background-color: #374151;
-        border-color: #4b5563;
-    }
-    .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
-        color: #ffffff;
-    }
-</style>
-@endpush
-
 @section('content')
 <div class="p-6">
     <div class="flex items-center justify-between mb-6">

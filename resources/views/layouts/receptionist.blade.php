@@ -28,92 +28,6 @@
             document.documentElement.classList.remove('dark');
         }
     </script>
-    
-    <style>
-        [x-cloak] { display: none !important; }
-        .sidebar-scroll {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(200, 200, 200, 0.3) rgba(200, 200, 200, 0.1);
-        }
-        
-        /* Select2 Custom Styling */
-        .select2-container--default .select2-selection--single {
-            height: 42px;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            background-color: white;
-        }
-        
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 26px;
-            color: #374151;
-            padding-left: 0;
-        }
-        
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 40px;
-            right: 8px;
-        }
-        
-        .select2-container--default .select2-selection--single:focus,
-        .select2-container--default.select2-container--focus .select2-selection--single {
-            outline: none;
-            border-color: #14b8a6;
-            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
-        }
-        
-        /* Dark mode support for Select2 */
-        .dark .select2-container--default .select2-selection--single {
-            background-color: #374151;
-            border-color: #4b5563;
-        }
-        
-        .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #ffffff;
-        }
-        
-        .dark .select2-dropdown {
-            background-color: #374151;
-            border-color: #4b5563;
-        }
-        
-        .dark .select2-container--default .select2-results__option {
-            color: #ffffff;
-        }
-        
-        .dark .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #14b8a6;
-        }
-        
-        .dark .select2-container--default .select2-search--dropdown .select2-search__field {
-            background-color: #4b5563;
-            border-color: #6b7280;
-            color: #ffffff;
-        }
-        
-        /* Select2 dropdown styling */
-        .select2-dropdown {
-            border-radius: 0.5rem;
-            border: 1px solid #d1d5db;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #14b8a6;
-        }
-        
-        .select2-container--default .select2-search--dropdown .select2-search__field {
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            padding: 0.5rem;
-        }
-        
-        /* Prevent double scrollbar */
-        body {
-            overflow: hidden;
-        }
-    </style>
 </head>
 <body class="bg-gray-100">
     @php
@@ -151,7 +65,7 @@
                 frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }},
                 studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*') || request()->routeIs('receptionist.transport-assignments.*') ? 'true' : 'false' }},
                 transportOpen: {{ request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*') || request()->routeIs('receptionist.transport-assign-history.*') || request()->routeIs('receptionist.transport-attendance.*') ? 'true' : 'false' }},
-                hostelOpen: {{ request()->routeIs('receptionist.hostels.*') || request()->routeIs('receptionist.hostel-floors.*') || request()->routeIs('receptionist.hostel-rooms.*') || request()->routeIs('receptionist.hostel-bed-assignments.*') ? 'true' : 'false' }},
+                hostelOpen: {{ request()->routeIs('receptionist.hostels.*') || request()->routeIs('receptionist.hostel-floors.*') || request()->routeIs('receptionist.hostel-rooms.*') || request()->routeIs('receptionist.hostel-bed-assignments.*') || request()->routeIs('receptionist.hostel-attendance.*') ? 'true' : 'false' }},
                 reportsOpen: {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'true' : 'false' }},
                 toggleFrontDesk() {
                     this.frontDeskOpen = !this.frontDeskOpen;
@@ -385,6 +299,12 @@
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.hostel-bed-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-user-plus w-5 mr-3"></i>
                             <span>Assign Student Hostel Bed</span>
+                        </a>
+
+                        <a href="{{ route('receptionist.hostel-attendance.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.hostel-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-clipboard-check w-5 mr-3"></i>
+                            <span>Student Attendance</span>
                         </a>
                     </div>
                 </div>

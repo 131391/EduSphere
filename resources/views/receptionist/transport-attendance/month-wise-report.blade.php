@@ -2,52 +2,6 @@
 
 @section('title', 'Transport Attendance Month Wise Report')
 
-@push('styles')
-<style>
-    /* Custom month input styling to match Select2 */
-    input[type="month"] {
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        background-image: none;
-        height: 42px;
-    }
-    
-    /* Hide default calendar picker icon */
-    input[type="month"]::-webkit-calendar-picker-indicator {
-        opacity: 0;
-        position: absolute;
-        right: 0;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-        z-index: 1;
-    }
-    
-    /* Hover effect */
-    input[type="month"]:hover {
-        border-color: #14b8a6;
-    }
-    
-    /* Focus effect matching Select2 */
-    input[type="month"]:focus {
-        outline: none;
-        border-color: #14b8a6;
-        box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
-    }
-    
-    /* Dark mode support */
-    .dark input[type="month"] {
-        color-scheme: dark;
-    }
-    
-    /* Ensure icons don't interfere with click */
-    .relative input[type="month"] + div {
-        pointer-events: none;
-    }
-</style>
-@endpush
-
 @section('content')
 <div class="space-y-6" x-data="transportAttendanceReport()" x-init="init()">
     <!-- Page Header -->
