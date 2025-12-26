@@ -206,6 +206,8 @@
                                     id="class_id"
                                     x-model="formData.class_id"
                                     @change="loadSections()"
+                                    :disabled="!isTeacher"
+                                    :class="!isTeacher ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60' : ''"
                                     class="w-full px-4 py-2 border {{ $errors->has('class_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                                 <option value="">Select Class</option>
                                 @foreach($classes as $class)
@@ -408,6 +410,8 @@
                             <select name="section_id" 
                                     id="section_id"
                                     x-model="formData.section_id"
+                                    :disabled="!isTeacher"
+                                    :class="!isTeacher ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60' : ''"
                                     class="w-full px-4 py-2 border {{ $errors->has('section_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                                 <option value="">Select Section</option>
                                 <template x-for="section in sections" :key="section.id">
@@ -582,6 +586,9 @@ document.addEventListener('alpine:init', () => {
         editMode: false,
         staffId: null,
         sections: [],
+        get isTeacher() {
+            return this.formData.post == '2'; // Teacher enum value
+        },
         formData: {
             post: '',
             class_id: '',
@@ -607,6 +614,27 @@ document.addEventListener('alpine:init', () => {
         },
         
         init() {
+            // Watch for post changes to enable/disable class and section
+            this.$watch('formData.post', (newValue, oldValue) => {
+                if (newValue != '2') { // Not Teacher
+                    // Clear class and section when not teacher
+                    this.formData.class_id = '';
+                    this.formData.section_id = '';
+                    this.sections = [];
+                }
+                // Update Select2 disabled state
+                this.$nextTick(() => {
+                    this.updateSelect2DisabledState();
+                });
+            });
+            
+            // Watch for isTeacher computed property changes
+            this.$watch('isTeacher', (newValue) => {
+                this.$nextTick(() => {
+                    this.updateSelect2DisabledState();
+                });
+            });
+            
             // Check if there are validation errors and reopen modal with old data
             @if($errors->any())
                 this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
@@ -632,20 +660,42 @@ document.addEventListener('alpine:init', () => {
                     higher_qualification_id: '{{ old('higher_qualification_id') }}',
                     previous_school_company_name: '{{ old('previous_school_company_name') }}',
                 };
-                if (this.formData.class_id) {
+                if (this.formData.class_id && this.isTeacher) {
                     this.loadSections();
                 }
                 this.$nextTick(() => {
+                    this.updateSelect2DisabledState();
                     this.$dispatch('open-modal', 'staff-modal');
                 });
             @endif
+        },
+        
+        updateSelect2DisabledState() {
+            // Update Select2 disabled state for class and section
+            if (typeof $ !== 'undefined') {
+                const $classSelect = $('#class_id');
+                const $sectionSelect = $('#section_id');
+                
+                if ($classSelect.hasClass('select2-hidden-accessible')) {
+                    $classSelect.prop('disabled', !this.isTeacher);
+                    $classSelect.trigger('change.select2');
+                }
+                
+                if ($sectionSelect.hasClass('select2-hidden-accessible')) {
+                    $sectionSelect.prop('disabled', !this.isTeacher);
+                    $sectionSelect.trigger('change.select2');
+                }
+            }
         },
         
         openAddModal() {
             this.editMode = false;
             this.staffId = null;
             this.resetForm();
-            this.$dispatch('open-modal', 'staff-modal');
+            this.$nextTick(() => {
+                this.updateSelect2DisabledState();
+                this.$dispatch('open-modal', 'staff-modal');
+            });
         },
         
         openEditModal(staff) {
@@ -673,8 +723,8 @@ document.addEventListener('alpine:init', () => {
                 previous_school_company_name: staff.previous_school_company_name || '',
             };
             
-            // Load sections if class is selected
-            if (this.formData.class_id) {
+            // Load sections if class is selected and is teacher
+            if (this.formData.class_id && this.isTeacher) {
                 this.loadSections();
             }
             
@@ -686,7 +736,10 @@ document.addEventListener('alpine:init', () => {
                 this.formData.staff_image_preview = `/storage/${staff.staff_image}`;
             }
             
-            this.$dispatch('open-modal', 'staff-modal');
+            this.$nextTick(() => {
+                this.updateSelect2DisabledState();
+                this.$dispatch('open-modal', 'staff-modal');
+            });
         },
         
         loadSections() {
@@ -694,7 +747,7 @@ document.addEventListener('alpine:init', () => {
             this.sections = [];
             this.formData.section_id = '';
             
-            if (classId) {
+            if (classId && this.isTeacher) {
                 fetch(`/receptionist/staff/get-sections/${classId}`)
                     .then(response => response.json())
                     .then(data => {
