@@ -315,6 +315,13 @@
                     </div>
                 </div>
 
+                <!-- Staff Management -->
+                <a href="{{ route('receptionist.staff.index') }}" 
+                   class="flex items-center px-4 py-3 rounded-lg {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors">
+                    <i class="fas fa-user-tie w-5 mr-3"></i>
+                    <span>Staff Management</span>
+                </a>
+
                 <!-- Reports Collapsible Menu -->
                 <div>
                     <button @click="toggleReports()" 

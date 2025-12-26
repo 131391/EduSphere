@@ -1,8 +1,19 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "public/build",
+  "builds": [
+    {
+      "src": "public/index.php",
+      "use": "@vercel/php"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "public/index.php"
+    }
+  ],
+  "buildCommand": "composer install --no-dev --optimize-autoloader && npm install && npm run build",
+  "installCommand": "composer install && npm install",
   "framework": null,
-  "installCommand": "npm install"
+  "outputDirectory": "public"
 }
-

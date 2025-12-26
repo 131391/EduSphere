@@ -85,3 +85,7 @@ Route::post('hostel-attendance/get-students', [\App\Http\Controllers\Receptionis
 Route::get('hostel-attendance/report', [\App\Http\Controllers\Receptionist\HostelAttendanceController::class, 'report'])->name('hostel-attendance.report');
 Route::resource('hostel-attendance', \App\Http\Controllers\Receptionist\HostelAttendanceController::class)->only(['index', 'store']);
 
+// Staff Management
+Route::get('staff/get-sections/{classId}', [\App\Http\Controllers\Receptionist\StaffController::class, 'getSections'])->name('staff.get-sections');
+Route::resource('staff', \App\Http\Controllers\Receptionist\StaffController::class);
+
