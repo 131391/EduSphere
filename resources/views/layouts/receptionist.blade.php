@@ -477,40 +477,88 @@
     
     <!-- Global Select2 Initialization -->
     <script>
+        // Track initialized selects to prevent double initialization
+        window.select2Initialized = window.select2Initialized || new Set();
+        
         // Helper function to safely initialize Select2
         function initSelect2($select) {
             // Skip if already initialized or should be excluded
             if ($select.hasClass('select2-hidden-accessible') || 
                 $select.hasClass('no-select2') || 
                 $select.attr('data-table-select')) {
-                return;
+                return false;
             }
             
+            // Check if this select has already been processed
+            const selectId = $select.attr('id') || $select.attr('name') || $select[0].outerHTML;
+            if (window.select2Initialized.has(selectId)) {
+                return false;
+            }
+            
+            // Mark as initialized before actually initializing (prevents race conditions)
+            window.select2Initialized.add(selectId);
+            
             // Initialize Select2
-            $select.select2({
-                placeholder: function() {
-                    return $(this).data('placeholder') || 'Select an option';
-                },
-                allowClear: $(this).data('allow-clear') !== undefined ? $(this).data('allow-clear') : false,
-                width: '100%'
-            });
+            try {
+                $select.select2({
+                    placeholder: function() {
+                        return $(this).data('placeholder') || 'Select an option';
+                    },
+                    allowClear: $(this).data('allow-clear') !== undefined ? $(this).data('allow-clear') : false,
+                    width: '100%'
+                });
+                return true;
+            } catch (e) {
+                // If initialization fails, remove from set so it can be retried
+                window.select2Initialized.delete(selectId);
+                console.warn('Select2 initialization failed:', e);
+                return false;
+            }
         }
         
         $(document).ready(function() {
-            // Initialize Select2 on all select elements (except datatable selects)
-            $('select').each(function() {
-                initSelect2($(this));
-            });
+            // Wait a bit for Alpine.js to finish initializing
+            setTimeout(function() {
+                // Initialize Select2 on all select elements (except datatable selects)
+                $('select').each(function() {
+                    initSelect2($(this));
+                });
+            }, 200);
             
             // Debounce function to prevent multiple rapid initializations
             let initTimeout;
+            let pendingSelects = new Set();
+            
             function debouncedInitSelect2($selects) {
                 clearTimeout(initTimeout);
+                
+                // Add to pending set
+                $selects.each(function() {
+                    const selectId = $(this).attr('id') || $(this).attr('name') || this.outerHTML;
+                    pendingSelects.add(selectId);
+                });
+                
                 initTimeout = setTimeout(function() {
+                    // Process only selects that are still pending and not initialized
                     $selects.each(function() {
-                        initSelect2($(this));
+                        const $select = $(this);
+                        const selectId = $select.attr('id') || $select.attr('name') || this.outerHTML;
+                        
+                        // Skip if already initialized or not in pending set
+                        if (!pendingSelects.has(selectId) || $select.hasClass('select2-hidden-accessible')) {
+                            pendingSelects.delete(selectId);
+                            return;
+                        }
+                        
+                        // Check if parent is still being rendered (Alpine.js x-cloak)
+                        if ($select.closest('[x-cloak]').length > 0) {
+                            return; // Skip, will be initialized when Alpine finishes
+                        }
+                        
+                        initSelect2($select);
+                        pendingSelects.delete(selectId);
                     });
-                }, 100);
+                }, 300); // Increased delay to allow Alpine.js to finish
             }
             
             // Re-initialize Select2 when new content is loaded dynamically
@@ -520,9 +568,11 @@
                     if (mutation.addedNodes.length) {
                         $(mutation.addedNodes).find('select').each(function() {
                             const $select = $(this);
+                            // Skip if already initialized, excluded, or inside x-cloak
                             if (!$select.hasClass('select2-hidden-accessible') && 
                                 !$select.hasClass('no-select2') && 
-                                !$select.attr('data-table-select')) {
+                                !$select.attr('data-table-select') &&
+                                $select.closest('[x-cloak]').length === 0) {
                                 newSelects.push(this);
                             }
                         });

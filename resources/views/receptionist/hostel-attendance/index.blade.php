@@ -209,16 +209,17 @@ function hostelAttendanceManagement() {
                     if (typeof $ !== 'undefined') {
                         const $hostelSelect = $('#hostel_id');
                         
-                        // Check if Select2 is already initialized
-                        if ($hostelSelect.hasClass('select2-hidden-accessible')) {
-                            $hostelSelect.select2('destroy');
+                        // Only initialize if not already initialized by global script
+                        if (!$hostelSelect.hasClass('select2-hidden-accessible')) {
+                            $hostelSelect.select2({
+                                placeholder: 'Select Hostel',
+                                allowClear: false,
+                                width: '100%'
+                            });
                         }
                         
-                        $hostelSelect.select2({
-                            placeholder: 'Select Hostel',
-                            allowClear: false,
-                            width: '100%'
-                        }).on('select2:select select2:change', (e) => {
+                        // Attach event handlers
+                        $hostelSelect.off('select2:select select2:change').on('select2:select select2:change', (e) => {
                             this.formData.hostel_id = e.target.value || $hostelSelect.val();
                             this.loadStudents();
                         });
