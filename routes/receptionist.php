@@ -72,8 +72,11 @@ Route::get('hostel-floors-export', [\App\Http\Controllers\Receptionist\HostelFlo
 Route::resource('hostel-rooms', \App\Http\Controllers\Receptionist\HostelRoomController::class);
 Route::get('hostel-rooms-export', [\App\Http\Controllers\Receptionist\HostelRoomController::class, 'export'])->name('hostel-rooms.export');
 Route::post('hostel-rooms/get-floors', [\App\Http\Controllers\Receptionist\HostelRoomController::class, 'getFloors'])->name('hostel-rooms.get-floors');
-
-// Hostel Floor Management
-Route::resource('hostel-floors', \App\Http\Controllers\Receptionist\HostelFloorController::class);
-Route::get('hostel-floors-export', [\App\Http\Controllers\Receptionist\HostelFloorController::class, 'export'])->name('hostel-floors.export');
+// Specific routes must come BEFORE resource route to avoid conflicts
+Route::get('hostel-bed-assignments/get-months', [\App\Http\Controllers\Receptionist\HostelBedAssignmentController::class, 'getMonths'])->name('hostel-bed-assignments.get-months');
+Route::post('hostel-bed-assignments/search-students', [\App\Http\Controllers\Receptionist\HostelBedAssignmentController::class, 'searchStudents'])->name('hostel-bed-assignments.search-students');
+Route::post('hostel-bed-assignments/get-floors', [\App\Http\Controllers\Receptionist\HostelBedAssignmentController::class, 'getFloors'])->name('hostel-bed-assignments.get-floors');
+Route::post('hostel-bed-assignments/get-rooms', [\App\Http\Controllers\Receptionist\HostelBedAssignmentController::class, 'getRooms'])->name('hostel-bed-assignments.get-rooms');
+Route::get('hostel-bed-assignments-export', [\App\Http\Controllers\Receptionist\HostelBedAssignmentController::class, 'export'])->name('hostel-bed-assignments.export');
+Route::resource('hostel-bed-assignments', \App\Http\Controllers\Receptionist\HostelBedAssignmentController::class);
 
