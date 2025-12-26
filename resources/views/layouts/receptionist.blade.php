@@ -151,12 +151,14 @@
                 frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') ? 'true' : 'false' }},
                 studentOpen: {{ request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*') || request()->routeIs('receptionist.transport-assignments.*') ? 'true' : 'false' }},
                 transportOpen: {{ request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*') || request()->routeIs('receptionist.transport-assign-history.*') || request()->routeIs('receptionist.transport-attendance.*') ? 'true' : 'false' }},
+                hostelOpen: {{ request()->routeIs('receptionist.hostels.*') || request()->routeIs('receptionist.hostel-floors.*') || request()->routeIs('receptionist.hostel-rooms.*') ? 'true' : 'false' }},
                 reportsOpen: {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'true' : 'false' }},
                 toggleFrontDesk() {
                     this.frontDeskOpen = !this.frontDeskOpen;
                     if (this.frontDeskOpen) {
                         this.studentOpen = false;
                         this.transportOpen = false;
+                        this.hostelOpen = false;
                         this.reportsOpen = false;
                     }
                 },
@@ -165,6 +167,7 @@
                     if (this.studentOpen) {
                         this.frontDeskOpen = false;
                         this.transportOpen = false;
+                        this.hostelOpen = false;
                         this.reportsOpen = false;
                     }
                 },
@@ -173,6 +176,16 @@
                     if (this.transportOpen) {
                         this.frontDeskOpen = false;
                         this.studentOpen = false;
+                        this.hostelOpen = false;
+                        this.reportsOpen = false;
+                    }
+                },
+                toggleHostel() {
+                    this.hostelOpen = !this.hostelOpen;
+                    if (this.hostelOpen) {
+                        this.frontDeskOpen = false;
+                        this.studentOpen = false;
+                        this.transportOpen = false;
                         this.reportsOpen = false;
                     }
                 },
@@ -182,6 +195,7 @@
                         this.frontDeskOpen = false;
                         this.studentOpen = false;
                         this.transportOpen = false;
+                        this.hostelOpen = false;
                     }
                 }
             }">
@@ -330,6 +344,42 @@
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.transport-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
                             <i class="fas fa-clipboard-check w-5 mr-3"></i>
                             <span class="whitespace-nowrap">Student Attendance</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Hostel Management Collapsible Menu -->
+                <div>
+                    <button @click="toggleHostel()" 
+                            class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-indigo-100 hover:bg-[#283593] transition-colors">
+                        <div class="flex items-center">
+                            <i class="fas fa-bed w-5 mr-3"></i>
+                            <span>Hostel</span>
+                        </div>
+                        <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': hostelOpen }"></i>
+                    </button>
+                    
+                    <!-- Submenu -->
+                    <div x-show="hostelOpen" 
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="ml-4 mt-1 space-y-1">
+                        <a href="{{ route('receptionist.hostels.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.hostels.index') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-bed w-5 mr-3"></i>
+                            <span>Hostels</span>
+                        </a>
+                        <a href="{{ route('receptionist.hostel-floors.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.hostel-floors.index') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-layer-group w-5 mr-3"></i>
+                            <span>Floors</span>
+                        </a>
+                        <a href="{{ route('receptionist.hostel-rooms.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.hostel-rooms.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }} transition-colors text-sm">
+                            <i class="fas fa-door-open w-5 mr-3"></i>
+                            <span>Rooms</span>
                         </a>
                     </div>
                 </div>

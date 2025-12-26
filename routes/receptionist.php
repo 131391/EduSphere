@@ -64,3 +64,16 @@ Route::post('transport-attendance', [\App\Http\Controllers\Receptionist\Transpor
 Route::get('transport-attendance/month-wise-report', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'monthWiseReport'])->name('transport-attendance.month-wise-report');
 Route::post('transport-attendance/get-routes-for-report', [\App\Http\Controllers\Receptionist\TransportAttendanceController::class, 'getRoutesForReport'])->name('transport-attendance.get-routes-for-report');
 
+// Hostel Management
+Route::resource('hostels', \App\Http\Controllers\Receptionist\HostelController::class);
+Route::get('hostels-export', [\App\Http\Controllers\Receptionist\HostelController::class, 'export'])->name('hostels.export');
+Route::resource('hostel-floors', \App\Http\Controllers\Receptionist\HostelFloorController::class);
+Route::get('hostel-floors-export', [\App\Http\Controllers\Receptionist\HostelFloorController::class, 'export'])->name('hostel-floors.export');
+Route::resource('hostel-rooms', \App\Http\Controllers\Receptionist\HostelRoomController::class);
+Route::get('hostel-rooms-export', [\App\Http\Controllers\Receptionist\HostelRoomController::class, 'export'])->name('hostel-rooms.export');
+Route::post('hostel-rooms/get-floors', [\App\Http\Controllers\Receptionist\HostelRoomController::class, 'getFloors'])->name('hostel-rooms.get-floors');
+
+// Hostel Floor Management
+Route::resource('hostel-floors', \App\Http\Controllers\Receptionist\HostelFloorController::class);
+Route::get('hostel-floors-export', [\App\Http\Controllers\Receptionist\HostelFloorController::class, 'export'])->name('hostel-floors.export');
+
