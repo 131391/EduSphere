@@ -171,15 +171,26 @@
                 'label' => 'Form Status',
                 'sortable' => true,
                 'render' => function($row) {
+                    // Convert enum to string for array key lookup
+                    if ($row->form_status instanceof \App\Enums\EnquiryStatus) {
+                        // Get the enum name (e.g., "PENDING") and convert to lowercase
+                        $statusKey = strtolower($row->form_status->name);
+                        $label = $row->form_status->label();
+                    } else {
+                        $statusKey = strtolower($row->form_status ?? 'pending');
+                        $label = ucfirst($statusKey);
+                    }
+                    
                     $colors = [
                         'pending' => 'bg-orange-100 text-orange-800',
                         'completed' => 'bg-blue-100 text-blue-800',
                         'cancelled' => 'bg-red-100 text-red-800',
                         'admitted' => 'bg-green-100 text-green-800',
                     ];
-                    $color = $colors[$row->form_status] ?? 'bg-gray-100 text-gray-800';
-                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full ' . $color . '">' 
-                         . ucfirst($row->form_status) . '</span>';
+                    $color = $colors[$statusKey] ?? 'bg-gray-100 text-gray-800';
+                    
+                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full ' . $color . '"> ' 
+                         . $label . '</span>';
                 }
             ],
         ];
