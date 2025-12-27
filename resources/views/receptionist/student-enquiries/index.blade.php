@@ -159,9 +159,12 @@
                 'sortable' => true,
                 'render' => function($row) {
                     // Convert enum to string for array key lookup
-                    $status = $row->form_status instanceof \App\Enums\EnquiryStatus 
-                        ? $row->form_status->name 
-                        : ($row->form_status ?? 'pending');
+                    if ($row->form_status instanceof \App\Enums\EnquiryStatus) {
+                        // Get the enum name (e.g., "PENDING") and convert to title case (e.g., "Pending")
+                        $status = ucfirst(strtolower($row->form_status->name));
+                    } else {
+                        $status = ucfirst(strtolower($row->form_status ?? 'pending'));
+                    }
                     
                     $colors = [
                         'Pending' => 'bg-orange-100 text-orange-800',
@@ -174,9 +177,9 @@
                     // Get label from enum if available
                     $label = $row->form_status instanceof \App\Enums\EnquiryStatus 
                         ? $row->form_status->label() 
-                        : ucfirst(strtolower($status));
+                        : $status;
                     
-                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full ' . $color . '">' 
+                    return '<span class="px-2 py-1 text-xs font-semibold rounded-full ' . $color . '"> ' 
                          . $label . '</span>';
                 }
             ],
