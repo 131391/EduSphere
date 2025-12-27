@@ -175,13 +175,8 @@ class SchoolController extends Controller
             // Create School
             $schoolData = collect($validated)->except(['admin_name', 'admin_email', 'admin_password', 'admin_password_confirmation'])->toArray();
             
-            // Map string status to enum integer
-            $statusMap = [
-                'active' => SchoolStatus::Active->value,
-                'inactive' => SchoolStatus::Inactive->value,
-                'suspended' => SchoolStatus::Suspended->value,
-            ];
-            $schoolData['status'] = $statusMap[$validated['status']] ?? SchoolStatus::Active->value;
+            // Status is already an integer from validation
+            $schoolData['status'] = $validated['status'];
 
             $school = School::create($schoolData);
 
@@ -260,15 +255,8 @@ class SchoolController extends Controller
             $validated['logo'] = $request->file('logo')->store('schools/logos', 'public');
         }
 
-        // Map string status to enum integer
-        if (isset($validated['status'])) {
-            $statusMap = [
-                'active' => SchoolStatus::Active->value,
-                'inactive' => SchoolStatus::Inactive->value,
-                'suspended' => SchoolStatus::Suspended->value,
-            ];
-            $validated['status'] = $statusMap[$validated['status']] ?? $school->status->value;
-        }
+        // Status is already an integer from validation
+        // No mapping needed
 
         $school->update($validated);
 
