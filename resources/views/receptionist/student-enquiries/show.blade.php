@@ -5,14 +5,22 @@
 @section('page-description', 'View student enquiry information')
 
 @section('content')
-<div class="max-w-7xl mx-auto">
-    {{-- Header Actions --}}
-    <div class="flex justify-between items-center mb-6">
-        <a href="{{ route('receptionist.student-enquiries.index') }}" 
-           class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Back to List
-        </a>
+<div class="w-full px-4 sm:px-6 lg:px-8">
+    {{-- Header with Actions --}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Student Enquiry Details</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">View student enquiry information</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('receptionist.student-enquiries.index') }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors shadow-sm">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back
+                </a>
+            </div>
+        </div>
     </div>
 
     {{-- Hero Section --}}

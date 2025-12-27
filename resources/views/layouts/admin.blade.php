@@ -18,7 +18,7 @@
     
     @include('partials.sidebar-scripts')
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors">
+<body class="bg-gray-100 h-screen overflow-hidden dark:bg-gray-900 transition-colors">
     <div class="flex h-screen overflow-hidden" x-data="{ 
         sidebarOpen: false, 
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',

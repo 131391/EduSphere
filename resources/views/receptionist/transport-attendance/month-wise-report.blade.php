@@ -7,16 +7,16 @@
     <!-- Page Header -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div class="flex items-center space-x-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Transport Attendance Month Wise</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">View monthly attendance reports for transport routes</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
                 <a href="{{ route('receptionist.transport-attendance.index') }}" 
                    class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Back
                 </a>
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Transport Attendance Month Wise</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">View monthly attendance reports for transport routes</p>
-                </div>
             </div>
         </div>
     </div>

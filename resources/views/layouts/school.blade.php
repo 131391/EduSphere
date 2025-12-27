@@ -28,7 +28,7 @@
     
     @include('partials.sidebar-scripts')
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 h-screen overflow-hidden">
     @php
         $school = app('currentSchool') ?? Auth::user()->school ?? \App\Models\School::where('status', 'active')->first();
         $currentAcademicYear = $school ? \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first() : null;

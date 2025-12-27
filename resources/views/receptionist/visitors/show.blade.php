@@ -5,25 +5,32 @@
 @section('page-description', 'View visitor information and meeting details')
 
 @section('content')
-<div class="max-w-7xl mx-auto">
+<div class="w-full px-4 sm:px-6 lg:px-8">
     {{-- Header Actions --}}
-    <div class="flex justify-between items-center mb-6">
-        <a href="{{ route('receptionist.visitors.index') }}" 
-           class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Back to List
-        </a>
-        <div class="flex gap-3">
-            @if(!$visitor->check_out)
-            <button onclick="document.getElementById('checkout-form').submit()" 
-                    class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
-                <i class="fas fa-sign-out-alt mr-2"></i>
-                Check Out
-            </button>
-            <form id="checkout-form" action="{{ route('receptionist.visitors.check-out', $visitor->id) }}" method="POST" class="hidden">
-                @csrf
-            </form>
-            @endif
+    {{-- Header Actions --}}
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Visitor Details</h1>
+                <p class="mt-1 text-sm text-gray-500">View visitor information and meeting details</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                @if(!$visitor->check_out)
+                <button onclick="document.getElementById('checkout-form').submit()" 
+                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Check Out
+                </button>
+                <form id="checkout-form" action="{{ route('receptionist.visitors.check-out', $visitor->id) }}" method="POST" class="hidden">
+                    @csrf
+                </form>
+                @endif
+                <a href="{{ route('receptionist.visitors.index') }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors shadow-sm">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back
+                </a>
+            </div>
         </div>
     </div>
 

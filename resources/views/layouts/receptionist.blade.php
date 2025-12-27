@@ -30,7 +30,7 @@
     </script>
     @include('partials.sidebar-scripts')
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 h-screen overflow-hidden">
     @php
         $school = auth()->user()->school;
         $currentAcademicYear = $school ? \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first() : null;
@@ -113,12 +113,16 @@
             @php
                 $frontDeskOpen = request()->routeIs('receptionist.visitors.*') || request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*');
                 $transportOpen = request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*');
+                $hostelOpen = request()->routeIs('receptionist.hostels.*') || request()->routeIs('receptionist.hostel-floors.*') || request()->routeIs('receptionist.hostel-rooms.*') || request()->routeIs('receptionist.hostel-bed-assignments.*') || request()->routeIs('receptionist.hostel-attendance.*');
+                $reportOpen = request()->routeIs('receptionist.transport-attendance.month-wise-report') || request()->routeIs('receptionist.hostel-attendance.report');
                 $staffOpen = request()->routeIs('receptionist.staff.*');
             @endphp
             <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll" 
                  x-data="{
                     frontDeskOpen: {{ $frontDeskOpen ? 'true' : 'false' }},
                     transportOpen: {{ $transportOpen ? 'true' : 'false' }},
+                    hostelOpen: {{ $hostelOpen ? 'true' : 'false' }},
+                    reportOpen: {{ $reportOpen ? 'true' : 'false' }},
                     staffOpen: {{ $staffOpen ? 'true' : 'false' }}
                  }">
                 <ul class="space-y-1 px-2">
@@ -203,6 +207,82 @@
                                 <a href="{{ route('receptionist.bus-stops.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.bus-stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-map-marker-alt w-4 mr-3"></i>
                                     <span>Bus Stops</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Hostel Management -->
+                    <li>
+                        <button @click="hostelOpen = !hostelOpen" 
+                                class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
+                                :class="{ 'justify-center': sidebarCollapsed }">
+                            <div class="flex items-center">
+                                <i class="fas fa-building w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Hostel Management</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform" 
+                               :class="{ 'rotate-180': hostelOpen }"
+                               x-show="!sidebarCollapsed"></i>
+                        </button>
+                        <ul x-show="hostelOpen" x-collapse {{ $hostelOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('receptionist.hostels.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostels.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-hotel w-4 mr-3"></i>
+                                    <span>Hostel List</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-floors.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-floors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-layer-group w-4 mr-3"></i>
+                                    <span>Hostel Floor</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-rooms.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-rooms.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-door-open w-4 mr-3"></i>
+                                    <span>Hostel Room</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-bed-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bed w-4 mr-3"></i>
+                                    <span>Bed Assignment</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-attendance.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-clipboard-check w-4 mr-3"></i>
+                                    <span>Hostel Attendance</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Report -->
+                    <li>
+                        <button @click="reportOpen = !reportOpen" 
+                                class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
+                                :class="{ 'justify-center': sidebarCollapsed }">
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-bar w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Report</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform" 
+                               :class="{ 'rotate-180': reportOpen }"
+                               x-show="!sidebarCollapsed"></i>
+                        </button>
+                        <ul x-show="reportOpen" x-collapse {{ $reportOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bus w-4 mr-3"></i>
+                                    <span>Transport Attendance</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-attendance.report') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bed w-4 mr-3"></i>
+                                    <span>Hostel Attendance</span>
                                 </a>
                             </li>
                         </ul>
