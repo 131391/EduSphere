@@ -109,11 +109,17 @@
             </div>
 
             <!-- Navigation Menu - Scrollable -->
+            <!-- Navigation Menu - Scrollable -->
+            @php
+                $frontDeskOpen = request()->routeIs('receptionist.visitors.*') || request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*');
+                $transportOpen = request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*');
+                $staffOpen = request()->routeIs('receptionist.staff.*');
+            @endphp
             <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll" 
                  x-data="{
-                    frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') || request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*') ? 'true' : 'false' }},
-                    transportOpen: {{ request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*') ? 'true' : 'false' }},
-                    staffOpen: {{ request()->routeIs('receptionist.staff.*') ? 'true' : 'false' }}
+                    frontDeskOpen: {{ $frontDeskOpen ? 'true' : 'false' }},
+                    transportOpen: {{ $transportOpen ? 'true' : 'false' }},
+                    staffOpen: {{ $staffOpen ? 'true' : 'false' }}
                  }">
                 <ul class="space-y-1 px-2">
                     <!-- Dashboard -->
@@ -139,7 +145,7 @@
                                :class="{ 'rotate-180': frontDeskOpen }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="frontDeskOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                        <ul x-show="frontDeskOpen" x-collapse {{ $frontDeskOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
                             <li>
                                 <a href="{{ route('receptionist.visitors.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-user-friends w-4 mr-3"></i>
@@ -180,7 +186,7 @@
                                :class="{ 'rotate-180': transportOpen }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="transportOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                        <ul x-show="transportOpen" x-collapse {{ $transportOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
                             <li>
                                 <a href="{{ route('receptionist.routes.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-route w-4 mr-3"></i>
@@ -215,7 +221,7 @@
                                :class="{ 'rotate-180': staffOpen }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="staffOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                        <ul x-show="staffOpen" x-collapse {{ $staffOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
                             <li>
                                 <a href="{{ route('receptionist.staff.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-list w-4 mr-3"></i>
@@ -336,7 +342,7 @@
                         </button>
                         
                         <!-- User Dropdown -->
-                        <div class="relative" x-data="{ open: false }" x-cloak>
+                        <div class="relative" x-data="{ open: false }">
                             <button 
                                 @click="open = !open"
                                 class="flex items-center space-x-1 sm:space-x-2 focus:outline-none"
@@ -351,6 +357,7 @@
                             <!-- Dropdown Menu -->
                             <div 
                                 x-show="open" 
+                                x-cloak
                                 @click.away="open = false"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 scale-95"

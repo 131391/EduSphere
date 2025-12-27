@@ -19,7 +19,7 @@
     $perPage = request('per_page', 15);
 @endphp
 
-<div class="bg-white rounded-lg shadow overflow-hidden" x-data="dataTable" x-cloak>
+<div class="bg-white rounded-lg shadow overflow-hidden" x-data="dataTable">
     <!-- Table Header with Search and Filters -->
     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -93,7 +93,7 @@
 
         <!-- Active Filters Display -->
         @if($filterable && count($filters) > 0)
-        <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()">
+        <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
             <template x-for="(value, key) in filters" :key="key">
                 <div x-show="value" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
                     <span x-text="getFilterLabel(key, value)"></span>

@@ -106,6 +106,11 @@
             </div>
 
             <!-- Navigation Menu - Scrollable -->
+            @php
+                $studentOpen = request()->routeIs('school.student-enquiries.*') || request()->routeIs('school.student-registrations.*') || request()->routeIs('school.admission.*');
+                $examinationOpen = request()->routeIs('school.examination.*');
+                $settingOpen = request()->routeIs('school.settings.*') || request()->routeIs('school.admission-news.*') || request()->routeIs('school.support');
+            @endphp
             <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll">
                 <ul class="space-y-1 px-2">
                     <!-- Main -->
@@ -254,7 +259,7 @@
                     <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Student</p>
                     </li>
-                    <li x-data="{ open: {{ request()->routeIs('school.student-enquiries.*') || request()->routeIs('school.student-registrations.*') || request()->routeIs('school.admission.*') ? 'true' : 'false' }} }">
+                    <li x-data="{ open: {{ $studentOpen ? 'true' : 'false' }} }">
                         <button @click="open = !open" 
                                 class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
                                 :class="{ 'justify-center': sidebarCollapsed }">
@@ -266,7 +271,7 @@
                                :class="{ 'transform rotate-180': open }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="open" x-collapse class="pl-4 mt-1 space-y-1">
+                        <ul x-show="open" x-collapse {{ $studentOpen ? '' : 'x-cloak' }} class="pl-4 mt-1 space-y-1">
                             <li>
                                 <a href="{{ route('school.student-enquiries.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-minus w-3 mr-3"></i>
@@ -382,7 +387,7 @@
                     <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Examination</p>
                     </li>
-                    <li x-data="{ open: {{ request()->routeIs('school.examination.*') ? 'true' : 'false' }} }">
+                    <li x-data="{ open: {{ $examinationOpen ? 'true' : 'false' }} }">
                         <button @click="open = !open" 
                                 class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
                                 :class="{ 'justify-center': sidebarCollapsed }">
@@ -394,7 +399,7 @@
                                :class="{ 'transform rotate-180': open }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="open" x-collapse class="pl-4 mt-1 space-y-1">
+                        <ul x-show="open" x-collapse {{ $examinationOpen ? '' : 'x-cloak' }} class="pl-4 mt-1 space-y-1">
                             <li>
                                 <a href="{{ route('school.examination.subjects.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.subjects.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-minus w-3 mr-3"></i>
@@ -440,7 +445,7 @@
                             <span class="whitespace-nowrap" x-show="!sidebarCollapsed">User Management</span>
                         </a>
                     </li>
-                    <li x-data="{ open: {{ request()->routeIs('school.settings.*') || request()->routeIs('school.admission-news.*') || request()->routeIs('school.support') ? 'true' : 'false' }} }">
+                    <li x-data="{ open: {{ $settingOpen ? 'true' : 'false' }} }">
                         <button @click="open = !open" 
                                 class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
                                 :class="{ 'justify-center': sidebarCollapsed }">
@@ -452,7 +457,7 @@
                                :class="{ 'transform rotate-180': open }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="open" x-collapse class="pl-4 mt-1 space-y-1">
+                        <ul x-show="open" x-collapse {{ $settingOpen ? '' : 'x-cloak' }} class="pl-4 mt-1 space-y-1">
                             <li>
                                 <a href="{{ route('school.settings.logo') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.settings.logo') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-minus w-3 mr-3"></i>
@@ -615,7 +620,7 @@
                         </button>
                         
                         <!-- User Dropdown -->
-                        <div class="relative" x-data="{ open: false }" x-cloak>
+                        <div class="relative" x-data="{ open: false }">
                             <button 
                                 @click="open = !open"
                                 class="flex items-center space-x-1 sm:space-x-2 focus:outline-none"
@@ -630,6 +635,7 @@
                             <!-- Dropdown Menu -->
                             <div 
                                 x-show="open" 
+                                x-cloak
                                 @click.away="open = false"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 scale-95"
