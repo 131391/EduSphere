@@ -902,6 +902,18 @@ document.addEventListener('alpine:init', () => {
                 previous_school_company_name: '',
             };
             this.sections = [];
+            
+            // Reset Select2 dropdowns
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('#post').val('').trigger('change');
+                    $('#class_id').val('').trigger('change');
+                    $('#section_id').val('').trigger('change');
+                    $('select[name="gender"]').val('').trigger('change');
+                    $('select[name="country_id"]').val('').trigger('change');
+                    $('select[name="higher_qualification_id"]').val('').trigger('change');
+                }
+            });
         },
         
         closeModal() {
