@@ -790,7 +790,6 @@
             }));
         });
     </script>
-    <x-delete-confirmation />
 </body>
 </html>
 
