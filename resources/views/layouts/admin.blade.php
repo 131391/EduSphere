@@ -184,7 +184,7 @@
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
                             title="Toggle fullscreen"
                         >
-                            <i class="text-xl fas fa-expand" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'"></i>
+                            <i class="text-xl fas" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'"></i>
                         </button>
                         
                         <!-- Dark Mode Toggle -->

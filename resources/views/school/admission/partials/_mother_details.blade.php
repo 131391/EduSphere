@@ -73,7 +73,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mobile No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="mother_mobile" value="{{ old('mother_mobile', isset($student) ? $student->mother_mobile : '') }}" placeholder="Enter Mobile No"
+                <input type="tel" name="mother_mobile" value="{{ old('mother_mobile', isset($student) ? $student->mother_mobile : '') }}" placeholder="Enter Mobile No" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                        class="w-full px-4 py-2 border {{ $errors->has('mother_mobile') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 @error('mother_mobile')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>

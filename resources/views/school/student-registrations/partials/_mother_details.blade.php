@@ -64,7 +64,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mobile Number <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="mother_mobile_no" value="{{ old('mother_mobile_no', $studentRegistration->mother_mobile_no ?? '') }}" required placeholder="Enter Mobile Number"
+                <input type="tel" name="mother_mobile_no" value="{{ old('mother_mobile_no', $studentRegistration->mother_mobile_no ?? '') }}" required placeholder="Enter Mobile Number" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
 

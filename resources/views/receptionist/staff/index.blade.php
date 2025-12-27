@@ -242,11 +242,14 @@
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                                 Mobile
                             </label>
-                            <input type="text" 
+                            <input type="tel" 
                                    name="mobile" 
                                    x-model="formData.mobile"
                                    value="{{ old('mobile') }}"
                                    placeholder="Enter Mobile"
+                                   pattern="[0-9]{10,15}" 
+                                   inputmode="numeric"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                    class="w-full px-4 py-2 border {{ $errors->has('mobile') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                             @error('mobile')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>

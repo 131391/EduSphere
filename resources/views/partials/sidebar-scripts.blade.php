@@ -1,10 +1,43 @@
 <script>
+    // Pre-load sidebar state
     if (localStorage.getItem('sidebarCollapsed') === 'true') {
         document.documentElement.classList.add('sidebar-collapsed');
     }
+    
+    // Pre-load header action states to prevent icon blinking
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        
+        // Set favorite icon state
+        const isFavorited = localStorage.getItem('favorited_' + currentPath) === 'true';
+        const favoriteIcon = document.querySelector('[title="Add to favorites"] i, [title="Add to Favorites"] i');
+        if (favoriteIcon && isFavorited) {
+            favoriteIcon.classList.remove('far');
+            favoriteIcon.classList.add('fas');
+        }
+        
+        // Set bookmark icon state
+        const isBookmarked = localStorage.getItem('bookmarked_' + currentPath) === 'true';
+        const bookmarkIcon = document.querySelector('[title="Bookmark this page"] i, [title="Saved Pages"] i');
+        if (bookmarkIcon && isBookmarked) {
+            bookmarkIcon.classList.remove('far');
+            bookmarkIcon.classList.add('fas');
+        }
+    });
 </script>
 <style>
     [x-cloak] { display: none !important; }
+    
+    /* Hide sidebar on mobile by default to prevent FOUC */
+    @media (max-width: 1023px) {
+        aside {
+            transform: translateX(-100%) !important;
+        }
+        /* Only show when Alpine.js adds the open state */
+        aside[x-show="isMobileMenuOpen"] {
+            transform: translateX(0) !important;
+        }
+    }
     
     /* Pre-load collapsed state to prevent FOUC */
     html.sidebar-collapsed aside {
