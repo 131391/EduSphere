@@ -9,8 +9,8 @@ class RegistrationController extends Controller
 {
     public function index()
     {
-        // TODO: Implement
-        return view('school.student-registrations.index');
+        // Redirect to the actual student registrations page
+        return redirect()->route('school.student-registrations.index');
     }
 
     public function import(Request $request)
