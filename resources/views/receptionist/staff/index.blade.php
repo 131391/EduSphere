@@ -896,9 +896,22 @@ document.addEventListener('alpine:init', () => {
 
 // Global function to open edit modal (called from table action buttons)
 function openEditModal(staff) {
-    const component = Alpine.$data(document.querySelector('[x-data*="staffManagement"]'));
-    if (component) {
+    console.log('openEditModal called with staff:', staff);
+    const element = document.querySelector('[x-data*="staffManagement"]');
+    console.log('Found element:', element);
+    
+    if (!element) {
+        console.error('Could not find staffManagement element');
+        return;
+    }
+    
+    const component = Alpine.$data(element);
+    console.log('Found component:', component);
+    
+    if (component && typeof component.openEditModal === 'function') {
         component.openEditModal(staff);
+    } else {
+        console.error('Component or openEditModal function not found');
     }
 }
 
