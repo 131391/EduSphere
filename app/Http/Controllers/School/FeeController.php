@@ -22,8 +22,8 @@ class FeeController extends Controller
 
     public function create()
     {
-        // TODO: Implement
-        return view('school.fees.create');
+        // TODO: Implement - redirecting to index for now
+        return redirect()->route('school.fees.index');
     }
 
     public function store(Request $request)
