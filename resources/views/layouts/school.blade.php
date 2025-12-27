@@ -692,7 +692,7 @@
             // Skip if already initialized or should be excluded
             if ($select.hasClass('select2-hidden-accessible') || 
                 $select.hasClass('no-select2') || 
-                $select.attr('data-table-select')) {
+                $select.is('[data-table-select]')) {
                 return false;
             }
             
@@ -751,6 +751,7 @@
                             // Skip if already initialized, excluded, or inside x-cloak
                             if (!$select.hasClass('select2-hidden-accessible') && 
                                 !$select.hasClass('no-select2') && 
+                                !$select.is('[data-table-select]') &&
                                 $select.closest('[x-cloak]').length === 0) {
                                 newSelects.push(this);
                             }
