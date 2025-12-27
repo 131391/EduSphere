@@ -76,7 +76,7 @@
             <!-- Navigation Menu - Scrollable -->
             <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll" 
                  x-data="{
-                    frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') || request()->routeIs('receptionist.enquiries.*') || request()->routeIs('receptionist.registrations.*') || request()->routeIs('receptionist.admissions.*') ? 'true' : 'false' }},
+                    frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') || request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.registrations.*') || request()->routeIs('receptionist.admissions.*') ? 'true' : 'false' }},
                     studentOpen: {{ request()->routeIs('receptionist.students.*') ? 'true' : 'false' }},
                     transportOpen: {{ request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*') ? 'true' : 'false' }},
                     staffOpen: {{ request()->routeIs('receptionist.staff.*') ? 'true' : 'false' }}
@@ -107,7 +107,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.enquiries.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                <a href="{{ route('receptionist.student-enquiries.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-question-circle w-4 mr-3"></i>
                                     <span>Student Enquiry</span>
                                 </a>
