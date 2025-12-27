@@ -77,6 +77,7 @@
 </div>
 
 <!-- Update Modal -->
+<div x-data="{
     fee: { id: '{{ old('fee_id') }}', late_fee_amount: '{{ old('late_fee_amount') }}', fine_date: '{{ old('fine_date') }}' },
     get action() {
         return this.fee.id ? '{{ route('school.late-fee.update', ':id') }}'.replace(':id', this.fee.id) : '{{ route('school.late-fee.store') }}';
@@ -88,8 +89,7 @@
             });
         @endif
     }
-} @open-modal.window="if ($event.detail.name === 'update-late-fee-modal') { fee = { ...$event.detail.fee }; } else if ($event.detail === 'update-late-fee-modal') { fee = { id: null, late_fee_amount: '', fine_date: '' }; }">
-    <x-modal name="update-late-fee-modal" title="Late Fee Configuration" maxWidth="xl">
+}" @open-modal.window="if ($event.detail.name === 'update-late-fee-modal') { fee = { ...$event.detail.fee }; } else if ($event.detail === 'update-late-fee-modal') { fee = { id: null, late_fee_amount: '', fine_date: '' }; }">    <x-modal name="update-late-fee-modal" title="Late Fee Configuration" maxWidth="xl">
         <form :action="action" method="POST" class="p-6 space-y-6">
             @csrf
             <template x-if="fee.id">
