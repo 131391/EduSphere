@@ -10,7 +10,7 @@ class RegistrationController extends Controller
     public function index()
     {
         // TODO: Implement
-        return view('school.registrations.index');
+        return view('school.student-registrations.index');
     }
 
     public function import(Request $request)
