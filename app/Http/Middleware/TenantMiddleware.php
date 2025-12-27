@@ -19,8 +19,8 @@ class TenantMiddleware
     {
         $school = $this->identifySchool($request);
 
-        // For localhost/127.0.0.1 development, try to get school from user
-        if (!$school && in_array($request->getHost(), ['localhost', '127.0.0.1', '127.0.0.1:8000'])) {
+        // For localhost/127.0.0.1 development or Railway, try to get school from user
+        if (!$school && (in_array($request->getHost(), ['localhost', '127.0.0.1', '127.0.0.1:8000']) || str_ends_with($request->getHost(), 'railway.app'))) {
             $user = auth()->user();
             if ($user && $user->school_id) {
                 $school = \App\Models\School::find($user->school_id);
