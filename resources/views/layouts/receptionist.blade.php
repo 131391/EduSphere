@@ -35,7 +35,331 @@
         $currentAcademicYear = $school ? \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first() : null;
     @endphp
 
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" 
+             @click="sidebarOpen = false"
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden"
+             style="display: none;"></div>
+
+        <!-- Sidebar -->
+        <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-[#1a237e] text-white flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
+               :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
+            <!-- Logo Section -->
+            <div class="p-4 border-b border-[#283593] flex-shrink-0">
+                <div class="flex items-center justify-center mb-2">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                        @if($school && $school->logo)
+                            <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name }}" class="w-16 h-16 rounded-full object-cover">
+                        @else
+                            <i class="fas fa-book text-[#1a237e] text-2xl"></i>
+                        @endif
+                    </div>
+                </div>
+                <h2 class="text-xs font-bold text-center leading-tight">{{ strtoupper($school->name ?? 'SCHOOL NAME') }}</h2>
+                @if($school)
+                    <p class="text-xs text-indigo-100 text-center mt-1">{{ $school->city ?? '' }}, {{ $school->state ?? '' }}</p>
+                @endif
+            </div>
+
+            <!-- Session Info -->
+            <div class="px-4 py-2 bg-[#283593] text-xs flex-shrink-0">
+                <p class="font-semibold">SESSION: {{ $currentAcademicYear?->name ?? '2025 - 2026' }}</p>
+            </div>
+
+            <!-- Navigation Menu - Scrollable -->
+            <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll" 
+                 x-data="{
+                    frontDeskOpen: {{ request()->routeIs('receptionist.visitors.*') || request()->routeIs('receptionist.enquiries.*') || request()->routeIs('receptionist.registrations.*') || request()->routeIs('receptionist.admissions.*') ? 'true' : 'false' }},
+                    studentOpen: {{ request()->routeIs('receptionist.students.*') ? 'true' : 'false' }},
+                    transportOpen: {{ request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*') ? 'true' : 'false' }},
+                    staffOpen: {{ request()->routeIs('receptionist.staff.*') ? 'true' : 'false' }}
+                 }">
+                <ul class="space-y-1 px-2">
+                    <!-- Dashboard -->
+                    <li>
+                        <a href="{{ route('receptionist.dashboard') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.dashboard') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="fas fa-tachometer-alt w-5 mr-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+
+                    <!-- Front Desk -->
+                    <li>
+                        <button @click="frontDeskOpen = !frontDeskOpen" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                            <div class="flex items-center">
+                                <i class="fas fa-concierge-bell w-5 mr-3"></i>
+                                <span>Front Desk</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': frontDeskOpen }"></i>
+                        </button>
+                        <ul x-show="frontDeskOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('receptionist.visitors.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-user-friends w-4 mr-3"></i>
+                                    <span>Visitor List</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.enquiries.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-question-circle w-4 mr-3"></i>
+                                    <span>Student Enquiry</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.registrations.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-clipboard-list w-4 mr-3"></i>
+                                    <span>Student Registration</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.admissions.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.admissions.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-user-graduate w-4 mr-3"></i>
+                                    <span>Admission List</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Student -->
+                    <li>
+                        <button @click="studentOpen = !studentOpen" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                            <div class="flex items-center">
+                                <i class="fas fa-user-graduate w-5 mr-3"></i>
+                                <span>Student</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': studentOpen }"></i>
+                        </button>
+                        <ul x-show="studentOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('receptionist.students.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.students.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-list w-4 mr-3"></i>
+                                    <span>Student List</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Transport Management -->
+                    <li>
+                        <button @click="transportOpen = !transportOpen" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                            <div class="flex items-center">
+                                <i class="fas fa-bus w-5 mr-3"></i>
+                                <span>Transport Management</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': transportOpen }"></i>
+                        </button>
+                        <ul x-show="transportOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('receptionist.routes.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-route w-4 mr-3"></i>
+                                    <span>Routes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.vehicles.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bus-alt w-4 mr-3"></i>
+                                    <span>Vehicles</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.bus-stops.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.bus-stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-map-marker-alt w-4 mr-3"></i>
+                                    <span>Bus Stops</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Staff -->
+                    <li>
+                        <button @click="staffOpen = !staffOpen" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                            <div class="flex items-center">
+                                <i class="fas fa-users w-5 mr-3"></i>
+                                <span>Staff</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': staffOpen }"></i>
+                        </button>
+                        <ul x-show="staffOpen" x-collapse class="ml-4 mt-1 space-y-1">
+                            <li>
+                                <a href="{{ route('receptionist.staff.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-list w-4 mr-3"></i>
+                                    <span>Staff List</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Logout -->
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] text-left">
+                                <i class="fas fa-sign-out-alt w-5 mr-3"></i>
+                                <span>LogOut</span>
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center">
+                <p>{{ date('Y') }} ©</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="flex items-center justify-between px-4 sm:px-6 py-4">
+                    <!-- Left: Menu & Search -->
+                    <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
+                        <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 hover:text-gray-700 lg:hidden focus:outline-none">
+                            <i class="fas fa-bars text-xl sm:text-2xl"></i>
+                        </button>
+                        <div class="relative flex-1 max-w-md">
+                            <input type="text" placeholder="Search..." class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                        </div>
+                    </div>
+
+                    <!-- Right: Actions & User -->
+                    <div class="flex items-center space-x-2 sm:space-x-4" x-data="headerActions">
+                        <!-- Star (Favorite) -->
+                        <button 
+                            @click="toggleFavorite()" 
+                            class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
+                            :class="isFavorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-500 hover:text-gray-700'"
+                            title="Add to Favorites"
+                        >
+                            <i :class="isFavorite ? 'fas fa-star text-xl' : 'far fa-star text-xl'"></i>
+                        </button>
+
+                        <!-- Bookmark (Saved List) -->
+                        <div class="relative hidden md:block">
+                            <button 
+                                @click="showFavorites = !showFavorites" 
+                                class="text-gray-500 hover:text-gray-700 transition-colors"
+                                title="Saved Pages"
+                            >
+                                <i class="far fa-bookmark text-xl"></i>
+                            </button>
+                            
+                            <!-- Favorites Dropdown -->
+                            <div 
+                                x-show="showFavorites" 
+                                @click.away="showFavorites = false"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                                x-cloak
+                            >
+                                <div class="px-4 py-2 border-b border-gray-100">
+                                    <h3 class="text-sm font-semibold text-gray-700">Saved Pages</h3>
+                                </div>
+                                <div class="max-h-64 overflow-y-auto">
+                                    <template x-if="favorites.length === 0">
+                                        <div class="px-4 py-4 text-center text-gray-500 text-sm">
+                                            No saved pages yet.
+                                        </div>
+                                    </template>
+                                    <template x-for="fav in favorites" :key="fav.id">
+                                        <div class="group flex items-center justify-between px-4 py-2 hover:bg-gray-50">
+                                            <a :href="fav.url" class="text-sm text-gray-700 hover:text-blue-600 truncate flex-1" x-text="fav.title"></a>
+                                            <button @click="removeFavorite(fav.id)" class="ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fullscreen -->
+                        <button 
+                            @click="toggleFullscreen()" 
+                            class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
+                            title="Toggle Fullscreen"
+                        >
+                            <i class="fas text-xl" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+                        </button>
+
+                        <!-- Dark Mode -->
+                        <button 
+                            @click="toggleDarkMode()" 
+                            class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
+                            title="Toggle Dark Mode"
+                        >
+                            <i class="far text-xl" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+                        </button>
+                        
+                        <!-- User Dropdown -->
+                        <div class="relative" x-data="{ open: false }" x-cloak>
+                            <button 
+                                @click="open = !open"
+                                class="flex items-center space-x-1 sm:space-x-2 focus:outline-none"
+                            >
+                                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                                    <i class="fas fa-user text-sm"></i>
+                                </div>
+                                <span class="text-gray-700 font-medium hidden sm:inline text-sm">{{ Auth::user()->name ?? 'Receptionist' }}</span>
+                                <i class="fas fa-chevron-down text-gray-500 text-xs hidden sm:inline"></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div 
+                                x-show="open" 
+                                @click.away="open = false"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                            >
+                                <a 
+                                    href="#" 
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                >
+                                    <i class="fas fa-user-circle mr-3 text-gray-500"></i>
+                                    Profile
+                                </a>
+                                <div class="border-t border-gray-200 my-1"></div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button 
+                                        type="submit"
+                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                                    >
+                                        <i class="fas fa-sign-out-alt mr-3"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+                @yield('content')
+            </main>
+        </div>
+    </div>
         <!-- Sidebar -->
         <aside class="w-64 bg-[#1a237e] text-white flex flex-col relative z-50">
             <!-- Logo Section -->
