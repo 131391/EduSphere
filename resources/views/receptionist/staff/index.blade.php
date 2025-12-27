@@ -810,6 +810,25 @@ document.addEventListener('alpine:init', () => {
             this.$nextTick(() => {
                 this.updateSelect2DisabledState();
                 this.$dispatch('open-modal', 'staff-modal');
+                
+                // Update Select2 values after modal opens
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined') {
+                        // Update all Select2 dropdowns with the form data values
+                        $('#post').val(this.formData.post).trigger('change');
+                        $('#class_id').val(this.formData.class_id).trigger('change');
+                        $('select[name="gender"]').val(this.formData.gender).trigger('change');
+                        $('select[name="country_id"]').val(this.formData.country_id).trigger('change');
+                        $('select[name="higher_qualification_id"]').val(this.formData.higher_qualification_id).trigger('change');
+                        
+                        // Update section after a slight delay to ensure sections are loaded
+                        if (this.formData.section_id) {
+                            setTimeout(() => {
+                                $('#section_id').val(this.formData.section_id).trigger('change');
+                            }, 200);
+                        }
+                    }
+                }, 100);
             });
         },
         
