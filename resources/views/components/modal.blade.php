@@ -76,15 +76,13 @@ $maxWidthClass = [
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
         
-        @if(isset($title) || isset($alpineTitle) || (isset($title) && $title->isNotEmpty()))
+        @if(isset($alpineTitle) || (isset($title) && !empty($title)))
         <div class="bg-teal-500 px-4 py-3 flex justify-between items-center">
             <h3 class="text-lg font-medium text-white">
-                @if(isset($title) && $title->isNotEmpty())
+                @if(isset($title) && !empty($title))
                     {{ $title }}
                 @elseif(isset($alpineTitle))
                     <span x-text="{{ $alpineTitle }}"></span>
-                @else
-                    {{ $title ?? '' }}
                 @endif
             </h3>
             <button x-on:click="show = false" class="text-white hover:text-gray-200 focus:outline-none">
