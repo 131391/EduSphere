@@ -207,13 +207,15 @@
                 'title' => 'Edit',
             ],
             [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    return "confirmDelete({$row->id})";
+                'type' => 'form',
+                'action' => function($row) {
+                    return route('receptionist.student-enquiries.destroy', $row->id);
                 },
+                'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
+                'confirm' => 'Are you sure you want to delete this enquiry?',
             ],
         ];
     @endphp
@@ -277,58 +279,6 @@
         </div>
     </div>
 </div>
-</div>
-
-<!-- Delete Confirmation Modal (Outside main component for proper layering) -->
-<div x-data="{ showDeleteModal: false, deleteEnquiryId: null }" 
-     @delete-enquiry.window="showDeleteModal = true; deleteEnquiryId = $event.detail.id; document.body.style.overflow = 'hidden'">
-    <div x-show="showDeleteModal" x-cloak 
-         @close="document.body.style.overflow = ''"
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-[60] flex items-center justify-center"
-         @click.self="showDeleteModal = false; document.body.style.overflow = ''">
-        <div class="relative mx-auto w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-800 overflow-hidden"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100">
-            
-            <div class="bg-red-500 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white">Confirm Delete</h3>
-                <button @click="showDeleteModal = false; document.body.style.overflow = ''" class="text-white hover:text-red-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
-            </div>
-
-            <div class="p-6">
-                <div class="flex items-center mb-4">
-                    <div class="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-lg font-semibold text-gray-800 dark:text-white">Are you sure?</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone.</p>
-                    </div>
-                </div>
-                <p class="text-gray-700 dark:text-gray-300">
-                    Do you really want to delete this enquiry? This will permanently remove the enquiry data from the system.
-                </p>
-            </div>
-
-            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex items-center justify-end gap-3">
-                <button @click="showDeleteModal = false; document.body.style.overflow = ''"
-                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
-                    Cancel
-                </button>
-                <form :action="`/receptionist/student-enquiries/${deleteEnquiryId}`" method="POST" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-md">
-                        Delete
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>
 
 @push('scripts')
@@ -638,13 +588,6 @@ window.openEditModal = function(enquiry) {
     if (component) {
         component.openEditModal(enquiry);
     }
-};
-
-window.confirmDelete = function(enquiryId) {
-    // Dispatch custom event for delete modal
-    window.dispatchEvent(new CustomEvent('delete-enquiry', {
-        detail: { id: enquiryId }
-    }));
 };
 </script>
 
