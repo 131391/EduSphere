@@ -7,10 +7,10 @@
     <title>@yield('title', 'School Dashboard - ' . config('app.name'))</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -26,6 +26,7 @@
         }
     </script>
     
+    @include('partials.sidebar-scripts')
 </head>
 <body class="bg-gray-100">
     @php
@@ -33,155 +34,237 @@
         $currentAcademicYear = $school ? \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first() : null;
     @endphp
 
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex h-screen overflow-hidden" x-data="{ 
+        sidebarOpen: false, 
+        sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+        init() {
+            document.documentElement.classList.remove('sidebar-collapsed');
+            // Remove no-transition class after a small delay to allow initial paint
+            setTimeout(() => {
+                document.querySelector('aside').classList.remove('no-transition');
+            }, 100);
+        },
+        toggleSidebar() {
+            this.sidebarCollapsed = !this.sidebarCollapsed;
+            localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+        }
+    }">
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" 
+             @click="sidebarOpen = false"
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden"
+             style="display: none;"></div>
         <!-- Sidebar -->
-        <aside class="w-64 bg-[#1a237e] text-white flex flex-col">
+        <aside class="fixed inset-y-0 left-0 z-50 bg-[#1a237e] text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
+               style="width: 16rem;"
+               :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'"
+               :class="{ 
+                   '-translate-x-full': !sidebarOpen, 
+                   'translate-x-0': sidebarOpen,
+                   'sidebar-collapsed': sidebarCollapsed
+               }">
             <!-- Logo Section -->
-            <div class="p-4 border-b border-[#283593] flex-shrink-0">
+            <div class="p-4 border-b border-[#283593] flex-shrink-0 relative group">
                 <div class="flex items-center justify-center mb-2">
-                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                    <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 logo-container"
+                         style="width: 4rem; height: 4rem;"
+                         :style="sidebarCollapsed ? 'width: 2.5rem; height: 2.5rem;' : 'width: 4rem; height: 4rem;'">
                         @if($school && $school->logo)
-                            <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name }}" class="w-16 h-16 rounded-full object-cover">
+                            <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name }}" class="rounded-full object-cover logo-img"
+                                 style="width: 4rem; height: 4rem;"
+                                 :style="sidebarCollapsed ? 'width: 2.5rem; height: 2.5rem;' : 'width: 4rem; height: 4rem;'">
                         @else
-                            <i class="fas fa-book text-[#1a237e] text-2xl"></i>
+                            <i class="fas fa-book text-[#1a237e]" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
                         @endif
                     </div>
                 </div>
-                <h2 class="text-xs font-bold text-center leading-tight">{{ strtoupper($school->name ?? 'SCHOOL NAME') }}</h2>
-                @if($school)
-                    <p class="text-xs text-indigo-100 text-center mt-1">{{ $school->city ?? '' }}, {{ $school->state ?? '' }}</p>
-                @endif
+                
+                <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="sidebar-text">
+                    <h2 class="text-xs font-bold text-center leading-tight">{{ strtoupper($school->name ?? 'SCHOOL NAME') }}</h2>
+                    @if($school)
+                        <p class="text-xs text-indigo-100 text-center mt-1">{{ $school->city ?? '' }}, {{ $school->state ?? '' }}</p>
+                    @endif
+                </div>
+
+                <!-- Toggle Button -->
+                <button @click="toggleSidebar()" class="absolute top-6 -right-4 w-8 h-8 flex items-center justify-center bg-teal-50 text-teal-600 rounded-full shadow-lg hover:bg-white hover:text-teal-700 transition-all duration-200 hidden lg:flex focus:outline-none z-50 border border-gray-200">
+                    <i class="fas fa-chevron-left" x-show="!sidebarCollapsed"></i>
+                    <i class="fas fa-chevron-right" x-show="sidebarCollapsed" style="display: none;"></i>
+                </button>
             </div>
 
             <!-- Session Info -->
-            <div class="px-4 py-2 bg-[#283593] text-xs flex-shrink-0">
-                <p class="font-semibold">SESSION: {{ $currentAcademicYear?->name ?? '2025 - 2026' }}</p>
+            <div class="px-4 py-2 bg-[#283593] text-xs flex-shrink-0 overflow-hidden whitespace-nowrap">
+                <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION: {{ $currentAcademicYear?->name ?? '2025 - 2026' }}</p>
+                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ substr($currentAcademicYear?->name ?? '25-26', 2, 2) }}-{{ substr($currentAcademicYear?->name ?? '25-26', -2) }}</p>
             </div>
 
             <!-- Navigation Menu - Scrollable -->
             <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll">
                 <ul class="space-y-1 px-2">
                     <!-- Main -->
-                    <li class="pt-2">
+                    <!-- Main -->
+                    <!-- Main -->
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Main</p>
                     </li>
                     <li>
-                        <a href="{{ route('school.dashboard') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.dashboard') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-tachometer-alt w-5 mr-3"></i>
-                            <span>Dashboards</span>
+                        <a href="{{ route('school.dashboard') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.dashboard') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-tachometer-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed" class="sidebar-text">Dashboards</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.registrations.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-file-import w-5 mr-3"></i>
-                            <span class="whitespace-nowrap">Import Registration</span>
+                        <a href="{{ route('school.registrations.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-file-import w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span class="whitespace-nowrap sidebar-text" x-show="!sidebarCollapsed">Import Registration</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.waivers.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.waivers.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-percent w-5 mr-3"></i>
-                            <span>Waiver</span>
+                        <a href="{{ route('school.waivers.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.waivers.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-percent w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed" class="sidebar-text">Waiver</span>
                         </a>
                     </li>
 
                     <!-- Fee Operations -->
-                    <li class="pt-2">
+                    <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Operations</p>
                     </li>
                     <li>
-                        <a href="{{ route('school.fee-master.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-master.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-money-bill-wave w-5 mr-3"></i>
-                            <span>Fee Management</span>
+                        <a href="{{ route('school.fee-master.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-master.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-money-bill-wave w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Fee Management</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.late-fee.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.late-fee.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-clock w-5 mr-3"></i>
-                            <span class="whitespace-nowrap">Manage Late Fee</span>
+                        <a href="{{ route('school.late-fee.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.late-fee.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-clock w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span class="whitespace-nowrap" x-show="!sidebarCollapsed">Manage Late Fee</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.fees.create') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fees.create') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-plus-circle w-5 mr-3"></i>
-                            <span>Create New Fee</span>
+                        <a href="{{ route('school.fees.create') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fees.create') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-plus-circle w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Create New Fee</span>
                         </a>
                     </li>
 
                     <!-- Academic Setup -->
-                    <li class="pt-2">
+                    <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Academic Setup</p>
                     </li>
                     <li>
-                        <a href="{{ route('school.academic-years.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.academic-years.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-calendar-alt w-5 mr-3"></i>
-                            <span>Academic Years</span>
+                        <a href="{{ route('school.academic-years.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.academic-years.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-calendar-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Academic Years</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.classes.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.classes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-graduation-cap w-5 mr-3"></i>
-                            <span>Class</span>
+                        <a href="{{ route('school.classes.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.classes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-graduation-cap w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Class</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.sections.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.sections.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-users w-5 mr-3"></i>
-                            <span>Section</span>
+                        <a href="{{ route('school.sections.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.sections.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-users w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Section</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.subjects.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.subjects.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-book w-5 mr-3"></i>
-                            <span class="whitespace-nowrap">Subject Master</span>
+                        <a href="{{ route('school.subjects.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.subjects.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-book w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span class="whitespace-nowrap" x-show="!sidebarCollapsed">Subject Master</span>
                         </a>
                     </li>
 
                     <!-- Fee Masters -->
-                    <li class="pt-2">
+                    <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Masters</p>
                     </li>
                     <li>
-                        <a href="{{ route('school.fee-types.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-credit-card w-5 mr-3"></i>
-                            <span>Fee type</span>
+                        <a href="{{ route('school.fee-types.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-credit-card w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Fee type</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.miscellaneous-fees.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.miscellaneous-fees.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-coins w-5 mr-3"></i>
-                            <span class="whitespace-nowrap">Miscellaneous Fee</span>
+                        <a href="{{ route('school.miscellaneous-fees.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.miscellaneous-fees.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-coins w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span class="whitespace-nowrap" x-show="!sidebarCollapsed">Miscellaneous Fee</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.fee-names.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-names.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-list w-5 mr-3"></i>
-                            <span>Fee Name</span>
+                        <a href="{{ route('school.fee-names.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.fee-names.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-list w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Fee Name</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.payment-methods.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.payment-methods.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-credit-card w-5 mr-3"></i>
-                            <span>Payment Method</span>
+                        <a href="{{ route('school.payment-methods.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.payment-methods.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-credit-card w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Payment Method</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.school-banks.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.school-banks.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-university w-5 mr-3"></i>
-                            <span>School Bank</span>
+                        <a href="{{ route('school.school-banks.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.school-banks.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-university w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">School Bank</span>
                         </a>
                     </li>
 
                     <!-- Student -->
-                    <li class="pt-2">
+                    <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Student</p>
                     </li>
                     <li x-data="{ open: {{ request()->routeIs('school.student-enquiries.*') || request()->routeIs('school.student-registrations.*') || request()->routeIs('school.admission.*') ? 'true' : 'false' }} }">
-                        <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none">
+                        <button @click="open = !open" 
+                                class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
+                                :class="{ 'justify-center': sidebarCollapsed }">
                             <div class="flex items-center">
-                                <i class="fas fa-user-graduate w-5 mr-3"></i>
-                                <span>Student</span>
+                                <i class="fas fa-user-graduate w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Student</span>
                             </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'transform rotate-180': open }"></i>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" 
+                               :class="{ 'transform rotate-180': open }"
+                               x-show="!sidebarCollapsed"></i>
                         </button>
                         <ul x-show="open" x-collapse class="pl-4 mt-1 space-y-1">
                             <li>
@@ -206,86 +289,110 @@
                     </li>
 
                     <!-- Student Masters -->
-                    <li class="pt-2">
+                    <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Student Masters</p>
                     </li>
                     <li>
-                        <a href="{{ route('school.student-types.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-user-tag w-5 mr-3"></i>
-                            <span>Student Type</span>
+                        <a href="{{ route('school.student-types.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-user-tag w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Student Type</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.boarding-types.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.boarding-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-bed w-5 mr-3"></i>
-                            <span>Boarding Type</span>
+                        <a href="{{ route('school.boarding-types.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.boarding-types.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-bed w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Boarding Type</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.corresponding-relatives.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.corresponding-relatives.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-users w-5 mr-3"></i>
-                            <span class="whitespace-nowrap">Corresponding Relatives</span>
+                        <a href="{{ route('school.corresponding-relatives.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.corresponding-relatives.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-users w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span class="whitespace-nowrap" x-show="!sidebarCollapsed">Corresponding Relatives</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.blood-groups.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.blood-groups.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-tint w-5 mr-3"></i>
-                            <span>Blood Groups</span>
+                        <a href="{{ route('school.blood-groups.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.blood-groups.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-tint w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Blood Groups</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.religions.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.religions.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-pray w-5 mr-3"></i>
-                            <span>Religions</span>
+                        <a href="{{ route('school.religions.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.religions.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-pray w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Religions</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.categories.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.categories.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-layer-group w-5 mr-3"></i>
-                            <span>Categorys</span>
+                        <a href="{{ route('school.categories.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.categories.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-layer-group w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Categorys</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.qualifications.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.qualifications.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-graduation-cap w-5 mr-3"></i>
-                            <span>Qualification</span>
+                        <a href="{{ route('school.qualifications.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.qualifications.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-graduation-cap w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Qualification</span>
                         </a>
                     </li>
 
                     <!-- Admission & News -->
-                    <li class="pt-2">
+                    <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Admission & News</p>
                     </li>
                     <li>
-                        <a href="{{ route('school.admission-codes.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-codes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-code w-5 mr-3"></i>
-                            <span>Admission Code</span>
+                        <a href="{{ route('school.admission-codes.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-codes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-code w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Admission Code</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.registration-codes.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.registration-codes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-barcode w-5 mr-3"></i>
-                            <span>Registration Code</span>
+                        <a href="{{ route('school.registration-codes.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.registration-codes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-barcode w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Registration Code</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.admission-news.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-news.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-newspaper w-5 mr-3"></i>
-                            <span>Admission News</span>
+                        <a href="{{ route('school.admission-news.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.admission-news.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-newspaper w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Admission News</span>
                         </a>
                     </li>
 
                     <!-- Examination -->
-                    <li class="pt-2">
+                    <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Examination</p>
                     </li>
                     <li x-data="{ open: {{ request()->routeIs('school.examination.*') ? 'true' : 'false' }} }">
-                        <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none">
+                        <button @click="open = !open" 
+                                class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
+                                :class="{ 'justify-center': sidebarCollapsed }">
                             <div class="flex items-center">
-                                <i class="fas fa-file-alt w-5 mr-3"></i>
-                                <span>Examination</span>
+                                <i class="fas fa-file-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Examination</span>
                             </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'transform rotate-180': open }"></i>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" 
+                               :class="{ 'transform rotate-180': open }"
+                               x-show="!sidebarCollapsed"></i>
                         </button>
                         <ul x-show="open" x-collapse class="pl-4 mt-1 space-y-1">
                             <li>
@@ -322,22 +429,28 @@
                     </li>
 
                     <!-- System -->
-                    <li class="pt-2">
+                    <li class="pt-2" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">System</p>
                     </li>
                     <li>
-                        <a href="{{ route('school.users.index') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.users.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-users w-5 mr-3"></i>
-                            <span class="whitespace-nowrap">User Management</span>
+                        <a href="{{ route('school.users.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.users.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-users w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span class="whitespace-nowrap" x-show="!sidebarCollapsed">User Management</span>
                         </a>
                     </li>
                     <li x-data="{ open: {{ request()->routeIs('school.settings.*') || request()->routeIs('school.admission-news.*') || request()->routeIs('school.support') ? 'true' : 'false' }} }">
-                        <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none">
+                        <button @click="open = !open" 
+                                class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
+                                :class="{ 'justify-center': sidebarCollapsed }">
                             <div class="flex items-center">
-                                <i class="fas fa-cog w-5 mr-3"></i>
-                                <span>Setting</span>
+                                <i class="fas fa-cog w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Setting</span>
                             </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'transform rotate-180': open }"></i>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200" 
+                               :class="{ 'transform rotate-180': open }"
+                               x-show="!sidebarCollapsed"></i>
                         </button>
                         <ul x-show="open" x-collapse class="pl-4 mt-1 space-y-1">
                             <li>
@@ -385,17 +498,20 @@
                         </ul>
                     </li>
                     <li>
-                        <a href="{{ route('school.support') }}" class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.support') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                            <i class="fas fa-question-circle w-5 mr-3"></i>
-                            <span>Support</span>
+                        <a href="{{ route('school.support') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.support') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-question-circle w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Support</span>
                         </a>
                     </li>
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="w-full flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] text-left">
-                                <i class="fas fa-sign-out-alt w-5 mr-3"></i>
-                                <span>LogOut</span>
+                            <button type="submit" class="w-full flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] text-left"
+                                    :class="{ 'justify-center': sidebarCollapsed }">
+                                <i class="fas fa-sign-out-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">LogOut</span>
                             </button>
                         </form>
                     </li>
@@ -403,7 +519,7 @@
             </nav>
 
             <!-- Footer -->
-            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center">
+            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center" x-show="!sidebarCollapsed">
                 <p>{{ date('Y') }} ©</p>
             </div>
         </aside>
@@ -433,7 +549,7 @@
                             :class="isFavorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-500 hover:text-gray-700'"
                             title="Add to Favorites"
                         >
-                            <i :class="isFavorite ? 'fas fa-star text-xl' : 'far fa-star text-xl'"></i>
+                            <i class="text-xl far fa-star" :class="isFavorite ? 'fas fa-star text-xl' : 'far fa-star text-xl'"></i>
                         </button>
 
                         <!-- Bookmark (Saved List) -->
@@ -486,7 +602,7 @@
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
                             title="Toggle Fullscreen"
                         >
-                            <i class="fas text-xl" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+                            <i class="fas fa-expand text-xl" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
                         </button>
 
                         <!-- Dark Mode -->
@@ -495,7 +611,7 @@
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
                             title="Toggle Dark Mode"
                         >
-                            <i class="far text-xl" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+                            <i class="far fa-moon text-xl" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
                         </button>
                         
                         <!-- User Dropdown -->
@@ -602,54 +718,26 @@
         }
         
         $(document).ready(function() {
-            // Wait a bit for Alpine.js to finish initializing
-            setTimeout(function() {
-                // Initialize Select2 on all select elements
-                $('select').each(function() {
-                    initSelect2($(this));
-                });
-            }, 200);
+            // Initialize Select2 immediately on load
+            $('select').each(function() {
+                initSelect2($(this));
+            });
             
             // Debounce function to prevent multiple rapid initializations
             let initTimeout;
-            let pendingSelects = new Set();
             
             function debouncedInitSelect2($selects) {
                 clearTimeout(initTimeout);
-                
-                // Add to pending set
-                $selects.each(function() {
-                    const selectId = $(this).attr('id') || $(this).attr('name') || this.outerHTML;
-                    pendingSelects.add(selectId);
-                });
-                
                 initTimeout = setTimeout(function() {
-                    // Process only selects that are still pending and not initialized
                     $selects.each(function() {
-                        const $select = $(this);
-                        const selectId = $select.attr('id') || $select.attr('name') || this.outerHTML;
-                        
-                        // Skip if already initialized or not in pending set
-                        if (!pendingSelects.has(selectId) || $select.hasClass('select2-hidden-accessible')) {
-                            pendingSelects.delete(selectId);
-                            return;
-                        }
-                        
-                        // Check if parent is still being rendered (Alpine.js x-cloak)
-                        if ($select.closest('[x-cloak]').length > 0) {
-                            return; // Skip, will be initialized when Alpine finishes
-                        }
-                        
-                        initSelect2($select);
-                        pendingSelects.delete(selectId);
+                        initSelect2($(this));
                     });
-                }, 300); // Increased delay to allow Alpine.js to finish
+                }, 50); // Reduced delay for snappier UI
             }
             
             // Re-initialize Select2 when new content is loaded dynamically
-            // This handles cases where selects are added via AJAX or Alpine.js
             const observer = new MutationObserver(function(mutations) {
-                const newSelects = $();
+                let newSelects = [];
                 mutations.forEach(function(mutation) {
                     if (mutation.addedNodes.length) {
                         $(mutation.addedNodes).find('select').each(function() {
@@ -657,7 +745,6 @@
                             // Skip if already initialized, excluded, or inside x-cloak
                             if (!$select.hasClass('select2-hidden-accessible') && 
                                 !$select.hasClass('no-select2') && 
-                                !$select.attr('data-table-select') &&
                                 $select.closest('[x-cloak]').length === 0) {
                                 newSelects.push(this);
                             }
@@ -665,9 +752,8 @@
                     }
                 });
                 
-                // Debounce initialization to prevent double loading
                 if (newSelects.length > 0) {
-                    debouncedInitSelect2(newSelects);
+                    debouncedInitSelect2($(newSelects));
                 }
             });
             

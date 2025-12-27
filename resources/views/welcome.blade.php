@@ -3,7 +3,7 @@
 @section('title', 'Welcome - ' . config('app.name'))
 
 @section('content')
-<div class="min-h-screen flex flex-col bg-gray-50">
+<div class="flex flex-col bg-gray-50">
     <!-- Navbar -->
     <nav class="bg-white shadow-sm sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,16 +58,16 @@
     </nav>
 
     <!-- Hero Section -->
-    <div class="relative bg-white overflow-hidden">
+    <div class="relative bg-white overflow-hidden py-8 sm:py-0">
         <div class="max-w-7xl mx-auto">
             <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-                <main class="mt-6 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+                <main class="mt-4 mx-auto max-w-7xl px-4 sm:mt-8 sm:px-6 md:mt-12 lg:mt-16 lg:px-8 xl:mt-20">
                     <div class="text-center lg:text-left">
-                        <h1 class="text-3xl tracking-tight font-extrabold text-gray-900 sm:text-4xl md:text-5xl lg:text-6xl">
+                        <h1 class="text-2xl tracking-tight font-extrabold text-gray-900 sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
                             <span class="block">Transform Your School</span>
                             <span class="block text-blue-600">Management Today</span>
                         </h1>
-                        <p class="mt-3 text-sm text-gray-500 sm:mt-5 sm:text-base md:text-lg sm:max-w-xl sm:mx-auto lg:mx-0">
+                        <p class="mt-3 text-xs text-gray-500 sm:mt-4 sm:text-sm md:text-base lg:text-lg sm:max-w-xl sm:mx-auto lg:mx-0">
                             The all-in-one ERP solution designed to streamline administration, enhance learning, and simplify communication for schools of all sizes.
                         </p>
                         <div class="mt-5 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:justify-center lg:justify-start">
@@ -121,7 +121,7 @@
     </div>
 
     <!-- Features Section -->
-    <div id="features" class="py-12 bg-gray-50">
+    <div id="features" class="py-8 sm:py-12 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
                 <h2 class="text-sm sm:text-base text-blue-600 font-semibold tracking-wide uppercase">Features</h2>

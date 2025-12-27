@@ -219,7 +219,7 @@ function openEditModal(feeName) {
         component.openEditModal(feeName);
     }
 }
-});
+
 </script>
 @endpush
 @endsection

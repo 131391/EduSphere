@@ -6,19 +6,34 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Dashboard - ' . config('app.name'))</title>
     
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     @stack('styles')
     
+    @include('partials.sidebar-scripts')
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors">
-    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
+    <div class="flex h-screen overflow-hidden" x-data="{ 
+        sidebarOpen: false, 
+        sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+        init() {
+            document.documentElement.classList.remove('sidebar-collapsed');
+            // Remove no-transition class after a small delay to allow initial paint
+            setTimeout(() => {
+                document.querySelector('aside').classList.remove('no-transition');
+            }, 100);
+        },
+        toggleSidebar() {
+            this.sidebarCollapsed = !this.sidebarCollapsed;
+            localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+        }
+    }">
         <!-- Mobile Sidebar Overlay -->
         <div x-show="sidebarOpen" 
              @click="sidebarOpen = false"
@@ -32,22 +47,40 @@
              style="display: none;"></div>
 
         <!-- Sidebar -->
-        <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-blue-900 text-white flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
-               :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
+        <aside class="fixed inset-y-0 left-0 z-50 bg-blue-900 text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
+               style="width: 16rem;"
+               :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'"
+               :class="{ 
+                   '-translate-x-full': !sidebarOpen, 
+                   'translate-x-0': sidebarOpen,
+                   'sidebar-collapsed': sidebarCollapsed
+               }">
             <!-- Logo Section -->
-            <div class="p-4 border-b border-blue-800">
+            <div class="p-4 border-b border-blue-800 relative group">
                 <div class="flex items-center justify-center mb-2">
-                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                        <i class="fas fa-book text-blue-900 text-2xl"></i>
+                    <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 logo-container"
+                         style="width: 4rem; height: 4rem;"
+                         :style="sidebarCollapsed ? 'width: 2.5rem; height: 2.5rem;' : 'width: 4rem; height: 4rem;'">
+                        <i class="fas fa-book text-blue-900 logo-img" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
                     </div>
                 </div>
-                <h2 class="text-sm font-bold text-center">EDUSPHERE</h2>
-                <p class="text-xs text-blue-200 text-center mt-1">School ERP System</p>
+                
+                <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="sidebar-text">
+                    <h2 class="text-sm font-bold text-center">EDUSPHERE</h2>
+                    <p class="text-xs text-blue-200 text-center mt-1">School ERP System</p>
+                </div>
+
+                <!-- Toggle Button -->
+                <button @click="toggleSidebar()" class="absolute top-6 -right-4 w-8 h-8 flex items-center justify-center bg-teal-50 text-teal-600 rounded-full shadow-lg hover:bg-white hover:text-teal-700 transition-all duration-200 hidden lg:flex focus:outline-none z-50 border border-gray-200">
+                    <i class="fas fa-chevron-left" x-show="!sidebarCollapsed"></i>
+                    <i class="fas fa-chevron-right" x-show="sidebarCollapsed" style="display: none;"></i>
+                </button>
             </div>
 
             <!-- Session Info -->
-            <div class="px-4 py-2 bg-blue-800 text-xs">
-                <p class="font-semibold">SESSION: {{ \App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '2025 - 2026' }}</p>
+            <div class="px-4 py-2 bg-blue-800 text-xs overflow-hidden whitespace-nowrap">
+                <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION: {{ \App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '2025 - 2026' }}</p>
+                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ substr(\App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '25-26', 2, 2) }}-{{ substr(\App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '25-26', -2) }}</p>
             </div>
 
             <!-- Navigation Menu -->
@@ -61,16 +94,18 @@
                 <ul class="space-y-1 px-2">
                     <li>
                         <a href="{{ route('admin.dashboard') }}" 
-                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.dashboard') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}">
-                            <i class="fas fa-tachometer-alt w-5 mr-3"></i>
-                            <span>Dashboards</span>
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.dashboard') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-tachometer-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed" class="sidebar-text">Dashboards</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('admin.schools.index') }}" 
-                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.schools.*') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}">
-                            <i class="fas fa-school w-5 mr-3"></i>
-                            <span>Schools</span>
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.schools.*') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-school w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Schools</span>
                         </a>
                     </li>
                     
@@ -78,9 +113,10 @@
                     <!-- Change Password -->
                     <li>
                         <a href="{{ route('admin.change-password') }}" 
-                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.change-password') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}">
-                            <i class="fas fa-key w-5 mr-3"></i>
-                            <span>Change Password</span>
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.change-password') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-key w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Change Password</span>
                         </a>
                     </li>
 
@@ -88,9 +124,10 @@
                     <li>
                         <form method="POST" action="{{ route('logout') }}" class="w-full">
                             @csrf
-                            <button type="submit" class="w-full flex items-center px-4 py-2 rounded-lg text-blue-200 hover:bg-blue-800">
-                                <i class="fas fa-sign-out-alt w-5 mr-3"></i>
-                                <span>LogOut</span>
+                            <button type="submit" class="w-full flex items-center px-4 py-2 rounded-lg text-blue-200 hover:bg-blue-800"
+                                    :class="{ 'justify-center': sidebarCollapsed }">
+                                <i class="fas fa-sign-out-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">LogOut</span>
                             </button>
                         </form>
                     </li>
@@ -128,7 +165,7 @@
                             :class="{ 'text-yellow-500': isFavorited }"
                             title="Add to favorites"
                         >
-                            <i class="text-xl" :class="isFavorited ? 'fas fa-star' : 'far fa-star'"></i>
+                            <i class="text-xl far fa-star" :class="isFavorited ? 'fas fa-star' : 'far fa-star'"></i>
                         </button>
                         
                         <!-- Bookmark Button -->
@@ -138,7 +175,7 @@
                             :class="{ 'text-blue-500': isBookmarked }"
                             title="Bookmark this page"
                         >
-                            <i class="text-xl" :class="isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'"></i>
+                            <i class="text-xl far fa-bookmark" :class="isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'"></i>
                         </button>
                         
                         <!-- Fullscreen Toggle -->
@@ -147,7 +184,7 @@
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
                             title="Toggle fullscreen"
                         >
-                            <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'"></i>
+                            <i class="text-xl fas fa-expand" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'"></i>
                         </button>
                         
                         <!-- Dark Mode Toggle -->
@@ -157,7 +194,7 @@
                             :class="{ 'text-yellow-400': isDarkMode }"
                             title="Toggle dark mode"
                         >
-                            <i class="text-xl" :class="isDarkMode ? 'fas fa-sun' : 'far fa-moon'"></i>
+                            <i class="text-xl far fa-moon" :class="isDarkMode ? 'fas fa-sun' : 'far fa-moon'"></i>
                         </button>
                         
                         <!-- User Dropdown -->
@@ -414,6 +451,92 @@
                     }, 3000);
                 }
             }))
+        });
+    </script>
+    <!-- Select2 Initialization -->
+    <script>
+        // Track initialized selects to prevent double initialization
+        window.select2Initialized = window.select2Initialized || new Set();
+        
+        // Helper function to safely initialize Select2
+        function initSelect2($select) {
+            // Skip if already initialized or should be excluded
+            if ($select.hasClass('select2-hidden-accessible') || 
+                $select.hasClass('no-select2')) {
+                return false;
+            }
+            
+            // Check if this select has already been processed
+            const selectId = $select.attr('id') || $select.attr('name') || $select[0].outerHTML;
+            if (window.select2Initialized.has(selectId)) {
+                return false;
+            }
+            
+            // Mark as initialized before actually initializing (prevents race conditions)
+            window.select2Initialized.add(selectId);
+            
+            // Initialize Select2
+            try {
+                $select.select2({
+                    placeholder: function() {
+                        return $(this).data('placeholder') || 'Select an option';
+                    },
+                    allowClear: $(this).data('allow-clear') !== undefined ? $(this).data('allow-clear') : false,
+                    width: '100%'
+                });
+                return true;
+            } catch (e) {
+                // If initialization fails, remove from set so it can be retried
+                window.select2Initialized.delete(selectId);
+                console.warn('Select2 initialization failed:', e);
+                return false;
+            }
+        }
+        
+        $(document).ready(function() {
+            // Initialize Select2 immediately on load
+            $('select').each(function() {
+                initSelect2($(this));
+            });
+            
+            // Debounce function to prevent multiple rapid initializations
+            let initTimeout;
+            
+            function debouncedInitSelect2($selects) {
+                clearTimeout(initTimeout);
+                initTimeout = setTimeout(function() {
+                    $selects.each(function() {
+                        initSelect2($(this));
+                    });
+                }, 50); // Reduced delay for snappier UI
+            }
+            
+            // Re-initialize Select2 when new content is loaded dynamically
+            const observer = new MutationObserver(function(mutations) {
+                let newSelects = [];
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length) {
+                        $(mutation.addedNodes).find('select').each(function() {
+                            const $select = $(this);
+                            // Skip if already initialized, excluded, or inside x-cloak
+                            if (!$select.hasClass('select2-hidden-accessible') && 
+                                !$select.hasClass('no-select2') && 
+                                $select.closest('[x-cloak]').length === 0) {
+                                newSelects.push(this);
+                            }
+                        });
+                    }
+                });
+                
+                if (newSelects.length > 0) {
+                    debouncedInitSelect2($(newSelects));
+                }
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
         });
     </script>
 </body>

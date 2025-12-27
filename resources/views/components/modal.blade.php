@@ -37,8 +37,9 @@ $maxWidthClass = [
         } else {
             document.body.classList.remove('overflow-y-hidden');
             // Clear validation errors when modal is closed
+            // Only hide P tags (error messages), not SPAN tags (mandatory field asterisks)
             $el.querySelectorAll('.text-red-500, .text-red-600').forEach(el => {
-                if (el.tagName === 'P' || el.tagName === 'SPAN' || el.tagName === 'DIV') {
+                if (el.tagName === 'P') {
                     el.style.display = 'none';
                 }
             });
@@ -46,6 +47,14 @@ $maxWidthClass = [
                 el.classList.remove('border-red-500', 'border-red-600');
                 el.classList.add('border-gray-300');
             });
+            // Reset all Select2 dropdowns when modal closes
+            if (typeof $ !== 'undefined') {
+                $el.querySelectorAll('select.select2-hidden-accessible').forEach(select => {
+                    const $select = $(select);
+                    // Reset to empty value (first option is usually empty/placeholder)
+                    $select.val('').trigger('change');
+                });
+            }
         }
     })"
     x-on:open-modal.window="if (typeof $event.detail === 'string' && $event.detail == '{{ $name }}') { show = true } else if (typeof $event.detail === 'object' && $event.detail.name == '{{ $name }}') { show = true }"

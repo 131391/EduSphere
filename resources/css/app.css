@@ -21,8 +21,8 @@ input[type=number] {
 }
 
 /* Alpine.js cloak */
-[x-cloak] { 
-    display: none !important; 
+[x-cloak] {
+    display: none !important;
 }
 
 /* Sidebar scroll styling - Comprehensive */
@@ -410,7 +410,7 @@ input[type="month"]:focus {
 }
 
 /* Ensure icons don't interfere with click */
-.relative input[type="month"] + div {
+.relative input[type="month"]+div {
     pointer-events: none;
 }
 
@@ -451,7 +451,7 @@ input[type="date"]:focus {
 }
 
 /* Ensure icons don't interfere with click */
-.relative input[type="date"] + div {
+.relative input[type="date"]+div {
     pointer-events: none;
 }
 
@@ -460,10 +460,10 @@ select.select2-hidden-accessible {
     display: none !important;
 }
 
-/* Prevent double scrollbar on body */
-body {
+/* Prevent double scrollbar on body - REMOVED as it breaks welcome page scrolling */
+/* body {
     overflow: hidden;
-}
+} */
 
 /* Fix date picker overlay z-index issue */
 input[type="date"]:focus {
