@@ -22,12 +22,15 @@
                     Country
                 </label>
                 <select name="correspondence_country_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    @foreach(config('countries') as $id => $name)
-                        <option value="{{ $id }}" {{ old('correspondence_country_id', isset($student) ? $student->correspondence_country_id : 1) == $id ? 'selected' : '' }}>
-                            {{ $name }}
-                        </option>
-                    @endforeach
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        data-location-cascade="true"
+                        data-country-select="true">
+                    <option value="">Select Country</option>
+                    @if(isset($student) && $student->correspondence_country_id)
+                        <option value="{{ $student->correspondence_country_id }}" selected>{{ $student->correspondenceCountry->name ?? 'Selected Country' }}</option>
+                    @elseif(old('correspondence_country_id'))
+                        <option value="{{ old('correspondence_country_id') }}" selected>Selected Country</option>
+                    @endif
                 </select>
             </div>
 
@@ -35,16 +38,24 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     State
                 </label>
-                <input type="text" name="correspondence_state" value="{{ old('correspondence_state', isset($student) ? $student->correspondence_state : '') }}" placeholder="Enter State"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="correspondence_state_id"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        data-state-select="true"
+                        data-selected="{{ old('correspondence_state_id', isset($student) ? $student->correspondence_state_id : '') }}">
+                    <option value="">Select State</option>
+                </select>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     City
                 </label>
-                <input type="text" name="correspondence_city" value="{{ old('correspondence_city', isset($student) ? $student->correspondence_city : '') }}" placeholder="Enter City"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="correspondence_city_id"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        data-city-select="true"
+                        data-selected="{{ old('correspondence_city_id', isset($student) ? $student->correspondence_city_id : '') }}">
+                    <option value="">Select City</option>
+                </select>
             </div>
 
             <div>

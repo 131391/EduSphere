@@ -26,8 +26,8 @@ class Staff extends Model
         'previous_school_salary',
         'current_salary',
         'country_id',
-        'state',
-        'city',
+        'state_id',
+        'city_id',
         'zip_code',
         'address',
         'aadhar_no',
@@ -45,6 +45,8 @@ class Staff extends Model
         'previous_school_salary' => 'decimal:2',
         'current_salary' => 'decimal:2',
         'country_id' => 'integer',
+        'state_id' => 'integer',
+        'city_id' => 'integer',
         'joining_date' => 'date',
     ];
 
@@ -78,5 +80,29 @@ class Staff extends Model
     public function higherQualification(): BelongsTo
     {
         return $this->belongsTo(Qualification::class, 'higher_qualification_id');
+    }
+
+    /**
+     * Get the country.
+     */
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\Country::class);
+    }
+
+    /**
+     * Get the state.
+     */
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\State::class);
+    }
+
+    /**
+     * Get the city.
+     */
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\City::class);
     }
 }

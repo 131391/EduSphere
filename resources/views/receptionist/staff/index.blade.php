@@ -119,8 +119,8 @@
                         'previous_school_salary' => $row->previous_school_salary,
                         'current_salary' => $row->current_salary,
                         'country_id' => $row->country_id,
-                        'state' => $row->state,
-                        'city' => $row->city,
+                        'state_id' => $row->state_id,
+                        'city_id' => $row->city_id,
                         'zip_code' => $row->zip_code,
                         'address' => $row->address,
                         'aadhar_no' => $row->aadhar_no,
@@ -318,7 +318,9 @@
                             </label>
                             <select name="country_id" 
                                     x-model="formData.country_id"
-                                    class="w-full px-4 py-2 border {{ $errors->has('country_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                                    class="w-full px-4 py-2 border {{ $errors->has('country_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                    data-location-cascade="true"
+                                    data-country-select="true">
                                 <option value="">Select Country</option>
                                 @foreach(config('countries') as $id => $name)
                                     <option value="{{ $id }}" {{ old('country_id') == $id ? 'selected' : '' }}>
@@ -336,13 +338,13 @@
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                                 Select City
                             </label>
-                            <input type="text" 
-                                   name="city" 
-                                   x-model="formData.city"
-                                   value="{{ old('city') }}"
-                                   placeholder="Enter City"
-                                   class="w-full px-4 py-2 border {{ $errors->has('city') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                            @error('city')
+                            <select name="city_id" 
+                                    x-model="formData.city_id"
+                                    class="w-full px-4 py-2 border {{ $errors->has('city_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                    data-city-select="true">
+                                <option value="">Select City</option>
+                            </select>
+                            @error('city_id')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -517,13 +519,13 @@
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                                 Select State
                             </label>
-                            <input type="text" 
-                                   name="state" 
-                                   x-model="formData.state"
-                                   value="{{ old('state') }}"
-                                   placeholder="Enter State"
-                                   class="w-full px-4 py-2 border {{ $errors->has('state') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                            @error('state')
+                            <select name="state_id" 
+                                    x-model="formData.state_id"
+                                    class="w-full px-4 py-2 border {{ $errors->has('state_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                    data-state-select="true">
+                                <option value="">Select State</option>
+                            </select>
+                            @error('state_id')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -610,8 +612,8 @@ document.addEventListener('alpine:init', () => {
             previous_school_salary: '',
             current_salary: '',
             country_id: '',
-            state: '',
-            city: '',
+            state_id: '',
+            city_id: '',
             zip_code: '',
             address: '',
             aadhar_no: '',
@@ -685,8 +687,8 @@ document.addEventListener('alpine:init', () => {
                     previous_school_salary: '{{ old('previous_school_salary') }}',
                     current_salary: '{{ old('current_salary') }}',
                     country_id: '{{ old('country_id') }}',
-                    state: '{{ old('state') }}',
-                    city: '{{ old('city') }}',
+                    state_id: '{{ old('state_id') }}',
+                    city_id: '{{ old('city_id') }}',
                     zip_code: '{{ old('zip_code') }}',
                     address: '{{ old('address') }}',
                     aadhar_no: '{{ old('aadhar_no') }}',
@@ -787,8 +789,8 @@ document.addEventListener('alpine:init', () => {
                 previous_school_salary: staff.previous_school_salary || '',
                 current_salary: staff.current_salary || '',
                 country_id: staff.country_id || '',
-                state: staff.state || '',
-                city: staff.city || '',
+                state_id: staff.state_id || '',
+                city_id: staff.city_id || '',
                 zip_code: staff.zip_code || '',
                 address: staff.address || '',
                 aadhar_no: staff.aadhar_no || '',

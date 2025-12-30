@@ -151,31 +151,19 @@
                             </div>
 
                             <div class="space-y-2">
-                                <label for="city" class="text-sm font-bold text-gray-700 ml-1">City</label>
-                                <input type="text" name="city" id="city" value="{{ old('city', $school->city) }}"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
-                                    placeholder="Enter city">
-                            </div>
-
-                            <div class="space-y-2">
-                                <label for="state" class="text-sm font-bold text-gray-700 ml-1">State</label>
-                                <input type="text" name="state" id="state" value="{{ old('state', $school->state) }}"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
-                                    placeholder="Enter state">
-                            </div>
-
-                            <div class="space-y-2">
                                 <label for="country_id" class="text-sm font-bold text-gray-700 ml-1">Country</label>
                                 <div class="relative group">
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-globe text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
                                     </div>
                                     <select name="country_id" id="country_id"
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none appearance-none cursor-pointer">
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none appearance-none cursor-pointer"
+                                        data-location-cascade="true"
+                                        data-country-select="true">
                                         <option value="">Select Country</option>
-                                        @foreach(config('countries') as $id => $name)
-                                            <option value="{{ $id }}" {{ old('country_id', $school->country_id) == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                        @endforeach
+                                        @if($school->country_id)
+                                            <option value="{{ $school->country_id }}" selected>{{ $school->country->name ?? 'Selected Country' }}</option>
+                                        @endif
                                     </select>
                                     <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                         <i class="fas fa-chevron-down text-gray-400"></i>
@@ -184,6 +172,26 @@
                                 @error('country_id')
                                 <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
                                 @enderror
+                            </div>
+
+                            <div class="space-y-2">
+                                <label for="state_id" class="text-sm font-bold text-gray-700 ml-1">State</label>
+                                <select name="state_id" id="state_id"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                                    data-state-select="true"
+                                    data-selected="{{ old('state_id', $school->state_id) }}">
+                                    <option value="">Select State</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label for="city_id" class="text-sm font-bold text-gray-700 ml-1">City</label>
+                                <select name="city_id" id="city_id"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                                    data-city-select="true"
+                                    data-selected="{{ old('city_id', $school->city_id) }}">
+                                    <option value="">Select City</option>
+                                </select>
                             </div>
 
                             <div class="space-y-2">

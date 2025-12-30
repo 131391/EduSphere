@@ -22,8 +22,8 @@ class School extends Model
         'email',
         'phone',
         'address',
-        'city',
-        'state',
+        'city_id',
+        'state_id',
         'country_id',
         'pincode',
         'logo',
@@ -52,6 +52,21 @@ class School extends Model
     }
 
     // Relationships
+    public function country()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\Country::class);
+    }
+
+    public function state()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\State::class);
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\City::class);
+    }
+
     public function users()
     {
         return $this->hasMany(User::class);
@@ -125,11 +140,6 @@ class School extends Model
         }
 
         return now()->lte($this->subscription_end_date);
-    }
-    public function getCountryNameAttribute()
-    {
-        $countries = config('countries');
-        return $countries[$this->country_id] ?? null;
     }
 }
 

@@ -24,8 +24,12 @@ class SchoolController extends Controller
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('subdomain', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhere('state', 'like', "%{$search}%");
+                  ->orWhereHas('city', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('state', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -119,9 +123,9 @@ class SchoolController extends Controller
                     $school->email,
                     $school->phone,
                     $school->status,
-                    $school->city,
-                    $school->state,
-                    $school->country,
+                    $school->city->name ?? '',
+                    $school->state->name ?? '',
+                    $school->country->name ?? '',
                     $school->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
@@ -148,9 +152,9 @@ class SchoolController extends Controller
             'email' => 'required|email|max:255|unique:schools,email',
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'country_id' => 'nullable|integer',
+            'city_id' => 'nullable|integer|exists:cities,id',
+            'state_id' => 'nullable|integer|exists:states,id',
+            'country_id' => 'nullable|integer|exists:countries,id',
             'pincode' => 'nullable|string|max:10',
             'website' => 'nullable|url|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -235,9 +239,9 @@ class SchoolController extends Controller
             'email' => 'required|email|max:255|unique:schools,email,' . $id,
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'country_id' => 'nullable|integer',
+            'city_id' => 'nullable|integer|exists:cities,id',
+            'state_id' => 'nullable|integer|exists:states,id',
+            'country_id' => 'nullable|integer|exists:countries,id',
             'pincode' => 'nullable|string|max:10',
             'website' => 'nullable|url|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

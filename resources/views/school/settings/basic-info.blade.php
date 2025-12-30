@@ -57,26 +57,39 @@
                     @error('address') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <!-- City -->
+                <!-- Country -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                    <input type="text" name="city" value="{{ old('city', $school->city) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                    <select name="country_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            data-location-cascade="true"
+                            data-country-select="true">
+                        <option value="">Select Country</option>
+                        @if($school->country_id)
+                            <option value="{{ $school->country_id }}" selected>{{ $school->country->name ?? 'Selected Country' }}</option>
+                        @endif
+                    </select>
                 </div>
 
                 <!-- State -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
-                    <input type="text" name="state" value="{{ old('state', $school->state) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="state_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            data-state-select="true"
+                            data-selected="{{ old('state_id', $school->state_id) }}">
+                        <option value="">Select State</option>
+                    </select>
                 </div>
 
-                <!-- Country -->
+                <!-- City -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                    <select name="country_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select Country</option>
-                        @foreach(config('countries') as $id => $name)
-                            <option value="{{ $id }}" {{ old('country_id', $school->country_id) == $id ? 'selected' : '' }}>{{ $name }}</option>
-                        @endforeach
+                    <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                    <select name="city_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            data-city-select="true"
+                            data-selected="{{ old('city_id', $school->city_id) }}">
+                        <option value="">Select City</option>
                     </select>
                 </div>
 

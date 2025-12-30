@@ -686,5 +686,7 @@
     </script>
     <!-- Global Form Validation Error Handler -->
     <script src="{{ asset('js/form-validation-handler.js') }}"></script>
+    <!-- Location Cascade Handler -->
+    <script src="{{ asset('js/location-cascade.js') }}"></script>
 </body>
 </html>

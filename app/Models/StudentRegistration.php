@@ -42,12 +42,12 @@ class StudentRegistration extends Model
         
         // Permanent Address
         'permanent_latitude', 'permanent_longitude', 'permanent_address', 'permanent_country_id',
-        'permanent_state', 'permanent_city', 'permanent_pin', 'permanent_state_of_domicile',
+        'permanent_state_id', 'permanent_city_id', 'permanent_pin', 'permanent_state_of_domicile',
         'permanent_railway_airport', 'permanent_correspondence_address',
         
         // Correspondence Address
-        'correspondence_address', 'correspondence_country_id', 'correspondence_state',
-        'correspondence_city', 'correspondence_pin', 'correspondence_location',
+        'correspondence_address', 'correspondence_country_id', 'correspondence_state_id',
+        'correspondence_city_id', 'correspondence_pin', 'correspondence_location',
         'correspondence_landmark', 'distance_from_school',
         
         // Photo Details
@@ -73,7 +73,11 @@ class StudentRegistration extends Model
         'father_age' => 'integer',
         'mother_age' => 'integer',
         'permanent_country_id' => 'integer',
+        'permanent_state_id' => 'integer',
+        'permanent_city_id' => 'integer',
         'correspondence_country_id' => 'integer',
+        'correspondence_state_id' => 'integer',
+        'correspondence_city_id' => 'integer',
         'admission_status' => AdmissionStatus::class,
         'gender' => Gender::class,
     ];
@@ -138,6 +142,37 @@ class StudentRegistration extends Model
     public function class(): BelongsTo
     {
         return $this->belongsTo(ClassModel::class, 'class_id');
+    }
+
+    // Location Relationships
+    public function permanentCountry()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\Country::class, 'permanent_country_id');
+    }
+
+    public function permanentState()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\State::class, 'permanent_state_id');
+    }
+
+    public function permanentCity()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\City::class, 'permanent_city_id');
+    }
+
+    public function correspondenceCountry()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\Country::class, 'correspondence_country_id');
+    }
+
+    public function correspondenceState()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\State::class, 'correspondence_state_id');
+    }
+
+    public function correspondenceCity()
+    {
+        return $this->belongsTo(\Nnjeim\World\Models\City::class, 'correspondence_city_id');
     }
 
     /**

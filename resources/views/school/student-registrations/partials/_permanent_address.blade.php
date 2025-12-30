@@ -34,12 +34,15 @@
                     Country <span class="text-red-500">*</span>
                 </label>
                 <select name="permanent_country_id" required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    @foreach(config('countries') as $id => $name)
-                        <option value="{{ $id }}" {{ old('permanent_country_id', $studentRegistration->permanent_country_id ?? 1) == $id ? 'selected' : '' }}>
-                            {{ $name }}
-                        </option>
-                    @endforeach
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        data-location-cascade="true"
+                        data-country-select="true">
+                    <option value="">Select Country</option>
+                    @if(isset($studentRegistration) && $studentRegistration->permanent_country_id)
+                        <option value="{{ $studentRegistration->permanent_country_id }}" selected>{{ $studentRegistration->permanentCountry->name ?? 'Selected Country' }}</option>
+                    @elseif(old('permanent_country_id'))
+                        <option value="{{ old('permanent_country_id') }}" selected>Selected Country</option>
+                    @endif
                 </select>
             </div>
 
@@ -47,16 +50,24 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     State <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="permanent_state" value="{{ old('permanent_state', $studentRegistration->permanent_state ?? '') }}" required placeholder="Enter State"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="permanent_state_id" required
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        data-state-select="true"
+                        data-selected="{{ old('permanent_state_id', $studentRegistration->permanent_state_id ?? '') }}">
+                    <option value="">Select State</option>
+                </select>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     City <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="permanent_city" value="{{ old('permanent_city', $studentRegistration->permanent_city ?? '') }}" required placeholder="Enter City Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="permanent_city_id" required
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        data-city-select="true"
+                        data-selected="{{ old('permanent_city_id', $studentRegistration->permanent_city_id ?? '') }}">
+                    <option value="">Select City</option>
+                </select>
             </div>
 
             <div>

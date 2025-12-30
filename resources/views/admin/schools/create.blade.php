@@ -194,31 +194,44 @@
                         @enderror
                     </div>
 
-                    <!-- City -->
-                    <div class="col-span-2 md:col-span-1">
-                        <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                        <input type="text" name="city" id="city" value="{{ old('city') }}"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('city') border-red-500 @enderror">
-                    </div>
-
-                    <!-- State -->
-                    <div class="col-span-2 md:col-span-1">
-                        <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State</label>
-                        <input type="text" name="state" id="state" value="{{ old('state') }}"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('state') border-red-500 @enderror">
-                    </div>
-
                     <!-- Country -->
                     <div class="col-span-2 md:col-span-1">
                         <label for="country_id" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
                         <select name="country_id" id="country_id"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('country_id') border-red-500 @enderror">
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('country_id') border-red-500 @enderror"
+                            data-location-cascade="true"
+                            data-country-select="true">
                             <option value="">Select Country</option>
-                            @foreach(config('countries') as $id => $name)
-                                <option value="{{ $id }}" {{ old('country_id', 1) == $id ? 'selected' : '' }}>{{ $name }}</option>
-                            @endforeach
                         </select>
                         @error('country_id')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- State -->
+                    <div class="col-span-2 md:col-span-1">
+                        <label for="state_id" class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                        <select name="state_id" id="state_id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('state_id') border-red-500 @enderror"
+                            data-state-select="true"
+                            data-selected="{{ old('state_id') }}">
+                            <option value="">Select State</option>
+                        </select>
+                        @error('state_id')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- City -->
+                    <div class="col-span-2 md:col-span-1">
+                        <label for="city_id" class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                        <select name="city_id" id="city_id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('city_id') border-red-500 @enderror"
+                            data-city-select="true"
+                            data-selected="{{ old('city_id') }}">
+                            <option value="">Select City</option>
+                        </select>
+                        @error('city_id')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

@@ -31,6 +31,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:super_admin'])
     require __DIR__.'/admin.php';
 });
 
+// Location API Routes
+Route::group(['prefix' => 'api/location'], function () {
+    Route::get('countries', [App\Http\Controllers\LocationController::class, 'getCountries'])->name('api.location.countries');
+    Route::get('states/{countryId}', [App\Http\Controllers\LocationController::class, 'getStates'])->name('api.location.states');
+    Route::get('cities/{stateId}', [App\Http\Controllers\LocationController::class, 'getCities'])->name('api.location.cities');
+});
+
+
+
 // School Admin routes (with tenant middleware)
 Route::prefix('school')->name('school.')->middleware(['auth', 'tenant', 'school.access', 'role:school_admin'])->group(function () {
     require __DIR__.'/school.php';

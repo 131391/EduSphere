@@ -110,9 +110,14 @@ class StudentRegistrationController extends TenantController
             'mother_last_name' => 'required|string|max:100',
             'mother_mobile_no' => 'required|string|max:20',
             'permanent_address' => 'required|string',
-            'permanent_state' => 'required|string|max:100',
-            'permanent_city' => 'required|string|max:100',
+            'permanent_country_id' => 'required|exists:countries,id',
+            'permanent_state_id' => 'required|exists:states,id',
+            'permanent_city_id' => 'required|exists:cities,id',
             'permanent_pin' => 'required|string|max:20',
+            'correspondence_address' => 'nullable|string',
+            'correspondence_country_id' => 'nullable|exists:countries,id',
+            'correspondence_state_id' => 'nullable|exists:states,id',
+            'correspondence_city_id' => 'nullable|exists:cities,id',
         ]);
 
         $data = $request->all();
@@ -184,6 +189,15 @@ class StudentRegistrationController extends TenantController
             'last_name' => 'required|string|max:100',
             'mobile_no' => 'required|string|max:20',
             'admission_status' => ['required', Rule::enum(AdmissionStatus::class)],
+            'permanent_address' => 'required|string',
+            'permanent_country_id' => 'required|exists:countries,id',
+            'permanent_state_id' => 'required|exists:states,id',
+            'permanent_city_id' => 'required|exists:cities,id',
+            'permanent_pin' => 'required|string|max:20',
+            'correspondence_address' => 'nullable|string',
+            'correspondence_country_id' => 'nullable|exists:countries,id',
+            'correspondence_state_id' => 'nullable|exists:states,id',
+            'correspondence_city_id' => 'nullable|exists:cities,id',
         ]);
 
         $data = $request->all();
