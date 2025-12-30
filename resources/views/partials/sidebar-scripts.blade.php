@@ -1,7 +1,29 @@
 <script>
-    // Pre-load sidebar state
+    // Pre-load sidebar state and apply inline styles to prevent FOUC
     if (localStorage.getItem('sidebarCollapsed') === 'true') {
         document.documentElement.classList.add('sidebar-collapsed');
+        
+        // Apply inline styles immediately to prevent blinking when Alpine.js initializes
+        // This runs synchronously before the page renders
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.querySelector('aside');
+            if (sidebar) {
+                sidebar.style.width = '5rem';
+                
+                // Also set logo container sizes
+                const logoContainer = sidebar.querySelector('.logo-container');
+                if (logoContainer) {
+                    logoContainer.style.width = '2.5rem';
+                    logoContainer.style.height = '2.5rem';
+                }
+                
+                const logoImg = sidebar.querySelector('.logo-img');
+                if (logoImg) {
+                    logoImg.style.width = '2.5rem';
+                    logoImg.style.height = '2.5rem';
+                }
+            }
+        });
     }
     
     // Pre-load header action states to prevent icon blinking
