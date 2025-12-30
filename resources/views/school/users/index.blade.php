@@ -180,16 +180,29 @@
                 <!-- Phone -->
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Phone</label>
-                    <input 
-                        type="tel" 
-                        name="phone" 
-                        x-model="formData.phone"
-                        placeholder="Enter phone number"
-                        pattern="[0-9]{10,15}" 
-                        inputmode="numeric"
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('phone') border-red-500 @enderror"
-                    >
+                    <div x-data="{ phoneValue: formData.phone }" x-init="$watch('formData.phone', value => phoneValue = value)">
+                        <div class="relative phone-input-wrapper">
+                            <div class="absolute inset-y-0 left-0 flex items-center pointer-events-none z-10">
+                                <span class="px-3 py-2 text-gray-700 font-medium bg-gray-50 border-r border-gray-300 rounded-l-md h-full flex items-center select-none">
+                                    +91
+                                </span>
+                            </div>
+                            <input 
+                                type="tel" 
+                                name="phone" 
+                                x-model="formData.phone"
+                                placeholder="Enter 10 digit mobile number"
+                                inputmode="numeric"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
+                                class="w-full pl-[70px] pr-16 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 @error('phone') border-red-500 focus:ring-red-500 @enderror"
+                            >
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <span class="text-xs font-medium" 
+                                      :class="formData.phone.length === 10 ? 'text-green-500' : (formData.phone.length > 0 ? 'text-yellow-500' : 'text-gray-400')"
+                                      x-text="formData.phone.length + '/10'">0/10</span>
+                            </div>
+                        </div>
+                    </div>
                     @error('phone')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror

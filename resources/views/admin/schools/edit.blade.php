@@ -132,17 +132,7 @@
 
                             <div class="space-y-2">
                                 <label for="phone" class="text-sm font-bold text-gray-700 ml-1">Phone Number <span class="text-red-500">*</span></label>
-                                <div class="relative group">
-                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <i class="fas fa-phone-alt text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
-                                    </div>
-                                    <input type="tel" name="phone" id="phone" value="{{ old('phone', $school->phone) }}" required pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none @error('phone') border-red-500 @enderror"
-                                        placeholder="Enter phone number">
-                                </div>
-                                @error('phone')
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
-                                @enderror
+                                <x-phone-input name="phone" id="phone" :value="$school->phone" />
                             </div>
 
                             <div class="md:col-span-2 space-y-2">
