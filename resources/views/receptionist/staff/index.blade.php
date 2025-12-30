@@ -322,9 +322,9 @@
                                     data-location-cascade="true"
                                     data-country-select="true">
                                 <option value="">Select Country</option>
-                                @foreach(config('countries') as $id => $name)
-                                    <option value="{{ $id }}" {{ old('country_id') == $id ? 'selected' : '' }}>
-                                        {{ $name }}
+                                @foreach($countries as $country)
+                                    <option value="{{ $country->id }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
+                                        {{ $country->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -823,8 +823,29 @@ document.addEventListener('alpine:init', () => {
                         $('#post').val(this.formData.post).trigger('change');
                         $('#class_id').val(this.formData.class_id).trigger('change');
                         $('select[name="gender"]').val(this.formData.gender).trigger('change');
-                        $('select[name="country_id"]').val(this.formData.country_id).trigger('change');
                         $('select[name="higher_qualification_id"]').val(this.formData.higher_qualification_id).trigger('change');
+                        
+                        // Handle Location Cascade manually for Edit Mode
+                        const countrySelect = document.querySelector('select[name="country_id"]');
+                        const stateSelect = document.querySelector('select[name="state_id"]');
+                        const citySelect = document.querySelector('select[name="city_id"]');
+
+                        if (window.locationCascade && this.formData.country_id) {
+                            window.locationCascade.setValue(countrySelect, this.formData.country_id);
+                            
+                            if (this.formData.state_id) {
+                                window.locationCascade.loadStates(stateSelect, this.formData.country_id, this.formData.state_id);
+                                
+                                if (this.formData.city_id) {
+                                    window.locationCascade.loadCities(citySelect, this.formData.state_id, this.formData.city_id);
+                                }
+                            } else {
+                                // Just trigger change to load states if no state selected
+                                window.locationCascade.triggerChange(countrySelect);
+                            }
+                        } else {
+                             $('select[name="country_id"]').val(this.formData.country_id).trigger('change');
+                        }
                         
                         // Update section after a slight delay to ensure sections are loaded
                         if (this.formData.section_id) {
@@ -895,8 +916,8 @@ document.addEventListener('alpine:init', () => {
                 previous_school_salary: '',
                 current_salary: '',
                 country_id: '',
-                state: '',
-                city: '',
+                state_id: '',
+                city_id: '',
                 zip_code: '',
                 address: '',
                 aadhar_no: '',

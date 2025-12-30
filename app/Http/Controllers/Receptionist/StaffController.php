@@ -59,7 +59,9 @@ class StaffController extends TenantController
         $classes = ClassModel::where('school_id', $schoolId)->orderBy('order')->get();
         $qualifications = Qualification::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get();
 
-        return view('receptionist.staff.index', compact('staff', 'classes', 'qualifications'));
+        $countries = \Nnjeim\World\Models\Country::orderBy('name')->get(['id', 'name']);
+
+        return view('receptionist.staff.index', compact('staff', 'classes', 'qualifications', 'countries'));
     }
 
     /**
