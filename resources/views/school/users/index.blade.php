@@ -147,7 +147,7 @@
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Email <span class="text-red-500">*</span></label>
                     <input 
-                        type="email" 
+                        type="text" 
                         name="email" 
                         x-model="formData.email"
                         placeholder="Enter email address"

@@ -131,7 +131,7 @@
                     <!-- Admin Email -->
                     <div class="col-span-2 md:col-span-1">
                         <label for="admin_email" class="block text-sm font-medium text-gray-700 mb-1">Admin Email <span class="text-red-500">*</span></label>
-                        <input type="email" name="admin_email" id="admin_email" value="{{ old('admin_email') }}"
+                        <input type="text" name="admin_email" id="admin_email" value="{{ old('admin_email') }}"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors @error('admin_email') border-red-500 @enderror"
                             placeholder="e.g. admin@school.com">
                         @error('admin_email')
@@ -169,7 +169,7 @@
                     <!-- School Email -->
                     <div class="col-span-2 md:col-span-1">
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-1">School Email <span class="text-red-500">*</span></label>
-                        <input type="email" name="email" id="email" value="{{ old('email') }}"
+                        <input type="text" name="email" id="email" value="{{ old('email') }}"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors @error('email') border-red-500 @enderror"
                             placeholder="e.g. contact@school.com">
                         @error('email')

@@ -121,7 +121,7 @@
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-envelope text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
                                     </div>
-                                    <input type="email" name="email" id="email" value="{{ old('email', $school->email) }}" required
+                                    <input type="text" name="email" id="email" value="{{ old('email', $school->email) }}"
                                         class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none @error('email') border-red-500 @enderror"
                                         placeholder="school@example.com">
                                 </div>

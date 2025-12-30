@@ -30,6 +30,8 @@
     @yield('content')
     
     @stack('scripts')
+    <!-- Global Form Validation Error Handler -->
+    <script src="{{ asset('js/form-validation-handler.js') }}"></script>
 </body>
 </html>
 
