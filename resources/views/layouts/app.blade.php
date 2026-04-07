@@ -12,10 +12,7 @@
 
     <!-- Livewire Styles -->
     @livewireStyles
-    
-    <!-- Font Awesome Icons -->
-    @vite('resources/css/app.css')
-    
+
     @stack('styles')
 </head>
 <body class="bg-gray-50 antialiased font-sans">

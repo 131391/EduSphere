@@ -35,7 +35,7 @@ class TenantMiddleware
         }
 
         if (!$school->isActive() || !$school->isSubscriptionActive()) {
-            abort(403, 'School subscription is inactive');
+            return response()->view('errors.subscription-inactive', ['school' => $school], 403);
         }
 
         // Bind school to service container
@@ -77,7 +77,6 @@ class TenantMiddleware
 
         return Cache::remember("school.subdomain.{$subdomain}", 3600, function () use ($subdomain) {
             return School::where('subdomain', $subdomain)
-                ->where('status', 'active')
                 ->first();
         });
     }
@@ -91,7 +90,6 @@ class TenantMiddleware
 
         return Cache::remember("school.domain.{$domain}", 3600, function () use ($domain) {
             return School::where('domain', $domain)
-                ->where('status', 'active')
                 ->first();
         });
     }
@@ -109,7 +107,6 @@ class TenantMiddleware
 
         return Cache::remember("school.path.{$path}", 3600, function () use ($path) {
             return School::where('code', $path)
-                ->where('status', 'active')
                 ->first();
         });
     }
@@ -127,7 +124,6 @@ class TenantMiddleware
 
         return Cache::remember("school.id.{$schoolId}", 3600, function () use ($schoolId) {
             return School::where('id', $schoolId)
-                ->where('status', 'active')
                 ->first();
         });
     }

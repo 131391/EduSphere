@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
@@ -37,5 +38,22 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('production')) {
             Model::preventLazyLoading();
         }
+
+        // Register fallback Livewire directives so missing Livewire packages don't render raw blade text.
+        Blade::directive('livewireStyles', function () {
+            if (class_exists(\Livewire\Livewire::class)) {
+                return '<?php echo \\Livewire\\Livewire::styles(); ?>';
+            }
+
+            return '';
+        });
+
+        Blade::directive('livewireScripts', function () {
+            if (class_exists(\Livewire\Livewire::class)) {
+                return '<?php echo \\Livewire\\Livewire::scripts(); ?>';
+            }
+
+            return '';
+        });
     }
 }
