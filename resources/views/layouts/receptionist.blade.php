@@ -105,7 +105,7 @@
             <!-- Session Info -->
             <div class="px-4 py-2 bg-[#283593] text-xs flex-shrink-0 overflow-hidden whitespace-nowrap">
                 <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION: {{ $currentAcademicYear?->name ?? '2025 - 2026' }}</p>
-                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ substr($currentAcademicYear?->name ?? '25-26', 2, 2) }}-{{ substr($currentAcademicYear?->name ?? '25-26', -2) }}</p>
+                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ preg_replace('/^.*?(\d{2})[^\d]*(\d{2})$/', '$1-$2', $currentAcademicYear?->name ?? '25-26') }}</p>
             </div>
 
             <!-- Navigation Menu - Scrollable -->
@@ -117,7 +117,8 @@
                 $reportOpen = request()->routeIs('receptionist.transport-attendance.month-wise-report') || request()->routeIs('receptionist.hostel-attendance.report');
                 $staffOpen = request()->routeIs('receptionist.staff.*');
             @endphp
-            <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll" 
+            <nav class="flex-1 py-4 sidebar-scroll" 
+                 :class="{ 'overflow-y-auto': !sidebarCollapsed, 'overflow-visible': sidebarCollapsed }" 
                  x-data="{
                     frontDeskOpen: {{ $frontDeskOpen ? 'true' : 'false' }},
                     transportOpen: {{ $transportOpen ? 'true' : 'false' }},
@@ -137,8 +138,8 @@
                     </li>
 
                     <!-- Front Desk -->
-                    <li>
-                        <button @click="frontDeskOpen = !frontDeskOpen" 
+                    <li class="relative group">
+                        <button @click="sidebarCollapsed ? (frontDeskOpen = false) : (frontDeskOpen = !frontDeskOpen)" 
                                 class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
                                 :class="{ 'justify-center': sidebarCollapsed }">
                             <div class="flex items-center">
@@ -149,28 +150,64 @@
                                :class="{ 'rotate-180': frontDeskOpen }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="frontDeskOpen" x-collapse {{ $frontDeskOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
+                        <!-- Expanded Menu -->
+                        <ul x-show="!sidebarCollapsed && frontDeskOpen" 
+                            x-collapse
+                            x-cloak
+                            class="ml-4 mt-1 space-y-1">
                             <li>
-                                <a href="{{ route('receptionist.visitors.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-user-friends w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.visitors.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-user-friends w-4"></i>
                                     <span>Visitor List</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.student-enquiries.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-question-circle w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.student-enquiries.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-question-circle w-4"></i>
                                     <span>Student Enquiry</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.student-registrations.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-clipboard-list w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.student-registrations.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-clipboard-list w-4"></i>
                                     <span>Student Registration</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.admission.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.admission.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-user-graduate w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.admission.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.admission.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-user-graduate w-4"></i>
+                                    <span>Admission List</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <!-- Collapsed Menu -->
+                        <ul x-show="sidebarCollapsed" 
+                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
+                            style="display: none;">
+                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
+                                Front Desk
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.visitors.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-user-friends w-4"></i>
+                                    <span>Visitor List</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.student-enquiries.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-question-circle w-4"></i>
+                                    <span>Student Enquiry</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.student-registrations.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-clipboard-list w-4"></i>
+                                    <span>Student Registration</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.admission.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.admission.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-user-graduate w-4"></i>
                                     <span>Admission List</span>
                                 </a>
                             </li>
@@ -178,8 +215,8 @@
                     </li>
 
                     <!-- Transport Management -->
-                    <li>
-                        <button @click="transportOpen = !transportOpen" 
+                    <li class="relative group">
+                        <button @click="sidebarCollapsed ? (transportOpen = false) : (transportOpen = !transportOpen)" 
                                 class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
                                 :class="{ 'justify-center': sidebarCollapsed }">
                             <div class="flex items-center">
@@ -190,22 +227,52 @@
                                :class="{ 'rotate-180': transportOpen }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="transportOpen" x-collapse {{ $transportOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
+                        <!-- Expanded Menu -->
+                        <ul x-show="!sidebarCollapsed && transportOpen" 
+                            x-collapse
+                            x-cloak
+                            class="ml-4 mt-1 space-y-1">
                             <li>
-                                <a href="{{ route('receptionist.routes.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-route w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.routes.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-route w-4"></i>
                                     <span>Routes</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.vehicles.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bus-alt w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.vehicles.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bus-alt w-4"></i>
                                     <span>Vehicles</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.bus-stops.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.bus-stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-map-marker-alt w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.bus-stops.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.bus-stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-map-marker-alt w-4"></i>
+                                    <span>Bus Stops</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <!-- Collapsed Menu -->
+                        <ul x-show="sidebarCollapsed" 
+                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
+                            style="display: none;">
+                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
+                                Transport Management
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.routes.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-route w-4"></i>
+                                    <span>Routes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.vehicles.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bus-alt w-4"></i>
+                                    <span>Vehicles</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.bus-stops.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.bus-stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-map-marker-alt w-4"></i>
                                     <span>Bus Stops</span>
                                 </a>
                             </li>
@@ -213,8 +280,8 @@
                     </li>
 
                     <!-- Hostel Management -->
-                    <li>
-                        <button @click="hostelOpen = !hostelOpen" 
+                    <li class="relative group">
+                        <button @click="sidebarCollapsed ? (hostelOpen = false) : (hostelOpen = !hostelOpen)" 
                                 class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
                                 :class="{ 'justify-center': sidebarCollapsed }">
                             <div class="flex items-center">
@@ -225,34 +292,76 @@
                                :class="{ 'rotate-180': hostelOpen }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="hostelOpen" x-collapse {{ $hostelOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
+                        <!-- Expanded Menu -->
+                        <ul x-show="!sidebarCollapsed && hostelOpen" 
+                            x-collapse
+                            x-cloak
+                            class="ml-4 mt-1 space-y-1">
                             <li>
-                                <a href="{{ route('receptionist.hostels.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostels.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-hotel w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.hostels.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostels.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-hotel w-4"></i>
                                     <span>Hostel List</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.hostel-floors.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-floors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-layer-group w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.hostel-floors.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-floors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-layer-group w-4"></i>
                                     <span>Hostel Floor</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.hostel-rooms.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-rooms.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-door-open w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.hostel-rooms.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-rooms.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-door-open w-4"></i>
                                     <span>Hostel Room</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-bed-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bed w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-bed-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bed w-4"></i>
                                     <span>Bed Assignment</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.hostel-attendance.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-clipboard-check w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.hostel-attendance.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-clipboard-check w-4"></i>
+                                    <span>Hostel Attendance</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <!-- Collapsed Menu -->
+                        <ul x-show="sidebarCollapsed" 
+                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
+                            style="display: none;">
+                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
+                                Hostel Management
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostels.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostels.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-hotel w-4"></i>
+                                    <span>Hostel List</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-floors.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-floors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-layer-group w-4"></i>
+                                    <span>Hostel Floor</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-rooms.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-rooms.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-door-open w-4"></i>
+                                    <span>Hostel Room</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-bed-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bed w-4"></i>
+                                    <span>Bed Assignment</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-attendance.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-clipboard-check w-4"></i>
                                     <span>Hostel Attendance</span>
                                 </a>
                             </li>
@@ -260,8 +369,8 @@
                     </li>
 
                     <!-- Report -->
-                    <li>
-                        <button @click="reportOpen = !reportOpen" 
+                    <li class="relative group">
+                        <button @click="sidebarCollapsed ? (reportOpen = false) : (reportOpen = !reportOpen)" 
                                 class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
                                 :class="{ 'justify-center': sidebarCollapsed }">
                             <div class="flex items-center">
@@ -272,16 +381,40 @@
                                :class="{ 'rotate-180': reportOpen }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="reportOpen" x-collapse {{ $reportOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
+                        <!-- Expanded Menu -->
+                        <ul x-show="!sidebarCollapsed && reportOpen" 
+                            x-collapse
+                            x-cloak
+                            class="ml-4 mt-1 space-y-1">
                             <li>
-                                <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bus w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bus w-4"></i>
                                     <span>Transport Attendance</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('receptionist.hostel-attendance.report') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bed w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.hostel-attendance.report') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bed w-4"></i>
+                                    <span>Hostel Attendance</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <!-- Collapsed Menu -->
+                        <ul x-show="sidebarCollapsed" 
+                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
+                            style="display: none;">
+                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
+                                Report
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bus w-4"></i>
+                                    <span>Transport Attendance</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.hostel-attendance.report') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-bed w-4"></i>
                                     <span>Hostel Attendance</span>
                                 </a>
                             </li>
@@ -289,8 +422,8 @@
                     </li>
 
                     <!-- Staff -->
-                    <li>
-                        <button @click="staffOpen = !staffOpen" 
+                    <li class="relative group">
+                        <button @click="sidebarCollapsed ? (staffOpen = false) : (staffOpen = !staffOpen)" 
                                 class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
                                 :class="{ 'justify-center': sidebarCollapsed }">
                             <div class="flex items-center">
@@ -301,10 +434,28 @@
                                :class="{ 'rotate-180': staffOpen }"
                                x-show="!sidebarCollapsed"></i>
                         </button>
-                        <ul x-show="staffOpen" x-collapse {{ $staffOpen ? '' : 'x-cloak' }} class="ml-4 mt-1 space-y-1">
+                        <!-- Expanded Menu -->
+                        <ul x-show="!sidebarCollapsed && staffOpen" 
+                            x-collapse
+                            x-cloak
+                            class="ml-4 mt-1 space-y-1">
                             <li>
-                                <a href="{{ route('receptionist.staff.index') }}" class="flex items-center px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-list w-4 mr-3"></i>
+                                <a href="{{ route('receptionist.staff.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-list w-4"></i>
+                                    <span>Staff List</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <!-- Collapsed Menu -->
+                        <ul x-show="sidebarCollapsed" 
+                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
+                            style="display: none;">
+                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
+                                Staff
+                            </li>
+                            <li>
+                                <a href="{{ route('receptionist.staff.index') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-list w-4"></i>
                                     <span>Staff List</span>
                                 </a>
                             </li>

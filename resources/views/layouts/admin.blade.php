@@ -80,7 +80,7 @@
             <!-- Session Info -->
             <div class="px-4 py-2 bg-blue-800 text-xs overflow-hidden whitespace-nowrap">
                 <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION: {{ \App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '2025 - 2026' }}</p>
-                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ substr(\App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '25-26', 2, 2) }}-{{ substr(\App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '25-26', -2) }}</p>
+                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ preg_replace('/^.*?(\d{2})[^\d]*(\d{2})$/', '$1-$2', \App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '25-26') }}</p>
             </div>
 
             <!-- Navigation Menu -->
