@@ -104,9 +104,10 @@ class SchoolSettingsController extends TenantController
     {
         $school = $this->getSchool();
         $academicYears = AcademicYear::where('school_id', $school->id)->orderBy('start_date', 'desc')->get();
-        $currentSessionId = $school->settings['current_session_id'] ?? null;
+        $currentSession = AcademicYear::where('school_id', $school->id)->where('is_current', true)->first();
+        $currentSessionId = $currentSession?->id;
         
-        return view('school.settings.session', compact('school', 'academicYears', 'currentSessionId'));
+        return view('school.settings.session', compact('school', 'academicYears', 'currentSessionId', 'currentSession'));
     }
 
     public function updateSession(Request $request)
@@ -115,14 +116,26 @@ class SchoolSettingsController extends TenantController
             'current_session_id' => 'required|exists:academic_years,id',
         ]);
 
+        $sessionId = $request->input('current_session_id');
         $school = $this->getSchool();
+
+        // Ensure the session belongs to this school
+        $academicYear = AcademicYear::where('school_id', $school->id)->findOrFail($sessionId);
+
+        // Update current session flags
+        AcademicYear::where('school_id', $school->id)
+            ->where('is_current', true)
+            ->get()
+            ->each(fn($year) => $year->update(['is_current' => false]));
+
+        $academicYear->update(['is_current' => true]);
+        
+        // Sync settings for backward compatibility if needed
         $settings = $school->settings ?? [];
-        
-        $settings['current_session_id'] = $request->input('current_session_id');
-        
+        $settings['current_session_id'] = $sessionId;
         $school->update(['settings' => $settings]);
 
-        return back()->with('success', 'Session updated successfully.');
+        return back()->with('success', 'Academic session updated successfully and applied across all modules.');
     }
     public function receiptNote()
     {

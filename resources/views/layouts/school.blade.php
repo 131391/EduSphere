@@ -1017,6 +1017,7 @@
     <script src="{{ asset('js/form-validation-handler.js') }}"></script>
     <!-- Location Cascade Handler -->
     <script src="{{ asset('js/location-cascade.js') }}"></script>
+    <x-toast />
 </body>
 </html>
 
