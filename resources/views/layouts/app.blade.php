@@ -10,8 +10,7 @@
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Livewire Styles -->
-    @livewireStyles
+    <!-- Livewire Assets (Auto-injected in v3, removed manual tags) -->
 
     @stack('styles')
 </head>
@@ -29,10 +28,7 @@
     
     @yield('content')
     
-    <!-- Livewire Scripts -->
-    @livewireScripts
-    
-    <script src="{{ mix('js/app.js') ?? asset('js/app.js') }}"></script>
+    <!-- Livewire Assets (Auto-injected in v3, removed manual tags) -->
     
     @stack('scripts')
 </body>

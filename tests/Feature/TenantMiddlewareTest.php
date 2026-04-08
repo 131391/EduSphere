@@ -12,12 +12,18 @@ class TenantMiddlewareTest extends TestCase
 
     public function test_tenant_middleware_identifies_school_by_subdomain(): void
     {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         $school = School::factory()->create([
             'subdomain' => 'testschool',
-            'status' => 'active',
+            'status' => \App\Enums\SchoolStatus::Active,
         ]);
 
-        $response = $this->get('http://testschool.localhost/dashboard');
+        $adminRole = \App\Models\Role::where('slug', \App\Models\Role::SCHOOL_ADMIN)->first();
+        $user = \App\Models\User::factory()->create([
+            'school_id' => $school->id,
+            'role_id' => $adminRole->id,
+        ]);
+        $response = $this->actingAs($user)->get('http://testschool.localhost/dashboard');
 
         $response->assertStatus(200);
     }
@@ -31,12 +37,18 @@ class TenantMiddlewareTest extends TestCase
 
     public function test_tenant_middleware_blocks_inactive_school(): void
     {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         $school = School::factory()->create([
             'subdomain' => 'inactive',
-            'status' => 'inactive',
+            'status' => \App\Enums\SchoolStatus::Inactive,
         ]);
 
-        $response = $this->get('http://inactive.localhost/dashboard');
+        $adminRole = \App\Models\Role::where('slug', \App\Models\Role::SCHOOL_ADMIN)->first();
+        $user = \App\Models\User::factory()->create([
+            'school_id' => $school->id,
+            'role_id' => $adminRole->id,
+        ]);
+        $response = $this->actingAs($user)->get('http://inactive.localhost/dashboard');
 
         $response->assertStatus(403);
     }

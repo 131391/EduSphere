@@ -218,13 +218,27 @@ class SchoolController extends Controller
     public function show($id)
     {
         $school = School::withTrashed()->findOrFail($id);
-        return view('admin.schools.show', compact('school'));
+        
+        // Fetch the primary administrator
+        $admin = \App\Models\User::where('school_id', $school->id)
+            ->whereHas('role', function($q) {
+                $q->where('slug', \App\Models\Role::SCHOOL_ADMIN);
+            })->first();
+
+        return view('admin.schools.show', compact('school', 'admin'));
     }
 
     public function edit($id)
     {
         $school = School::withTrashed()->findOrFail($id);
-        return view('admin.schools.edit', compact('school'));
+        
+        // Fetch the primary administrator
+        $admin = \App\Models\User::where('school_id', $school->id)
+            ->whereHas('role', function($q) {
+                $q->where('slug', \App\Models\Role::SCHOOL_ADMIN);
+            })->first();
+
+        return view('admin.schools.edit', compact('school', 'admin'));
     }
 
     public function update(Request $request, $id)
@@ -248,6 +262,12 @@ class SchoolController extends Controller
             'status' => ['required', 'integer', Rule::enum(SchoolStatus::class)],
             'subscription_start_date' => 'nullable|date',
             'subscription_end_date' => 'nullable|date|after:subscription_start_date',
+
+            // Admin Account Management
+            'admin_id' => 'nullable|exists:users,id',
+            'admin_name' => 'nullable|string|max:255',
+            'admin_email' => 'nullable|email|max:255',
+            'admin_password' => 'nullable|string|min:8|confirmed',
         ]);
 
         // Handle logo upload
@@ -262,7 +282,37 @@ class SchoolController extends Controller
         // Status is already an integer from validation
         // No mapping needed
 
-        $school->update($validated);
+        \DB::beginTransaction();
+        try {
+            $school->update(collect($validated)->except(['admin_id', 'admin_name', 'admin_email', 'admin_password', 'admin_password_confirmation'])->toArray());
+
+            // Update Admin User if admin_id is provided
+            if ($request->filled('admin_id')) {
+                $admin = \App\Models\User::findOrFail($request->admin_id);
+                
+                $adminData = [];
+                if ($request->filled('admin_name')) $adminData['name'] = $request->admin_name;
+                if ($request->filled('admin_email')) {
+                    // Check email uniqueness manually if changed
+                    if ($request->admin_email !== $admin->email) {
+                        $request->validate(['admin_email' => 'unique:users,email']);
+                    }
+                    $adminData['email'] = $request->admin_email;
+                }
+                if ($request->filled('admin_password')) {
+                    $adminData['password'] = \Hash::make($request->admin_password);
+                }
+
+                if (!empty($adminData)) {
+                    $admin->update($adminData);
+                }
+            }
+
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return back()->withInput()->with('error', 'Failed to update school: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.schools.index')
             ->with('success', 'School updated successfully.');

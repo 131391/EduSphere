@@ -37,6 +37,9 @@ use App\Http\Controllers\School\UserController;
 use App\Http\Controllers\School\UserFavoriteController;
 use App\Http\Controllers\School\AdmissionFeeController;
 use App\Http\Controllers\School\RegistrationCodeController;
+use App\Http\Controllers\School\FeePaymentController;
+use App\Http\Controllers\School\LibraryController;
+use App\Http\Controllers\School\AttendanceReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +76,12 @@ Route::get('/fees/create', [FeeController::class, 'create'])->name('fees.create'
 Route::post('/fees', [FeeController::class, 'store'])->name('fees.store');
 Route::get('/fees/{fee}', [FeeController::class, 'show'])->name('fees.show');
 Route::get('/fee-management', [FeeController::class, 'index'])->name('fee-management');
+
+// Fee Payments
+Route::get('/fee-payments', [FeePaymentController::class, 'index'])->name('fee-payments.index');
+Route::get('/fee-payments/collect/{student}', [FeePaymentController::class, 'collect'])->name('fee-payments.collect');
+Route::post('/fee-payments/collect/{student}', [FeePaymentController::class, 'store'])->name('fee-payments.store');
+Route::get('/fee-payments/receipt/{receipt_no}', [FeePaymentController::class, 'receipt'])->name('fee-payments.receipt');
 
 // Waiver Management
 Route::get('/waivers', [WaiverController::class, 'index'])->name('waivers.index');
@@ -168,6 +177,14 @@ Route::prefix('examination')->name('examination.')->group(function () {
     Route::resource('exam-types', ExamTypeController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('exams', ExamController::class)->only(['index', 'store', 'destroy']);
     Route::resource('grades', GradeController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Mark Entry
+    Route::get('marks', [ExamController::class, 'marksEntry'])->name('marks.index');
+    Route::get('marks/enter', [ExamController::class, 'enterMarks'])->name('marks.entry');
+    Route::post('marksGroup', [ExamController::class, 'storeMarks'])->name('marks.store');
+
+    // Tabulation
+    Route::get('exams/{exam}/tabulate', [ExamController::class, 'tabulate'])->name('exams.tabulate');
 });
 
 // Subject Management
@@ -192,6 +209,22 @@ Route::resource('admission', \App\Http\Controllers\School\AdmissionController::c
     'admission' => 'student'
 ]);
 Route::get('admission/class-data/{classId}', [\App\Http\Controllers\School\AdmissionController::class, 'getClassData'])->name('admission.class-data');
+
+// Library Management
+Route::prefix('library')->name('library.')->group(function () {
+    Route::get('/', [LibraryController::class, 'index'])->name('index');
+    Route::post('/books', [LibraryController::class, 'storeBook'])->name('books.store');
+    Route::get('/issues', [LibraryController::class, 'issues'])->name('issues');
+    Route::post('/issue', [LibraryController::class, 'issueBook'])->name('issue.store');
+    Route::post('/return/{issue}', [LibraryController::class, 'returnBook'])->name('return');
+});
+
+// Attendance Reporting
+Route::prefix('reports/attendance')->name('reports.attendance.')->group(function () {
+    Route::get('/monthly', [AttendanceReportController::class, 'monthly'])->name('monthly');
+    Route::get('/student', [AttendanceReportController::class, 'student'])->name('student');
+    Route::get('/daily', [AttendanceReportController::class, 'daily'])->name('daily');
+});
 
 // Other school admin routes...
 

@@ -54,17 +54,17 @@ class School extends Model
     // Relationships
     public function country()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\Country::class);
+        return $this->belongsTo(Country::class);
     }
 
     public function state()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\State::class);
+        return $this->belongsTo(State::class);
     }
 
     public function city()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\City::class);
+        return $this->belongsTo(City::class);
     }
 
     public function users()

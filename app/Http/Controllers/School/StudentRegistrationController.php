@@ -14,6 +14,7 @@ use App\Models\Category;
 use App\Models\BoardingType;
 use App\Models\CorrespondingRelative;
 use App\Models\Qualification;
+use App\Services\LocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -21,9 +22,17 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StudentRegistrationController extends Controller
 {
+    protected $locationService;
+
+    public function __construct(LocationService $locationService)
+    {
+        $this->locationService = $locationService;
+    }
+
     public function index(Request $request)
     {
         $school = Auth::user()->school;
@@ -83,11 +92,12 @@ class StudentRegistrationController extends Controller
         $boardingTypes = BoardingType::where('school_id', $school->id)->get();
         $correspondingRelatives = CorrespondingRelative::where('school_id', $school->id)->get();
         $qualifications = Qualification::where('school_id', $school->id)->get();
+        $countries = $this->locationService->getCountries();
 
         return view('school.student-registrations.create', compact(
             'classes', 'academicYears', 'enquiries', 'studentTypes', 
             'bloodGroups', 'religions', 'categories', 'boardingTypes', 
-            'correspondingRelatives', 'qualifications'
+            'correspondingRelatives', 'qualifications', 'countries'
         ));
     }
 
@@ -191,11 +201,12 @@ class StudentRegistrationController extends Controller
         $boardingTypes = BoardingType::where('school_id', $school->id)->get();
         $correspondingRelatives = CorrespondingRelative::where('school_id', $school->id)->get();
         $qualifications = Qualification::where('school_id', $school->id)->get();
+        $countries = $this->locationService->getCountries();
 
         return view('school.student-registrations.edit', compact(
             'studentRegistration', 'classes', 'academicYears', 'enquiries', 
             'studentTypes', 'bloodGroups', 'religions', 'categories', 
-            'boardingTypes', 'correspondingRelatives', 'qualifications'
+            'boardingTypes', 'correspondingRelatives', 'qualifications', 'countries'
         ));
     }
 
@@ -313,7 +324,7 @@ class StudentRegistrationController extends Controller
             ->where('school_id', $school->id)
             ->findOrFail($id);
         
-        $pdf = \PDF::loadView('pdf.student-registration', compact('studentRegistration', 'school'));
+        $pdf = Pdf::loadView('pdf.student-registration', compact('studentRegistration', 'school'));
         
         return $pdf->download('student-registration-' . $studentRegistration->registration_no . '.pdf');
     }

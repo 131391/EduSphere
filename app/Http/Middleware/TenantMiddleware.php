@@ -26,7 +26,7 @@ class TenantMiddleware
                 $school = \App\Models\School::find($user->school_id);
             } else {
                 // Fallback: use first active school for development
-                $school = \App\Models\School::where('status', 'active')->first();
+                $school = \App\Models\School::where('status', \App\Enums\SchoolStatus::Active)->first();
             }
         }
 

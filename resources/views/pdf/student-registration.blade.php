@@ -161,7 +161,7 @@
         @endif
         <div class="school-name">{{ strtoupper($school->name) }}</div>
         <div class="school-address">
-            {{ $school->address }}, {{ $school->city }}, {{ $school->state }} - {{ $school->pin_code }}<br>
+            {{ $school->address }}, {{ $school->city->name ?? '' }}, {{ $school->state->name ?? '' }} - {{ $school->pin_code }}<br>
             Phone: {{ $school->phone }} | Email: {{ $school->email }}
         </div>
     </div>

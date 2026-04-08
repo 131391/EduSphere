@@ -77,10 +77,17 @@
                 </button>
             </div>
 
+            @php
+                $currentYear = \App\Models\AcademicYear::where('is_current', true)->first();
+                if (!$currentYear) {
+                    $currentYear = \App\Models\AcademicYear::orderBy('start_date', 'desc')->first();
+                }
+                $sessionName = $currentYear?->name ?? '2025 - 2026';
+            @endphp
             <!-- Session Info -->
             <div class="px-4 py-2 bg-blue-800 text-xs overflow-hidden whitespace-nowrap">
-                <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION: {{ \App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '2025 - 2026' }}</p>
-                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ preg_replace('/^.*?(\d{2})[^\d]*(\d{2})$/', '$1-$2', \App\Models\AcademicYear::where('is_current', true)->first()?->name ?? '25-26') }}</p>
+                <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION: {{ $sessionName }}</p>
+                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ preg_replace('/^.*?(\d{2})[^\d]*(\d{2})$/', '$1-$2', $sessionName) }}</p>
             </div>
 
             <!-- Navigation Menu -->

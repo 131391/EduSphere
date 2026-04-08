@@ -175,32 +175,32 @@ class Student extends Model
     // Location Relationships
     public function permanentCountry()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\Country::class, 'permanent_country_id');
+        return $this->belongsTo(Country::class, 'permanent_country_id');
     }
 
     public function permanentState()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\State::class, 'permanent_state_id');
+        return $this->belongsTo(State::class, 'permanent_state_id');
     }
 
     public function permanentCity()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\City::class, 'permanent_city_id');
+        return $this->belongsTo(City::class, 'permanent_city_id');
     }
 
     public function correspondenceCountry()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\Country::class, 'correspondence_country_id');
+        return $this->belongsTo(Country::class, 'correspondence_country_id');
     }
 
     public function correspondenceState()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\State::class, 'correspondence_state_id');
+        return $this->belongsTo(State::class, 'correspondence_state_id');
     }
 
     public function correspondenceCity()
     {
-        return $this->belongsTo(\Nnjeim\World\Models\City::class, 'correspondence_city_id');
+        return $this->belongsTo(City::class, 'correspondence_city_id');
     }
 
     // Scopes

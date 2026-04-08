@@ -29,45 +29,15 @@
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Country <span class="text-red-500">*</span>
-                </label>
-                <select name="permanent_country_id" required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        data-location-cascade="true"
-                        data-country-select="true">
-                    <option value="">Select Country</option>
-                    @if(isset($studentRegistration) && $studentRegistration->permanent_country_id)
-                        <option value="{{ $studentRegistration->permanent_country_id }}" selected>{{ $studentRegistration->permanentCountry->name ?? 'Selected Country' }}</option>
-                    @elseif(old('permanent_country_id'))
-                        <option value="{{ old('permanent_country_id') }}" selected>Selected Country</option>
-                    @endif
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    State <span class="text-red-500">*</span>
-                </label>
-                <select name="permanent_state_id" required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        data-state-select="true"
-                        data-selected="{{ old('permanent_state_id', $studentRegistration->permanent_state_id ?? '') }}">
-                    <option value="">Select State</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    City <span class="text-red-500">*</span>
-                </label>
-                <select name="permanent_city_id" required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        data-city-select="true"
-                        data-selected="{{ old('permanent_city_id', $studentRegistration->permanent_city_id ?? '') }}">
-                    <option value="">Select City</option>
-                </select>
+            <div class="md:col-span-2">
+                <x-location-selector 
+                    prefix="permanent" 
+                    label="Permanent" 
+                    :countries="$countries"
+                    :selectedCountry="old('permanent_country_id', $studentRegistration->permanent_country_id ?? '')"
+                    :selectedState="old('permanent_state_id', $studentRegistration->permanent_state_id ?? '')"
+                    :selectedCity="old('permanent_city_id', $studentRegistration->permanent_city_id ?? '')"
+                />
             </div>
 
             <div>

@@ -16,12 +16,46 @@ class DatabaseSeeder extends Seeder
         // Seed roles first
         $this->call(RoleSeeder::class);
         
-        // Seed master data
-        // Seed master data
-        // $this->call(MasterDataSeeder::class); // Removed to prevent global seeding
+        // Seed geographic data
+        $this->call([
+            CountrySeeder::class,
+            StateSeeder::class,
+            CitySeeder::class,
+        ]);
+
+        // Create default school for development
+        $this->createDefaultSchool();
 
         // Create super admin only
         $this->createSuperAdmin();
+    }
+
+    protected function createDefaultSchool(): void
+    {
+        $school = \App\Models\School::firstOrCreate(
+            ['subdomain' => 'admin'],
+            [
+                'name' => 'Default School',
+                'code' => 'DEFAULT001',
+                'status' => \App\Enums\SchoolStatus::Active,
+                'email' => 'school@example.com',
+            ]
+        );
+
+        // Create Admin User for this school if it doesn't exist
+        $schoolAdminRole = Role::where('slug', Role::SCHOOL_ADMIN)->first();
+        if ($schoolAdminRole) {
+            User::firstOrCreate(
+                ['email' => 'admin@dps.school.com'],
+                [
+                    'name' => 'DPS Admin',
+                    'password' => bcrypt('password'),
+                    'school_id' => $school->id,
+                    'role_id' => $schoolAdminRole->id,
+                    'status' => User::STATUS_ACTIVE,
+                ]
+            );
+        }
     }
 
     protected function createSuperAdmin(): void
@@ -39,4 +73,3 @@ class DatabaseSeeder extends Seeder
         );
     }
 }
-

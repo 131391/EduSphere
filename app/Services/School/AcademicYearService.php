@@ -41,7 +41,9 @@ class AcademicYearService
             // If setting as current, unset other current years
             if (isset($data['is_current']) && $data['is_current']) {
                 AcademicYear::where('school_id', $school->id)
-                    ->update(['is_current' => false]);
+                    ->where('is_current', true)
+                    ->get()
+                    ->each(fn($year) => $year->update(['is_current' => false]));
             }
 
             $academicYear = AcademicYear::create([
@@ -51,6 +53,9 @@ class AcademicYearService
                 'end_date' => $data['end_date'],
                 'is_current' => $data['is_current'] ?? false,
             ]);
+
+            // Clear statistics cache
+            $academicYear->clearCache();
 
             Log::info('Academic year created', [
                 'academic_year_id' => $academicYear->id,
@@ -80,10 +85,15 @@ class AcademicYearService
             if (isset($data['is_current']) && $data['is_current']) {
                 AcademicYear::where('school_id', $academicYear->school_id)
                     ->where('id', '!=', $academicYear->id)
-                    ->update(['is_current' => false]);
+                    ->where('is_current', true)
+                    ->get()
+                    ->each(fn($year) => $year->update(['is_current' => false]));
             }
 
             $academicYear->update($data);
+
+            // Clear cache
+            $academicYear->clearCache();
 
             Log::info('Academic year updated', [
                 'academic_year_id' => $academicYear->id,

@@ -2,30 +2,41 @@
 
 namespace App\Http\Controllers\School\Examination;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\AcademicYear;
 use App\Models\ClassModel;
 use App\Models\Exam;
 use App\Models\ExamType;
 use App\Models\FeeName;
+use App\Models\Subject;
+use App\Models\Student;
+use App\Services\School\Examination\ResultService;
 use Illuminate\Http\Request;
 
-class ExamController extends Controller
+class ExamController extends TenantController
 {
+    protected $resultService;
+
+    public function __construct(ResultService $resultService)
+    {
+        parent::__construct();
+        $this->resultService = $resultService;
+    }
+
     public function index()
     {
-        $school = auth()->user()->school;
+        $this->ensureSchoolActive();
         
         $exams = Exam::with(['academicYear', 'class', 'examType'])
-            ->where('school_id', $school->id)
+            ->where('school_id', $this->getSchoolId())
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        $classes = ClassModel::where('school_id', $school->id)->get();
-        $examTypes = ExamType::where('school_id', $school->id)->get();
-        $academicYears = AcademicYear::where('school_id', $school->id)->get();
+        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
+        $examTypes = ExamType::where('school_id', $this->getSchoolId())->get();
+        $academicYears = AcademicYear::where('school_id', $this->getSchoolId())->get();
         
-        $months = FeeName::where('school_id', $school->id)
+        $months = FeeName::where('school_id', $this->getSchoolId())
             ->where('is_active', true)
             ->pluck('name');
 
@@ -34,14 +45,15 @@ class ExamController extends Controller
 
     public function store(Request $request)
     {
+        $this->ensureSchoolActive();
+
         $request->validate([
             'class_id' => 'required|exists:classes,id',
             'exam_type_id' => 'required|exists:exam_types,id',
             'month' => 'required|string',
         ]);
 
-        $school = auth()->user()->school;
-        $activeAcademicYear = AcademicYear::where('school_id', $school->id)
+        $activeAcademicYear = AcademicYear::where('school_id', $this->getSchoolId())
             ->where('is_active', true)
             ->first();
 
@@ -50,7 +62,7 @@ class ExamController extends Controller
         }
 
         Exam::create([
-            'school_id' => $school->id,
+            'school_id' => $this->getSchoolId(),
             'academic_year_id' => $activeAcademicYear->id,
             'class_id' => $request->class_id,
             'exam_type_id' => $request->exam_type_id,
@@ -61,19 +73,113 @@ class ExamController extends Controller
         return redirect()->route('school.examination.exams.index')->with('success', 'Exam created successfully.');
     }
 
+    /**
+     * Show selection form for mark entry
+     */
+    public function marksEntry()
+    {
+        $this->ensureSchoolActive();
+        
+        $exams = Exam::where('school_id', $this->getSchoolId())->get();
+        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
+        $subjects = Subject::where('school_id', $this->getSchoolId())->get();
+
+        return view('school.examination.marks.index', compact('exams', 'classes', 'subjects'));
+    }
+
+    /**
+     * Show mark entry grid
+     */
+    public function enterMarks(Request $request)
+    {
+        $this->ensureSchoolActive();
+
+        $request->validate([
+            'exam_id' => 'required|exists:exams,id',
+            'class_id' => 'required|exists:classes,id',
+            'subject_id' => 'required|exists:subjects,id',
+        ]);
+
+        $exam = Exam::findOrFail($request->exam_id);
+        $class = ClassModel::findOrFail($request->class_id);
+        $subject = Subject::findOrFail($request->subject_id);
+        
+        $students = Student::where('school_id', $this->getSchoolId())
+            ->where('class_id', $class->id)
+            ->active()
+            ->get();
+
+        $results = \App\Models\Result::where('exam_id', $exam->id)
+            ->where('subject_id', $subject->id)
+            ->get()
+            ->keyBy('student_id');
+
+        return view('school.examination.marks.entry', compact('exam', 'class', 'subject', 'students', 'results'));
+    }
+
+    /**
+     * Store bulk marks
+     */
+    public function storeMarks(Request $request)
+    {
+        $this->ensureSchoolActive();
+
+        $validated = $request->validate([
+            'exam_id' => 'required|exists:exams,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'class_id' => 'required|exists:classes,id',
+            'total_marks' => 'required|numeric|min:1',
+            'marks' => 'required|array',
+            'marks.*.student_id' => 'required|exists:students,id',
+            'marks.*.marks_obtained' => 'required|numeric|min:0|max:' . ($request->total_marks ?? 100),
+            'academic_year_id' => 'required|exists:academic_years,id',
+        ]);
+
+        $result = $this->resultService->saveMarks($this->school, $validated);
+
+        if ($result['success']) {
+            return redirect()->route('school.examination.marks.index')->with('success', $result['message']);
+        }
+
+        return back()->with('error', $result['message'])->withInput();
+    }
+
+    /**
+     * Display tabulated results for an exam
+     */
+    public function tabulate(Exam $exam)
+    {
+        $this->authorizeTenant($exam);
+        $this->ensureSchoolActive();
+
+        $exam->load(['class', 'examType', 'academicYear']);
+        
+        // Get all subjects that have results for this exam
+        $subjectIds = \App\Models\Result::where('exam_id', $exam->id)
+            ->distinct()
+            ->pluck('subject_id');
+        
+        $subjects = Subject::whereIn('id', $subjectIds)->get();
+
+        // Get all students in this class
+        $students = Student::where('class_id', $exam->class_id)
+            ->where('school_id', $this->getSchoolId())
+            ->active()
+            ->get();
+
+        // Get all results
+        $results = \App\Models\Result::where('exam_id', $exam->id)
+            ->get()
+            ->groupBy('student_id');
+
+        return view('school.examination.exams.tabulate', compact('exam', 'subjects', 'students', 'results'));
+    }
+
     public function destroy(Exam $exam)
     {
-        $this->authorizeAccess($exam);
-        
+        $this->authorizeTenant($exam);
         $exam->delete();
 
         return redirect()->route('school.examination.exams.index')->with('success', 'Exam deleted successfully.');
-    }
-
-    protected function authorizeAccess(Exam $exam)
-    {
-        if ($exam->school_id !== auth()->user()->school_id) {
-            abort(403);
-        }
     }
 }

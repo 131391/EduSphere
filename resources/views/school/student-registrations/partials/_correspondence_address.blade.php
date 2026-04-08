@@ -13,45 +13,15 @@
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Country
-                </label>
-                <select name="correspondence_country_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        data-location-cascade="true"
-                        data-country-select="true">
-                    <option value="">Select Country</option>
-                    @if(isset($studentRegistration) && $studentRegistration->correspondence_country_id)
-                        <option value="{{ $studentRegistration->correspondence_country_id }}" selected>{{ $studentRegistration->correspondenceCountry->name ?? 'Selected Country' }}</option>
-                    @elseif(old('correspondence_country_id'))
-                        <option value="{{ old('correspondence_country_id') }}" selected>Selected Country</option>
-                    @endif
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    State
-                </label>
-                <select name="correspondence_state_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        data-state-select="true"
-                        data-selected="{{ old('correspondence_state_id', $studentRegistration->correspondence_state_id ?? '') }}">
-                    <option value="">Select State</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    City
-                </label>
-                <select name="correspondence_city_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        data-city-select="true"
-                        data-selected="{{ old('correspondence_city_id', $studentRegistration->correspondence_city_id ?? '') }}">
-                    <option value="">Select City</option>
-                </select>
+            <div class="md:col-span-2">
+                <x-location-selector 
+                    prefix="correspondence" 
+                    label="Correspondence" 
+                    :countries="$countries"
+                    :selectedCountry="old('correspondence_country_id', $studentRegistration->correspondence_country_id ?? '')"
+                    :selectedState="old('correspondence_state_id', $studentRegistration->correspondence_state_id ?? '')"
+                    :selectedCity="old('correspondence_city_id', $studentRegistration->correspondence_city_id ?? '')"
+                />
             </div>
 
             <div>

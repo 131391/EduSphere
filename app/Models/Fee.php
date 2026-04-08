@@ -19,6 +19,7 @@ class Fee extends Model
         'student_id',
         'academic_year_id',
         'fee_type_id',
+        'fee_name_id',
         'class_id',
         'bill_no',
         'fee_period',
@@ -74,6 +75,11 @@ class Fee extends Model
     public function feeType()
     {
         return $this->belongsTo(FeeType::class);
+    }
+
+    public function feeName()
+    {
+        return $this->belongsTo(FeeName::class);
     }
 
     public function class()

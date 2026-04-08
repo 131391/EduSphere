@@ -232,9 +232,11 @@
                             <label for="status" class="text-sm font-bold text-gray-700 ml-1">Account Status <span class="text-red-500">*</span></label>
                             <select name="status" id="status" required
                                 class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none appearance-none cursor-pointer">
-                                <option value="active" {{ old('status', $school->status) === 'active' ? 'selected' : '' }}>Active</option>
-                                <option value="inactive" {{ old('status', $school->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                <option value="suspended" {{ old('status', $school->status) === 'suspended' ? 'selected' : '' }}>Suspended</option>
+                                @foreach(\App\Enums\SchoolStatus::cases() as $status)
+                                    <option value="{{ $status->value }}" {{ old('status', $school->status instanceof \UnitEnum ? $school->status->value : $school->status) == $status->value ? 'selected' : '' }}>
+                                        {{ $status->label() }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -251,6 +253,54 @@
                                 value="{{ old('subscription_end_date', $school->subscription_end_date ? $school->subscription_end_date->format('Y-m-d') : '') }}"
                                 class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
                         </div>
+                    </div>
+                </div>
+
+                <!-- Administrator Account Settings Card -->
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-50 bg-gray-50/50 flex items-center">
+                        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center mr-4">
+                            <i class="fas fa-user-shield text-green-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Administrator Account</h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        @if($admin)
+                            <input type="hidden" name="admin_id" value="{{ $admin->id }}">
+                            <div class="space-y-2">
+                                <label for="admin_name" class="text-sm font-bold text-gray-700 ml-1">Admin Name</label>
+                                <input type="text" name="admin_name" id="admin_name" value="{{ old('admin_name', $admin->name) }}"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                            </div>
+                            <div class="space-y-2">
+                                <label for="admin_email" class="text-sm font-bold text-gray-700 ml-1">Admin Email</label>
+                                <input type="email" name="admin_email" id="admin_email" value="{{ old('admin_email', $admin->email) }}"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                            </div>
+                            <div class="pt-4 border-t border-gray-50">
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Change Password</p>
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div class="space-y-2">
+                                        <label for="admin_password" class="text-sm font-bold text-gray-700 ml-1">New Password</label>
+                                        <input type="password" name="admin_password" id="admin_password" placeholder="Leave blank to keep current"
+                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                                        @error('admin_password')
+                                            <p class="text-xs text-red-500 ml-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label for="admin_password_confirmation" class="text-sm font-bold text-gray-700 ml-1">Confirm Password</label>
+                                        <input type="password" name="admin_password_confirmation" id="admin_password_confirmation" placeholder="Confirm new password"
+                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start">
+                                <i class="fas fa-exclamation-triangle text-amber-500 mt-1 mr-3"></i>
+                                <p class="text-sm text-amber-700">No primary administrator account found for this school.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

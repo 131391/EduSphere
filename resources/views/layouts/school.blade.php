@@ -31,6 +31,11 @@
     @php
         $school = app('currentSchool') ?? Auth::user()->school ?? \App\Models\School::where('status', 'active')->first();
         $currentAcademicYear = $school ? \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first() : null;
+        
+        // If no current academic year set, try to get the most recent one
+        if (!$currentAcademicYear && $school) {
+            $currentAcademicYear = \App\Models\AcademicYear::where('school_id', $school->id)->orderBy('start_date', 'desc')->first();
+        }
     @endphp
 
     <div class="flex h-screen overflow-hidden" x-data="{ 
@@ -87,7 +92,7 @@
                 <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="sidebar-text">
                     <h2 class="text-xs font-bold text-center leading-tight">{{ strtoupper($school->name ?? 'SCHOOL NAME') }}</h2>
                     @if($school)
-                        <p class="text-xs text-indigo-100 text-center mt-1">{{ $school->city ?? '' }}, {{ $school->state ?? '' }}</p>
+                        <p class="text-xs text-indigo-100 text-center mt-1">{{ $school->city->name ?? '' }}, {{ $school->state->name ?? '' }}</p>
                     @endif
                 </div>
 

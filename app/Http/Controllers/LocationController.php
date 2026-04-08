@@ -3,31 +3,31 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Nnjeim\World\World;
+use App\Services\LocationService;
+use Exception;
 
 class LocationController extends Controller
 {
+    protected $locationService;
+
+    public function __construct(LocationService $locationService)
+    {
+        $this->locationService = $locationService;
+    }
+
     /**
      * Get all countries
      */
     public function getCountries()
     {
         try {
-            $action = World::countries();
-            
-            if ($action->success) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $action->data
-                ]);
-            }
+            $countries = $this->locationService->getCountries();
             
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch countries'
-            ], 500);
-            
-        } catch (\Exception $e) {
+                'success' => true,
+                'data' => $countries
+            ]);
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching countries: ' . $e->getMessage()
@@ -41,25 +41,13 @@ class LocationController extends Controller
     public function getStates($countryId)
     {
         try {
-            $action = World::states([
-                'filters' => [
-                    'country_id' => $countryId
-                ]
-            ]);
-            
-            if ($action->success) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $action->data ?? []
-                ]);
-            }
+            $states = $this->locationService->getStates($countryId);
             
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch states'
-            ], 500);
-            
-        } catch (\Exception $e) {
+                'success' => true,
+                'data' => $states
+            ]);
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching states: ' . $e->getMessage()
@@ -73,25 +61,13 @@ class LocationController extends Controller
     public function getCities($stateId)
     {
         try {
-            $action = World::cities([
-                'filters' => [
-                    'state_id' => $stateId
-                ]
-            ]);
-            
-            if ($action->success) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $action->data ?? []
-                ]);
-            }
+            $cities = $this->locationService->getCities($stateId);
             
             return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch cities'
-            ], 500);
-            
-        } catch (\Exception $e) {
+                'success' => true,
+                'data' => $cities
+            ]);
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching cities: ' . $e->getMessage()

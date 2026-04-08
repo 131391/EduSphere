@@ -11,6 +11,13 @@ class UpdateAcademicYearRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'is_current' => $this->has('is_current') && ($this->is_current === 'on' || $this->is_current == 1 || $this->is_current === true || $this->is_current === 'true'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [

@@ -19,7 +19,7 @@
                 $logo = $school->logo 
                     ? asset('storage/' . $school->logo) 
                     : null;
-                $cityState = trim(($school->city ?? '') . ', ' . ($school->state ?? ''), ', ');
+                $cityState = trim(($school->city->name ?? '') . ', ' . ($school->state->name ?? ''), ', ');
                 
                 return view('components.table.school-name', [
                     'school' => $school,
@@ -145,8 +145,17 @@
 <div class="space-y-6">
     <!-- Success Message -->
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative" role="alert">
-        <span class="block sm:inline">{{ session('success') }}</span>
+    <div x-data="{ show: true }" 
+         x-init="setTimeout(() => show = false, 5000)" 
+         x-show="show" 
+         x-transition:leave="transition ease-in duration-300" 
+         x-transition:leave-start="opacity-100 scale-100" 
+         x-transition:leave-end="opacity-0 scale-95"
+         class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative shadow-sm" role="alert">
+        <span class="block sm:inline font-medium">{{ session('success') }}</span>
+        <button @click="show = false" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+            <i class="fas fa-times text-green-500"></i>
+        </button>
     </div>
     @endif
 
