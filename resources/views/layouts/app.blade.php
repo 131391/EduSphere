@@ -31,6 +31,7 @@
     <!-- Livewire Assets (Auto-injected in v3, removed manual tags) -->
     
     @stack('scripts')
+    <x-toast />
 </body>
 </html>
 

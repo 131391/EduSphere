@@ -7,23 +7,7 @@
 @section('content')
 <div class="space-y-6" x-data="hostelManagement" x-init="init()">
     {{-- Success/Error Messages --}}
-    @if(session('success'))
-    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative">
-        <span class="block sm:inline">{{ session('success') }}</span>
-        <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    @endif
 
-    @if(session('error'))
-    <div x-data="{ show: true }" x-show="show" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative">
-        <span class="block sm:inline">{{ session('error') }}</span>
-        <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    @endif
 
     {{-- Hostel Statistics --}}
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">

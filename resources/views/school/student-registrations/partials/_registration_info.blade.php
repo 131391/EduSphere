@@ -27,7 +27,8 @@
                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white bg-gray-50 dark:bg-gray-900 cursor-not-allowed">
                     <input type="hidden" name="enquiry_id" value="{{ $studentRegistration->enquiry_id }}">
                 @else
-                    <select name="enquiry_id" id="enquiry_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                    <select name="enquiry_id" id="enquiry_id" 
+                            class="w-full px-4 py-2 border @error('enquiry_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                         <option value="">Select Enquiry No</option>
                         @foreach($enquiries as $enquiry)
                             <option value="{{ $enquiry->id }}" {{ (old('enquiry_id', $studentRegistration->enquiry_id ?? '') == $enquiry->id) ? 'selected' : '' }}>
@@ -35,6 +36,9 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('enquiry_id')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 @endif
             </div>
 
@@ -42,7 +46,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Academic Year <span class="text-red-500">*</span>
                 </label>
-                <select name="academic_year_id" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="academic_year_id" 
+                        class="w-full px-4 py-2 border @error('academic_year_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Select Academic Year</option>
                     @foreach($academicYears as $year)
                         <option value="{{ $year->id }}" {{ (old('academic_year_id', $studentRegistration->academic_year_id ?? '') == $year->id) ? 'selected' : '' }}>
@@ -50,21 +55,27 @@
                         </option>
                     @endforeach
                 </select>
+                @error('academic_year_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     For Class <span class="text-red-500">*</span>
                 </label>
-                <select name="class_id" required x-model="selectedClassId" @change="updateFee()"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="class_id" x-model="selectedClassId" @change="updateFee()"
+                        class="w-full px-4 py-2 border @error('class_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Select Class</option>
                     @foreach($classes as $class)
-                        <option value="{{ $class->id }}">
+                        <option value="{{ $class->id }}" {{ (old('class_id', $studentRegistration->class_id ?? '') == $class->id) ? 'selected' : '' }}>
                             {{ $class->name }}
                         </option>
                     @endforeach
                 </select>
+                @error('class_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -73,7 +84,10 @@
                 </label>
                 <input type="number" step="0.01" name="registration_fee" x-ref="registrationFeeInput" readonly
                        value="{{ old('registration_fee', $studentRegistration->registration_fee ?? '') }}" placeholder="Enter Registration Fee"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white bg-gray-50 dark:bg-gray-900 cursor-not-allowed">
+                       class="w-full px-4 py-2 border @error('registration_fee') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white bg-gray-50 dark:bg-gray-900 cursor-not-allowed">
+                @error('registration_fee')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
         </div>
     </div>

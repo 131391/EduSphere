@@ -4,30 +4,6 @@
 
 @section('content')
 <div class="space-y-6" x-data="enquiryManagement()">
-    <!-- Success Message -->
-    @if(session('success'))
-    <div x-data="{ show: true }" x-show="show" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative">
-        <span class="block sm:inline">{{ session('success') }}</span>
-        <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    @endif
-
-    @if($errors->any())
-    <div x-data="{ show: true }" x-show="show" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative">
-        <strong class="font-bold">Whoops! Something went wrong.</strong>
-        <ul class="mt-2 list-disc list-inside">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    @endif
-
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <!-- Total Enquiry -->
@@ -237,12 +213,13 @@
 
     <!-- Add/Edit Enquiry Modal -->
     <x-modal name="enquiry-modal" alpineTitle="editMode ? 'Edit Enquiry' : 'Add New Enquiry'" maxWidth="6xl">
-        <form :action="editMode ? `/school/student-enquiries/${enquiryId}` : '{{ route('school.student-enquiries.store') }}'" 
+        <form @submit.prevent="submitForm" 
+              id="enquiryForm"
               method="POST" 
               enctype="multipart/form-data"
+              novalidate
               class="p-6">
             @csrf
-            <input type="hidden" name="_method" x-bind:value="editMode ? 'PUT' : 'POST'">
             <input type="hidden" name="enquiry_id" x-model="enquiryId">
 
             @include('school.student-enquiries.partials.form')
@@ -254,8 +231,16 @@
                     Cancel
                 </button>
                 <button type="submit"
-                        class="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
-                    <span x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
+                        :disabled="submitting"
+                        class="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span x-show="!submitting" x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
+                    <span x-show="submitting" class="flex items-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                    </span>
                 </button>
             </div>
         </form>
@@ -267,137 +252,176 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('enquiryManagement', () => ({
         editMode: false,
         enquiryId: null,
+        submitting: false,
         
         init() {
-            @if($errors->any())
-                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
-                this.enquiryId = {{ old('enquiry_id', 'null') }};
-                this.$nextTick(() => {
-                    this.$dispatch('open-modal', 'enquiry-modal');
-                });
-            @endif
+            // No longer reopening modal via server-side errors since we use AJAX
         },
 
         closeModal() {
             this.$dispatch('close-modal', 'enquiry-modal');
             this.editMode = false;
             this.enquiryId = null;
+            this.clearErrors();
+            document.getElementById('enquiryForm').reset();
+            // Reset Select2s
+            if (typeof $ !== 'undefined') {
+                $('.select2-hidden-accessible').val('').trigger('change');
+            }
         },
 
         openAddModal() {
             this.editMode = false;
             this.enquiryId = null;
+            this.clearErrors();
+            document.getElementById('enquiryForm').reset();
+            if (typeof $ !== 'undefined') {
+                $('.select2-hidden-accessible').val('').trigger('change');
+            }
             this.$dispatch('open-modal', 'enquiry-modal');
         },
         
         openEditModal(enquiry) {
             this.editMode = true;
             this.enquiryId = enquiry.id;
+            this.clearErrors();
             this.$dispatch('open-modal', 'enquiry-modal');
             
             // Populate form fields
             this.$nextTick(() => {
+                const form = document.getElementById('enquiryForm');
                 Object.keys(enquiry).forEach(key => {
                     let value = enquiry[key];
+                    if (value === null || typeof value === 'object') return;
                     
-                    // Skip null values and nested objects
-                    if (value === null || typeof value === 'object') {
-                        return;
-                    }
-                    
-                    const input = document.querySelector(`[name="${key}"]`);
+                    const input = form.querySelector(`[name="${key}"]`);
                     if (input) {
-                        // Skip file inputs to prevent InvalidStateError
-                        if (input.type === 'file') {
-                            return;
-                        }
-
-                        // Check if it's a Select2 dropdown
+                        if (input.type === 'file') return;
                         if ($(input).hasClass('select2-hidden-accessible')) {
-                            // Use Select2 API to set value
                             $(input).val(value).trigger('change');
-                        } else if (input.tagName === 'SELECT') {
-                            // Regular select
-                            input.value = value;
                         } else if (input.type === 'date' && value) {
-                            // Format date for input (YYYY-MM-DD)
-                            // Handles both "2025-12-25 15:00:00" and "2025-12-25T00:00:00.000000Z"
                             input.value = value.substring(0, 10);
+                        } else if (input.type === 'checkbox') {
+                            input.checked = !!value;
                         } else {
-                            // Regular input/textarea
                             input.value = value;
                         }
                     }
                 });
                 
-                // Handle nested objects manually
-                if (enquiry.class_id) {
-                    const classInput = document.querySelector('[name="class_id"]');
-                    if (classInput) {
-                        if ($(classInput).hasClass('select2-hidden-accessible')) {
-                            $(classInput).val(enquiry.class_id).trigger('change');
-                        } else {
-                            classInput.value = enquiry.class_id;
-                        }
-                    }
-                }
-                
-                if (enquiry.academic_year_id) {
-                    const yearInput = document.querySelector('[name="academic_year_id"]');
-                    if (yearInput) {
-                        if ($(yearInput).hasClass('select2-hidden-accessible')) {
-                            $(yearInput).val(enquiry.academic_year_id).trigger('change');
-                        } else {
-                            yearInput.value = enquiry.academic_year_id;
-                        }
-                    }
-                }
-                
-                // Handle country_id dropdown
-                if (enquiry.country_id) {
-                    const countryInput = document.querySelector('[name="country_id"]');
-                    if (countryInput) {
-                        if ($(countryInput).hasClass('select2-hidden-accessible')) {
-                            $(countryInput).val(enquiry.country_id).trigger('change');
-                        } else {
-                            countryInput.value = enquiry.country_id;
-                        }
-                    }
-                }
-                
-                // Handle photo previews for existing images
-                const photoFields = [
-                    { field: 'father_photo', previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeBtnId: 'father-photo-remove' },
-                    { field: 'mother_photo', previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeBtnId: 'mother-photo-remove' },
-                    { field: 'student_photo', previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeBtnId: 'student-photo-remove' }
-                ];
-                
-                photoFields.forEach(photo => {
-                    if (enquiry[photo.field]) {
-                        const preview = document.getElementById(photo.previewId);
-                        const icon = document.getElementById(photo.iconId);
-                        const removeBtn = document.getElementById(photo.removeBtnId);
-                        
-                        if (preview) {
-                            // Set the image source to the stored photo path
-                            preview.src = `/storage/${enquiry[photo.field]}`;
-                            preview.classList.remove('hidden');
-                        }
-                        if (icon) {
-                            icon.classList.add('hidden');
-                        }
-                        if (removeBtn) {
-                            removeBtn.classList.remove('hidden');
-                        }
+                // Special handling for photos
+                const photoFields = ['father_photo', 'mother_photo', 'student_photo'];
+                photoFields.forEach(field => {
+                    if (enquiry[field]) {
+                        const preview = document.getElementById(`${field.replace('_', '-')}-preview`);
+                        const icon = document.getElementById(`${field.replace('_', '-')}-icon`);
+                        const removeBtn = document.getElementById(`${field.replace('_', '-')}-remove`);
+                        if (preview) { preview.src = `/storage/${enquiry[field]}`; preview.classList.remove('hidden'); }
+                        if (icon) icon.classList.add('hidden');
+                        if (removeBtn) removeBtn.classList.remove('hidden');
                     }
                 });
             });
         },
-        
-        closeModal() {
-            this.showModal = false;
-            // Unlock body scroll
-            document.body.style.overflow = '';
+
+        async submitForm() {
+            this.submitting = true;
+            this.clearErrors();
+
+            const form = document.getElementById('enquiryForm');
+            const formData = new FormData(form);
+            
+            // Add _method for PUT requests
+            if (this.editMode) {
+                formData.append('_method', 'PUT');
+            }
+
+            const url = this.editMode 
+                ? `/school/student-enquiries/${this.enquiryId}`
+                : '{{ route('school.student-enquiries.store') }}';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.status === 422) {
+                    this.displayErrors(result.errors);
+                } else if (response.ok) {
+                    // Success!
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Enquiry saved successfully'
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message || 'Something went wrong');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                if (window.Toast) {
+                    window.Toast.fire({
+                        icon: 'error',
+                        title: error.message || 'Could not save enquiry'
+                    });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        displayErrors(errors) {
+            Object.keys(errors).forEach(field => {
+                const input = document.querySelector(`[name="${field}"]`);
+                if (input) {
+                    input.classList.add('border-red-500');
+                    input.classList.remove('border-gray-300');
+                    
+                    // Handle Select2 containers
+                    if ($(input).hasClass('select2-hidden-accessible')) {
+                        const select2Container = $(input).next('.select2-container').find('.select2-selection');
+                        select2Container.addClass('!border-red-500');
+                    }
+                    
+                    // Create or find error message element
+                    let errorMsg = input.closest('div').querySelector('.error-message');
+                    if (!errorMsg) {
+                        errorMsg = document.createElement('p');
+                        errorMsg.className = 'error-message text-red-500 text-xs mt-1';
+                        input.closest('div').appendChild(errorMsg);
+                    }
+                    errorMsg.innerText = errors[field][0];
+                }
+            });
+            
+            // Focus the first error field
+            const firstErrorField = document.querySelector('.border-red-500');
+            if (firstErrorField) {
+                firstErrorField.focus();
+                firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        },
+
+        clearErrors() {
+            document.querySelectorAll('.border-red-500').forEach(el => {
+                el.classList.remove('border-red-500');
+                el.classList.add('border-gray-300');
+            });
+            // Clear Select2 error borders
+            if (typeof $ !== 'undefined') {
+                $('.select2-selection').removeClass('!border-red-500');
+            }
+            document.querySelectorAll('.error-message').forEach(el => el.remove());
         }
     }));
 });

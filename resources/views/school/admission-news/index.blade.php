@@ -4,11 +4,6 @@
 
 @section('content')
 <div class="space-y-6" x-data="admissionNewsManagement">
-    @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative">
-        <span class="block sm:inline">{{ session('success') }}</span>
-    </div>
-    @endif
 
     <div class="flex items-center justify-between">
         <div>

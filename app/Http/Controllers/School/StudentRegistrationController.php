@@ -109,6 +109,11 @@ class StudentRegistrationController extends TenantController
 
     public function store(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('StudentRegistrationController@store reached', [
+            'request' => $request->all(),
+            'session' => session()->all()
+        ]);
+        
         $school = Auth::user()->school;
 
         $validated = $request->validate([
@@ -139,9 +144,9 @@ class StudentRegistrationController extends TenantController
             
             // Permanent Address
             'permanent_address' => 'required|string',
-            'permanent_country_id' => 'required|exists:countries,id',
-            'permanent_state_id' => 'required|exists:states,id',
-            'permanent_city_id' => 'required|exists:cities,id',
+            'permanent_country_id' => 'required',
+            'permanent_state_id' => 'required',
+            'permanent_city_id' => 'required',
             'permanent_pin' => 'required|string|max:20',
             'correspondence_address' => 'nullable|string',
             'correspondence_country_id' => 'nullable|exists:countries,id',
@@ -156,6 +161,17 @@ class StudentRegistrationController extends TenantController
             'mother_signature' => 'nullable|image|max:2048',
             'student_signature' => 'nullable|image|max:2048',
         ]);
+
+        // Pre-check Registration Fee setup if fee is provided
+        if ($request->registration_fee > 0) {
+            $regFeeName = FeeName::where('school_id', $school->id)
+                ->where('name', 'Registration Fee')
+                ->first();
+            
+            if (!$regFeeName) {
+                return back()->withErrors(['registration_fee' => 'Financial system error: "Registration Fee" type not found in school settings. Please contact administrator.'])->withInput();
+            }
+        }
 
         DB::beginTransaction();
         try {
@@ -172,42 +188,47 @@ class StudentRegistrationController extends TenantController
 
             $registration = StudentRegistration::create($data);
 
+            // Update Enquiry Status if linked
+            if ($request->filled('enquiry_id')) {
+                $enquiry = StudentEnquiry::where('school_id', $school->id)
+                    ->where('id', $request->enquiry_id)
+                    ->first();
+                if ($enquiry) {
+                    $enquiry->update(['form_status' => \App\Enums\EnquiryStatus::Completed]);
+                }
+            }
+
             // --- FINANCIAL INTEGRATION ---
             if ($request->registration_fee > 0) {
-                // Find 'Registration Fee' name
-                $regFeeName = FeeName::where('school_id', $school->id)
-                    ->where('name', 'Registration Fee')
-                    ->first();
+                // $regFeeName already found above
+                $fee = Fee::create([
+                    'school_id' => $school->id,
+                    'registration_id' => $registration->id,
+                    'academic_year_id' => $registration->academic_year_id,
+                    'fee_type_id' => $regFeeName->fee_type_id,
+                    'fee_name_id' => $regFeeName->id,
+                    'class_id' => $registration->class_id,
+                    'bill_no' => 'REG-' . time(),
+                    'fee_period' => 'One-time',
+                    'payable_amount' => $request->registration_fee,
+                    'paid_amount' => $request->registration_fee,
+                    'due_amount' => 0,
+                    'due_date' => now(),
+                    'payment_date' => now(),
+                    'payment_status' => \App\Enums\FeeStatus::Paid,
+                    'payment_mode' => 'Cash',
+                    'remarks' => 'Registration Fee for No: ' . $registration->registration_no
+                ]);
 
-                if ($regFeeName) {
-                    $fee = Fee::create([
-                        'school_id' => $school->id,
-                        'academic_year_id' => $registration->academic_year_id,
-                        'fee_type_id' => $regFeeName->fee_type_id,
-                        'fee_name_id' => $regFeeName->id,
-                        'class_id' => $registration->class_id,
-                        'bill_no' => 'REG-' . time(),
-                        'fee_period' => 'One-time',
-                        'payable_amount' => $request->registration_fee,
-                        'paid_amount' => $request->registration_fee,
-                        'due_amount' => 0,
-                        'due_date' => now(),
-                        'payment_date' => now(),
-                        'payment_status' => \App\Enums\FeeStatus::Paid,
-                        'payment_mode' => 'Cash',
-                        'remarks' => 'Registration Fee for No: ' . $registration->registration_no
-                    ]);
-
-                    FeePayment::create([
-                        'school_id' => $school->id,
-                        'fee_id' => $fee->id,
-                        'academic_year_id' => $registration->academic_year_id,
-                        'amount' => $request->registration_fee,
-                        'payment_date' => now(),
-                        'receipt_no' => 'R-' . time(),
-                        'created_by' => Auth::id(),
-                    ]);
-                }
+                FeePayment::create([
+                    'school_id' => $school->id,
+                    'fee_id' => $fee->id,
+                    'academic_year_id' => $registration->academic_year_id,
+                    'amount' => $request->registration_fee,
+                    'payment_date' => now(),
+                    'receipt_no' => 'R-' . time(),
+                    'created_by' => Auth::id(),
+                ]);
             }
 
             DB::commit();
@@ -215,7 +236,14 @@ class StudentRegistrationController extends TenantController
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error("Registration Error: " . $e->getMessage());
-            return back()->with('error', 'Error during registration: ' . $e->getMessage())->withInput();
+            
+            // Try to provide a more helpful field-level error if it's a common issue
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, 'Registration Fee')) {
+                return back()->withErrors(['registration_fee' => 'Error calculating registration fee: ' . $errorMessage])->withInput();
+            }
+            
+            return back()->with('error', 'Critical Error: ' . $errorMessage)->withInput();
         }
     }
 

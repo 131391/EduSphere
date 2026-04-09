@@ -10,30 +10,41 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mother Name (If Staff)
                 </label>
-                <select name="mother_staff_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="mother_staff_id" 
+                        class="w-full px-4 py-2 border @error('mother_staff_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Choose Mother Name (If Staff)</option>
                     {{-- Populate from staff table if needed --}}
                 </select>
+                @error('mother_staff_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Initial <span class="text-red-500">*</span>
                 </label>
-                <select name="mother_name_prefix" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="mother_name_prefix"  
+                        class="w-full px-4 py-2 border @error('mother_name_prefix') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="Mrs" {{ (old('mother_name_prefix', $studentRegistration->mother_name_prefix ?? '') == 'Mrs') ? 'selected' : '' }}>Mrs</option>
                     <option value="Dr" {{ (old('mother_name_prefix', $studentRegistration->mother_name_prefix ?? '') == 'Dr') ? 'selected' : '' }}>Dr</option>
                     <option value="Ms" {{ (old('mother_name_prefix', $studentRegistration->mother_name_prefix ?? '') == 'Ms') ? 'selected' : '' }}>Ms</option>
                     <option value="Late" {{ (old('mother_name_prefix', $studentRegistration->mother_name_prefix ?? '') == 'Late') ? 'selected' : '' }}>Late</option>
                 </select>
+                @error('mother_name_prefix')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     First Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="mother_first_name" value="{{ old('mother_first_name', $studentRegistration->mother_first_name ?? '') }}" required placeholder="Enter First Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="mother_first_name" value="{{ old('mother_first_name', $studentRegistration->mother_first_name ?? '') }}"  placeholder="Enter First Name"
+                       class="w-full px-4 py-2 border @error('mother_first_name') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_first_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -41,15 +52,21 @@
                     Middle Name
                 </label>
                 <input type="text" name="mother_middle_name" value="{{ old('mother_middle_name', $studentRegistration->mother_middle_name ?? '') }}" placeholder="Enter Middle Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_middle_name') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_middle_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Last Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="mother_last_name" value="{{ old('mother_last_name', $studentRegistration->mother_last_name ?? '') }}" required placeholder="Enter Last Name"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="text" name="mother_last_name" value="{{ old('mother_last_name', $studentRegistration->mother_last_name ?? '') }}"  placeholder="Enter Last Name"
+                       class="w-full px-4 py-2 border @error('mother_last_name') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_last_name')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -57,15 +74,21 @@
                     Email Id
                 </label>
                 <input type="email" name="mother_email" value="{{ old('mother_email', $studentRegistration->mother_email ?? '') }}" placeholder="Enter Email Id"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_email') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_email')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mobile Number <span class="text-red-500">*</span>
                 </label>
-                <input type="tel" name="mother_mobile_no" value="{{ old('mother_mobile_no', $studentRegistration->mother_mobile_no ?? '') }}" required placeholder="Enter Mobile Number" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <input type="tel" name="mother_mobile_no" value="{{ old('mother_mobile_no', $studentRegistration->mother_mobile_no ?? '') }}" placeholder="Enter Mobile Number" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                       class="w-full px-4 py-2 border @error('mother_mobile_no') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_mobile_no')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -73,7 +96,10 @@
                     Landline Number
                 </label>
                 <input type="text" name="mother_landline_no" value="{{ old('mother_landline_no', $studentRegistration->mother_landline_no ?? '') }}" placeholder="Enter Landline Number"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_landline_no') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_landline_no')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -81,7 +107,10 @@
                     Occupation/Profession
                 </label>
                 <input type="text" name="mother_occupation" value="{{ old('mother_occupation', $studentRegistration->mother_occupation ?? '') }}" placeholder="Enter Occupation/Profession"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_occupation') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_occupation')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -89,7 +118,10 @@
                     Organization
                 </label>
                 <input type="text" name="mother_organization" value="{{ old('mother_organization', $studentRegistration->mother_organization ?? '') }}" placeholder="Enter Organization"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_organization') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_organization')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -97,19 +129,26 @@
                     Office Address
                 </label>
                 <input type="text" name="mother_office_address" value="{{ old('mother_office_address', $studentRegistration->mother_office_address ?? '') }}" placeholder="Enter Office Address"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_office_address') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_office_address')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Qualification
                 </label>
-                <select name="mother_qualification" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="mother_qualification" 
+                        class="w-full px-4 py-2 border @error('mother_qualification') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     <option value="">Choose Qualification</option>
                     @foreach($qualifications as $qual)
                         <option value="{{ $qual->name }}" {{ (old('mother_qualification', $studentRegistration->mother_qualification ?? '') == $qual->name) ? 'selected' : '' }}>{{ $qual->name }}</option>
                     @endforeach
                 </select>
+                @error('mother_qualification')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -117,7 +156,10 @@
                     Department
                 </label>
                 <input type="text" name="mother_department" value="{{ old('mother_department', $studentRegistration->mother_department ?? '') }}" placeholder="Enter Department"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_department') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_department')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -125,7 +167,10 @@
                     Designation
                 </label>
                 <input type="text" name="mother_designation" value="{{ old('mother_designation', $studentRegistration->mother_designation ?? '') }}" placeholder="Enter Designation"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_designation') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_designation')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -133,7 +178,10 @@
                     Mother Aadhar No
                 </label>
                 <input type="text" name="mother_aadhar_no" value="{{ old('mother_aadhar_no', $studentRegistration->mother_aadhar_no ?? '') }}" placeholder="Enter Mother Aadhar No"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_aadhar_no') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_aadhar_no')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -141,7 +189,10 @@
                     Annual Income
                 </label>
                 <input type="number" step="0.01" name="mother_annual_income" value="{{ old('mother_annual_income', $studentRegistration->mother_annual_income ?? '') }}" placeholder="Enter Annual Income"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_annual_income') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_annual_income')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -149,7 +200,10 @@
                     Mother Age
                 </label>
                 <input type="number" step="0.01" name="mother_age" value="{{ old('mother_age', $studentRegistration->mother_age ?? '') }}" placeholder="Enter Mother Age"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border @error('mother_age') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('mother_age')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
         </div>
     </div>

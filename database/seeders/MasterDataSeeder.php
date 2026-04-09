@@ -20,7 +20,11 @@ class MasterDataSeeder extends Seeder
      */
     public function run(\App\Models\School $school = null): void
     {
-        if (!$school) {
+        if (!$school || !$school->id) {
+            $schools = \App\Models\School::all();
+            foreach ($schools as $s) {
+                $this->run($s);
+            }
             return;
         }
 
@@ -82,6 +86,18 @@ class MasterDataSeeder extends Seeder
             PaymentMethod::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
         }
 
+        // Fee Types
+        $feeTypes = [
+            'Monthly', 'Qtrly', 'Haf-Yearly', 'Yearly'
+        ];
+        $monthlyType = null;
+        foreach ($feeTypes as $name) {
+            $type = FeeType::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
+            if ($name === 'Monthly') {
+                $monthlyType = $type;
+            }
+        }
+
         // Fee Names
         $feeNames = [
             'April', 'MAY 2', 'JUNE 3', 'JULY 4', 'AUGUST 5', 'SEPTEMBER 6', 
@@ -89,15 +105,10 @@ class MasterDataSeeder extends Seeder
             'FEBRUARY 11', 'MARCH 12', 'EXAM FEE'
         ];
         foreach ($feeNames as $name) {
-            FeeName::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
-        }
-
-        // Fee Types
-        $feeTypes = [
-            'Monthly', 'Qtrly', 'Haf-Yearly', 'Yearly'
-        ];
-        foreach ($feeTypes as $name) {
-            FeeType::firstOrCreate(['name' => $name, 'school_id' => $schoolId]);
+            FeeName::firstOrCreate(
+                ['name' => $name, 'school_id' => $schoolId],
+                ['fee_type_id' => $monthlyType ? $monthlyType->id : 1]
+            );
         }
 
         // Classes

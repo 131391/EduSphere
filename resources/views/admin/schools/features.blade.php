@@ -14,11 +14,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded mb-6">
-            <p class="text-green-700">{{ session('success') }}</p>
-        </div>
-    @endif
 
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <form action="{{ route('admin.schools.update-features', $school->id) }}" method="POST">

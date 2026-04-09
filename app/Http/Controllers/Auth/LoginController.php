@@ -59,6 +59,24 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
 
+            // Subdomain cross-login check
+            $host = $request->getHost();
+            $subdomain = explode('.', $host)[0];
+            
+            // Only enforce school isolation on actual school subdomains
+            if (!in_array($subdomain, ['www', 'admin', 'api'])) {
+                $school = \App\Models\School::where('subdomain', $subdomain)->first();
+                if ($school && !$user->canAccessSchool($school->id)) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    throw ValidationException::withMessages([
+                        'email' => ['These credentials do not match our records for this school.'],
+                    ]);
+                }
+            }
+
             // Check user status — reject inactive, suspended, and pending users
             if (!$user->isActive()) {
                 Auth::logout();

@@ -3,7 +3,7 @@
 @section('title', 'Apply Fee Waiver')
 
 @section('content')
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="w-full space-y-6">
     <div class="flex items-center space-x-4">
         <a href="{{ route('school.waivers.index') }}" class="p-2 bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-blue-600 hover:border-blue-200 transition shadow-sm">
             <i class="fas fa-chevron-left"></i>

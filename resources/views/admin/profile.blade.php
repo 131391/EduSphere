@@ -11,11 +11,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded mb-6">
-            <p class="text-green-700">{{ session('success') }}</p>
-        </div>
-    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Profile Overview -->

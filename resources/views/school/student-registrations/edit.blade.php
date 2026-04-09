@@ -14,8 +14,12 @@
     </div>
 
     @if ($errors->any())
-        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <ul class="list-disc list-inside text-sm text-red-600 dark:text-red-400">
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shadow-sm">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mr-3 text-lg"></i>
+                <h3 class="text-base font-bold text-red-800 dark:text-red-300">Update Failed: Please correct the following errors</h3>
+            </div>
+            <ul class="list-disc list-inside text-sm text-red-600 dark:text-red-400 pl-8 space-y-1">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -23,7 +27,22 @@
         </div>
     @endif
 
-    <form action="{{ route('school.student-registrations.update', $studentRegistration->id) }}" method="POST" enctype="multipart/form-data">
+    @if (session('error'))
+        <div class="mb-6 p-4 bg-red-100 dark:bg-red-900/40 border-l-4 border-red-500 rounded-r-lg shadow-sm">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-times-circle text-red-500 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-red-800 dark:text-red-200">
+                        {{ session('error') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <form action="{{ route('school.student-registrations.update', $studentRegistration->id) }}" method="POST" enctype="multipart/form-data" novalidate>
         @csrf
         @method('PUT')
         

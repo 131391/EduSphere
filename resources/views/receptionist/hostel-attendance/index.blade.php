@@ -5,14 +5,6 @@
 @section('content')
 <div class="space-y-6" x-data="hostelAttendanceManagement()" x-init="init()">
     <!-- Success Message -->
-    @if(session('success'))
-    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg relative">
-        <span class="block sm:inline">{{ session('success') }}</span>
-        <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-    @endif
 
     {{-- Page Header --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">

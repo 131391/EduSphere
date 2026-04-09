@@ -23,6 +23,7 @@ class Fee extends Model
     protected $fillable = [
         'school_id',
         'student_id',
+        'registration_id',
         'academic_year_id',
         'fee_type_id',
         'fee_name_id',
@@ -71,6 +72,11 @@ class Fee extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function registration()
+    {
+        return $this->belongsTo(StudentRegistration::class, 'registration_id');
     }
 
     public function academicYear()

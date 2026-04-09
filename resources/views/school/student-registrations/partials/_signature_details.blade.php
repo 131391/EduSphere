@@ -31,6 +31,9 @@
                     <input type="file" name="father_signature" accept="image/*" 
                            onchange="previewImage(event, 'father-signature-preview', 'father-signature-icon', 'father-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                    @error('father_signature')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
@@ -56,6 +59,9 @@
                     <input type="file" name="mother_signature" accept="image/*" 
                            onchange="previewImage(event, 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                    @error('mother_signature')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
@@ -81,6 +87,9 @@
                     <input type="file" name="student_signature" accept="image/*" 
                            onchange="previewImage(event, 'student-signature-preview', 'student-signature-icon', 'student-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                    @error('student_signature')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
         </div>

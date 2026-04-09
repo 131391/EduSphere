@@ -16,5 +16,6 @@
     @yield('content')
 
     @stack('scripts')
+    <x-toast />
 </body>
 </html>

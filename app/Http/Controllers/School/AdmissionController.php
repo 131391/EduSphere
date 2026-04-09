@@ -123,7 +123,30 @@ class AdmissionController extends TenantController
         try {
             $student = new Student();
             $student->school_id = $school->id;
-            $student->user_id = Auth::id(); // Ideally create a new user for student
+            
+            // Generate Admission No early if not provided to use for User generation
+            $admissionNo = $request->admission_no;
+            if (!$admissionNo) {
+                $lastStudent = Student::where('school_id', $school->id)->latest()->first();
+                $admissionNo = $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
+            }
+            $student->admission_no = $admissionNo;
+
+            // Create Student User Account
+            $studentRole = \App\Models\Role::where('slug', \App\Models\Role::STUDENT)->first();
+            $userEmail = $request->email ?: 'student.' . $admissionNo . '@edusphere.local';
+            
+            $user = \App\Models\User::create([
+                'name' => trim($request->first_name . ' ' . $request->last_name),
+                'email' => $userEmail,
+                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'role_id' => $studentRole ? $studentRole->id : null,
+                'school_id' => $school->id,
+                'phone' => $request->phone,
+                'status' => \App\Enums\UserStatus::Active,
+            ]);
+            
+            $student->user_id = $user->id;
             
             // Exclude non-model fields
             $excludedFields = [
@@ -141,11 +164,7 @@ class AdmissionController extends TenantController
             $student->father_photo = $this->storeTenantFile($request->file('father_photo'), "parents/{$school->id}/photos", $request->father_photo_path);
             $student->mother_photo = $this->storeTenantFile($request->file('mother_photo'), "parents/{$school->id}/photos", $request->mother_photo_path);
             
-            // Generate Admission No if not provided
-            if (!$request->admission_no) {
-                $lastStudent = Student::where('school_id', $school->id)->latest()->first();
-                $student->admission_no = $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
-            }
+            // Admission No is already generated above
 
             // Concatenate Parent Names if necessary (handled by validation mapping usually but ensuring here)
             if (!$student->father_name) {
@@ -219,13 +238,26 @@ class AdmissionController extends TenantController
                 ]);
             }
 
-            // If linked to a registration, update its status
+            // If linked to a registration, update its status and the underlying Enquiry
             if ($request->registration_no) {
                 $registration = StudentRegistration::where('registration_no', $request->registration_no)
                     ->where('school_id', $school->id)
                     ->first();
                 if ($registration) {
                     $registration->update(['admission_status' => AdmissionStatus::Admitted]);
+                    
+                    // Transition Registration Fees to this student's ledger
+                    Fee::where('school_id', $school->id)
+                        ->where('registration_id', $registration->id)
+                        ->whereNull('student_id')
+                        ->update(['student_id' => $student->id]);
+
+                    if ($registration->enquiry_id) {
+                        $enquiry = \App\Models\StudentEnquiry::find($registration->enquiry_id);
+                        if ($enquiry) {
+                            $enquiry->update(['form_status' => \App\Enums\EnquiryStatus::Admitted]);
+                        }
+                    }
                 }
             }
 

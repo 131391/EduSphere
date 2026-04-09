@@ -10,12 +10,6 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure platform-wide parameters and global defaults</p>
     </div>
 
-    @if(session('success'))
-        <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl flex items-center text-green-700 dark:text-green-300">
-            <i class="fas fa-check-circle mr-3"></i>
-            <span class="text-sm font-bold">{{ session('success') }}</span>
-        </div>
-    @endif
 
     <form action="{{ route('admin.settings.update-system') }}" method="POST">
         @csrf

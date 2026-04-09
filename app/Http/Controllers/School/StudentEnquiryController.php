@@ -69,6 +69,13 @@ class StudentEnquiryController extends TenantController
 
         StudentEnquiry::create($validated);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Student enquiry added successfully.'
+            ]);
+        }
+
         return redirect()->route('school.student-enquiries.index')
             ->with('success', 'Student enquiry added successfully.');
     }
@@ -83,6 +90,13 @@ class StudentEnquiryController extends TenantController
         $validated = $this->handleFileUploads($request, $validated, $studentEnquiry);
 
         $studentEnquiry->update($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Student enquiry updated successfully.'
+            ]);
+        }
 
         return redirect()->route('school.student-enquiries.index')
             ->with('success', 'Student enquiry updated successfully.');
@@ -109,11 +123,11 @@ class StudentEnquiryController extends TenantController
         return $request->validate([
             // Enquiry Form
             'academic_year_id' => [
-                'nullable',
+                'required',
                 \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())
             ],
             'class_id' => [
-                'nullable',
+                'required',
                 \Illuminate\Validation\Rule::exists('classes', 'id')->where('school_id', $this->getSchoolId())
             ],
 
