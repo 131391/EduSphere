@@ -50,14 +50,26 @@ class FeeController extends TenantController
         $this->ensureSchoolActive();
 
         $validated = $request->validate([
-            'class_id' => 'required|exists:classes,id',
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'fee_type_id' => 'required|exists:fee_types,id',
+            'class_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('classes', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'academic_year_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'fee_type_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('fee_types', 'id')->where('school_id', $this->getSchoolId())
+            ],
             'fee_name_ids' => 'required|array',
-            'fee_name_ids.*' => 'exists:fee_names,id',
-            'fee_period' => 'required|string|max:100', // e.g., "April 2025"
+            'fee_name_ids.*' => [
+                \Illuminate\Validation\Rule::exists('fee_names', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'fee_period' => 'required|string|max:100',
             'due_date' => 'required|date|after_or_equal:today',
         ]);
+
 
         $result = $this->feeService->generateClassFees($this->school, $validated);
 

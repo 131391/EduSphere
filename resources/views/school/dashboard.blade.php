@@ -3,40 +3,7 @@
 @section('title', 'School Dashboard')
 
 @section('content')
-@php
-    $school = app('currentSchool') ?? Auth::user()->school ?? \App\Models\School::where('status', 'active')->first();
-    if (!$school) {
-        abort(404, 'School not found');
-    }
-    $academicYear = \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first();
-    
-    // Calculate stats
-    $totalCollection = \App\Models\Fee::where('school_id', $school->id)
-        ->where('payment_status', 'paid')
-        ->sum('paid_amount');
-    
-    $todayCollection = \App\Models\Fee::where('school_id', $school->id)
-        ->where('payment_status', 'paid')
-        ->whereDate('payment_date', today())
-        ->sum('paid_amount');
-    
-    $totalAdmission = \App\Models\Student::where('school_id', $school->id)->count();
-    $todayAdmission = \App\Models\Student::where('school_id', $school->id)
-        ->whereDate('admission_date', today())
-        ->count();
-    
-    $totalEnquiry = \App\Models\Registration::where('school_id', $school->id)->count();
-    $todayEnquiry = \App\Models\Registration::where('school_id', $school->id)
-        ->whereDate('registration_date', today())
-        ->count();
-    
-    $runningClasses = \App\Models\ClassModel::where('school_id', $school->id)
-        ->where('is_available', true)
-        ->count();
-    
-    $totalSections = \App\Models\Section::where('school_id', $school->id)->count();
-@endphp
-
+@section('content')
 <!-- Stats Cards -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
     <!-- Total Collection -->
@@ -116,7 +83,7 @@
                     <svg class="transform -rotate-90" viewBox="0 0 100 100">
                         <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" stroke-width="8"/>
                         <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="8" 
-                                stroke-dasharray="{{ ($totalCollection / ($totalCollection + 100000)) * 251.2 }} 251.2"/>
+                                stroke-dasharray="{{ ($totalCollection / ($totalCollection + 100000 ?: 1)) * 251.2 }} 251.2"/>
                     </svg>
                 </div>
                 <div class="mt-4 space-y-2">
@@ -172,7 +139,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse(\App\Models\Fee::where('school_id', $school->id)->latest()->take(5)->get() as $fee)
+                        @forelse($recentFees as $fee)
                         <tr>
                             <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 whitespace-nowrap">{{ $fee->bill_no }}</td>
                             <td class="px-3 sm:px-4 py-3 text-xs sm:text-sm text-gray-900 whitespace-nowrap">{{ $fee->student->admission_no ?? 'N/A' }}</td>

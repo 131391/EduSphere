@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,7 +11,7 @@ use App\Enums\AttendanceStatus;
 
 class Attendance extends Model
 {
-    use HasFactory;
+    use HasFactory, Tenantable;
 
     protected $table = 'attendance';
 

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\School;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use Illuminate\Http\Request;
 
-class UserFavoriteController extends Controller
+class UserFavoriteController extends TenantController
 {
     public function index()
     {

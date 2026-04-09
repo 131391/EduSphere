@@ -5,12 +5,25 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 use App\Models\Role;
+use App\Models\User;
 
 class LoginController extends Controller
 {
+    /**
+     * Maximum login attempts before lockout.
+     */
+    protected int $maxAttempts = 5;
+
+    /**
+     * Lockout duration in seconds.
+     */
+    protected int $decaySeconds = 60;
+
     /**
      * Show the login form.
      */
@@ -29,13 +42,40 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
+        // Rate limiting: prevent brute-force attacks
+        $throttleKey = Str::transliterate(Str::lower($request->input('email')) . '|' . $request->ip());
+
+        if (RateLimiter::tooManyAttempts($throttleKey, $this->maxAttempts)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+
+            throw ValidationException::withMessages([
+                'email' => ["Too many login attempts. Please try again in {$seconds} seconds."],
+            ]);
+        }
+
         $credentials = $request->only('email', 'password');
         $remember = $request->filled('remember');
 
         if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-
             $user = Auth::user();
+
+            // Check user status — reject inactive, suspended, and pending users
+            if (!$user->isActive()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                $statusLabel = $user->status_label ?? 'inactive';
+
+                throw ValidationException::withMessages([
+                    'email' => ["Your account is {$statusLabel}. Please contact the administrator."],
+                ]);
+            }
+
+            // Clear rate limiter on successful login
+            RateLimiter::clear($throttleKey);
+
+            $request->session()->regenerate();
 
             // Update last login (use try-catch to avoid errors if update fails)
             try {
@@ -51,6 +91,9 @@ class LoginController extends Controller
             // Redirect based on role
             return $this->redirectByRole($user);
         }
+
+        // Increment rate limiter on failed attempt
+        RateLimiter::hit($throttleKey, $this->decaySeconds);
 
         throw ValidationException::withMessages([
             'email' => ['The provided credentials do not match our records.'],

@@ -17,28 +17,29 @@ use App\Http\Controllers\Api\FeeController;
 |
 */
 
-// Public API routes
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+// Public API routes - DISABLED until properly implemented
+// Route::post('/login', [AuthController::class, 'login']);
+// Route::post('/register', [AuthController::class, 'register']);
 
-// Protected API routes
-Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+// Protected API routes - DISABLED until properly implemented
+// Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
+//     Route::get('/user', function (Request $request) {
+//         return $request->user();
+//     });
+// 
+//     // Student API
+//     Route::prefix('students')->group(function () {
+//         Route::get('/', [StudentController::class, 'index']);
+//         Route::get('/{student}', [StudentController::class, 'show']);
+//     });
+// 
+//     // Fee API
+//     Route::prefix('fees')->group(function () {
+//         Route::get('/', [FeeController::class, 'index']);
+//         Route::get('/{fee}', [FeeController::class, 'show']);
+//     });
+// 
+//     // Other API routes...
+// });
 
-    // Student API
-    Route::prefix('students')->group(function () {
-        Route::get('/', [StudentController::class, 'index']);
-        Route::get('/{student}', [StudentController::class, 'show']);
-    });
-
-    // Fee API
-    Route::prefix('fees')->group(function () {
-        Route::get('/', [FeeController::class, 'index']);
-        Route::get('/{fee}', [FeeController::class, 'show']);
-    });
-
-    // Other API routes...
-});
 

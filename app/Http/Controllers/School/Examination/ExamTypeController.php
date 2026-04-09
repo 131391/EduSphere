@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\School\Examination;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\ExamType;
 use Illuminate\Http\Request;
 
-class ExamTypeController extends Controller
+class ExamTypeController extends TenantController
 {
     public function index()
     {
@@ -36,7 +36,7 @@ class ExamTypeController extends Controller
 
     public function update(Request $request, ExamType $examType)
     {
-        $this->authorizeAccess($examType);
+        $this->authorizeTenant($examType);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -51,19 +51,12 @@ class ExamTypeController extends Controller
 
     public function destroy(ExamType $examType)
     {
-        $this->authorizeAccess($examType);
+        $this->authorizeTenant($examType);
         
         // Check if exam type is used in any exams (to be implemented later when Exam model is ready)
         // For now, just delete
         $examType->delete();
 
         return redirect()->route('school.examination.exam-types.index')->with('success', 'Exam type deleted successfully.');
-    }
-
-    protected function authorizeAccess(ExamType $examType)
-    {
-        if ($examType->school_id !== auth()->user()->school_id) {
-            abort(403);
-        }
     }
 }

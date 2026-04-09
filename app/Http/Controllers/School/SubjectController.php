@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\School;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 
-class SubjectController extends Controller
+class SubjectController extends TenantController
 {
     public function index()
     {
@@ -41,7 +41,7 @@ class SubjectController extends Controller
 
     public function update(Request $request, Subject $subject)
     {
-        $this->authorizeAccess($subject);
+        $this->authorizeTenant($subject);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -60,7 +60,7 @@ class SubjectController extends Controller
 
     public function destroy(Subject $subject)
     {
-        $this->authorizeAccess($subject);
+        $this->authorizeTenant($subject);
         
         // Check if subject is assigned to any classes
         if ($subject->classes()->exists()) {
@@ -70,12 +70,5 @@ class SubjectController extends Controller
         $subject->delete();
 
         return redirect()->route('school.subjects.index')->with('success', 'Subject deleted successfully.');
-    }
-
-    protected function authorizeAccess(Subject $subject)
-    {
-        if ($subject->school_id !== auth()->user()->school_id) {
-            abort(403);
-        }
     }
 }

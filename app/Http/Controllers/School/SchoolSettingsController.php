@@ -28,15 +28,15 @@ class SchoolSettingsController extends TenantController
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
+            'city_id' => 'nullable|exists:cities,id',
+            'state_id' => 'nullable|exists:states,id',
+            'country_id' => 'nullable|exists:countries,id',
             'pincode' => 'nullable|string|max:20',
             'website' => 'nullable|url|max:255',
         ]);
 
         $this->getSchool()->update($request->only([
-            'name', 'email', 'phone', 'address', 'city', 'state', 'country', 'pincode', 'website'
+            'name', 'email', 'phone', 'address', 'city_id', 'state_id', 'country_id', 'pincode', 'website'
         ]));
 
         return back()->with('success', 'Basic information updated successfully.');
@@ -67,6 +67,33 @@ class SchoolSettingsController extends TenantController
         }
 
         return back()->with('success', 'Logo updated successfully.');
+    }
+
+    public function siteIcon()
+    {
+        $school = $this->getSchool();
+        return view('school.settings.site-icon', compact('school'));
+    }
+
+    public function updateSiteIcon(Request $request)
+    {
+        $request->validate([
+            'site_icon' => 'required|image|mimes:png,ico,jpg|max:512',
+        ]);
+
+        $school = $this->getSchool();
+
+        if ($request->hasFile('site_icon')) {
+            // Delete old icon if exists
+            if ($school->site_icon) {
+                Storage::disk('public')->delete($school->site_icon);
+            }
+
+            $path = $request->file('site_icon')->store('school-icons', 'public');
+            $school->update(['site_icon' => $path]);
+        }
+
+        return back()->with('success', 'Site icon updated successfully.');
     }
 
     public function generalSettings()

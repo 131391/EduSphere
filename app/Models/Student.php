@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,7 +15,7 @@ use App\Enums\Gender;
 
 class Student extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity, Tenantable;
 
     protected $fillable = [
         'school_id',

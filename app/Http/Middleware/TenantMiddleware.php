@@ -19,20 +19,10 @@ class TenantMiddleware
     {
         $school = $this->identifySchool($request);
 
-        // For localhost/127.0.0.1 development or Railway, try to get school from user
-        if (!$school && (in_array($request->getHost(), ['localhost', '127.0.0.1', '127.0.0.1:8000']) || str_ends_with($request->getHost(), 'railway.app'))) {
-            $user = auth()->user();
-            if ($user && $user->school_id) {
-                $school = \App\Models\School::find($user->school_id);
-            } else {
-                // Fallback: use first active school for development
-                $school = \App\Models\School::where('status', \App\Enums\SchoolStatus::Active)->first();
-            }
-        }
-
         if (!$school) {
             abort(404, 'School not found');
         }
+
 
         if (!$school->isActive() || !$school->isSubscriptionActive()) {
             return response()->view('errors.subscription-inactive', ['school' => $school], 403);
@@ -40,9 +30,6 @@ class TenantMiddleware
 
         // Bind school to service container
         app()->instance('currentSchool', $school);
-        
-        // Set school in config for database connections if needed
-        config(['database.connections.mysql.database' => $this->getDatabaseName($school)]);
 
         return $next($request);
     }
@@ -128,13 +115,5 @@ class TenantMiddleware
         });
     }
 
-    /**
-     * Get database name for school (if using separate databases)
-     */
-    protected function getDatabaseName(School $school): string
-    {
-        $prefix = config('tenant.database_prefix', 'edusphere_');
-        return $prefix . $school->code;
-    }
 }
 

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\School\Examination;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\Grade;
 use Illuminate\Http\Request;
 
-class GradeController extends Controller
+class GradeController extends TenantController
 {
     public function index()
     {
@@ -40,7 +40,7 @@ class GradeController extends Controller
 
     public function update(Request $request, Grade $grade)
     {
-        $this->authorizeAccess($grade);
+        $this->authorizeTenant($grade);
 
         $request->validate([
             'range_start' => 'required|integer|min:0|max:100',
@@ -59,17 +59,10 @@ class GradeController extends Controller
 
     public function destroy(Grade $grade)
     {
-        $this->authorizeAccess($grade);
+        $this->authorizeTenant($grade);
         
         $grade->delete();
 
         return redirect()->route('school.examination.grades.index')->with('success', 'Grade deleted successfully.');
-    }
-
-    protected function authorizeAccess(Grade $grade)
-    {
-        if ($grade->school_id !== auth()->user()->school_id) {
-            abort(403);
-        }
     }
 }

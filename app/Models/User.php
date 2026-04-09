@@ -7,13 +7,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
+
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, HasRoles, LogsActivity;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, LogsActivity;
 
     // Status constants
     const STATUS_INACTIVE = 0;

@@ -13,7 +13,7 @@ class SchoolController extends Controller
 {
     public function index(Request $request)
     {
-        $query = School::withTrashed();
+        $query = School::withTrashed()->with(['city', 'state', 'country']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -87,13 +87,13 @@ class SchoolController extends Controller
         $inactiveSchools = School::withTrashed()->where('status', SchoolStatus::Inactive->value)->count();
         $suspendedSchools = School::withTrashed()->where('status', SchoolStatus::Suspended->value)->count();
 
-        // Paginate results
-        $schools = $query->paginate($perPage);
-
-        // Export functionality
+        // Export functionality (BEFORE pagination so we export full result set)
         if ($request->has('export') && $request->export === 'csv') {
             return $this->exportToCsv($query->get());
         }
+
+        // Paginate results
+        $schools = $query->paginate($perPage);
 
         return view('admin.schools.index', compact('schools', 'totalSchools', 'activeSchools', 'inactiveSchools', 'suspendedSchools'));
     }
@@ -141,32 +141,9 @@ class SchoolController extends Controller
         return view('admin.schools.create');
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\Admin\StoreSchoolRequest $request)
     {
-        $validated = $request->validate([
-            // School Details
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:schools,code',
-            'subdomain' => 'required|string|max:255|unique:schools,subdomain',
-            'domain' => 'nullable|string|max:255|unique:schools,domain',
-            'email' => 'required|email|max:255|unique:schools,email',
-            'phone' => 'required|string|max:20',
-            'address' => 'nullable|string',
-            'city_id' => 'nullable|integer|exists:cities,id',
-            'state_id' => 'nullable|integer|exists:states,id',
-            'country_id' => 'nullable|integer|exists:countries,id',
-            'pincode' => 'nullable|string|max:10',
-            'website' => 'nullable|url|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => ['required', 'integer', Rule::enum(SchoolStatus::class)],
-            'subscription_start_date' => 'nullable|date',
-            'subscription_end_date' => 'nullable|date|after:subscription_start_date',
-
-            // Admin Details
-            'admin_name' => 'required|string|max:255',
-            'admin_email' => 'required|email|max:255|unique:users,email',
-            'admin_password' => 'required|string|min:8|confirmed',
-        ]);
+        $validated = $request->validated();
 
         try {
             \DB::beginTransaction();
@@ -179,9 +156,6 @@ class SchoolController extends Controller
             // Create School
             $schoolData = collect($validated)->except(['admin_name', 'admin_email', 'admin_password', 'admin_password_confirmation'])->toArray();
             
-            // Status is already an integer from validation
-            $schoolData['status'] = $validated['status'];
-
             $school = School::create($schoolData);
 
             // Seed Master Data for the new school
@@ -241,34 +215,10 @@ class SchoolController extends Controller
         return view('admin.schools.edit', compact('school', 'admin'));
     }
 
-    public function update(Request $request, $id)
+    public function update(\App\Http\Requests\Admin\UpdateSchoolRequest $request, $id)
     {
         $school = School::withTrashed()->findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:schools,code,' . $id,
-            'subdomain' => 'required|string|max:255|unique:schools,subdomain,' . $id,
-            'domain' => 'nullable|string|max:255|unique:schools,domain,' . $id,
-            'email' => 'required|email|max:255|unique:schools,email,' . $id,
-            'phone' => 'required|string|max:20',
-            'address' => 'nullable|string',
-            'city_id' => 'nullable|integer|exists:cities,id',
-            'state_id' => 'nullable|integer|exists:states,id',
-            'country_id' => 'nullable|integer|exists:countries,id',
-            'pincode' => 'nullable|string|max:10',
-            'website' => 'nullable|url|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => ['required', 'integer', Rule::enum(SchoolStatus::class)],
-            'subscription_start_date' => 'nullable|date',
-            'subscription_end_date' => 'nullable|date|after:subscription_start_date',
-
-            // Admin Account Management
-            'admin_id' => 'nullable|exists:users,id',
-            'admin_name' => 'nullable|string|max:255',
-            'admin_email' => 'nullable|email|max:255',
-            'admin_password' => 'nullable|string|min:8|confirmed',
-        ]);
+        $validated = $request->validated();
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
@@ -278,9 +228,6 @@ class SchoolController extends Controller
             }
             $validated['logo'] = $request->file('logo')->store('schools/logos', 'public');
         }
-
-        // Status is already an integer from validation
-        // No mapping needed
 
         \DB::beginTransaction();
         try {
@@ -293,10 +240,6 @@ class SchoolController extends Controller
                 $adminData = [];
                 if ($request->filled('admin_name')) $adminData['name'] = $request->admin_name;
                 if ($request->filled('admin_email')) {
-                    // Check email uniqueness manually if changed
-                    if ($request->admin_email !== $admin->email) {
-                        $request->validate(['admin_email' => 'unique:users,email']);
-                    }
                     $adminData['email'] = $request->admin_email;
                 }
                 if ($request->filled('admin_password')) {
@@ -318,6 +261,9 @@ class SchoolController extends Controller
             ->with('success', 'School updated successfully.');
     }
 
+    /**
+     * Soft-delete a school
+     */
     public function destroy($id)
     {
         $school = School::findOrFail($id);
@@ -326,4 +272,84 @@ class SchoolController extends Controller
         return redirect()->route('admin.schools.index')
             ->with('success', 'School deleted successfully.');
     }
+
+    /**
+     * Restore a soft-deleted school
+     */
+    public function restore($id)
+    {
+        $school = School::withTrashed()->findOrFail($id);
+
+        if (!$school->trashed()) {
+            return back()->with('error', 'School is not deleted.');
+        }
+
+        $school->restore();
+
+        return redirect()->route('admin.schools.index')
+            ->with('success', 'School restored successfully.');
+    }
+
+    /**
+     * Permanently delete a school
+     */
+    public function forceDelete($id)
+    {
+        $school = School::withTrashed()->findOrFail($id);
+        $school->forceDelete();
+
+        return redirect()->route('admin.schools.index')
+            ->with('success', 'School permanently deleted.');
+    }
+
+    /**
+     * Show feature flags form for a school
+     */
+    public function features($id)
+    {
+        $school = School::findOrFail($id);
+        $features = $school->features ?? [];
+
+        $availableFeatures = [
+            'student_management' => 'Student Management',
+            'staff_management' => 'Staff & HR Management',
+            'finance_accounting' => 'Finance & Accounting',
+            'exam_management' => 'Examination Management',
+            'attendance_tracking' => 'Attendance Tracking',
+            'library_system' => 'Library Management',
+            'transport_fleet' => 'Transport & Fleet',
+            'hostel_management' => 'Hostel Management',
+            'inventory_management' => 'Inventory Management',
+            'communication_hub' => 'Communication Hub (SMS/Email)',
+            'online_admissions' => 'Online Admissions',
+            'parent_portal' => 'Parent Portal',
+            'student_portal' => 'Student Portal',
+        ];
+
+        $premiumFeatures = [
+            'biometric_integration' => 'Biometric Integration',
+            'gps_tracking' => 'GPS Live Tracking',
+            'mobile_app' => 'White-label Mobile App',
+            'payment_gateway' => 'Online Payment Gateway',
+            'virtual_classrooms' => 'Virtual Classrooms (Zoom/Meet)',
+        ];
+
+        return view('admin.schools.features', compact('school', 'features', 'availableFeatures', 'premiumFeatures'));
+    }
+
+    /**
+     * Update feature flags for a school
+     */
+    public function updateFeatures(Request $request, $id)
+    {
+        $school = School::findOrFail($id);
+
+        $school->update([
+            'features' => $request->input('features', []),
+        ]);
+
+        return redirect()->route('admin.schools.index')
+            ->with('success', 'Feature flags updated for ' . $school->name . '.');
+    }
 }
+

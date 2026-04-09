@@ -149,6 +149,9 @@ Route::prefix('settings')->name('settings.')->group(function () {
     Route::get('logo', [SchoolSettingsController::class, 'logo'])->name('logo');
     Route::put('logo', [SchoolSettingsController::class, 'updateLogo'])->name('logo.update');
     
+    Route::get('site-icon', [SchoolSettingsController::class, 'siteIcon'])->name('site-icon');
+    Route::put('site-icon', [SchoolSettingsController::class, 'updateSiteIcon'])->name('site-icon.update');
+    
     Route::get('general', [SchoolSettingsController::class, 'generalSettings'])->name('general');
     Route::put('general', [SchoolSettingsController::class, 'updateGeneralSettings'])->name('general.update');
     

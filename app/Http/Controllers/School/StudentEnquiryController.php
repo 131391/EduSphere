@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\School;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\StudentEnquiry;
 use App\Models\AcademicYear;
 use App\Models\ClassModel;
@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 use App\Enums\EnquiryStatus;
 use App\Enums\Gender;
 
-class StudentEnquiryController extends Controller
+class StudentEnquiryController extends TenantController
 {
     public function index(Request $request)
     {
@@ -41,7 +41,7 @@ class StudentEnquiryController extends Controller
         $perPage = $request->get('per_page', 15);
         $enquiries = $query->paginate($perPage)->withQueryString();
 
-        // Statistics
+        // Statistics - Scoped to school
         $stats = [
             'total' => StudentEnquiry::where('school_id', $school->id)->count(),
             'pending' => StudentEnquiry::where('school_id', $school->id)->pending()->count(),
@@ -75,7 +75,7 @@ class StudentEnquiryController extends Controller
 
     public function update(Request $request, StudentEnquiry $studentEnquiry)
     {
-        $this->authorizeAccess($studentEnquiry);
+        $this->authorizeTenant($studentEnquiry);
 
         $validated = $this->validateEnquiry($request, $studentEnquiry->id);
 
@@ -90,7 +90,7 @@ class StudentEnquiryController extends Controller
 
     public function destroy(StudentEnquiry $studentEnquiry)
     {
-        $this->authorizeAccess($studentEnquiry);
+        $this->authorizeTenant($studentEnquiry);
 
         // Delete associated files
         $this->deleteFiles($studentEnquiry);
@@ -108,8 +108,15 @@ class StudentEnquiryController extends Controller
     {
         return $request->validate([
             // Enquiry Form
-            'academic_year_id' => 'nullable|exists:academic_years,id',
-            'class_id' => 'nullable|exists:classes,id',
+            'academic_year_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'class_id' => [
+                'nullable',
+                \Illuminate\Validation\Rule::exists('classes', 'id')->where('school_id', $this->getSchoolId())
+            ],
+
             'subject_name' => 'nullable|string|max:255',
             'student_name' => 'required|string|max:255',
             'gender' => ['nullable', 'integer', Rule::enum(Gender::class)],
@@ -226,13 +233,4 @@ class StudentEnquiryController extends Controller
         }
     }
 
-    /**
-     * Authorize access
-     */
-    private function authorizeAccess($enquiry)
-    {
-        if ($enquiry->school_id !== auth()->user()->school_id) {
-            abort(403);
-        }
-    }
 }

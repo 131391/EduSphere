@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,9 +12,13 @@ use Spatie\Activitylog\LogOptions;
 
 use App\Enums\FeeStatus;
 
+/**
+ * @property string|null $due_amount
+ * @property string|null $payment_date
+ */
 class Fee extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity, Tenantable;
 
     protected $fillable = [
         'school_id',
@@ -52,7 +58,7 @@ class Fee extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['bill_no', 'payment_status', 'paid_amount'])
+            ->logOnly(['bill_no', 'payment_status', 'paid_amount', 'student.first_name'])
             ->logOnlyDirty();
     }
 
@@ -116,9 +122,9 @@ class Fee extends Model
     public function markAsPaid($amount, $paymentMode, $transactionId = null): void
     {
         $this->paid_amount = $amount;
-        $this->due_amount = $this->payable_amount - $amount - ($this->waiver_amount ?? 0) - ($this->discount_amount ?? 0);
+        $this->due_amount = number_format($this->payable_amount - $amount - ($this->waiver_amount ?? 0) - ($this->discount_amount ?? 0), 2, '.', '');
         $this->payment_status = $this->due_amount > 0 ? FeeStatus::Partial : FeeStatus::Paid;
-        $this->payment_date = now();
+        $this->payment_date = now()->toDateString();
         $this->payment_mode = $paymentMode;
         $this->transaction_id = $transactionId;
         $this->save();

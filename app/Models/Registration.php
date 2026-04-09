@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +12,7 @@ use App\Enums\RegistrationStatus;
 
 class Registration extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Tenantable;
 
     protected $fillable = [
         'school_id',

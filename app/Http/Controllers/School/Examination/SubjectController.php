@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\School\Examination;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\ClassModel;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SubjectController extends Controller
+class SubjectController extends TenantController
 {
     public function index()
     {

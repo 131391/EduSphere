@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\School;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\TenantController;
 use App\Models\StudentRegistration;
 use App\Models\ClassModel;
 use App\Models\AcademicYear;
@@ -24,7 +24,7 @@ use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class StudentRegistrationController extends Controller
+class StudentRegistrationController extends TenantController
 {
     protected $locationService;
 

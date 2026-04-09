@@ -77,18 +77,8 @@
                 </button>
             </div>
 
-            @php
-                $currentYear = \App\Models\AcademicYear::where('is_current', true)->first();
-                if (!$currentYear) {
-                    $currentYear = \App\Models\AcademicYear::orderBy('start_date', 'desc')->first();
-                }
-                $sessionName = $currentYear?->name ?? '2025 - 2026';
-            @endphp
-            <!-- Session Info -->
-            <div class="px-4 py-2 bg-blue-800 text-xs overflow-hidden whitespace-nowrap">
-                <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION: {{ $sessionName }}</p>
-                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;" :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">{{ preg_replace('/^.*?(\d{2})[^\d]*(\d{2})$/', '$1-$2', $sessionName) }}</p>
-            </div>
+            <!-- Sidebar divider -->
+            <div class="border-b border-blue-800 mx-4 mb-4"></div>
 
             <!-- Navigation Menu -->
             <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll" 
@@ -111,8 +101,24 @@
                         <a href="{{ route('admin.schools.index') }}" 
                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.schools.*') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
                            :class="{ 'justify-center': sidebarCollapsed }">
-                            <i class="fas fa-school w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <i class="fas fa-school w-5 text-center" :class="{ 'mr-3': !sidebarCollapsed }"></i>
                             <span x-show="!sidebarCollapsed">Schools</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.users.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.users.*') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-users-cog w-5 text-center" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">All Users</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.audit-logs.index') }}" 
+                           class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.audit-logs.*') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                           :class="{ 'justify-center': sidebarCollapsed }">
+                            <i class="fas fa-history w-5 text-center" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed">Audit Logs</span>
                         </a>
                     </li>
                     
@@ -157,9 +163,80 @@
                         <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 hover:text-gray-700 lg:hidden focus:outline-none">
                             <i class="fas fa-bars text-xl sm:text-2xl"></i>
                         </button>
-                        <div class="relative flex-1 max-w-md">
-                            <input type="text" placeholder="Search..." class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm"></i>
+                        <div class="relative flex-1 max-w-md" x-data="{ 
+                            searchQuery: '', 
+                            results: [], 
+                            loading: false, 
+                            showResults: false,
+                            async performSearch() {
+                                if (this.searchQuery.length < 2) {
+                                    this.results = [];
+                                    this.showResults = false;
+                                    return;
+                                }
+                                this.loading = true;
+                                try {
+                                    const response = await fetch(`{{ route('admin.global-search') }}?q=${encodeURIComponent(this.searchQuery)}`);
+                                    const data = await response.json();
+                                    this.results = data.results;
+                                    this.showResults = true;
+                                } catch (error) {
+                                    console.error('Search failed:', error);
+                                } finally {
+                                    this.loading = false;
+                                }
+                            }
+                        }" @click.away="showResults = false">
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    x-model="searchQuery" 
+                                    @input.debounce.300ms="performSearch()"
+                                    @focus="if(results.length > 0) showResults = true"
+                                    placeholder="Search schools, users..." 
+                                    class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                >
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm"></i>
+                                <div x-show="loading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                    <i class="fas fa-spinner fa-spin text-blue-500 text-xs text-sm"></i>
+                                </div>
+                            </div>
+
+                            <!-- Search Results Dropdown -->
+                            <div 
+                                x-show="showResults" 
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[100] max-h-96 overflow-y-auto"
+                                style="display: none;"
+                            >
+                                <template x-if="results.length > 0">
+                                    <div class="py-2">
+                                        <template x-for="result in results" :key="result.url + result.title">
+                                            <a :href="result.url" class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b last:border-0 border-gray-100 dark:border-gray-700">
+                                                <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mr-3" :class="`bg-${result.color}-100 text-${result.color}-600`" x-html="`<i class='fas ${result.icon}'></i>`" style="color: unset; background-color: unset;" :style="`background-color: var(--tw-bg-opacity); color: var(--tw-text-opacity);`" :class="{
+                                                    'bg-blue-100 text-blue-600': result.color === 'blue',
+                                                    'bg-purple-100 text-purple-600': result.color === 'purple',
+                                                    'bg-green-100 text-green-600': result.color === 'green'
+                                                }">
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-semibold text-gray-900 dark:text-white truncate" x-text="result.title"></p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="result.subtitle"></p>
+                                                </div>
+                                                <i class="fas fa-chevron-right text-gray-300 text-xs ml-2"></i>
+                                            </a>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template x-if="results.length === 0 && searchQuery.length >= 2">
+                                    <div class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-search text-3xl mb-3 opacity-20 block"></i>
+                                        <p class="text-sm">No results found for "<span class="font-semibold" x-text="searchQuery"></span>"</p>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
 
