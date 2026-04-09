@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
-            $table->string('city')->nullable();
-            $table->string('state')->nullable();
-            $table->integer('country_id')->default(1);
+            $table->unsignedInteger('city_id')->nullable();
+            $table->unsignedInteger('state_id')->nullable();
+            $table->unsignedInteger('country_id')->nullable()->default(1);
             $table->string('pincode')->nullable();
             $table->string('logo')->nullable();
             $table->string('site_icon')->nullable();

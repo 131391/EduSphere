@@ -205,7 +205,7 @@
 <!-- Edit Modal -->
 <div x-data="{ fee: null }" @open-modal.window="if ($event.detail.name === 'edit-fee-master-modal') { fee = $event.detail.fee; $dispatch('open-actual-edit-modal'); }">
     <x-modal name="edit-fee-master-modal-actual" title="Edit Fee Configuration" focusable>
-        <form x-bind:action="'{{ route('school.fee-master.update', '') }}/' + fee.id" method="POST" class="p-6 space-y-5" x-show="fee">
+        <form x-bind:action="fee ? '/school/fee-master/' + fee.id : '#'" method="POST" class="p-6 space-y-5" x-show="fee">
             @csrf
             @method('PUT')
             <div class="grid grid-cols-1 gap-4">

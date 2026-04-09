@@ -85,6 +85,7 @@ Route::get('/fee-payments/receipt/{receipt_no}', [FeePaymentController::class, '
 
 // Waiver Management
 Route::get('/waivers', [WaiverController::class, 'index'])->name('waivers.index');
+Route::get('/waivers/create', [WaiverController::class, 'create'])->name('waivers.create');
 Route::post('/waivers', [WaiverController::class, 'store'])->name('waivers.store');
 
 // Late Fee Management

@@ -65,16 +65,16 @@ return new class extends Migration
             // Address Info
             $table->text('address')->nullable();
             $table->text('permanent_address')->nullable();
-            $table->string('permanent_state')->nullable();
-            $table->string('permanent_city')->nullable();
+            $table->unsignedInteger('permanent_state_id')->nullable();
+            $table->unsignedInteger('permanent_city_id')->nullable();
             $table->string('permanent_pin')->nullable();
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();
-            $table->unsignedTinyInteger('permanent_country_id')->default(1)->nullable(); // consolidated from add_country_id
-            $table->unsignedTinyInteger('correspondence_country_id')->default(1)->nullable(); // consolidated from add_country_id
+            $table->unsignedInteger('permanent_country_id')->default(1)->nullable(); 
+            $table->unsignedInteger('correspondence_country_id')->default(1)->nullable();
             $table->text('correspondence_address')->nullable();
-            $table->string('correspondence_state')->nullable();
-            $table->string('correspondence_city')->nullable();
+            $table->unsignedInteger('correspondence_state_id')->nullable();
+            $table->unsignedInteger('correspondence_city_id')->nullable();
             $table->string('correspondence_pin')->nullable();
             $table->string('correspondence_location')->nullable();
             $table->string('distance_from_school')->nullable();

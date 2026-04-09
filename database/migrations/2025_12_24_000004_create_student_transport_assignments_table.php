@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('vehicle_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('fee_per_month', 10, 2);
             $table->foreignId('academic_year_id')->constrained()->onDelete('cascade');
+            $table->tinyInteger('status')->default(1)->comment('1=Active, 0=Inactive, 2=Pending, 3=Completed, 4=Cancelled');
             $table->timestamps();
             $table->softDeletes();
 

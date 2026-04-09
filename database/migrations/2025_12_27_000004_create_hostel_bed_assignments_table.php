@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('rent', 10, 2)->nullable();
             $table->date('hostel_assign_date')->nullable();
             $table->string('starting_month')->nullable();
+            $table->tinyInteger('status')->default(1)->comment('1=Active, 0=Inactive, 2=Pending, 3=Completed, 4=Cancelled');
             $table->timestamps();
             $table->softDeletes();
 

@@ -16,9 +16,6 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->web(append: [
-            \App\Http\Middleware\TenantMiddleware::class,
-        ]);
         
         $middleware->alias([
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,

@@ -43,13 +43,13 @@ class TestSchoolsSeeder extends Seeder
         // Create default Fee Type and Names for DPS
         $dpsFeeType = \App\Models\FeeType::updateOrCreate(
             ['school_id' => $dps->id, 'name' => 'Compulsory Fees'],
-            ['status' => 1]
+            ['is_active' => \App\Enums\YesNo::Yes]
         );
 
         foreach (['Registration Fee', 'Admission Fee', 'Tuition Fee'] as $name) {
             \App\Models\FeeName::updateOrCreate(
                 ['school_id' => $dps->id, 'name' => $name],
-                ['fee_type_id' => $dpsFeeType->id, 'status' => 1]
+                ['fee_type_id' => $dpsFeeType->id, 'is_active' => \App\Enums\YesNo::Yes]
             );
         }
 
@@ -81,13 +81,13 @@ class TestSchoolsSeeder extends Seeder
         // Create default Fee Type and Names for DAV
         $davFeeType = \App\Models\FeeType::updateOrCreate(
             ['school_id' => $dav->id, 'name' => 'Compulsory Fees'],
-            ['status' => 1]
+            ['is_active' => \App\Enums\YesNo::Yes]
         );
 
         foreach (['Registration Fee', 'Admission Fee', 'Tuition Fee'] as $name) {
             \App\Models\FeeName::updateOrCreate(
                 ['school_id' => $dav->id, 'name' => $name],
-                ['fee_type_id' => $davFeeType->id, 'status' => 1]
+                ['fee_type_id' => $davFeeType->id, 'is_active' => \App\Enums\YesNo::Yes]
             );
         }
 

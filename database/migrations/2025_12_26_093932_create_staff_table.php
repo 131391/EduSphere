@@ -24,9 +24,9 @@ return new class extends Migration
             $table->integer('total_experience')->nullable()->comment('Total experience in years');
             $table->decimal('previous_school_salary', 10, 2)->nullable()->comment('Previous school salary per month');
             $table->decimal('current_salary', 10, 2)->nullable()->comment('Current salary per month');
-            $table->integer('country_id')->nullable()->comment('Country ID from config');
-            $table->string('state')->nullable();
-            $table->string('city')->nullable();
+            $table->unsignedInteger('country_id')->nullable();
+            $table->unsignedInteger('state_id')->nullable();
+            $table->unsignedInteger('city_id')->nullable();
             $table->string('zip_code')->nullable();
             $table->text('address')->nullable();
             $table->string('aadhar_no')->nullable();

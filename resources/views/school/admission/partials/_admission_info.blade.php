@@ -185,6 +185,5 @@ $(document).ready(function() {
     if (initialClassId) {
         loadClassData(initialClassId, oldSectionId);
     }
-});
 </script>
 @endpush

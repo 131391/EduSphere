@@ -19,6 +19,7 @@ class FeeName extends Model
 
     protected $fillable = [
         'school_id',
+        'fee_type_id',
         'name',
         'description',
         'is_active',
@@ -45,8 +46,13 @@ class FeeName extends Model
         return $this->belongsTo(School::class);
     }
 
+    public function feeType()
+    {
+        return $this->belongsTo(FeeType::class);
+    }
+
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', \App\Enums\YesNo::Yes);
     }
 }

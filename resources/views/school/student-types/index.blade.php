@@ -201,7 +201,6 @@ function openEditModal(type) {
         component.openEditModal(type);
     }
 }
-});
 </script>
 @endpush
 @endsection

@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('fee_names', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained('schools')->onDelete('cascade');
+            $table->foreignId('fee_type_id')->constrained('fee_types')->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);

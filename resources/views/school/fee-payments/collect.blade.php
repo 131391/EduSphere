@@ -169,6 +169,5 @@ document.addEventListener('DOMContentLoaded', function() {
             updateTotal();
         });
     }
-});
 </script>
 @endsection

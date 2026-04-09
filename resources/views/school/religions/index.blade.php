@@ -201,7 +201,6 @@ function openEditModal(religion) {
         component.openEditModal(religion);
     }
 }
-});
 </script>
 @endpush
 @endsection

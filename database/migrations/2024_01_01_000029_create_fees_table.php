@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('academic_year_id')->constrained('academic_years')->onDelete('cascade');
             $table->foreignId('fee_type_id')->constrained('fee_types')->onDelete('cascade');
+            $table->foreignId('fee_name_id')->nullable()->constrained('fee_names')->onDelete('cascade');
             $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
             $table->string('bill_no')->unique();
             $table->string('fee_period'); // e.g., "January 2025"

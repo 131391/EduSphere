@@ -90,9 +90,9 @@ return new class extends Migration
             $table->string('permanent_latitude', 50)->nullable();
             $table->string('permanent_longitude', 50)->nullable();
             $table->text('permanent_address');
-            $table->unsignedTinyInteger('permanent_country_id')->default(1); // consolidated from add_country_id_fields
-            $table->string('permanent_state', 100);
-            $table->string('permanent_city', 100);
+            $table->unsignedInteger('permanent_country_id')->default(1); 
+            $table->unsignedInteger('permanent_state_id')->nullable();
+            $table->unsignedInteger('permanent_city_id')->nullable();
             $table->string('permanent_pin', 20);
             $table->string('permanent_state_of_domicile', 100)->nullable();
             $table->string('permanent_railway_airport', 150)->nullable();
@@ -100,9 +100,9 @@ return new class extends Migration
             
             // Correspondence Address
             $table->text('correspondence_address')->nullable();
-            $table->unsignedTinyInteger('correspondence_country_id')->default(1); // consolidated from add_country_id_fields
-            $table->string('correspondence_state', 100)->nullable();
-            $table->string('correspondence_city', 100)->nullable();
+            $table->unsignedInteger('correspondence_country_id')->default(1); 
+            $table->unsignedInteger('correspondence_state_id')->nullable();
+            $table->unsignedInteger('correspondence_city_id')->nullable();
             $table->string('correspondence_pin', 20)->nullable();
             $table->string('correspondence_location', 150)->nullable();
             $table->text('correspondence_landmark')->nullable();
