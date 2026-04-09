@@ -683,6 +683,14 @@
                     width: '100%'
                 });
 
+                // Global rule: Default Country to India (102) if empty or auto-defaulted
+                if ($select.attr('name') && $select.attr('name').includes('country_id')) {
+                    let hasExplicitSelection = $select.find('option[selected]').length > 0;
+                    if (!hasExplicitSelection || !$select.val() || $select.val() === "") {
+                        setTimeout(() => $select.val('102').trigger('change'), 50);
+                    }
+                }
+
                 return true;
             } catch (e) {
                 // If initialization fails, remove from set so it can be retried
