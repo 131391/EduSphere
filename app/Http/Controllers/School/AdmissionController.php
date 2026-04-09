@@ -246,11 +246,16 @@ class AdmissionController extends TenantController
                 if ($registration) {
                     $registration->update(['admission_status' => AdmissionStatus::Admitted]);
                     
-                    // Transition Registration Fees to this student's ledger
-                    Fee::where('school_id', $school->id)
+                    // Transition Registration Fees and Payments to this student's ledger
+                    $registrationFees = Fee::where('school_id', $school->id)
                         ->where('registration_id', $registration->id)
                         ->whereNull('student_id')
-                        ->update(['student_id' => $student->id]);
+                        ->pluck('id');
+
+                    if ($registrationFees->isNotEmpty()) {
+                        Fee::whereIn('id', $registrationFees)->update(['student_id' => $student->id]);
+                        FeePayment::whereIn('fee_id', $registrationFees)->whereNull('student_id')->update(['student_id' => $student->id]);
+                    }
 
                     if ($registration->enquiry_id) {
                         $enquiry = \App\Models\StudentEnquiry::find($registration->enquiry_id);

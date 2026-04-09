@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\Tenantable;
 
 use App\Traits\{Searchable, Sortable, Tenantable};
 use Illuminate\Database\Eloquent\Factories\HasFactory;

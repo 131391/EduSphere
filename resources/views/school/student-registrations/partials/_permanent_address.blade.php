@@ -29,7 +29,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Address
+                    Address <span class="text-red-500">*</span>
                 </label>
                 <textarea name="permanent_address"  rows="3" placeholder="Enter House No, Street, Landmark"
                         class="w-full px-4 py-2 border @error('permanent_address') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">{{ old('permanent_address', $studentRegistration->permanent_address ?? '') }}</textarea>
@@ -43,7 +43,7 @@
                     prefix="permanent" 
                     label="Permanent" 
                     :countries="$countries"
-                    :selectedCountry="old('permanent_country_id', $studentRegistration->permanent_country_id ?? '')"
+                    :selectedCountry="old('permanent_country_id', $studentRegistration->permanent_country_id ?? 102)"
                     :selectedState="old('permanent_state_id', $studentRegistration->permanent_state_id ?? '')"
                     :selectedCity="old('permanent_city_id', $studentRegistration->permanent_city_id ?? '')"
                 />
@@ -51,7 +51,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Pin
+                    Pin <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="permanent_pin" value="{{ old('permanent_pin', $studentRegistration->permanent_pin ?? '') }}" placeholder="Enter Pin Code"
                        class="w-full px-4 py-2 border @error('permanent_pin') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">

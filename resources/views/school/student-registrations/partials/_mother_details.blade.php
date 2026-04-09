@@ -22,7 +22,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Initial <span class="text-red-500">*</span>
+                    Initial
                 </label>
                 <select name="mother_name_prefix"  
                         class="w-full px-4 py-2 border @error('mother_name_prefix') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">

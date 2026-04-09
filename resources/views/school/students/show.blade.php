@@ -118,7 +118,7 @@
 
                 <div class="p-6">
                     <!-- Tab: Personal Details -->
-                    <div x-show="tab === 'details'" x-transition @click.away="null">
+                    <div x-show="tab === 'details'" x-transition>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <div>
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Date of Birth</p>

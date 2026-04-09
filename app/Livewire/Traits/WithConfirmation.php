@@ -10,7 +10,7 @@ trait WithConfirmation
     public string $confirmationAction = '';
     public string $confirmButtonText = 'Confirm';
     public string $confirmButtonColor = 'red';
-    public ?callable $confirmCallback = null;
+    public ?\Closure $confirmCallback = null;
 
     public function confirmAction(
         string $title,

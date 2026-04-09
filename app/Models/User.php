@@ -11,6 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 use App\Enums\UserStatus;
+use App\Models\StudentParent;
 
 class User extends Authenticatable
 {
@@ -85,7 +86,7 @@ class User extends Authenticatable
 
     public function parent()
     {
-        return $this->hasOne(ParentModel::class);
+        return $this->hasOne(StudentParent::class);
     }
 
     // Scopes

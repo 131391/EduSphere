@@ -4,7 +4,8 @@
     'selectedState' => null,
     'selectedCity' => null,
     'label' => '',
-    'countries' => []
+    'countries' => [],
+    'required' => true
 ])
 
 @php
@@ -16,7 +17,9 @@
     $stateIdAttr = $prefix ? "{$prefix}-state-select" : "state-select";
     $cityIdAttr = $prefix ? "{$prefix}-city-select" : "city-select";
     
-    $inputClasses = "w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white disabled:bg-gray-100 disabled:cursor-not-allowed";
+    $baseClasses = "w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white disabled:bg-gray-100 disabled:cursor-not-allowed";
+    $normalBorder = "border-gray-300 dark:border-gray-600";
+    $errorBorder = "border-red-500";
 @endphp
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 location-selector-container" 
@@ -27,9 +30,9 @@
     
     <div>
         <label for="{{ $countryIdAttr }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {{ $label ? $label . ' ' : '' }}Country <span class="text-red-500">*</span>
+            {{ $label ? $label . ' ' : '' }}Country @if($required)<span class="text-red-500">*</span>@endif
         </label>
-        <select name="{{ $countryName }}" id="{{ $countryIdAttr }}" class="{{ $inputClasses }} country-select" required>
+        <select name="{{ $countryName }}" id="{{ $countryIdAttr }}" class="{{ $baseClasses }} @error($countryName) {{ $errorBorder }} @else {{ $normalBorder }} @enderror country-select">
             <option value="">Select Country</option>
             @foreach($countries as $country)
                 <option value="{{ $country['id'] }}" {{ $selectedCountry == $country['id'] ? 'selected' : '' }}>
@@ -37,24 +40,33 @@
                 </option>
             @endforeach
         </select>
+        @error($countryName)
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+        @enderror
     </div>
 
     <div>
         <label for="{{ $stateIdAttr }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {{ $label ? $label . ' ' : '' }}State <span class="text-red-500">*</span>
+            {{ $label ? $label . ' ' : '' }}State @if($required)<span class="text-red-500">*</span>@endif
         </label>
-        <select name="{{ $stateName }}" id="{{ $stateIdAttr }}" class="{{ $inputClasses }} state-select" required {{ !$selectedCountry ? 'disabled' : '' }}>
+        <select name="{{ $stateName }}" id="{{ $stateIdAttr }}" class="{{ $baseClasses }} @error($stateName) {{ $errorBorder }} @else {{ $normalBorder }} @enderror state-select" {{ !$selectedCountry ? 'disabled' : '' }}>
             <option value="">Select State</option>
         </select>
+        @error($stateName)
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+        @enderror
     </div>
 
     <div>
         <label for="{{ $cityIdAttr }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {{ $label ? $label . ' ' : '' }}City <span class="text-red-500">*</span>
+            {{ $label ? $label . ' ' : '' }}City @if($required)<span class="text-red-500">*</span>@endif
         </label>
-        <select name="{{ $cityName }}" id="{{ $cityIdAttr }}" class="{{ $inputClasses }} city-select" required {{ !$selectedState ? 'disabled' : '' }}>
+        <select name="{{ $cityName }}" id="{{ $cityIdAttr }}" class="{{ $baseClasses }} @error($cityName) {{ $errorBorder }} @else {{ $normalBorder }} @enderror city-select" {{ !$selectedState ? 'disabled' : '' }}>
             <option value="">Select City</option>
         </select>
+        @error($cityName)
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+        @enderror
     </div>
 </div>
 

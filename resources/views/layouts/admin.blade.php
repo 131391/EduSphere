@@ -189,7 +189,7 @@
                                     this.loading = false;
                                 }
                             }
-                        }" @click.away="showResults = false">
+                        }" @click.outside="showResults = false">
                             <div class="relative">
                                 <input 
                                     type="text" 
@@ -285,7 +285,7 @@
                         </button>
                         
                         <!-- User Dropdown -->
-                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                             <button @click="open = !open" class="flex items-center space-x-1 sm:space-x-2 focus:outline-none">
                                 <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">
                                     <i class="fas fa-user text-sm"></i>

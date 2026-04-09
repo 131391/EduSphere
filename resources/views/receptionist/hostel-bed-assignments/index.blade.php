@@ -202,7 +202,7 @@
                                    class="w-full px-4 py-2 border {{ $errors->has('student_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
                                    autocomplete="off">
                             <div x-show="showStudentDropdown && studentResults.length > 0" 
-                                 @click.away="showStudentDropdown = false"
+                                 @click.outside="showStudentDropdown = false"
                                  class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                                 <template x-for="student in studentResults" :key="student.id">
                                     <div @click="selectStudent(student)" 

@@ -62,9 +62,12 @@ class FeePaymentService
                     'created_by' => auth()->id(),
                 ]);
 
-                // Update Fee record
-                $fee->paid_amount += $amountToPay;
-                $fee->due_amount = $fee->payable_amount - $fee->paid_amount - $fee->waiver_amount - $fee->discount_amount;
+                // Update Fee record — coerce nullable columns to float to avoid arithmetic errors
+                $fee->paid_amount = (float)($fee->paid_amount ?? 0) + $amountToPay;
+                $fee->due_amount = (float)($fee->payable_amount ?? 0)
+                    - $fee->paid_amount
+                    - (float)($fee->waiver_amount ?? 0)
+                    - (float)($fee->discount_amount ?? 0);
                 
                 if ($fee->due_amount <= 0) {
                     $fee->payment_status = FeeStatus::Paid;

@@ -7,7 +7,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Address <span class="text-red-500">*</span>
+                    Address
                 </label>
                 <input type="text" name="correspondence_address" value="{{ old('correspondence_address', $studentRegistration->correspondence_address ?? '') }}" placeholder="Enter Address"
                        class="w-full px-4 py-2 border @error('correspondence_address') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
@@ -21,7 +21,8 @@
                     prefix="correspondence" 
                     label="Correspondence" 
                     :countries="$countries"
-                    :selectedCountry="old('correspondence_country_id', $studentRegistration->correspondence_country_id ?? '')"
+                    :required="false"
+                    :selectedCountry="old('correspondence_country_id', $studentRegistration->correspondence_country_id ?? 102)"
                     :selectedState="old('correspondence_state_id', $studentRegistration->correspondence_state_id ?? '')"
                     :selectedCity="old('correspondence_city_id', $studentRegistration->correspondence_city_id ?? '')"
                 />

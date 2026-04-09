@@ -38,7 +38,7 @@ class FeePaymentController extends TenantController
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('admission_no', 'like', "%{$search}%")
-                  ->orWhere('mobile_no', 'like', "%{$search}%");
+                  ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 

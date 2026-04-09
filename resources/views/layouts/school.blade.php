@@ -15,6 +15,12 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
+    <!-- Alpine.js Plugins (must load before Alpine core) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Alpine.js Core -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     @stack('styles')
     
     <!-- Dark Mode Persistence -->
@@ -700,7 +706,7 @@
                             <!-- Favorites Dropdown -->
                             <div 
                                 x-show="showFavorites" 
-                                @click.away="showFavorites = false"
+                                @click.outside="showFavorites = false"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 scale-95"
                                 x-transition:enter-end="opacity-100 scale-100"
@@ -766,7 +772,7 @@
                             <div 
                                 x-show="open" 
                                 x-cloak
-                                @click.away="open = false"
+                                @click.outside="open = false"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 scale-95"
                                 x-transition:enter-end="opacity-100 scale-100"
@@ -905,11 +911,7 @@
     
     <x-delete-confirmation />
     
-    <!-- Alpine.js Plugins -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    
-    <!-- Alpine.js with defer - standard approach that ensures DOM ready and proper initialization order -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Alpine.js is now loaded in <head> with defer for earlier initialization -->
     
     <script>
         document.addEventListener('alpine:init', () => {

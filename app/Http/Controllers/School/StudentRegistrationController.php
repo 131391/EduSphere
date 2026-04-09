@@ -220,12 +220,15 @@ class StudentRegistrationController extends TenantController
                     'remarks' => 'Registration Fee for No: ' . $registration->registration_no
                 ]);
 
+                $cashPaymentMethod = \App\Models\PaymentMethod::where('name', 'Cash')->first();
+
                 FeePayment::create([
                     'school_id' => $school->id,
                     'fee_id' => $fee->id,
                     'academic_year_id' => $registration->academic_year_id,
                     'amount' => $request->registration_fee,
                     'payment_date' => now(),
+                    'payment_method_id' => $cashPaymentMethod->id ?? 1,
                     'receipt_no' => 'R-' . time(),
                     'created_by' => Auth::id(),
                 ]);
