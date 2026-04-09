@@ -9,6 +9,8 @@
 ])
 
 @php
+    $selectedCountry = $selectedCountry ?: 102;
+
     $countryName = $prefix ? "{$prefix}_country_id" : "country_id";
     $stateName = $prefix ? "{$prefix}_state_id" : "state_id";
     $cityName = $prefix ? "{$prefix}_city_id" : "city_id";

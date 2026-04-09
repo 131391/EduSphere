@@ -579,6 +579,11 @@
                     allowClear: $(this).data('allow-clear') !== undefined ? $(this).data('allow-clear') : false,
                     width: '100%'
                 });
+                // Global rule: Default Country to India (102) if empty
+                if ($select.attr('name') && $select.attr('name').includes('country_id') && !$select.val()) {
+                    $select.val('102').trigger('change.select2');
+                }
+                
                 return true;
             } catch (e) {
                 // If initialization fails, remove from set so it can be retried
