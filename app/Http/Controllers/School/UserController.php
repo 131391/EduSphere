@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Enums\SchoolStatus;
+use App\Enums\UserStatus;
 
 class UserController extends TenantController
 {
@@ -46,7 +47,7 @@ class UserController extends TenantController
             'password' => Hash::make($validated['password']),
             'role_id' => $role->id,
             'phone' => $validated['phone'],
-            'status' => User::STATUS_ACTIVE,
+            'status' => UserStatus::Active,
         ]);
 
         return redirect()->route('school.users.index')->with('success', 'User created successfully.');
@@ -60,9 +61,9 @@ class UserController extends TenantController
         $role = \App\Models\Role::where('slug', $validated['role'])->firstOrFail();
 
         $statusMap = [
-            'active' => User::STATUS_ACTIVE,
-            'inactive' => User::STATUS_INACTIVE,
-            'suspended' => User::STATUS_SUSPENDED,
+            'active' => UserStatus::Active,
+            'inactive' => UserStatus::Inactive,
+            'suspended' => UserStatus::Suspended,
         ];
 
         $data = [
@@ -70,7 +71,7 @@ class UserController extends TenantController
             'email' => $validated['email'],
             'role_id' => $role->id,
             'phone' => $validated['phone'],
-            'status' => $statusMap[$validated['status']] ?? User::STATUS_ACTIVE,
+            'status' => $statusMap[$validated['status']] ?? UserStatus::Active,
         ];
 
         if ($request->filled('password')) {

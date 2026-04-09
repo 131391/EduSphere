@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Enums\GeneralStatus;
+
 class HostelBedAssignment extends Model
 {
     use HasFactory, SoftDeletes, Tenantable;
@@ -23,11 +25,13 @@ class HostelBedAssignment extends Model
         'rent',
         'hostel_assign_date',
         'starting_month',
+        'status',
     ];
 
     protected $casts = [
         'rent' => 'decimal:2',
         'hostel_assign_date' => 'date',
+        'status' => GeneralStatus::class,
     ];
 
     /**

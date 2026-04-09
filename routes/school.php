@@ -229,5 +229,12 @@ Route::prefix('reports/attendance')->name('reports.attendance.')->group(function
     Route::get('/daily', [AttendanceReportController::class, 'daily'])->name('daily');
 });
 
+// Facility Management
+Route::prefix('facilities')->name('facilities.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\School\StudentFacilityController::class, 'index'])->name('index');
+    Route::post('/transport/{student}', [\App\Http\Controllers\School\StudentFacilityController::class, 'assignTransport'])->name('transport.assign');
+    Route::post('/hostel/{student}', [\App\Http\Controllers\School\StudentFacilityController::class, 'assignHostel'])->name('hostel.assign');
+});
+
 // Other school admin routes...
 

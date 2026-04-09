@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
 
+use App\Enums\RouteStatus;
+
 class TransportRoute extends Model
 {
     use HasFactory, Tenantable;
@@ -27,6 +29,7 @@ class TransportRoute extends Model
 
     protected $casts = [
         'route_create_date' => 'date',
+        'status' => RouteStatus::class,
     ];
 
     /**
@@ -50,7 +53,7 @@ class TransportRoute extends Model
      */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', self::STATUS_ACTIVE);
+        return $query->where('status', RouteStatus::Active);
     }
 
     /**
@@ -58,7 +61,7 @@ class TransportRoute extends Model
      */
     public function scopeInactive(Builder $query): Builder
     {
-        return $query->where('status', self::STATUS_INACTIVE);
+        return $query->where('status', RouteStatus::Inactive);
     }
 
     /**
@@ -66,7 +69,7 @@ class TransportRoute extends Model
      */
     public function getStatusLabel(): string
     {
-        return self::getStatusLabels()[$this->status] ?? 'Unknown';
+        return $this->status instanceof RouteStatus ? $this->status->label() : 'Unknown';
     }
 
     /**

@@ -14,18 +14,24 @@ use App\Models\Category;
 use App\Models\BoardingType;
 use App\Models\CorrespondingRelative;
 use App\Models\Qualification;
+use App\Models\Fee;
+use App\Models\FeeName;
+use App\Models\FeePayment;
 use App\Services\LocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
+use App\Traits\HandlesFileCopies;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class StudentRegistrationController extends TenantController
 {
+    use HandlesFileCopies;
     protected $locationService;
 
     public function __construct(LocationService $locationService)
@@ -151,37 +157,68 @@ class StudentRegistrationController extends TenantController
             'student_signature' => 'nullable|image|max:2048',
         ]);
 
-        $data = $request->all();
-        $data['school_id'] = $school->id;
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $data['school_id'] = $school->id;
 
-        // Handle File Uploads
-        $fileFields = ['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature'];
-        foreach ($fileFields as $field) {
-            if ($request->hasFile($field)) {
-                // New file uploaded - store it
-                $path = $request->file($field)->store("registrations/{$school->id}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
-                $data[$field] = $path;
-            } elseif ($request->filled("enquiry_{$field}")) {
-                // Photo from enquiry - copy it to registration storage
-                $enquiryPath = $request->input("enquiry_{$field}");
-                if ($enquiryPath && Storage::disk('public')->exists($enquiryPath)) {
-                    // Determine destination directory
-                    $destinationDir = "registrations/{$school->id}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures');
-                    // Generate new filename to avoid conflicts
-                    $filename = basename($enquiryPath);
-                    $newPath = $destinationDir . '/' . time() . '_' . $filename;
-                    
-                    // Copy file from enquiry storage to registration storage
-                    Storage::disk('public')->copy($enquiryPath, $newPath);
-                    $data[$field] = $newPath;
+            // Handle File Uploads or Copies using Trait
+            $data['father_photo'] = $this->storeTenantFile($request->file('father_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_father_photo'));
+            $data['mother_photo'] = $this->storeTenantFile($request->file('mother_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_mother_photo'));
+            $data['student_photo'] = $this->storeTenantFile($request->file('student_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_student_photo'));
+            $data['father_signature'] = $this->storeTenantFile($request->file('father_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_father_signature'));
+            $data['mother_signature'] = $this->storeTenantFile($request->file('mother_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_mother_signature'));
+            $data['student_signature'] = $this->storeTenantFile($request->file('student_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_student_signature'));
+
+            $registration = StudentRegistration::create($data);
+
+            // --- FINANCIAL INTEGRATION ---
+            if ($request->registration_fee > 0) {
+                // Find 'Registration Fee' name
+                $regFeeName = FeeName::where('school_id', $school->id)
+                    ->where('name', 'Registration Fee')
+                    ->first();
+
+                if ($regFeeName) {
+                    $fee = Fee::create([
+                        'school_id' => $school->id,
+                        'academic_year_id' => $registration->academic_year_id,
+                        'fee_type_id' => $regFeeName->fee_type_id,
+                        'fee_name_id' => $regFeeName->id,
+                        'class_id' => $registration->class_id,
+                        'bill_no' => 'REG-' . time(),
+                        'fee_period' => 'One-time',
+                        'payable_amount' => $request->registration_fee,
+                        'paid_amount' => $request->registration_fee,
+                        'due_amount' => 0,
+                        'due_date' => now(),
+                        'payment_date' => now(),
+                        'payment_status' => \App\Enums\FeeStatus::Paid,
+                        'payment_mode' => 'Cash',
+                        'remarks' => 'Registration Fee for No: ' . $registration->registration_no
+                    ]);
+
+                    FeePayment::create([
+                        'school_id' => $school->id,
+                        'fee_id' => $fee->id,
+                        'academic_year_id' => $registration->academic_year_id,
+                        'amount' => $request->registration_fee,
+                        'payment_date' => now(),
+                        'receipt_no' => 'R-' . time(),
+                        'created_by' => Auth::id(),
+                    ]);
                 }
             }
+
+            DB::commit();
+            return redirect()->route('school.student-registrations.index')->with('success', 'Student registered successfully with financial records.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error("Registration Error: " . $e->getMessage());
+            return back()->with('error', 'Error during registration: ' . $e->getMessage())->withInput();
         }
-
-        StudentRegistration::create($data);
-
-        return redirect()->route('school.student-registrations.index')->with('success', 'Student registered successfully.');
     }
+
 
     public function show(StudentRegistration $studentRegistration)
     {

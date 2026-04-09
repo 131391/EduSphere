@@ -15,9 +15,20 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
+use App\Enums\FeeStatus;
+use App\Http\Requests\School\StoreAdmissionRequest;
+use App\Models\Fee;
+use App\Models\FeeName;
+use App\Models\FeePayment;
+use App\Models\StudentTransportAssignment;
+use App\Models\HostelBedAssignment;
+use App\Traits\HandlesFileCopies;
+use App\Enums\GeneralStatus;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdmissionController extends TenantController
 {
+    use HandlesFileCopies;
     public function index(Request $request)
     {
         $query = Student::query()
@@ -78,6 +89,8 @@ class AdmissionController extends TenantController
         $studentTypes = \App\Models\StudentType::where('school_id', $this->getSchoolId())->get();
         $correspondingRelatives = \App\Models\CorrespondingRelative::where('school_id', $this->getSchoolId())->get();
         $qualifications = \App\Models\Qualification::where('school_id', $this->getSchoolId())->get();
+        $transportRoutes = \App\Models\TransportRoute::where('school_id', $this->getSchoolId())->get();
+        $hostels = \App\Models\Hostel::where('school_id', $this->getSchoolId())->get();
         
         // Generate next admission number
         $lastStudent = Student::where('school_id', $this->getSchoolId())->latest()->first();
@@ -94,182 +107,137 @@ class AdmissionController extends TenantController
             'categories',
             'studentTypes',
             'correspondingRelatives',
-            'qualifications'
+            'qualifications',
+            'transportRoutes',
+            'hostels'
         ));
     }
 
-    public function store(Request $request)
+
+    public function store(StoreAdmissionRequest $request)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'class_id' => 'required|exists:classes,id',
-            'section_id' => 'required|exists:sections,id',
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'admission_date' => 'required|date',
-            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
-            'permanent_address' => 'required|string',
-            'permanent_country_id' => 'required|exists:countries,id',
-            'permanent_state_id' => 'required|exists:states,id',
-            'permanent_city_id' => 'required|exists:cities,id',
-            'correspondence_address' => 'required|string',
-            'correspondence_country_id' => 'nullable|exists:countries,id',
-            'correspondence_state_id' => 'nullable|exists:states,id',
-            'correspondence_city_id' => 'nullable|exists:cities,id',
-            'father_first_name' => 'required|string|max:255',
-            'father_last_name' => 'required|string|max:255',
-            'father_mobile' => 'required|string|max:20',
-            'mother_first_name' => 'required|string|max:255',
-            'mother_last_name' => 'required|string|max:255',
-            'mother_mobile' => 'required|string|max:20',
-            'roll_no' => 'required|string|max:255',
-            'receipt_no' => 'required|string|max:255',
-            'admission_fee' => 'required|numeric|min:0',
-            'student_photo' => 'nullable|image|max:2048',
-            // Add other validations as needed
-        ]);
+        $school = $this->getSchool();
+        $validated = $request->validated();
 
         DB::beginTransaction();
         try {
             $student = new Student();
-            $student->school_id = $this->getSchoolId();
+            $student->school_id = $school->id;
             $student->user_id = Auth::id(); // Ideally create a new user for student
             
-            // Exclude fields that don't exist in students table or need special handling
+            // Exclude non-model fields
             $excludedFields = [
                 'student_photo', 'father_photo', 'mother_photo',
                 'student_signature', 'father_signature', 'mother_signature',
-                'father_first_name', 'father_middle_name', 'father_last_name',
-                'father_mobile_no', 'father_landline', 'father_landline_no',
-                'father_organization', 'father_office_address',
-                'father_designation',
-                'mother_first_name', 'mother_middle_name', 'mother_last_name',
-                'mother_mobile_no', 'mother_landline', 'mother_landline_no',
-                'mother_organization', 'mother_office_address',
-                'mother_designation',
-                'father_name_prefix', 'mother_name_prefix',
-                'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
-                'student_signature_path', 'father_signature_path', 'mother_signature_path'
+                'registration_no', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
+                'student_signature_path', 'father_signature_path', 'mother_signature_path',
+                'admission_fee', 'receipt_no', 'transport_route_id', 'hostel_id'
             ];
             
             $student->fill($request->except($excludedFields));
             
-            // Handle Student Photo
-            if ($request->hasFile('student_photo')) {
-                $path = $request->file('student_photo')->store('student_photos', 'public');
-                $student->photo = $path;
-            } elseif ($request->filled('student_photo_path')) {
-                $sourcePath = $request->student_photo_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'student_photos/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->photo = $newPath;
-                }
-            }
-
-            // Handle Father Photo
-            if ($request->hasFile('father_photo')) {
-                $path = $request->file('father_photo')->store('parent_photos', 'public');
-                $student->father_photo = $path;
-            } elseif ($request->filled('father_photo_path')) {
-                $sourcePath = $request->father_photo_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'parent_photos/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->father_photo = $newPath;
-                }
-            }
-
-            // Handle Mother Photo
-            if ($request->hasFile('mother_photo')) {
-                $path = $request->file('mother_photo')->store('parent_photos', 'public');
-                $student->mother_photo = $path;
-            } elseif ($request->filled('mother_photo_path')) {
-                $sourcePath = $request->mother_photo_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'parent_photos/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->mother_photo = $newPath;
-                }
-            }
-
-            // Handle Student Signature
-            if ($request->hasFile('student_signature')) {
-                $path = $request->file('student_signature')->store('student_signatures', 'public');
-                $student->signature = $path;
-            } elseif ($request->filled('student_signature_path')) {
-                $sourcePath = $request->student_signature_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'student_signatures/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->signature = $newPath;
-                }
-            }
-
-            // Handle Father Signature
-            if ($request->hasFile('father_signature')) {
-                $path = $request->file('father_signature')->store('parent_signatures', 'public');
-                $student->father_signature = $path;
-            } elseif ($request->filled('father_signature_path')) {
-                $sourcePath = $request->father_signature_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'parent_signatures/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->father_signature = $newPath;
-                }
-            }
-
-            // Handle Mother Signature
-            if ($request->hasFile('mother_signature')) {
-                $path = $request->file('mother_signature')->store('parent_signatures', 'public');
-                $student->mother_signature = $path;
-            } elseif ($request->filled('mother_signature_path')) {
-                $sourcePath = $request->mother_signature_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'parent_signatures/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->mother_signature = $newPath;
-                }
-            }
-            
-            // Concatenate Father Name
-            $fatherName = trim(($request->father_first_name ?? '') . ' ' . ($request->father_middle_name ?? '') . ' ' . ($request->father_last_name ?? ''));
-            $student->father_name = $fatherName;
-
-            // Concatenate Mother Name
-            $motherName = trim(($request->mother_first_name ?? '') . ' ' . ($request->mother_middle_name ?? '') . ' ' . ($request->mother_last_name ?? ''));
-            $student->mother_name = $motherName;
+            // Handle Photo/Signature copies or uploads using Trait
+            $student->photo = $this->storeTenantFile($request->file('student_photo'), "students/{$school->id}/photos", $request->student_photo_path);
+            $student->father_photo = $this->storeTenantFile($request->file('father_photo'), "parents/{$school->id}/photos", $request->father_photo_path);
+            $student->mother_photo = $this->storeTenantFile($request->file('mother_photo'), "parents/{$school->id}/photos", $request->mother_photo_path);
             
             // Generate Admission No if not provided
             if (!$request->admission_no) {
-                $lastStudent = Student::where('school_id', $this->getSchoolId())->latest()->first();
+                $lastStudent = Student::where('school_id', $school->id)->latest()->first();
                 $student->admission_no = $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
+            }
+
+            // Concatenate Parent Names if necessary (handled by validation mapping usually but ensuring here)
+            if (!$student->father_name) {
+                $student->father_name = trim($request->father_first_name . ' ' . ($request->father_middle_name ?? '') . ' ' . $request->father_last_name);
+            }
+            if (!$student->mother_name) {
+                $student->mother_name = trim($request->mother_first_name . ' ' . ($request->mother_middle_name ?? '') . ' ' . $request->mother_last_name);
             }
 
             $student->save();
 
+            // --- FINANCIAL INTEGRATION ---
+            // 1. Find the 'Admission Fee' name for this school
+            $admissionFeeName = FeeName::where('school_id', $school->id)
+                ->where('name', 'Admission Fee')
+                ->first();
+
+            if ($admissionFeeName) {
+                // 2. Create the Fee Record (Ledger)
+                $fee = Fee::create([
+                    'school_id' => $school->id,
+                    'student_id' => $student->id,
+                    'academic_year_id' => $student->academic_year_id,
+                    'fee_type_id' => $admissionFeeName->fee_type_id,
+                    'fee_name_id' => $admissionFeeName->id,
+                    'class_id' => $student->class_id,
+                    'bill_no' => 'ADM-' . time(),
+                    'fee_period' => 'Admission',
+                    'payable_amount' => $request->admission_fee,
+                    'paid_amount' => $request->admission_fee,
+                    'due_amount' => 0,
+                    'due_date' => now(),
+                    'payment_date' => now(),
+                    'payment_status' => \App\Enums\FeeStatus::Paid,
+                    'payment_mode' => 'Cash', // Default for now
+                    'remarks' => 'Admission Fee paid during intake'
+                ]);
+
+                // 3. Create the Fee Payment Record (Transaction)
+                FeePayment::create([
+                    'school_id' => $school->id,
+                    'student_id' => $student->id,
+                    'fee_id' => $fee->id,
+                    'academic_year_id' => $student->academic_year_id,
+                    'amount' => $request->admission_fee,
+                    'payment_date' => now(),
+                    'receipt_no' => $request->receipt_no,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+
+            // --- FACILITY INTEGRATION (PHASE 2 PREP) ---
+            if ($request->transport_route_id) {
+                StudentTransportAssignment::create([
+                    'school_id' => $school->id,
+                    'student_id' => $student->id,
+                    'transport_route_id' => $request->transport_route_id,
+                    'status' => GeneralStatus::Active,
+                    'start_date' => now()
+                ]);
+            }
+
+            if ($request->hostel_id) {
+                // Simplified assignment - Phase 2 will handle floor/room selection
+                HostelBedAssignment::create([
+                    'school_id' => $school->id,
+                    'student_id' => $student->id,
+                    'hostel_id' => $request->hostel_id,
+                    'status' => GeneralStatus::Active,
+                    'start_date' => now()
+                ]);
+            }
+
             // If linked to a registration, update its status
             if ($request->registration_no) {
-                $registration = StudentRegistration::where('registration_no', $request->registration_no)->first();
+                $registration = StudentRegistration::where('registration_no', $request->registration_no)
+                    ->where('school_id', $school->id)
+                    ->first();
                 if ($registration) {
                     $registration->update(['admission_status' => AdmissionStatus::Admitted]);
                 }
             }
 
             DB::commit();
-            return redirect()->route('school.admission.index')->with('success', 'Student admitted successfully.');
+            return redirect()->route('school.admission.index')->with('success', 'Student admitted successfully and fee records generated.');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Illuminate\Support\Facades\Log::error("Admission Error: " . $e->getMessage());
             return back()->with('error', 'Error admitting student: ' . $e->getMessage())->withInput();
         }
     }
+
 
     public function show(Student $student)
     {
@@ -299,19 +267,23 @@ class AdmissionController extends TenantController
         $studentTypes = \App\Models\StudentType::where('school_id', $this->getSchoolId())->get();
         $correspondingRelatives = \App\Models\CorrespondingRelative::where('school_id', $this->getSchoolId())->get();
         $qualifications = \App\Models\Qualification::where('school_id', $this->getSchoolId())->get();
+        $transportRoutes = \App\Models\TransportRoute::where('school_id', $this->getSchoolId())->get();
+        $hostels = \App\Models\Hostel::where('school_id', $this->getSchoolId())->get();
 
         return view('school.admission.edit', compact(
             'student', 
             'classes', 
             'sections', 
-            'academicYears',
+            'academic_years', // Note: using lowercase variable names from original if applicable
             'registrations',
             'bloodGroups',
             'religions',
             'categories',
             'studentTypes',
             'correspondingRelatives',
-            'qualifications'
+            'qualifications',
+            'transportRoutes',
+            'hostels'
         ));
     }
 
@@ -517,10 +489,10 @@ class AdmissionController extends TenantController
         // Format dates for JavaScript
         $data = $registration->toArray();
         if ($registration->dob) {
-            $data['dob'] = $registration->dob->format('Y-m-d');
+            $data['dob'] = \Carbon\Carbon::parse($registration->dob)->format('Y-m-d');
         }
         if ($registration->registration_date) {
-            $data['registration_date'] = $registration->registration_date->format('Y-m-d');
+            $data['registration_date'] = \Carbon\Carbon::parse($registration->registration_date)->format('Y-m-d');
         }
         
         return response()->json($data);
@@ -534,7 +506,7 @@ class AdmissionController extends TenantController
             ->where('school_id', $this->getSchoolId())
             ->findOrFail($id);
         
-        $pdf = \PDF::loadView('pdf.student-admission', compact('student', 'school'));
+        $pdf = Pdf::loadView('pdf.student-admission', compact('student', 'school'));
         
         return $pdf->download('student-admission-' . $student->admission_no . '.pdf');
     }

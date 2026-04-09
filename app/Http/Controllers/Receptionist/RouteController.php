@@ -56,7 +56,7 @@ class RouteController extends TenantController
 
         $schoolId = $this->getSchoolId();
         $validated['school_id'] = $schoolId;
-        $validated['status'] = TransportRoute::STATUS_ACTIVE;
+        $validated['status'] = RouteStatus::Active;
 
         // Verify vehicle belongs to same school if provided
         if (!empty($validated['vehicle_id'])) {

@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
+use App\Enums\YesNo;
+
 class FeeName extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity, Searchable, Sortable, Cacheable;
@@ -23,7 +25,7 @@ class FeeName extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active' => YesNo::class,
     ];
 
     protected $searchable = ['name'];

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
+use App\Enums\YesNo;
 
 class StudentRegistration extends Model
 {
@@ -68,8 +69,8 @@ class StudentRegistration extends Model
         'registration_fee' => 'decimal:2',
         'father_annual_income' => 'decimal:2',
         'mother_annual_income' => 'decimal:2',
-        'is_single_parent' => 'boolean',
-        'is_transport_required' => 'boolean',
+        'is_single_parent' => YesNo::class,
+        'is_transport_required' => YesNo::class,
         'number_of_brothers' => 'integer',
         'number_of_sisters' => 'integer',
         'father_age' => 'integer',

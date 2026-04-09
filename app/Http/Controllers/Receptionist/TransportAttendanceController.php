@@ -9,6 +9,7 @@ use App\Models\Vehicle;
 use App\Models\TransportRoute;
 use App\Models\AcademicYear;
 use App\Enums\TransportAttendanceType;
+use App\Enums\RouteStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -69,7 +70,7 @@ class TransportAttendanceController extends TenantController
         // Get routes for this vehicle
         $routes = TransportRoute::where('school_id', $schoolId)
             ->where('vehicle_id', $request->vehicle_id)
-            ->where('status', TransportRoute::STATUS_ACTIVE)
+            ->where('status', RouteStatus::Active)
             ->orderBy('route_name')
             ->get(['id', 'route_name']);
         
@@ -447,7 +448,7 @@ class TransportAttendanceController extends TenantController
         // Get routes for this vehicle
         $routes = TransportRoute::where('school_id', $schoolId)
             ->where('vehicle_id', $request->vehicle_id)
-            ->where('status', TransportRoute::STATUS_ACTIVE)
+            ->where('status', RouteStatus::Active)
             ->orderBy('route_name')
             ->get(['id', 'route_name']);
         

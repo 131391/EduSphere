@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
+use App\Enums\YesNo;
+
 class AcademicYear extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity, Searchable, Sortable, Cacheable;
@@ -26,7 +28,7 @@ class AcademicYear extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'is_current' => 'boolean',
+        'is_current' => \App\Enums\YesNo::class,
     ];
 
     protected $searchable = ['name'];
@@ -69,7 +71,7 @@ class AcademicYear extends Model
 
     public function scopeCurrent($query)
     {
-        return $query->where('is_current', true);
+        return $query->where('is_current', \App\Enums\YesNo::Yes);
     }
 }
 

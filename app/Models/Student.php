@@ -12,6 +12,8 @@ use Spatie\Activitylog\LogOptions;
 
 use App\Enums\StudentStatus;
 use App\Enums\Gender;
+use App\Enums\GeneralStatus;
+use App\Enums\YesNo;
 
 class Student extends Model
 {
@@ -111,6 +113,8 @@ class Student extends Model
         'correspondence_city_id' => 'integer',
         'status' => StudentStatus::class,
         'gender' => Gender::class,
+        'is_single_parent' => YesNo::class,
+        'transport_required' => YesNo::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -172,6 +176,16 @@ class Student extends Model
     public function registrations()
     {
         return $this->hasMany(Registration::class, 'admission_no', 'admission_no');
+    }
+
+    public function transportAssignment()
+    {
+        return $this->hasOne(StudentTransportAssignment::class)->where('status', GeneralStatus::Active);
+    }
+
+    public function hostelAssignment()
+    {
+        return $this->hasOne(HostelBedAssignment::class)->where('status', GeneralStatus::Active);
     }
 
     // Location Relationships

@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Enums\UserStatus;
 
 class User extends Authenticatable
 {
@@ -51,7 +52,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_login_at' => 'datetime',
-        'status' => 'integer',
+        'status' => UserStatus::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -102,48 +103,48 @@ class User extends Authenticatable
 
     public function scopeActive($query)
     {
-        return $query->where('status', self::STATUS_ACTIVE);
+        return $query->where('status', UserStatus::Active);
     }
 
     public function scopeInactive($query)
     {
-        return $query->where('status', self::STATUS_INACTIVE);
+        return $query->where('status', UserStatus::Inactive);
     }
 
     public function scopeSuspended($query)
     {
-        return $query->where('status', self::STATUS_SUSPENDED);
+        return $query->where('status', UserStatus::Suspended);
     }
 
     public function scopePending($query)
     {
-        return $query->where('status', self::STATUS_PENDING);
+        return $query->where('status', UserStatus::Pending);
     }
 
     // Status helper methods
     public function isActive(): bool
     {
-        return $this->status === self::STATUS_ACTIVE;
+        return $this->status === UserStatus::Active;
     }
 
     public function isInactive(): bool
     {
-        return $this->status === self::STATUS_INACTIVE;
+        return $this->status === UserStatus::Inactive;
     }
 
     public function isSuspended(): bool
     {
-        return $this->status === self::STATUS_SUSPENDED;
+        return $this->status === UserStatus::Suspended;
     }
 
     public function isPending(): bool
     {
-        return $this->status === self::STATUS_PENDING;
+        return $this->status === UserStatus::Pending;
     }
 
     public function getStatusLabelAttribute(): string
     {
-        return self::STATUS_LABELS[$this->status] ?? 'Unknown';
+        return $this->status instanceof UserStatus ? $this->status->label() : 'Unknown';
     }
 
     // Role helper methods

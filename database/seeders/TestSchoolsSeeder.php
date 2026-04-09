@@ -40,6 +40,20 @@ class TestSchoolsSeeder extends Seeder
             ]
         );
 
+        // Create default Fee Type and Names for DPS
+        $dpsFeeType = \App\Models\FeeType::updateOrCreate(
+            ['school_id' => $dps->id, 'name' => 'Compulsory Fees'],
+            ['status' => 1]
+        );
+
+        foreach (['Registration Fee', 'Admission Fee', 'Tuition Fee'] as $name) {
+            \App\Models\FeeName::updateOrCreate(
+                ['school_id' => $dps->id, 'name' => $name],
+                ['fee_type_id' => $dpsFeeType->id, 'status' => 1]
+            );
+        }
+
+
         // 2. Create DAV Public School
         $dav = School::updateOrCreate(
             ['subdomain' => 'dav'],
@@ -63,6 +77,20 @@ class TestSchoolsSeeder extends Seeder
                 'status' => User::STATUS_ACTIVE,
             ]
         );
+
+        // Create default Fee Type and Names for DAV
+        $davFeeType = \App\Models\FeeType::updateOrCreate(
+            ['school_id' => $dav->id, 'name' => 'Compulsory Fees'],
+            ['status' => 1]
+        );
+
+        foreach (['Registration Fee', 'Admission Fee', 'Tuition Fee'] as $name) {
+            \App\Models\FeeName::updateOrCreate(
+                ['school_id' => $dav->id, 'name' => $name],
+                ['fee_type_id' => $davFeeType->id, 'status' => 1]
+            );
+        }
+
 
         $this->command->info('Test schools (DPS and DAV) created successfully!');
     }

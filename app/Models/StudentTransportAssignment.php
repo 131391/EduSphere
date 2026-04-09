@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Enums\GeneralStatus;
+
 class StudentTransportAssignment extends Model
 {
     use HasFactory, SoftDeletes, Tenantable;
@@ -20,10 +22,12 @@ class StudentTransportAssignment extends Model
         'vehicle_id',
         'fee_per_month',
         'academic_year_id',
+        'status',
     ];
 
     protected $casts = [
         'fee_per_month' => 'decimal:2',
+        'status' => GeneralStatus::class,
     ];
 
     /**
