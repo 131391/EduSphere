@@ -217,22 +217,6 @@
             </template>
             <input type="hidden" name="visitor_id" :value="visitorId" x-show="editMode">
 
-            {{-- Centralized Validation Summary --}}
-            <template x-if="Object.keys(errors).length > 0">
-                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl animate-fade-in">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-exclamation-circle text-red-500"></i>
-                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
-                    </div>
-                    <ul class="list-disc list-inside space-y-1">
-                        <template x-for="(messages, field) in errors" :key="field">
-                            <template x-for="message in messages" :key="message">
-                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
-                            </template>
-                        </template>
-                    </ul>
-                </div>
-            </template>
 
             <div class="grid grid-cols-2 gap-6">
                 <!-- Left Column -->
@@ -520,6 +504,16 @@ document.addEventListener('alpine:init', () => {
                 if (event.detail === 'visitor-modal') {
                     this.resetForm();
                 }
+            });
+
+            // Robust error clearing for selects (including Select2)
+            this.$nextTick(() => {
+                $(this.$el).find('select').on('change', (e) => {
+                    const fieldName = e.target.getAttribute('name');
+                    if (fieldName && this.errors[fieldName]) {
+                        delete this.errors[fieldName];
+                    }
+                });
             });
             
             // Hide error banner when modal opens
@@ -887,71 +881,5 @@ function removeImage(event, inputName, previewId, iconId, removeBtnId) {
 }
 </script>
 
-<script>
-// Global script to hide validation errors when user starts typing or selecting
-document.addEventListener('DOMContentLoaded', function() {
-    // Function to hide error banner
-    const hideErrorBanner = function() {
-        const errorBanner = document.getElementById('error-banner');
-        if (errorBanner) {
-            errorBanner.style.display = 'none';
-            // Also update Alpine.js state if available
-            if (errorBanner.__x) {
-                errorBanner.__x.$data.show = false;
-            }
-        }
-    };
-    
-    // Hide error banner when clicking on any form field
-    document.addEventListener('click', function(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
-            hideErrorBanner();
-        }
-    });
-    
-    // Add event listeners to all inputs and selects in the modal
-    const modal = document.querySelector('[x-data*="visitorManagement"]');
-    if (modal) {
-        // Handle regular inputs
-        modal.addEventListener('input', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                hideErrorBanner();
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-500')) {
-                    errorElement.classList.add('hidden');
-                }
-                // Also remove red border
-                e.target.classList.remove('border-red-500');
-            }
-        });
-        
-        // Handle native selects - use change event
-        modal.addEventListener('change', function(e) {
-            if (e.target.tagName === 'SELECT') {
-                hideErrorBanner();
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-500')) {
-                    errorElement.classList.add('hidden');
-                }
-                // Also remove red border
-                e.target.classList.remove('border-red-500');
-            }
-        });
-        
-        // Also listen for input events on selects (some browsers fire input on select change)
-        modal.addEventListener('input', function(e) {
-            if (e.target.tagName === 'SELECT') {
-                hideErrorBanner();
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-500')) {
-                    errorElement.classList.add('hidden');
-                }
-                // Also remove red border
-                e.target.classList.remove('border-red-500');
-            }
-        });
-    }
-});
-</script>
 @endpush
 @endsection

@@ -18,20 +18,6 @@
         <div x-data="registrationManagement('{{ route('receptionist.student-registrations.update', $studentRegistration->id) }}', 'PUT')" 
              class="space-y-6">
             
-            <!-- Centralized Validation Summary -->
-            <template x-if="Object.keys(errors).length > 0">
-                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm mb-6 animate-pulse-subtle">
-                    <div class="flex items-center mb-2">
-                        <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
-                        <h3 class="text-sm font-bold text-red-800 uppercase tracking-wider">Validation Errors Detected</h3>
-                    </div>
-                    <ul class="list-disc list-inside text-xs text-red-700 space-y-1">
-                        <template x-for="(messages, field) in errors" :key="field">
-                            <li x-text="messages[0]"></li>
-                        </template>
-                    </ul>
-                </div>
-            </template>
 
             <form @submit.prevent="submitForm">
                 @csrf
@@ -85,6 +71,17 @@
                 return {
                     errors: {},
                     loading: false,
+                    
+                    init() {
+                        this.$nextTick(() => {
+                            $(this.$el).find('select').on('change', (e) => {
+                                const fieldName = e.target.getAttribute('name');
+                                if (fieldName && this.errors[fieldName]) {
+                                    delete this.errors[fieldName];
+                                }
+                            });
+                        });
+                    },
                     
                     async submitForm(e) {
                         this.loading = true;

@@ -18,22 +18,6 @@
             <form id="registrationForm" @submit.prevent="submitForm">
                 @csrf
                 
-                {{-- Centralized Validation Summary --}}
-                <template x-if="Object.keys(errors).length > 0">
-                    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl animate-fade-in shadow-sm">
-                        <div class="flex items-center gap-2 mb-2">
-                            <i class="fas fa-exclamation-circle text-red-500"></i>
-                            <span class="text-xs font-black text-red-700 uppercase tracking-widest">Registration Validation Exceptions</span>
-                        </div>
-                        <ul class="list-disc list-inside space-y-1">
-                            <template x-for="(messages, field) in errors" :key="field">
-                                <template x-for="message in messages" :key="message">
-                                    <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
-                                </template>
-                            </template>
-                        </ul>
-                    </div>
-                </template>
 
                 @include('receptionist.student-registrations.partials.form')
 
@@ -79,6 +63,17 @@
             return {
                 submitting: false,
                 errors: {},
+                
+                init() {
+                    this.$nextTick(() => {
+                        $(this.$el).find('select').on('change', (e) => {
+                            const fieldName = e.target.getAttribute('name');
+                            if (fieldName && this.errors[fieldName]) {
+                                delete this.errors[fieldName];
+                            }
+                        });
+                    });
+                },
 
                 async submitForm() {
                     this.submitting = true;
