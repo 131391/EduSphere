@@ -34,79 +34,117 @@ class LocationCascade {
     }
 
     initCascades() {
-        const countrySelects = document.querySelectorAll('[data-location-cascade="true"]');
+        // Wait a small bit for global Select2 initializers to finish
+        setTimeout(() => {
+            const countrySelects = document.querySelectorAll('[data-location-cascade="true"]');
 
-        countrySelects.forEach(countrySelect => {
-            if (countrySelect.dataset.cascadeInitialized) return;
+            countrySelects.forEach(countrySelect => {
+                if (countrySelect.dataset.cascadeInitialized) return;
 
-            const container = countrySelect.closest('form') || document.body;
-            const stateSelect = container.querySelector('[data-state-select]');
-            const citySelect = container.querySelector('[data-city-select]');
+                // Find container, prioritizing closest field-group container (like grid) so multiple location sets in one form don't conflict.
+                const container = countrySelect.closest('.grid') || countrySelect.closest('.fieldset') || countrySelect.closest('form') || document.body;
+                const stateSelect = container.querySelector('[data-state-select]');
+                const citySelect = container.querySelector('[data-city-select]');
 
-            if (!stateSelect || !citySelect) return;
+                if (!stateSelect || !citySelect) return;
 
-            // Mark as initialized
-            countrySelect.dataset.cascadeInitialized = 'true';
+                // Mark as initialized
+                countrySelect.dataset.cascadeInitialized = 'true';
 
-            // Load initial countries if empty
-            if (countrySelect.options.length <= 1) {
-                this.loadCountries(countrySelect);
-            }
-
-            // Handle Country Change
-            this.bindChange(countrySelect, () => {
-                this.resetSelect(stateSelect);
-                this.resetSelect(citySelect);
-
-                const countryId = countrySelect.value;
-                if (countryId) {
-                    this.loadStates(stateSelect, countryId);
+                // Load initial countries if empty
+                if (countrySelect.options.length <= 2) {
+                    // If it has a dummy option, reset it
+                    if (countrySelect.options.length === 2 && countrySelect.options[1].value) {
+                        countrySelect.setAttribute('data-selected', countrySelect.options[1].value);
+                        countrySelect.innerHTML = '<option value="">Select Country</option>';
+                    }
+                    const selectedCountry = countrySelect.getAttribute('data-selected');
+                    this.loadCountries(countrySelect, selectedCountry);
                 }
-            });
 
-            // Handle State Change
-            this.bindChange(stateSelect, () => {
-                this.resetSelect(citySelect);
+                // Handle Country Change
+                let lastCountryId = countrySelect.value;
+                this.bindChange(countrySelect, () => {
+                    const countryId = countrySelect.value;
+                    if (countryId == lastCountryId) return; // Prevent phantom triggers (loose equality for string/number)
+                    lastCountryId = countryId;
 
-                const stateId = stateSelect.value;
-                if (stateId) {
-                    this.loadCities(citySelect, stateId);
-                }
-            });
+                    this.resetSelect(stateSelect);
+                    this.resetSelect(citySelect);
 
-            // Handle pre-selected values (e.g., old input or edit mode)
-            if (countrySelect.value && stateSelect.options.length <= 1) {
-                const selectedState = stateSelect.getAttribute('data-selected');
-                this.loadStates(stateSelect, countrySelect.value, selectedState);
-            }
+                    if (countryId) {
+                        const selectedState = stateSelect.getAttribute('data-selected');
+                        this.loadStates(stateSelect, countryId, selectedState);
+                    }
+                });
 
-            if (stateSelect.getAttribute('data-selected') && citySelect.options.length <= 1) {
-                // Wait for states to load first if needed
-                const checkStateLoaded = setInterval(() => {
-                    if (stateSelect.options.length > 1) {
-                        clearInterval(checkStateLoaded);
-                        if (stateSelect.value) {
-                            const selectedCity = citySelect.getAttribute('data-selected');
-                            this.loadCities(citySelect, stateSelect.value, selectedCity);
+                // Handle State Change
+                let lastStateId = stateSelect.value;
+                this.bindChange(stateSelect, () => {
+                    const stateId = stateSelect.value;
+                    if (stateId == lastStateId) return; // Prevent phantom triggers (loose equality)
+                    lastStateId = stateId;
+
+                    this.resetSelect(citySelect);
+
+                    if (stateId) {
+                        const selectedCity = citySelect.getAttribute('data-selected');
+                        this.loadCities(citySelect, stateId, selectedCity);
+                    }
+                });
+
+                // --- Recursive Initial Sync Engine ---
+                // This ensures that if any part of the chain is pre-populated (via SSR),
+                // the subsequent child parts are also synchronized and backfilled.
+                
+                const syncChain = async () => {
+                    // 1. Sync State if Country is set
+                    if (countrySelect.value && !stateSelect.dataset.initSynced) {
+                        const selectedState = stateSelect.getAttribute('data-selected');
+                        if (selectedState) {
+                            stateSelect.dataset.initSynced = 'true';
+                            await this.loadStates(stateSelect, countrySelect.value, selectedState);
                         }
                     }
-                }, 100);
-            }
-        });
+
+                    // 2. Sync City if State is set (Wait a bit for State to potentially load if it wasn't SSR)
+                    // We check again after a small delay to catch async state loads
+                    setTimeout(async () => {
+                        if (stateSelect.value && !citySelect.dataset.initSynced) {
+                            const selectedCity = citySelect.getAttribute('data-selected');
+                            if (selectedCity) {
+                                citySelect.dataset.initSynced = 'true';
+                                await this.loadCities(citySelect, stateSelect.value, selectedCity);
+                            }
+                        }
+                    }, 300);
+                };
+
+                syncChain();
+            });
+        }, 250);
     }
 
     bindChange(element, callback) {
-        // Standard change event
-        element.addEventListener('change', callback);
+        let isProcessing = false;
+        const wrappedCallback = (e) => {
+            if (isProcessing) return;
+            isProcessing = true;
+            callback(e);
+            // Increased to 100ms to allow DOM and Select2 to settle
+            setTimeout(() => { isProcessing = false; }, 100);
+        };
 
-        // Select2 change event
         if (window.jQuery) {
-            $(element).on('select2:select', callback);
-            $(element).on('select2:clear', callback);
+            // Bind both native jQuery change and select2 events
+            $(element).on('change select2:select select2:clear', wrappedCallback);
+        } else {
+            // Standard change event fallback
+            element.addEventListener('change', wrappedCallback);
         }
     }
 
-    async loadCountries(select) {
+    async loadCountries(select, selectedValue = null) {
         this.setLoading(select, true);
         try {
             const response = await fetch('/api/location/countries');
@@ -115,8 +153,12 @@ class LocationCascade {
             if (data.success) {
                 this.populateSelect(select, data.data, 'id', 'name');
 
-                // Select India by default if nothing selected
-                if (!select.value) {
+                // Select the old value if available
+                if (selectedValue) {
+                    this.setValue(select, selectedValue);
+                    this.triggerChange(select);
+                } else if (!select.value) {
+                    // Select India by default if nothing selected
                     const india = data.data.find(c => c.name === 'India');
                     if (india) {
                         this.setValue(select, india.id);
@@ -129,6 +171,8 @@ class LocationCascade {
             console.error('Error loading countries:', error);
         } finally {
             this.setLoading(select, false);
+            // Optionally remove data-selected after full cycle
+            setTimeout(() => select.removeAttribute('data-selected'), 1000);
         }
     }
 
@@ -142,14 +186,15 @@ class LocationCascade {
                 this.populateSelect(select, data.data, 'id', 'name');
                 if (selectedValue) {
                     this.setValue(select, selectedValue);
-                    // Do not trigger change here to avoid race condition with initialization logic
-                    // The setInterval block in initCascades will handle loading cities
+                    this.triggerChange(select); // Organically triggers city load
                 }
             }
         } catch (error) {
             console.error('Error loading states:', error);
         } finally {
             this.setLoading(select, false);
+            // Optionally remove data-selected after full cycle
+            setTimeout(() => select.removeAttribute('data-selected'), 1000);
         }
     }
 
@@ -169,23 +214,38 @@ class LocationCascade {
             console.error('Error loading cities:', error);
         } finally {
             this.setLoading(select, false);
+            // Optionally remove data-selected after full cycle
+            setTimeout(() => select.removeAttribute('data-selected'), 1000);
         }
     }
 
     populateSelect(select, items, valueKey, textKey) {
-        // Keep placeholder
+        // Capture current selected value (SSR support)
+        const currentValue = select.value;
         const placeholder = select.options[0];
-        select.innerHTML = '';
-        if (placeholder) select.add(placeholder);
-
+        const placeholderText = placeholder ? placeholder.text : 'Select an option';
+        
+        // Build new options list
+        let optionsHtml = `<option value="">${placeholderText}</option>`;
         items.forEach(item => {
-            const option = new Option(item[textKey], item[valueKey]);
-            select.add(option);
+            const isSelected = item[valueKey] == currentValue ? 'selected' : '';
+            optionsHtml += `<option value="${item[valueKey]}" ${isSelected}>${item[textKey]}</option>`;
         });
+        
+        select.innerHTML = optionsHtml;
+
+        // Restore value if it was wiped by the innerHTML change
+        if (currentValue && !select.value) {
+            select.value = currentValue;
+        }
 
         // Refresh Select2 if active
         if (window.jQuery && $(select).hasClass('select2-hidden-accessible')) {
-            $(select).trigger('change.select2');
+            // Ensure Select2 is updated with the new options
+            $(select).select2({
+                placeholder: placeholderText,
+                width: '100%'
+            }).trigger('change.select2');
         }
     }
 
@@ -199,14 +259,16 @@ class LocationCascade {
     setValue(select, value) {
         select.value = value;
         if (window.jQuery && $(select).hasClass('select2-hidden-accessible')) {
-            $(select).val(value).trigger('change.select2');
+            $(select).val(value).trigger('change');
         }
     }
 
     triggerChange(select) {
-        select.dispatchEvent(new Event('change'));
-        if (window.jQuery && $(select).hasClass('select2-hidden-accessible')) {
+        // Use jQuery trigger if available to hit all listeners (native + jQuery)
+        if (window.jQuery) {
             $(select).trigger('change');
+        } else {
+            select.dispatchEvent(new Event('change'));
         }
     }
 

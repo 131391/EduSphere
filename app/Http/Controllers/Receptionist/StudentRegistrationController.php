@@ -14,22 +14,36 @@ use App\Models\Category;
 use App\Models\BoardingType;
 use App\Models\CorrespondingRelative;
 use App\Models\Qualification;
+use App\Models\Fee;
+use App\Models\FeeName;
+use App\Models\FeePayment;
+use App\Services\LocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
-use App\Enums\EnquiryStatus;
 use App\Enums\Gender;
+use App\Traits\HandlesFileCopies;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StudentRegistrationController extends TenantController
 {
+    use HandlesFileCopies;
+    protected $locationService;
+
+    public function __construct(LocationService $locationService)
+    {
+        $this->locationService = $locationService;
+    }
+
     public function index(Request $request)
     {
-        $schoolId = $this->getSchoolId();
+        $school = Auth::user()->school;
         
-        $query = StudentRegistration::where('school_id', $schoolId)
+        $query = StudentRegistration::where('school_id', $school->id)
             ->with(['class', 'academicYear']);
 
         // Search
@@ -56,101 +70,186 @@ class StudentRegistrationController extends TenantController
 
         // Statistics
         $stats = [
-            'total' => StudentRegistration::where('school_id', $schoolId)->count(),
-            'admitted' => StudentRegistration::where('school_id', $schoolId)->admitted()->count(),
-            'pending' => StudentRegistration::where('school_id', $schoolId)->pending()->count(),
-            'cancelled' => StudentRegistration::where('school_id', $schoolId)->cancelled()->count(),
-            'total_enquiry' => StudentEnquiry::where('school_id', $schoolId)->count(),
+            'total' => StudentRegistration::where('school_id', $school->id)->count(),
+            'admitted' => StudentRegistration::where('school_id', $school->id)->admitted()->count(),
+            'pending' => StudentRegistration::where('school_id', $school->id)->pending()->count(),
+            'cancelled' => StudentRegistration::where('school_id', $school->id)->cancelled()->count(),
+            'total_enquiry' => StudentEnquiry::where('school_id', $school->id)->count(),
         ];
 
-        $classes = ClassModel::where('school_id', $schoolId)->get();
+        $classes = ClassModel::where('school_id', $school->id)->get();
 
         return view('receptionist.student-registrations.index', compact('registrations', 'stats', 'classes'));
     }
 
     public function create()
     {
-        $schoolId = $this->getSchoolId();
-        $classes = ClassModel::where('school_id', $schoolId)->with('registrationFee')->get();
-        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
-        $enquiries = StudentEnquiry::where('school_id', $schoolId)
+        $school = Auth::user()->school;
+        $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
+        $academicYears = AcademicYear::where('school_id', $school->id)->get();
+        $enquiries = StudentEnquiry::where('school_id', $school->id)
             ->pending()
             ->get();
             
-        $studentTypes = StudentType::where('school_id', $schoolId)->get();
-        $bloodGroups = BloodGroup::where('school_id', $schoolId)->get();
-        $religions = Religion::where('school_id', $schoolId)->get();
-        $categories = Category::where('school_id', $schoolId)->get();
-        $boardingTypes = BoardingType::where('school_id', $schoolId)->get();
-        $correspondingRelatives = CorrespondingRelative::where('school_id', $schoolId)->get();
-        $qualifications = Qualification::where('school_id', $schoolId)->get();
+        $studentTypes = StudentType::where('school_id', $school->id)->get();
+        $bloodGroups = BloodGroup::where('school_id', $school->id)->get();
+        $religions = Religion::where('school_id', $school->id)->get();
+        $categories = Category::where('school_id', $school->id)->get();
+        $boardingTypes = BoardingType::where('school_id', $school->id)->get();
+        $correspondingRelatives = CorrespondingRelative::where('school_id', $school->id)->get();
+        $qualifications = Qualification::where('school_id', $school->id)->get();
+        $countries = $this->locationService->getCountries();
 
         return view('receptionist.student-registrations.create', compact(
             'classes', 'academicYears', 'enquiries', 'studentTypes', 
             'bloodGroups', 'religions', 'categories', 'boardingTypes', 
-            'correspondingRelatives', 'qualifications'
+            'correspondingRelatives', 'qualifications', 'countries'
         ));
     }
 
     public function store(Request $request)
     {
-        $schoolId = $this->getSchoolId();
+        \Illuminate\Support\Facades\Log::info('StudentRegistrationController@store reached', [
+            'request' => $request->all(),
+            'session' => session()->all()
+        ]);
+        
+        $school = Auth::user()->school;
 
         $validated = $request->validate([
+            // Registration Form Information
+            'enquiry_id' => 'nullable|exists:student_enquiries,id',
             'academic_year_id' => 'required|exists:academic_years,id',
             'class_id' => 'required|exists:classes,id',
+            'registration_fee' => 'nullable|numeric',
+            
+            // Personal Information
             'first_name' => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
             'last_name' => 'required|string|max:100',
             'gender' => ['required', 'integer', Rule::enum(Gender::class)],
+            'dob' => 'nullable|date',
+            'email' => 'nullable|email|max:150',
             'mobile_no' => 'required|string|max:20',
+            
+            // Father's Details
             'father_first_name' => 'required|string|max:100',
             'father_last_name' => 'required|string|max:100',
             'father_mobile_no' => 'required|string|max:20',
+            
+            // Mother's Details
             'mother_first_name' => 'required|string|max:100',
             'mother_last_name' => 'required|string|max:100',
             'mother_mobile_no' => 'required|string|max:20',
+            
+            // Permanent Address
             'permanent_address' => 'required|string',
-            'permanent_country_id' => 'required|exists:countries,id',
-            'permanent_state_id' => 'required|exists:states,id',
-            'permanent_city_id' => 'required|exists:cities,id',
+            'permanent_country_id' => 'required',
+            'permanent_state_id' => 'required',
+            'permanent_city_id' => 'required',
             'permanent_pin' => 'required|string|max:20',
             'correspondence_address' => 'nullable|string',
             'correspondence_country_id' => 'nullable|exists:countries,id',
             'correspondence_state_id' => 'nullable|exists:states,id',
             'correspondence_city_id' => 'nullable|exists:cities,id',
+            
+            // Photos & Signatures
+            'father_photo' => 'nullable|image|max:2048',
+            'mother_photo' => 'nullable|image|max:2048',
+            'student_photo' => 'nullable|image|max:2048',
+            'father_signature' => 'nullable|image|max:2048',
+            'mother_signature' => 'nullable|image|max:2048',
+            'student_signature' => 'nullable|image|max:2048',
         ]);
 
-        $data = $request->all();
-        $data['school_id'] = $schoolId;
-
-        // Handle File Uploads
-        $fileFields = ['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature'];
-        foreach ($fileFields as $field) {
-            if ($request->hasFile($field)) {
-                // New file uploaded - store it
-                $path = $request->file($field)->store("registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
-                $data[$field] = $path;
-            } elseif ($request->filled("enquiry_{$field}")) {
-                // Photo from enquiry - copy it to registration storage
-                $enquiryPath = $request->input("enquiry_{$field}");
-                if ($enquiryPath && Storage::disk('public')->exists($enquiryPath)) {
-                    // Determine destination directory
-                    $destinationDir = "registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures');
-                    // Generate new filename to avoid conflicts
-                    $filename = basename($enquiryPath);
-                    $newPath = $destinationDir . '/' . time() . '_' . $filename;
-                    
-                    // Copy file from enquiry storage to registration storage
-                    Storage::disk('public')->copy($enquiryPath, $newPath);
-                    $data[$field] = $newPath;
-                }
+        // Pre-check Registration Fee setup if fee is provided
+        if ($request->registration_fee > 0) {
+            $regFeeName = FeeName::where('school_id', $school->id)
+                ->where('name', 'Registration Fee')
+                ->first();
+            
+            if (!$regFeeName) {
+                return back()->withErrors(['registration_fee' => 'Financial system error: "Registration Fee" type not found in school settings. Please contact administrator.'])->withInput();
             }
         }
 
-        StudentRegistration::create($data);
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $data['school_id'] = $school->id;
 
-        return redirect()->route('receptionist.student-registrations.index')->with('success', 'Student registered successfully.');
+            // Handle File Uploads or Copies using Trait
+            $data['father_photo'] = $this->storeTenantFile($request->file('father_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_father_photo'));
+            $data['mother_photo'] = $this->storeTenantFile($request->file('mother_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_mother_photo'));
+            $data['student_photo'] = $this->storeTenantFile($request->file('student_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_student_photo'));
+            $data['father_signature'] = $this->storeTenantFile($request->file('father_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_father_signature'));
+            $data['mother_signature'] = $this->storeTenantFile($request->file('mother_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_mother_signature'));
+            $data['student_signature'] = $this->storeTenantFile($request->file('student_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_student_signature'));
+
+            $registration = StudentRegistration::create($data);
+
+            // Update Enquiry Status if linked
+            if ($request->filled('enquiry_id')) {
+                $enquiry = StudentEnquiry::where('school_id', $school->id)
+                    ->where('id', $request->enquiry_id)
+                    ->first();
+                if ($enquiry) {
+                    $enquiry->update(['form_status' => \App\Enums\EnquiryStatus::Completed]);
+                }
+            }
+
+            // --- FINANCIAL INTEGRATION ---
+            if ($request->registration_fee > 0) {
+                // $regFeeName already found above
+                $fee = Fee::create([
+                    'school_id' => $school->id,
+                    'registration_id' => $registration->id,
+                    'academic_year_id' => $registration->academic_year_id,
+                    'fee_type_id' => $regFeeName->fee_type_id,
+                    'fee_name_id' => $regFeeName->id,
+                    'class_id' => $registration->class_id,
+                    'bill_no' => 'REG-' . time(),
+                    'fee_period' => 'One-time',
+                    'payable_amount' => $request->registration_fee,
+                    'paid_amount' => $request->registration_fee,
+                    'due_amount' => 0,
+                    'due_date' => now(),
+                    'payment_date' => now(),
+                    'payment_status' => \App\Enums\FeeStatus::Paid,
+                    'payment_mode' => 'Cash',
+                    'remarks' => 'Registration Fee for No: ' . $registration->registration_no
+                ]);
+
+                $cashPaymentMethod = \App\Models\PaymentMethod::where('name', 'Cash')->first();
+
+                FeePayment::create([
+                    'school_id' => $school->id,
+                    'fee_id' => $fee->id,
+                    'academic_year_id' => $registration->academic_year_id,
+                    'amount' => $request->registration_fee,
+                    'payment_date' => now(),
+                    'payment_method_id' => $cashPaymentMethod->id ?? 1,
+                    'receipt_no' => 'R-' . time(),
+                    'created_by' => Auth::id(),
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('receptionist.student-registrations.index')->with('success', 'Student registered successfully with financial records.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error("Registration Error: " . $e->getMessage());
+            
+            // Try to provide a more helpful field-level error if it's a common issue
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, 'Registration Fee')) {
+                return back()->withErrors(['registration_fee' => 'Error calculating registration fee: ' . $errorMessage])->withInput();
+            }
+            
+            return back()->with('error', 'Critical Error: ' . $errorMessage)->withInput();
+        }
     }
+
 
     public function show(StudentRegistration $studentRegistration)
     {
@@ -159,28 +258,29 @@ class StudentRegistrationController extends TenantController
 
     public function edit(StudentRegistration $studentRegistration)
     {
-        $schoolId = $this->getSchoolId();
-        $classes = ClassModel::where('school_id', $schoolId)->with('registrationFee')->get();
-        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
-        $enquiries = StudentEnquiry::where('school_id', $schoolId)->get();
-        $studentTypes = StudentType::where('school_id', $schoolId)->get();
-        $bloodGroups = BloodGroup::where('school_id', $schoolId)->get();
-        $religions = Religion::where('school_id', $schoolId)->get();
-        $categories = Category::where('school_id', $schoolId)->get();
-        $boardingTypes = BoardingType::where('school_id', $schoolId)->get();
-        $correspondingRelatives = CorrespondingRelative::where('school_id', $schoolId)->get();
-        $qualifications = Qualification::where('school_id', $schoolId)->get();
+        $school = Auth::user()->school;
+        $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
+        $academicYears = AcademicYear::where('school_id', $school->id)->get();
+        $enquiries = StudentEnquiry::where('school_id', $school->id)->get();
+        $studentTypes = StudentType::where('school_id', $school->id)->get();
+        $bloodGroups = BloodGroup::where('school_id', $school->id)->get();
+        $religions = Religion::where('school_id', $school->id)->get();
+        $categories = Category::where('school_id', $school->id)->get();
+        $boardingTypes = BoardingType::where('school_id', $school->id)->get();
+        $correspondingRelatives = CorrespondingRelative::where('school_id', $school->id)->get();
+        $qualifications = Qualification::where('school_id', $school->id)->get();
+        $countries = $this->locationService->getCountries();
 
         return view('receptionist.student-registrations.edit', compact(
             'studentRegistration', 'classes', 'academicYears', 'enquiries', 
             'studentTypes', 'bloodGroups', 'religions', 'categories', 
-            'boardingTypes', 'correspondingRelatives', 'qualifications'
+            'boardingTypes', 'correspondingRelatives', 'qualifications', 'countries'
         ));
     }
 
     public function update(Request $request, StudentRegistration $studentRegistration)
     {
-        $schoolId = $this->getSchoolId();
+        $school = Auth::user()->school;
 
         $validated = $request->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -189,12 +289,9 @@ class StudentRegistrationController extends TenantController
             'last_name' => 'required|string|max:100',
             'mobile_no' => 'required|string|max:20',
             'admission_status' => ['required', Rule::enum(AdmissionStatus::class)],
-            'permanent_address' => 'required|string',
-            'permanent_country_id' => 'required|exists:countries,id',
-            'permanent_state_id' => 'required|exists:states,id',
-            'permanent_city_id' => 'required|exists:cities,id',
-            'permanent_pin' => 'required|string|max:20',
-            'correspondence_address' => 'nullable|string',
+            'permanent_country_id' => 'nullable|exists:countries,id',
+            'permanent_state_id' => 'nullable|exists:states,id',
+            'permanent_city_id' => 'nullable|exists:cities,id',
             'correspondence_country_id' => 'nullable|exists:countries,id',
             'correspondence_state_id' => 'nullable|exists:states,id',
             'correspondence_city_id' => 'nullable|exists:cities,id',
@@ -210,7 +307,7 @@ class StudentRegistrationController extends TenantController
                 if ($studentRegistration->$field) {
                     Storage::disk('public')->delete($studentRegistration->$field);
                 }
-                $path = $request->file($field)->store("registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
+                $path = $request->file($field)->store("registrations/{$school->id}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
                 $data[$field] = $path;
             } elseif ($request->filled("enquiry_{$field}")) {
                 // Photo from enquiry - copy it to registration storage
@@ -221,7 +318,7 @@ class StudentRegistrationController extends TenantController
                         Storage::disk('public')->delete($studentRegistration->$field);
                     }
                     // Determine destination directory
-                    $destinationDir = "registrations/{$schoolId}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures');
+                    $destinationDir = "registrations/{$school->id}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures');
                     // Generate new filename to avoid conflicts
                     $filename = basename($enquiryPath);
                     $newPath = $destinationDir . '/' . time() . '_' . $filename;
@@ -240,6 +337,7 @@ class StudentRegistrationController extends TenantController
 
     public function destroy(StudentRegistration $studentRegistration)
     {
+        // Delete files
         $fileFields = ['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature'];
         foreach ($fileFields as $field) {
             if ($studentRegistration->$field) {
@@ -254,8 +352,8 @@ class StudentRegistrationController extends TenantController
 
     public function getEnquiryData($id)
     {
-        $schoolId = $this->getSchoolId();
-        $enquiry = StudentEnquiry::where('school_id', $schoolId)
+        $school = Auth::user()->school;
+        $enquiry = StudentEnquiry::where('school_id', $school->id)
             ->where('id', $id)
             ->first();
         
@@ -263,21 +361,9 @@ class StudentRegistrationController extends TenantController
             return response()->json(['error' => 'Enquiry not found'], 404);
         }
         
-        // Format dates for JavaScript
-        $data = $enquiry->toArray();
-        if ($enquiry->dob) {
-            $data['dob'] = $enquiry->dob->format('Y-m-d');
-        }
-        if ($enquiry->follow_up_date) {
-            $data['follow_up_date'] = $enquiry->follow_up_date->format('Y-m-d');
-        }
-        if ($enquiry->enquiry_date) {
-            $data['enquiry_date'] = $enquiry->enquiry_date->format('Y-m-d');
-        }
-        
         return response()->json([
             'success' => true,
-            'data' => $data
+            'data' => $enquiry
         ]);
     }
 
@@ -300,14 +386,13 @@ class StudentRegistrationController extends TenantController
 
     public function downloadPdf($id)
     {
-        $schoolId = $this->getSchoolId();
-        $school = $this->getSchool();
+        $school = Auth::user()->school;
         
         $studentRegistration = StudentRegistration::with(['class', 'academicYear'])
-            ->where('school_id', $schoolId)
+            ->where('school_id', $school->id)
             ->findOrFail($id);
         
-        $pdf = \PDF::loadView('pdf.student-registration', compact('studentRegistration', 'school'));
+        $pdf = Pdf::loadView('pdf.student-registration', compact('studentRegistration', 'school'));
         
         return $pdf->download('student-registration-' . $studentRegistration->registration_no . '.pdf');
     }

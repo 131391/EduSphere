@@ -9,16 +9,16 @@ use App\Models\ClassModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use App\Enums\Gender;
 use App\Enums\EnquiryStatus;
+use App\Enums\Gender;
 
 class StudentEnquiryController extends TenantController
 {
     public function index(Request $request)
     {
-        $schoolId = $this->getSchoolId();
+        $school = auth()->user()->school;
         
-        $query = StudentEnquiry::where('school_id', $schoolId)
+        $query = StudentEnquiry::where('school_id', $school->id)
             ->with(['academicYear', 'class']);
 
         // Search functionality
@@ -41,41 +41,40 @@ class StudentEnquiryController extends TenantController
         $perPage = $request->get('per_page', 15);
         $enquiries = $query->paginate($perPage)->withQueryString();
 
-        // Statistics
+        // Statistics - Scoped to school
         $stats = [
-            'total' => StudentEnquiry::where('school_id', $schoolId)->count(),
-            'pending' => StudentEnquiry::where('school_id', $schoolId)->pending()->count(),
-            'cancelled' => StudentEnquiry::where('school_id', $schoolId)->cancelled()->count(),
-            'registration' => StudentEnquiry::where('school_id', $schoolId)->completed()->count(),
-            'admitted' => StudentEnquiry::where('school_id', $schoolId)->admitted()->count(),
+            'total' => StudentEnquiry::where('school_id', $school->id)->count(),
+            'pending' => StudentEnquiry::where('school_id', $school->id)->pending()->count(),
+            'cancelled' => StudentEnquiry::where('school_id', $school->id)->cancelled()->count(),
+            'registration' => StudentEnquiry::where('school_id', $school->id)->completed()->count(),
+            'admitted' => StudentEnquiry::where('school_id', $school->id)->admitted()->count(),
         ];
 
         // Get academic years and classes for dropdowns
-        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
-        $classes = ClassModel::where('school_id', $schoolId)->get();
+        $academicYears = AcademicYear::where('school_id', $school->id)->get();
+        $classes = ClassModel::where('school_id', $school->id)->get();
 
         return view('receptionist.student-enquiries.index', compact('enquiries', 'stats', 'academicYears', 'classes'));
-    }
-
-    public function show(StudentEnquiry $studentEnquiry)
-    {
-        $this->authorizeTenant($studentEnquiry);
-        
-        $studentEnquiry->load(['academicYear', 'class']);
-        
-        return view('receptionist.student-enquiries.show', compact('studentEnquiry'));
     }
 
     public function store(Request $request)
     {
         $validated = $this->validateEnquiry($request);
 
-        $validated['school_id'] = $this->getSchoolId();
+        $school = auth()->user()->school;
+        $validated['school_id'] = $school->id;
 
         // Handle file uploads
         $validated = $this->handleFileUploads($request, $validated);
 
         StudentEnquiry::create($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Student enquiry added successfully.'
+            ]);
+        }
 
         return redirect()->route('receptionist.student-enquiries.index')
             ->with('success', 'Student enquiry added successfully.');
@@ -84,9 +83,6 @@ class StudentEnquiryController extends TenantController
     public function update(Request $request, StudentEnquiry $studentEnquiry)
     {
         $this->authorizeTenant($studentEnquiry);
-        
-        // Store enquiry ID for redirect back on validation error
-        $request->merge(['enquiry_id' => $studentEnquiry->id]);
 
         $validated = $this->validateEnquiry($request, $studentEnquiry->id);
 
@@ -94,6 +90,13 @@ class StudentEnquiryController extends TenantController
         $validated = $this->handleFileUploads($request, $validated, $studentEnquiry);
 
         $studentEnquiry->update($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Student enquiry updated successfully.'
+            ]);
+        }
 
         return redirect()->route('receptionist.student-enquiries.index')
             ->with('success', 'Student enquiry updated successfully.');
@@ -119,8 +122,15 @@ class StudentEnquiryController extends TenantController
     {
         return $request->validate([
             // Enquiry Form
-            'academic_year_id' => 'nullable|exists:academic_years,id',
-            'class_id' => 'nullable|exists:classes,id',
+            'academic_year_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'class_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('classes', 'id')->where('school_id', $this->getSchoolId())
+            ],
+
             'subject_name' => 'nullable|string|max:255',
             'student_name' => 'required|string|max:255',
             'gender' => ['nullable', 'integer', Rule::enum(Gender::class)],
@@ -236,4 +246,5 @@ class StudentEnquiryController extends TenantController
             Storage::disk('public')->delete($enquiry->student_photo);
         }
     }
+
 }

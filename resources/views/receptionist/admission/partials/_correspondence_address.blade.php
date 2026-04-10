@@ -22,9 +22,10 @@
                     Country
                 </label>
                 <select name="correspondence_country_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        class="w-full px-4 py-2 border {{ $errors->has('correspondence_country_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
                         data-location-cascade="true"
-                        data-country-select="true">
+                        data-country-select="true"
+                        data-selected="{{ old('correspondence_country_id', isset($student) ? $student->correspondence_country_id : '') }}">
                     <option value="">Select Country</option>
                     @if(isset($student) && $student->correspondence_country_id)
                         <option value="{{ $student->correspondence_country_id }}" selected>{{ $student->correspondenceCountry->name ?? 'Selected Country' }}</option>
@@ -32,6 +33,9 @@
                         <option value="{{ old('correspondence_country_id') }}" selected>Selected Country</option>
                     @endif
                 </select>
+                @error('correspondence_country_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -39,11 +43,19 @@
                     State
                 </label>
                 <select name="correspondence_state_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        class="w-full px-4 py-2 border {{ $errors->has('correspondence_state_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
                         data-state-select="true"
                         data-selected="{{ old('correspondence_state_id', isset($student) ? $student->correspondence_state_id : '') }}">
                     <option value="">Select State</option>
+                    @if(isset($student) && $student->correspondence_state_id)
+                        <option value="{{ $student->correspondence_state_id }}" selected>{{ $student->correspondenceState->name ?? 'Selected State' }}</option>
+                    @elseif(old('correspondence_state_id'))
+                        <option value="{{ old('correspondence_state_id') }}" selected>Selected State</option>
+                    @endif
                 </select>
+                @error('correspondence_state_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -51,11 +63,19 @@
                     City
                 </label>
                 <select name="correspondence_city_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        class="w-full px-4 py-2 border {{ $errors->has('correspondence_city_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
                         data-city-select="true"
                         data-selected="{{ old('correspondence_city_id', isset($student) ? $student->correspondence_city_id : '') }}">
                     <option value="">Select City</option>
+                    @if(isset($student) && $student->correspondence_city_id)
+                        <option value="{{ $student->correspondence_city_id }}" selected>{{ $student->correspondenceCity->name ?? 'Selected City' }}</option>
+                    @elseif(old('correspondence_city_id'))
+                        <option value="{{ old('correspondence_city_id') }}" selected>Selected City</option>
+                    @endif
                 </select>
+                @error('correspondence_city_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>

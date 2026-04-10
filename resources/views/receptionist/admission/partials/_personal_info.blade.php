@@ -56,10 +56,13 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Date of Birth
+                    Date of Birth <span class="text-red-500">*</span>
                 </label>
                 <input type="date" name="date_of_birth" value="{{ old('date_of_birth', isset($student) && $student->date_of_birth ? $student->date_of_birth->format('Y-m-d') : '') }}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border {{ $errors->has('date_of_birth') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('date_of_birth')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>

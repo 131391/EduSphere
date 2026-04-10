@@ -145,7 +145,7 @@ $(document).ready(function() {
         if (classId) {
             // Fetch sections and admission fee for selected class
             $.ajax({
-                url: `{{ url('receptionist/admission/class-data') }}/${classId}`,
+                url: `{{ url('school/admission/class-data') }}/${classId}`,
                 method: 'GET',
                 success: function(data) {
                     // Populate sections

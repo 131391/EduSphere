@@ -209,10 +209,10 @@ Route::resource('student-registrations', \App\Http\Controllers\School\StudentReg
 // Admission Management
 Route::get('admission/registration/{id}', [\App\Http\Controllers\School\AdmissionController::class, 'getRegistrationData'])->name('admission.getRegistrationData');
 Route::get('admission/{id}/pdf', [\App\Http\Controllers\School\AdmissionController::class, 'downloadPdf'])->name('admission.pdf');
+Route::get('admission/class-data/{classId}', [\App\Http\Controllers\School\AdmissionController::class, 'getClassData'])->name('admission.class-data');
 Route::resource('admission', \App\Http\Controllers\School\AdmissionController::class)->parameters([
     'admission' => 'student'
 ]);
-Route::get('admission/class-data/{classId}', [\App\Http\Controllers\School\AdmissionController::class, 'getClassData'])->name('admission.class-data');
 
 // Library Management
 Route::prefix('library')->name('library.')->group(function () {

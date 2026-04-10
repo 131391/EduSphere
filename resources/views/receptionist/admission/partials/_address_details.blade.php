@@ -35,12 +35,13 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Country
+                    Country <span class="text-red-500">*</span>
                 </label>
                 <select name="permanent_country_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        class="w-full px-4 py-2 border {{ $errors->has('permanent_country_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
                         data-location-cascade="true"
-                        data-country-select="true">
+                        data-country-select="true"
+                        data-selected="{{ old('permanent_country_id', isset($student) ? $student->permanent_country_id : '') }}">
                     <option value="">Select Country</option>
                     @if(isset($student) && $student->permanent_country_id)
                         <option value="{{ $student->permanent_country_id }}" selected>{{ $student->permanentCountry->name ?? 'Selected Country' }}</option>
@@ -48,30 +49,49 @@
                         <option value="{{ old('permanent_country_id') }}" selected>Selected Country</option>
                     @endif
                 </select>
+                @error('permanent_country_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    State
+                    State <span class="text-red-500">*</span>
                 </label>
                 <select name="permanent_state_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        class="w-full px-4 py-2 border {{ $errors->has('permanent_state_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
                         data-state-select="true"
                         data-selected="{{ old('permanent_state_id', isset($student) ? $student->permanent_state_id : '') }}">
                     <option value="">Select State</option>
+                    @if(isset($student) && $student->permanent_state_id)
+                        <option value="{{ $student->permanent_state_id }}" selected>{{ $student->permanentState->name ?? 'Selected State' }}</option>
+                    @elseif(old('permanent_state_id'))
+                        <option value="{{ old('permanent_state_id') }}" selected>Selected State</option>
+                    @endif
                 </select>
+                @error('permanent_state_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    City
+                    City <span class="text-red-500">*</span>
                 </label>
                 <select name="permanent_city_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                        class="w-full px-4 py-2 border {{ $errors->has('permanent_city_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
                         data-city-select="true"
                         data-selected="{{ old('permanent_city_id', isset($student) ? $student->permanent_city_id : '') }}">
                     <option value="">Select City</option>
+                    @if(isset($student) && $student->permanent_city_id)
+                        <option value="{{ $student->permanent_city_id }}" selected>{{ $student->permanentCity->name ?? 'Selected City' }}</option>
+                    @elseif(old('permanent_city_id'))
+                        <option value="{{ old('permanent_city_id') }}" selected>Selected City</option>
+                    @endif
                 </select>
+                @error('permanent_city_id')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -79,7 +99,10 @@
                     Pin
                 </label>
                 <input type="text" name="permanent_pin" value="{{ old('permanent_pin', isset($student) ? $student->permanent_pin : '') }}" placeholder="Enter Pin"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                       class="w-full px-4 py-2 border {{ $errors->has('permanent_pin') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                @error('permanent_pin')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
@@ -94,7 +117,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Railway / Airport
                 </label>
-                <input type="text" name="railway_airport" value="{{ old('railway_airport') }}" placeholder="Enter Nearest Railway Station / Airport"
+                <input type="text" name="railway_airport" value="{{ old('railway_airport', isset($student) ? $student->railway_airport : '') }}" placeholder="Enter Nearest Railway Station / Airport"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
             </div>
 

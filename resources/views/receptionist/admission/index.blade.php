@@ -179,5 +179,4 @@
         Admission List
     </x-data-table>
 </div>
-
 @endsection

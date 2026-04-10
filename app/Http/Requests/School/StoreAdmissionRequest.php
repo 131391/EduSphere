@@ -41,6 +41,7 @@ class StoreAdmissionRequest extends FormRequest
                 Rule::exists('academic_years', 'id')->where('school_id', $schoolId)
             ],
             'admission_date' => 'required|date',
+            'date_of_birth' => 'required|date',
             'gender' => ['required', 'integer', Rule::enum(Gender::class)],
             'permanent_address' => 'required|string',
             'permanent_country_id' => 'required|exists:countries,id',

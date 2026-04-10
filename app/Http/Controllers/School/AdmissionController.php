@@ -152,9 +152,9 @@ class AdmissionController extends TenantController
             $excludedFields = [
                 'student_photo', 'father_photo', 'mother_photo',
                 'student_signature', 'father_signature', 'mother_signature',
-                'registration_no', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
+                'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
                 'student_signature_path', 'father_signature_path', 'mother_signature_path',
-                'admission_fee', 'receipt_no', 'transport_route_id', 'hostel_id'
+                'admission_fee', 'transport_route_id', 'hostel_id'
             ];
             
             $student->fill($request->except($excludedFields));
@@ -204,6 +204,8 @@ class AdmissionController extends TenantController
                 ]);
 
                 // 3. Create the Fee Payment Record (Transaction)
+                $cashPaymentMethod = \App\Models\PaymentMethod::where('name', 'Cash')->first();
+
                 FeePayment::create([
                     'school_id' => $school->id,
                     'student_id' => $student->id,
@@ -211,6 +213,7 @@ class AdmissionController extends TenantController
                     'academic_year_id' => $student->academic_year_id,
                     'amount' => $request->admission_fee,
                     'payment_date' => now(),
+                    'payment_method_id' => $cashPaymentMethod->id ?? 1,
                     'receipt_no' => $request->receipt_no,
                     'created_by' => Auth::id(),
                 ]);
@@ -283,6 +286,7 @@ class AdmissionController extends TenantController
 
     public function edit(Student $student)
     {
+        $student->load(['permanentState', 'permanentCity', 'correspondenceState', 'correspondenceCity']);
         $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
         $sections = Section::where('school_id', $this->getSchoolId())->get();
         $academicYears = AcademicYear::where('school_id', $this->getSchoolId())->get();
@@ -311,7 +315,7 @@ class AdmissionController extends TenantController
             'student', 
             'classes', 
             'sections', 
-            'academic_years', // Note: using lowercase variable names from original if applicable
+            'academicYears', 
             'registrations',
             'bloodGroups',
             'religions',

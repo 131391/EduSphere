@@ -18,6 +18,28 @@
     <form action="{{ route('school.admission.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
         @csrf
         
+        @if ($errors->any())
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            There were {{ $errors->count() }} errors with your submission
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul class="list-disc pl-5 space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+        
         <!-- Admission Info -->
         @include('school.admission.partials._admission_info')
 
@@ -222,15 +244,21 @@ $(document).ready(function() {
                     $('textarea[name="permanent_address"]').val(data.permanent_address);
                     clearFieldError('permanent_address');
                 }
-                $('select[name="permanent_country_id"]').val(data.permanent_country_id || 1).trigger('change');
-                if (data.permanent_state) {
-                    $('input[name="permanent_state"]').val(data.permanent_state);
-                    clearFieldError('permanent_state');
+                
+                if (data.permanent_state_id) {
+                    $('select[name="permanent_state_id"]').attr('data-selected', data.permanent_state_id);
                 }
-                if (data.permanent_city) {
-                    $('input[name="permanent_city"]').val(data.permanent_city);
-                    clearFieldError('permanent_city');
+                if (data.permanent_city_id) {
+                    $('select[name="permanent_city_id"]').attr('data-selected', data.permanent_city_id);
                 }
+                
+                if (data.permanent_country_id) {
+                    $('select[name="permanent_country_id"]').val(data.permanent_country_id).trigger('change');
+                    clearFieldError('permanent_country_id');
+                } else {
+                    $('select[name="permanent_country_id"]').val(102).trigger('change'); // default India
+                }
+                
                 if (data.permanent_pin) {
                     $('input[name="permanent_pin"]').val(data.permanent_pin);
                     clearFieldError('permanent_pin');
@@ -239,9 +267,20 @@ $(document).ready(function() {
                 // Correspondence Address
                 $('input[name="correspondence_address"]').val(data.correspondence_address || '');
                 $('textarea[name="correspondence_address"]').val(data.correspondence_address || '');
-                $('select[name="correspondence_country_id"]').val(data.correspondence_country_id || 1).trigger('change');
-                $('input[name="correspondence_state"]').val(data.correspondence_state || '');
-                $('input[name="correspondence_city"]').val(data.correspondence_city || '');
+                
+                if (data.correspondence_state_id) {
+                    $('select[name="correspondence_state_id"]').attr('data-selected', data.correspondence_state_id);
+                }
+                if (data.correspondence_city_id) {
+                    $('select[name="correspondence_city_id"]').attr('data-selected', data.correspondence_city_id);
+                }
+                
+                if (data.correspondence_country_id) {
+                    $('select[name="correspondence_country_id"]').val(data.correspondence_country_id).trigger('change');
+                } else {
+                    $('select[name="correspondence_country_id"]').val(102).trigger('change'); // default India
+                }
+                
                 $('input[name="correspondence_pin"]').val(data.correspondence_pin || '');
                 
                 // Clear errors for admission-specific fields ONLY if they have values
@@ -318,10 +357,13 @@ $(document).ready(function() {
         });
     });
 
-    // Trigger change event if registration is selected (e.g. after validation error)
-    if ($('#registration_select').val()) {
-        $('#registration_select').trigger('change');
-    }
+    // Trigger change event if registration is selected and NO validation errors exist
+    // If validation errors exist, we want to keep the old() values and let Laravel show the errors!
+    @if(!$errors->any())
+        if ($('#registration_select').val()) {
+            $('#registration_select').trigger('change');
+        }
+    @endif
     
     // Global error clearing - clear errors when fields are interacted with (but not on page load)
     // Use a flag to track if this is user interaction vs page load
@@ -359,6 +401,26 @@ $(document).ready(function() {
                 $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
             }
         }
+    });
+
+    /**
+     * Fix form submission issues caused by Select2 and disabled selects:
+     * 1. Select2-wrapped selects with required attribute cannot be focused by
+     *    native browser validation → silently blocks submission.
+     * 2. Disabled selects (state/city before selection) don't submit values →
+     *    server never receives them, validation errors appear but old() is empty.
+     */
+    document.querySelectorAll('form').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            // Fix Select2 hidden selects blocking browser validation
+            form.querySelectorAll('select.select2-hidden-accessible').forEach(function(select) {
+                select.removeAttribute('required');
+            });
+            // Fix disabled selects not sending values
+            form.querySelectorAll('select[disabled]').forEach(function(select) {
+                select.removeAttribute('disabled');
+            });
+        }, true);
     });
 });
 </script>

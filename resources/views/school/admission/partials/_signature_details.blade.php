@@ -23,7 +23,7 @@
                     <input type="file" name="father_signature" accept="image/*" 
                            onchange="previewImage(event, 'father-signature-preview', 'father-signature-icon', 'father-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
-                    <input type="hidden" name="father_signature_path" id="father_signature_path" value="">
+                    <input type="hidden" name="father_signature_path" id="father_signature_path" value="{{ old('father_signature_path') }}">
                 </div>
             </div>
 
@@ -45,7 +45,7 @@
                     <input type="file" name="mother_signature" accept="image/*" 
                            onchange="previewImage(event, 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
-                    <input type="hidden" name="mother_signature_path" id="mother_signature_path" value="">
+                    <input type="hidden" name="mother_signature_path" id="mother_signature_path" value="{{ old('mother_signature_path') }}">
                 </div>
             </div>
 
@@ -67,12 +67,31 @@
                     <input type="file" name="student_signature" accept="image/*" 
                            onchange="previewImage(event, 'student-signature-preview', 'student-signature-icon', 'student-signature-remove')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
-                    <input type="hidden" name="student_signature_path" id="student_signature_path" value="">
+                    <input type="hidden" name="student_signature_path" id="student_signature_path" value="{{ old('student_signature_path') }}">
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const signatures = [
+            { path: 'father_signature_path', preview: 'father-signature-preview', icon: 'father-signature-icon', remove: 'father-signature-remove' },
+            { path: 'mother_signature_path', preview: 'mother-signature-preview', icon: 'mother-signature-icon', remove: 'mother-signature-remove' },
+            { path: 'student_signature_path', preview: 'student-signature-preview', icon: 'student-signature-icon', remove: 'student-signature-remove' }
+        ];
+        
+        signatures.forEach(sig => {
+            const hiddenInput = document.getElementById(sig.path);
+            if (hiddenInput && hiddenInput.value) {
+                if (typeof loadImagePreview === 'function') {
+                    loadImagePreview(hiddenInput.value, sig.preview, sig.icon, sig.remove);
+                }
+            }
+        });
+    });
+</script>
 
 <script>
 function previewImage(event, previewId, iconId, removeBtnId) {

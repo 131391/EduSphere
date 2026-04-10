@@ -83,6 +83,59 @@ $(document).ready(function() {
             width: '100%'
         });
     }
+
+    // Auto-fill form when registration is selected
+    $('#registration_select').on('change', function(e) {
+        // Skip if this change event was NOT triggered by a real user interaction on the Edit page
+        // (to prevent overwriting saved student data on page load)
+        if (e.originalEvent === undefined && !$(this).data('manual-trigger')) return;
+
+        const registrationId = $(this).val();
+        
+        if (!registrationId) return;
+        
+        // Fetch registration data
+        $.ajax({
+            url: `/school/admission/registration/${registrationId}`,
+            method: 'GET',
+            success: function(data) {
+                // Helper function to clear errors for a field
+                function clearFieldError(fieldName) {
+                    const field = $(`[name="${fieldName}"]`);
+                    if (field.length && field.val()) {
+                        field.removeClass('border-red-500');
+                        field.closest('div').find('p.text-red-500').remove();
+                        if (field.hasClass('select2-hidden-accessible')) {
+                            field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
+                        }
+                    }
+                }
+                
+                // Personal Information
+                if (data.first_name) { $('input[name="first_name"]').val(data.first_name); clearFieldError('first_name'); }
+                $('input[name="middle_name"]').val(data.middle_name || '');
+                if (data.last_name) { $('input[name="last_name"]').val(data.last_name); clearFieldError('last_name'); }
+                if (data.gender) { $('select[name="gender"]').val(data.gender).trigger('change'); clearFieldError('gender'); }
+                $('input[name="date_of_birth"]').val(data.dob || '');
+                $('input[name="email"]').val(data.email || '');
+                if (data.mobile_no) { $('input[name="phone"]').val(data.mobile_no); clearFieldError('phone'); }
+                
+                // Location Sync
+                if (data.permanent_country_id) { $('select[name="permanent_country_id"]').val(data.permanent_country_id).trigger('change'); }
+                if (data.permanent_state_id) { $('select[name="permanent_state_id"]').attr('data-selected', data.permanent_state_id); }
+                if (data.permanent_city_id) { $('select[name="permanent_city_id"]').attr('data-selected', data.permanent_city_id); }
+
+                // Basic logic for Father/Mother
+                if (data.father_first_name) { $('input[name="father_first_name"]').val(data.father_first_name); }
+                if (data.father_mobile_no) { $('input[name="father_mobile"]').val(data.father_mobile_no); }
+                if (data.mother_first_name) { $('input[name="mother_first_name"]').val(data.mother_first_name); }
+                if (data.mother_mobile_no) { $('input[name="mother_mobile"]').val(data.mother_mobile_no); }
+
+                // Update Photos if available
+                if (data.student_photo) { loadImagePreview(data.student_photo, 'student-photo-preview', 'student-photo-icon', 'student-photo-remove'); }
+            }
+        });
+    });
     
     // Load existing photos and signatures
     @if($student->photo)
@@ -104,6 +157,34 @@ $(document).ready(function() {
     @if($student->mother_signature)
         loadImagePreview('{{ $student->mother_signature }}', 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove');
     @endif
+
+    // Global error clearing logic
+    let isUserInteraction = false;
+    let pageLoadComplete = false;
+    setTimeout(function() {
+        pageLoadComplete = true;
+        setTimeout(function() { isUserInteraction = true; }, 100);
+    }, 1000);
+    
+    $(document).on('input change', 'input, select, textarea', function(e) {
+        if (!isUserInteraction || !pageLoadComplete || e.originalEvent === undefined) return;
+        const $field = $(this);
+        if ($field.attr('name') && $field.val()) {
+            $field.removeClass('border-red-500');
+            $field.closest('div').find('p.text-red-500').remove();
+            if ($field.hasClass('select2-hidden-accessible')) {
+                $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
+            }
+        }
+    });
+
+    // Form submission interceptor
+    document.querySelectorAll('form').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            form.querySelectorAll('select.select2-hidden-accessible').forEach(function(select) { select.removeAttribute('required'); });
+            form.querySelectorAll('select[disabled]').forEach(function(select) { select.removeAttribute('disabled'); });
+        }, true);
+    });
 });
 </script>
 @endpush
