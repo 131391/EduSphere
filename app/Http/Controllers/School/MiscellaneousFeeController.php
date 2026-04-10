@@ -43,16 +43,30 @@ class MiscellaneousFeeController extends TenantController
     public function store(StoreMiscellaneousFeeRequest $request)
     {
         try {
-            $this->service->createFee(
+            $fee = $this->service->createFee(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee created successfully!',
+                    'data' => $fee
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.miscellaneous-fees.index',
                 'Fee created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create fee: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create fee: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class MiscellaneousFeeController extends TenantController
             $fee = MiscellaneousFee::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateFee($fee, $request->validated());
+            $fee = $this->service->updateFee($fee, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee updated successfully!',
+                    'data' => $fee
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.miscellaneous-fees.index',
                 'Fee updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update fee: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update fee: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class MiscellaneousFeeController extends TenantController
 
             $this->service->deleteFee($fee);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.miscellaneous-fees.index',
                 'Fee deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete fee: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.miscellaneous-fees.index',
                 'Failed to delete fee: ' . $e->getMessage()

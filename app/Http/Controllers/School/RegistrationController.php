@@ -19,7 +19,7 @@ class RegistrationController extends TenantController
             'file' => 'required|mimes:csv,txt|max:2048',
         ]);
 
-        $school = app('currentSchool');
+        $school = $this->getSchool();
         $file = $request->file('file');
         $path = $file->getRealPath();
         $data = array_map('str_getcsv', file($path));
@@ -32,7 +32,7 @@ class RegistrationController extends TenantController
             
             // Expected columns: Student Name, Father Name, Mother Name, Date of Birth (YYYY-MM-DD), Gender (Male/Female), Class ID, Registration Fee
             \App\Models\Registration::create([
-                'school_id' => $school->id,
+                'school_id' => $this->getSchoolId(),
                 'registration_no' => 'REG-' . strtoupper(\Illuminate\Support\Str::random(8)),
                 'student_name' => $row[0],
                 'father_name' => $row[1],

@@ -21,24 +21,41 @@
     </div>
 
     <!-- Attendance Form -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <form id="attendanceForm" method="POST" action="{{ route('receptionist.transport-attendance.store') }}">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <form @submit.prevent="save" method="POST">
             @csrf
+            
+            {{-- Global Error Announcement --}}
+            <template x-if="Object.keys(errors).length > 0">
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl mx-8 mt-8">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="(messages, field) in errors" :key="field">
+                            <template x-for="message in messages" :key="message">
+                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
+                            </template>
+                        </template>
+                    </ul>
+                </div>
+            </template>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
                 <!-- Vehicle Selection -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        Vehicle <span class="text-red-500">*</span>
+                    <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">
+                        Primary Vehicle <span class="text-red-500">*</span>
                     </label>
                     <select 
                         name="vehicle_id" 
                         id="vehicle_id"
                         x-model="formData.vehicle_id"
-                        @change="loadRoutes()"
+                        @change="delete errors.vehicle_id; loadRoutes()"
                         x-ref="vehicleSelect"
-                        class="w-full px-4 py-2 border @error('vehicle_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        required
+                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-700 dark:text-white"
+                        :class="errors.vehicle_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'"
                     >
                         <option value="">Select Vehicle</option>
                         @foreach($vehicles as $vehicle)
@@ -47,98 +64,107 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('vehicle_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <template x-if="errors.vehicle_id">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.vehicle_id[0]"></p>
+                    </template>
                 </div>
 
                 <!-- Route Selection -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        Route <span class="text-red-500">*</span>
+                    <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">
+                        Assigned Route <span class="text-red-500">*</span>
                     </label>
                     <select 
                         name="route_id" 
                         id="route_id"
                         x-model="formData.route_id"
-                        @change="loadStudents()"
+                        @change="delete errors.route_id; loadStudents()"
                         x-ref="routeSelect"
-                        class="w-full px-4 py-2 border @error('route_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        required
+                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-700 dark:text-white"
+                        :class="errors.route_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'"
                     >
                         <option value="">Select Route</option>
                     </select>
-                    @error('route_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <template x-if="errors.route_id">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.route_id[0]"></p>
+                    </template>
                 </div>
 
                 <!-- Attendance Type Selection -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        Attendance Type <span class="text-red-500">*</span>
+                    <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">
+                        Operational Stage <span class="text-red-500">*</span>
                     </label>
                     <select 
                         name="attendance_type" 
                         id="attendance_type"
                         x-model="formData.attendance_type"
-                        class="w-full px-4 py-2 border @error('attendance_type') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        required
+                        @change="delete errors.attendance_type"
+                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-700 dark:text-white"
+                        :class="errors.attendance_type ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'"
                     >
-                        <option value="">Select Attendance</option>
+                        <option value="">Select Stage</option>
                         @foreach($attendanceTypes as $type)
                             <option value="{{ $type->value }}">{{ $type->label() }}</option>
                         @endforeach
                     </select>
-                    @error('attendance_type')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <template x-if="errors.attendance_type">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.attendance_type[0]"></p>
+                    </template>
                 </div>
 
                 <!-- Attendance Date -->
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        Date <span class="text-red-500">*</span>
+                    <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">
+                        Session Date <span class="text-red-500">*</span>
                     </label>
                     <input 
                         type="date" 
                         name="attendance_date" 
                         id="attendance_date"
                         x-model="formData.attendance_date"
-                        value="{{ old('attendance_date', date('Y-m-d')) }}"
+                        @input="delete errors.attendance_date"
                         max="{{ date('Y-m-d') }}"
-                        class="w-full px-4 py-2 border @error('attendance_date') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        required
+                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-700 dark:text-white"
+                        :class="errors.attendance_date ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'"
                     >
-                    @error('attendance_date')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <template x-if="errors.attendance_date">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.attendance_date[0]"></p>
+                    </template>
                 </div>
             </div>
 
-            <!-- Submit Button -->
-            <div class="flex justify-end mb-6">
+            <!-- Submit Button Overlay -->
+            <div class="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest" x-show="students.length > 0">
+                        Operational Integrity Verified
+                    </p>
+                </div>
                 <button 
                     type="submit"
-                    :disabled="!canSubmit"
-                    class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    :disabled="!canSubmit || submitting"
+                    class="px-10 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black rounded-xl transition-all shadow-lg shadow-teal-100 disabled:from-gray-300 disabled:to-gray-400 disabled:shadow-none uppercase text-xs tracking-widest flex items-center gap-2"
                 >
-                    <i class="fas fa-check mr-2"></i>
-                    Submit
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <span x-text="submitting ? 'Propagating...' : 'Finalize Attendance'"></span>
                 </button>
             </div>
 
             <!-- Students List -->
-            <div x-show="students.length > 0" class="mt-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-                        Students (<span x-text="students.length"></span>)
-                    </h3>
+            <div x-show="students.length > 0" class="p-8 border-t border-gray-100 bg-white" x-transition>
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight">Boarding Manifest</h3>
+                        <p class="text-xs text-gray-500">Verify present boarders for the selected transit session</p>
+                    </div>
                     <div class="flex gap-2">
                         <button 
                             type="button"
                             @click="checkAll()"
-                            class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+                            class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-black rounded-lg transition-all uppercase tracking-widest"
                         >
                             <i class="fas fa-check-square mr-2"></i>
                             Check All
@@ -146,7 +172,7 @@
                         <button 
                             type="button"
                             @click="uncheckAll()"
-                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+                            class="px-4 py-2 bg-gray-50 text-gray-600 hover:bg-gray-100 text-[10px] font-black rounded-lg transition-all uppercase tracking-widest"
                         >
                             <i class="fas fa-square mr-2"></i>
                             Uncheck All
@@ -154,45 +180,45 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div class="overflow-hidden rounded-2xl border border-gray-100">
+                    <table class="min-w-full bg-white dark:bg-gray-800">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest">
                                     <input 
                                         type="checkbox" 
                                         @change="toggleAll($event.target.checked)"
                                         :checked="allChecked"
-                                        class="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                        class="rounded-lg border-gray-200 text-teal-600 focus:ring-teal-500 h-5 w-5"
                                     >
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">SR NO</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ADMISSION NO</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">STUDENT NAME</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">BUS STOP NAME</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ATTENDANCE</th>
+                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest">SR NO</th>
+                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest">ADMISSION NO</th>
+                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest">STUDENT NAME</th>
+                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest">BUS STOP NAME</th>
+                                <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest">STATUS</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                             <template x-for="(student, index) in students" :key="student.id">
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td class="px-4 py-3 whitespace-nowrap">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <input 
                                             type="checkbox" 
                                             :id="`student_${student.id}`"
                                             :value="student.id.toString()"
                                             x-model="checkedStudents"
-                                            class="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                            class="rounded-lg border-gray-200 text-teal-600 focus:ring-teal-500 h-5 w-5"
                                         >
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="index + 1"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="student.admission_no"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="student.name"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="student.bus_stop_name"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-500" x-text="index + 1"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-xs font-black text-gray-900 dark:text-white" x-text="student.admission_no"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-700 dark:text-white" x-text="student.name"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-500" x-text="student.bus_stop_name"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <span 
-                                            class="px-2 py-1 text-xs font-semibold rounded-full"
-                                            :class="checkedStudents.includes(student.id.toString()) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                            class="inline-block px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full"
+                                            :class="checkedStudents.includes(student.id.toString()) ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'"
                                             x-text="checkedStudents.includes(student.id.toString()) ? 'Present' : 'Absent'"
                                         ></span>
                                     </td>
@@ -212,9 +238,12 @@
             </div>
 
             <!-- Empty State -->
-            <div x-show="students.length === 0 && formData.route_id" class="text-center py-12">
-                <i class="fas fa-users text-gray-400 text-6xl mb-4"></i>
-                <p class="text-gray-500 dark:text-gray-400">No students found for the selected route.</p>
+            <div x-show="students.length === 0 && formData.route_id" class="text-center py-20 bg-gray-50/50">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full shadow-sm mb-6 border border-gray-100">
+                    <i class="fas fa-users text-gray-300 text-3xl"></i>
+                </div>
+                <h3 class="text-sm font-black text-gray-800 uppercase tracking-tight">Empty Manifest</h3>
+                <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest">No active boarders linked to this route</p>
             </div>
         </form>
     </div>
@@ -233,273 +262,98 @@ function transportAttendanceManagement() {
         routes: [],
         students: [],
         checkedStudents: [],
-        loading: false,
+        submitting: false,
+        errors: {},
 
         get canSubmit() {
             return !!(this.formData.vehicle_id && this.formData.route_id && this.formData.attendance_type && this.formData.attendance_date && this.students.length > 0);
         },
 
         async init() {
-            // Wait for Select2 to be auto-initialized by global script, then attach handlers
+            // Setup Select2 change handlers
             this.$nextTick(() => {
-                setTimeout(() => {
-                    if (typeof $ !== 'undefined') {
-                        // Handle vehicle select Select2 events
-                        const vehicleSelect = this.$refs.vehicleSelect || document.getElementById('vehicle_id');
-                        if (vehicleSelect) {
-                            const $vehicleSelect = $(vehicleSelect);
-                            // Handle Select2 change events for vehicle
-                            $vehicleSelect.off('select2:select.select2:change').on('select2:select select2:change', (e) => {
-                                const value = e.target.value || $vehicleSelect.val();
-                                this.formData.vehicle_id = value;
-                                this.$nextTick(() => {
-                                    this.loadRoutes();
-                                });
-                            });
-                        }
-                        
-                        // Handle attendance type select Select2 events
-                        const attendanceTypeSelect = document.getElementById('attendance_type');
-                        if (attendanceTypeSelect) {
-                            const $attendanceTypeSelect = $(attendanceTypeSelect);
-                            $attendanceTypeSelect.off('select2:select.select2:change').on('select2:select select2:change', (e) => {
-                                const value = e.target.value || $attendanceTypeSelect.val();
-                                this.formData.attendance_type = value;
-                            });
-                        }
-                        
-                        const routeSelect = this.$refs.routeSelect || document.getElementById('route_id');
-                        if (routeSelect) {
-                            const $routeSelect = $(routeSelect);
-                            
-                            // If Select2 is already initialized, just attach handlers
-                            if ($routeSelect.hasClass('select2-hidden-accessible')) {
-                                // Remove existing handlers to avoid duplicates
-                                $routeSelect.off('select2:select.select2:change.change');
-                            } else {
-                                // Initialize Select2 if not already initialized
-                                $routeSelect.select2({
-                                    placeholder: 'Select Route',
-                                    allowClear: false,
-                                    width: '100%'
-                                });
-                            }
-                            
-                            // Handle Select2 change events
-                            $routeSelect.on('select2:select select2:change', (e) => {
-                                const value = e.target.value || $routeSelect.val();
-                                this.formData.route_id = value;
-                                this.$nextTick(() => {
-                                    this.loadStudents();
-                                });
-                            });
-                            
-                            // Also handle native change event as fallback
-                            $routeSelect.on('change', (e) => {
-                                const value = e.target.value || $routeSelect.val();
-                                this.formData.route_id = value;
-                                this.$nextTick(() => {
-                                    this.loadStudents();
-                                });
-                            });
-                        }
-                    }
-                }, 300);
+                setTimeout(() => this.setupSelectHandlers(), 500);
+            });
+        },
+
+        setupSelectHandlers() {
+            if (typeof $ === 'undefined') return;
+
+            // Vehicle Select
+            const $vehicleSelect = $('#vehicle_id');
+            $vehicleSelect.off('change').on('change', (e) => {
+                const val = e.target.value;
+                if (this.formData.vehicle_id !== val) {
+                    this.formData.vehicle_id = val;
+                    if (this.errors.vehicle_id) delete this.errors.vehicle_id;
+                    this.loadRoutes();
+                }
             });
 
-            // Set old values if validation failed
-            @if(old('vehicle_id'))
-                this.formData.vehicle_id = '{{ old('vehicle_id') }}';
-                await this.loadRoutes();
-                
-                @if(old('route_id'))
-                    // Wait a bit for routes to populate, then set route and load students
-                    setTimeout(() => {
-                        this.formData.route_id = '{{ old('route_id') }}';
-                        if (typeof $ !== 'undefined') {
-                            const routeSelect = this.$refs.routeSelect || document.getElementById('route_id');
-                            if (routeSelect) {
-                                $(routeSelect).val(this.formData.route_id).trigger('change');
-                            }
-                        }
-                        this.loadStudents();
-                    }, 500);
-                @endif
-            @endif
+            // Route Select
+            const $routeSelect = $('#route_id');
+            $routeSelect.off('change').on('change', (e) => {
+                const val = e.target.value;
+                if (this.formData.route_id !== val) {
+                    this.formData.route_id = val;
+                    if (this.errors.route_id) delete this.errors.route_id;
+                    this.loadStudents();
+                }
+            });
 
-            @if(old('attendance_type'))
-                this.formData.attendance_type = '{{ old('attendance_type') }}';
-            @endif
-
-            @if(old('attendance_date'))
-                this.formData.attendance_date = '{{ old('attendance_date') }}';
-            @endif
+            // Attendance Type
+            const $typeSelect = $('#attendance_type');
+            $typeSelect.off('change').on('change', (e) => {
+                this.formData.attendance_type = e.target.value;
+                if (this.errors.attendance_type) delete this.errors.attendance_type;
+            });
         },
 
         async loadRoutes() {
             if (!this.formData.vehicle_id) {
                 this.routes = [];
                 this.formData.route_id = '';
-                this.students = [];
-                this.checkedStudents = [];
                 this.updateRouteOptions();
                 return;
             }
 
-            this.loading = true;
-            const url = '{{ route('receptionist.transport-attendance.get-routes') }}';
-            
             try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-                
-                const response = await fetch(url, {
+                const response = await fetch('{{ route('receptionist.transport-attendance.get-routes') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({
-                        vehicle_id: this.formData.vehicle_id,
-                    }),
+                    body: JSON.stringify({ vehicle_id: this.formData.vehicle_id })
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    let errorData;
-                    try {
-                        errorData = JSON.parse(errorText);
-                    } catch (e) {
-                        errorData = { error: errorText || 'Failed to load routes' };
-                    }
-                    throw new Error(errorData.error || errorData.message || 'Failed to load routes');
-                }
-
                 const data = await response.json();
-                
-                if (data.success && Array.isArray(data.routes)) {
+                if (data.success) {
                     this.routes = data.routes;
                     this.updateRouteOptions();
-                    // Only clear route_id if routes were loaded successfully
-                    if (this.routes.length > 0) {
-                        this.formData.route_id = '';
-                    }
-                    this.students = [];
-                    this.checkedStudents = [];
-                } else {
-                    this.routes = [];
-                    this.updateRouteOptions();
+                } else if (data.errors) {
+                    this.errors = data.errors;
                 }
             } catch (error) {
-                alert('Error loading routes: ' + error.message);
-                this.routes = [];
-                this.updateRouteOptions();
-            } finally {
-                this.loading = false;
+                console.error('Route load failed', error);
             }
         },
 
         updateRouteOptions() {
-            // Use setTimeout to ensure DOM is ready
-            setTimeout(() => {
-                let select = this.$refs.routeSelect;
-                
-                // Fallback to getElementById if ref doesn't work
-                if (!select) {
-                    select = document.getElementById('route_id');
-                }
-                
-                if (!select) {
-                    return;
-                }
+            if (typeof $ === 'undefined') return;
+            const $select = $('#route_id');
+            
+            // Clear and add placeholder
+            $select.empty().append('<option value="">Select Route</option>');
+            
+            this.routes.forEach(route => {
+                $select.append(`<option value="${route.id}">${route.route_name}</option>`);
+            });
 
-                // Check if jQuery and Select2 are available
-                if (typeof $ === 'undefined') {
-                    // Fallback to native DOM manipulation
-                    while (select.options.length > 1) {
-                        select.remove(1);
-                    }
-                    if (Array.isArray(this.routes) && this.routes.length > 0) {
-                        this.routes.forEach(route => {
-                            const option = document.createElement('option');
-                            option.value = route.id;
-                            option.textContent = route.route_name;
-                            select.appendChild(option);
-                        });
-                    }
-                    return;
-                }
-
-                const $select = $(select);
-                const isSelect2 = $select.hasClass('select2-hidden-accessible');
-                
-                // Store current value
-                const currentValue = this.formData.route_id;
-
-                // Destroy Select2 if it exists
-                if (isSelect2) {
-                    try {
-                        $select.select2('destroy');
-                    } catch (e) {
-                        // Silently handle error
-                    }
-                }
-
-                // Clear existing options except the first one (placeholder)
-                while (select.options.length > 1) {
-                    select.remove(1);
-                }
-
-                // Add new options
-                if (Array.isArray(this.routes) && this.routes.length > 0) {
-                    this.routes.forEach((route) => {
-                        const option = document.createElement('option');
-                        option.value = route.id;
-                        option.textContent = route.route_name;
-                        select.appendChild(option);
-                    });
-                }
-
-                // Always reinitialize Select2 (even if it wasn't initialized before)
-                try {
-                    $select.select2({
-                        placeholder: 'Select Route',
-                        allowClear: false,
-                        width: '100%'
-                    });
-                    
-                    // Re-attach change handler
-                    $select.off('select2:select select2:change').on('select2:select select2:change', (e) => {
-                        const value = e.target.value || $select.val();
-                        this.formData.route_id = value;
-                        this.$nextTick(() => {
-                            this.loadStudents();
-                        });
-                    });
-                    
-                    // Restore value if it still exists in the new options
-                    if (currentValue) {
-                        const optionExists = $select.find(`option[value="${currentValue}"]`).length > 0;
-                        if (optionExists) {
-                            $select.val(currentValue).trigger('change');
-                            this.formData.route_id = currentValue;
-                        } else {
-                            $select.val('').trigger('change');
-                            this.formData.route_id = '';
-                        }
-                    } else {
-                        $select.val('').trigger('change');
-                    }
-                    
-                    // Sync current Select2 value with Alpine.js
-                    const currentSelectValue = $select.val();
-                    if (currentSelectValue && currentSelectValue !== this.formData.route_id) {
-                        this.formData.route_id = currentSelectValue;
-                    }
-                } catch (e) {
-                    // Silently handle error
-                }
-            }, 150);
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.trigger('change');
+            }
         },
 
         async loadStudents() {
@@ -509,37 +363,80 @@ function transportAttendanceManagement() {
                 return;
             }
 
-            this.loading = true;
             try {
                 const response = await fetch('{{ route('receptionist.transport-attendance.get-students') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({
                         vehicle_id: this.formData.vehicle_id,
                         route_id: this.formData.route_id,
-                    }),
+                    })
                 });
 
                 const data = await response.json();
-                
                 if (data.success) {
                     this.students = data.students;
-                    // By default, check all students
+                    // Default to checked
                     this.checkedStudents = this.students.map(s => s.id.toString());
-                } else {
-                    alert(data.message || 'Failed to load students');
-                    this.students = [];
-                    this.checkedStudents = [];
+                } else if (data.errors) {
+                    this.errors = data.errors;
                 }
             } catch (error) {
-                alert('Error loading students. Please try again.');
-                this.students = [];
-                this.checkedStudents = [];
+                console.error('Student load failed', error);
+            }
+        },
+
+        async save() {
+            if (!this.canSubmit || this.submitting) return;
+
+            this.submitting = true;
+            this.errors = {};
+
+            try {
+                const response = await fetch('{{ route('receptionist.transport-attendance.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ...this.formData,
+                        students: this.students.map(s => s.id),
+                        checked_students: this.checkedStudents
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Manifest Synchronized'
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                        if (window.Toast) {
+                            window.Toast.fire({ icon: 'error', title: 'Data integrity failure' });
+                        }
+                    } else {
+                        throw new Error(result.message || 'Transmission error');
+                    }
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
             } finally {
-                this.loading = false;
+                this.submitting = false;
             }
         },
 
@@ -552,11 +449,7 @@ function transportAttendanceManagement() {
         },
 
         toggleAll(checked) {
-            if (checked) {
-                this.checkAll();
-            } else {
-                this.uncheckAll();
-            }
+            if (checked) this.checkAll(); else this.uncheckAll();
         },
 
         get allChecked() {

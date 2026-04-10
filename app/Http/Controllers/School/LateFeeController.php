@@ -20,11 +20,19 @@ class LateFeeController extends TenantController
 
     public function store(StoreLateFeeRequest $request)
     {
-        LateFee::create([
+        $lateFee = LateFee::create([
             'school_id' => $this->getSchoolId(),
             'fine_date' => $request->fine_date,
             'late_fee_amount' => $request->late_fee_amount,
         ]);
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Late fee configuration created successfully!',
+                'data' => $lateFee
+            ]);
+        }
 
         return back()->with('success', 'Late fee configuration created successfully.');
     }
@@ -38,6 +46,14 @@ class LateFeeController extends TenantController
             'late_fee_amount' => $request->late_fee_amount,
         ]);
 
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Late fee configuration updated successfully!',
+                'data' => $lateFee
+            ]);
+        }
+
         return back()->with('success', 'Late fee configuration updated successfully.');
     }
 
@@ -45,6 +61,13 @@ class LateFeeController extends TenantController
     {
         $this->authorizeTenant($lateFee);
         $lateFee->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Late fee configuration deleted successfully!'
+            ]);
+        }
 
         return back()->with('success', 'Late fee configuration deleted successfully.');
     }

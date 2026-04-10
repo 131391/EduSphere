@@ -35,12 +35,12 @@ class VisitorController extends TenantController
         }
 
         // Sorting
-        $sortColumn = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
         $query->orderBy($sortColumn, $sortDirection);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $visitors = $query->paginate($perPage)->withQueryString();
 
         // Statistics for the page
@@ -70,138 +70,243 @@ class VisitorController extends TenantController
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'mobile' => 'required|string|max:20',
-            'email' => 'nullable|email',
-            'address' => 'nullable|string',
-            'visitor_type' => 'required|string',
-            'visit_purpose' => 'required|string',
-            'meeting_purpose' => 'nullable|string',
-            'meeting_with' => 'required|string',
-            'priority' => ['required', 'integer', Rule::enum(VisitorPriority::class)],
-            'no_of_guests' => 'nullable|integer|min:1',
-            'meeting_type' => ['required', 'integer', Rule::enum(VisitorMode::class)],
-            'source' => 'nullable|string',
-            'meeting_scheduled' => 'nullable|date',
-            'visitor_photo' => 'nullable|image|max:2048',
-            'id_proof' => 'nullable|file|max:2048',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'mobile' => 'required|string|max:20',
+                'email' => 'nullable|email',
+                'address' => 'nullable|string',
+                'visitor_type' => 'required|string',
+                'visit_purpose' => 'required|string',
+                'meeting_purpose' => 'nullable|string',
+                'meeting_with' => 'required|string',
+                'priority' => ['required', 'integer', Rule::enum(VisitorPriority::class)],
+                'no_of_guests' => 'nullable|integer|min:1',
+                'meeting_type' => ['required', 'integer', Rule::enum(VisitorMode::class)],
+                'source' => 'nullable|string',
+                'meeting_scheduled' => 'nullable|date',
+                'visitor_photo' => 'nullable|image|max:2048',
+                'id_proof' => 'nullable|file|max:2048',
+            ]);
 
-        $schoolId = $this->getSchoolId();
-        $validated['school_id'] = $schoolId;
-        $validated['visitor_no'] = Visitor::generateVisitorNo($schoolId);
+            $schoolId = $this->getSchoolId();
+            $validated['school_id'] = $schoolId;
+            $validated['visitor_no'] = Visitor::generateVisitorNo($schoolId);
 
-        // Handle file uploads
-        if ($request->hasFile('visitor_photo')) {
-            $validated['visitor_photo'] = $request->file('visitor_photo')->store('visitors/photos', 'public');
+            // Handle file uploads
+            if ($request->hasFile('visitor_photo')) {
+                $validated['visitor_photo'] = $request->file('visitor_photo')->store('visitors/photos', 'public');
+            }
+
+            if ($request->hasFile('id_proof')) {
+                $validated['id_proof'] = $request->file('id_proof')->store('visitors/proofs', 'public');
+            }
+
+            // Convert priority to integer (form sends as string, enum needs int)
+            $validated['priority'] = (int) $validated['priority'];
+            
+            // Convert meeting_type to integer (form sends as string, enum needs int)
+            $validated['meeting_type'] = (int) $validated['meeting_type'];
+
+            $visitor = Visitor::create($validated);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Visitor recorded successfully!',
+                    'data' => $visitor
+                ]);
+            }
+
+            return redirect()->route('receptionist.visitors.index')->with('success', 'Visitor added successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to record visitor: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to record visitor: ' . $e->getMessage());
         }
-
-        if ($request->hasFile('id_proof')) {
-            $validated['id_proof'] = $request->file('id_proof')->store('visitors/proofs', 'public');
-        }
-
-        // Convert priority to integer (form sends as string, enum needs int)
-        $validated['priority'] = (int) $validated['priority'];
-        
-        // Convert meeting_type to integer (form sends as string, enum needs int)
-        $validated['meeting_type'] = (int) $validated['meeting_type'];
-
-        Visitor::create($validated);
-
-        return redirect()->route('receptionist.visitors.index')->with('success', 'Visitor added successfully.');
     }
 
     public function update(Request $request, Visitor $visitor)
     {
         $this->authorizeAccess($visitor);
         
-        // Store visitor ID for redirect back on validation error
-        $request->merge(['visitor_id' => $visitor->id]);
+        try {
+            // Store visitor ID for redirect back on validation error
+            $request->merge(['visitor_id' => $visitor->id]);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'mobile' => 'required|string|max:20',
-            'email' => 'nullable|email',
-            'address' => 'nullable|string',
-            'visitor_type' => 'required|string',
-            'visit_purpose' => 'required|string',
-            'meeting_purpose' => 'nullable|string',
-            'meeting_with' => 'required|string',
-            'priority' => ['required', 'integer', Rule::enum(VisitorPriority::class)],
-            'no_of_guests' => 'nullable|integer|min:1',
-            'meeting_type' => ['required', 'integer', Rule::enum(VisitorMode::class)],
-            'source' => 'nullable|string',
-            'meeting_scheduled' => 'nullable|date',
-            'visitor_photo' => 'nullable|image|max:2048',
-            'id_proof' => 'nullable|file|max:2048',
-        ]);
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'mobile' => 'required|string|max:20',
+                'email' => 'nullable|email',
+                'address' => 'nullable|string',
+                'visitor_type' => 'required|string',
+                'visit_purpose' => 'required|string',
+                'meeting_purpose' => 'nullable|string',
+                'meeting_with' => 'required|string',
+                'priority' => ['required', 'integer', Rule::enum(VisitorPriority::class)],
+                'no_of_guests' => 'nullable|integer|min:1',
+                'meeting_type' => ['required', 'integer', Rule::enum(VisitorMode::class)],
+                'source' => 'nullable|string',
+                'meeting_scheduled' => 'nullable|date',
+                'visitor_photo' => 'nullable|image|max:2048',
+                'id_proof' => 'nullable|file|max:2048',
+            ]);
 
-        // Handle file uploads
-        if ($request->hasFile('visitor_photo')) {
-            if ($visitor->visitor_photo) {
-                Storage::disk('public')->delete($visitor->visitor_photo);
+            // Handle file uploads
+            if ($request->hasFile('visitor_photo')) {
+                if ($visitor->visitor_photo) {
+                    Storage::disk('public')->delete($visitor->visitor_photo);
+                }
+                $validated['visitor_photo'] = $request->file('visitor_photo')->store('visitors/photos', 'public');
             }
-            $validated['visitor_photo'] = $request->file('visitor_photo')->store('visitors/photos', 'public');
-        }
 
-        if ($request->hasFile('id_proof')) {
-            if ($visitor->id_proof) {
-                Storage::disk('public')->delete($visitor->id_proof);
+            if ($request->hasFile('id_proof')) {
+                if ($visitor->id_proof) {
+                    Storage::disk('public')->delete($visitor->id_proof);
+                }
+                $validated['id_proof'] = $request->file('id_proof')->store('visitors/proofs', 'public');
             }
-            $validated['id_proof'] = $request->file('id_proof')->store('visitors/proofs', 'public');
+
+            // Convert priority to integer (form sends as string, enum needs int)
+            $validated['priority'] = (int) $validated['priority'];
+            
+            // Convert meeting_type to integer (form sends as string, enum needs int)
+            $validated['meeting_type'] = (int) $validated['meeting_type'];
+
+            $visitor->update($validated);
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Visitor updated successfully!',
+                    'data' => $visitor
+                ]);
+            }
+
+            return redirect()->route('receptionist.visitors.index')->with('success', 'Visitor updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update visitor: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to update visitor: ' . $e->getMessage());
         }
-
-        // Convert priority to integer (form sends as string, enum needs int)
-        $validated['priority'] = (int) $validated['priority'];
-        
-        // Convert meeting_type to integer (form sends as string, enum needs int)
-        $validated['meeting_type'] = (int) $validated['meeting_type'];
-
-        $visitor->update($validated);
-
-        return redirect()->route('receptionist.visitors.index')->with('success', 'Visitor updated successfully.');
     }
 
     public function destroy(Visitor $visitor)
     {
         $this->authorizeAccess($visitor);
 
-        // Delete associated files
-        if ($visitor->visitor_photo) {
-            Storage::disk('public')->delete($visitor->visitor_photo);
-        }
-        if ($visitor->id_proof) {
-            Storage::disk('public')->delete($visitor->id_proof);
-        }
+        try {
+            // Delete associated files
+            if ($visitor->visitor_photo) {
+                Storage::disk('public')->delete($visitor->visitor_photo);
+            }
+            if ($visitor->id_proof) {
+                Storage::disk('public')->delete($visitor->id_proof);
+            }
 
-        $visitor->delete();
+            $visitor->delete();
 
-        return redirect()->route('receptionist.visitors.index')->with('success', 'Visitor deleted successfully.');
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Visitor deleted successfully!'
+                ]);
+            }
+
+            return redirect()->route('receptionist.visitors.index')->with('success', 'Visitor deleted successfully.');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete visitor: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->route('receptionist.visitors.index')->with('error', 'Failed to delete visitor: ' . $e->getMessage());
+        }
     }
 
     public function checkIn(Visitor $visitor)
     {
         $this->authorizeAccess($visitor);
 
-        $visitor->update([
-            'check_in' => now(),
-            'status' => 'checked_in',
-        ]);
+        try {
+            $visitor->update([
+                'check_in' => now(),
+                'status' => 'checked_in',
+            ]);
 
-        return back()->with('success', 'Visitor checked in successfully.');
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Visitor checked in successfully!'
+                ]);
+            }
+
+            return back()->with('success', 'Visitor checked in successfully.');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to check in: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to check in: ' . $e->getMessage());
+        }
     }
 
     public function checkOut(Visitor $visitor)
     {
         $this->authorizeAccess($visitor);
 
-        $visitor->update([
-            'check_out' => now(),
-            'status' => 'completed',
-        ]);
+        try {
+            $visitor->update([
+                'check_out' => now(),
+                'status' => 'completed',
+            ]);
 
-        return back()->with('success', 'Visitor checked out successfully.');
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Visitor checked out successfully!'
+                ]);
+            }
+
+            return back()->with('success', 'Visitor checked out successfully.');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to check out: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to check out: ' . $e->getMessage());
+        }
     }
 
     public function export()

@@ -1,173 +1,309 @@
 @extends('layouts.school')
 
-@section('title', 'Collect Fees - ' . $student->full_name)
+@section('title', 'Process Fee Collection - ' . $student->full_name)
 
 @section('content')
-<div class="mb-6 flex items-center justify-between">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">Collect Fees</h1>
-        <p class="text-gray-600">{{ $student->full_name }} ({{ $student->admission_no }}) - {{ $student->class->name ?? '' }}</p>
+<div x-data="feeCollectionManager()">
+    <!-- Header/Breadcrumb -->
+    <div class="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('school.fee-payments.index') }}" class="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm group">
+                <i class="fas fa-chevron-left group-hover:-translate-x-0.5 transition-transform"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Process Fee Payment</h1>
+                <nav class="flex text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                    <span>Financial</span>
+                    <span class="mx-2 text-gray-300">/</span>
+                    <span class="text-emerald-600">Collection Portal</span>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div class="flex flex-col items-end">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Current Balance</span>
+                <span class="text-lg font-black text-gray-800">
+                    <span class="text-xs font-bold mr-0.5">₹</span>{{ number_format($pendingFees->sum('due_amount'), 2) }}
+                </span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
+                <i class="fas fa-wallet text-sm"></i>
+            </div>
+        </div>
     </div>
-    <a href="{{ route('fee-payments.index') }}" class="text-gray-600 hover:text-gray-900 flex items-center">
-        <i class="fas fa-arrow-left mr-2"></i> Back to Search
-    </a>
+
+    <!-- Student Quick Profile -->
+    <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 mb-8 shadow-lg shadow-emerald-100 flex items-center gap-6 relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+            <i class="fas fa-user-graduate text-9xl"></i>
+        </div>
+        <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 text-2xl font-black shadow-inner">
+            {{ substr($student->first_name, 0, 1) }}
+        </div>
+        <div>
+            <h2 class="text-2xl font-bold text-white tracking-tight">{{ $student->full_name }}</h2>
+            <div class="flex gap-4 mt-1">
+                <span class="inline-flex items-center text-[11px] font-bold text-emerald-50/80 uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                    <i class="fas fa-barcode mr-1.5 opacity-60"></i> ADM: {{ $student->admission_no }}
+                </span>
+                <span class="inline-flex items-center text-[11px] font-bold text-emerald-50/80 uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                    <i class="fas fa-graduation-cap mr-1.5 opacity-60"></i> {{ $student->class->name ?? 'N/A' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <form @submit.prevent="submitPayment" method="POST" id="payment-form" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        @csrf
+        <input type="hidden" name="academic_year_id" value="{{ $academicYear->id ?? '' }}">
+
+        <!-- Fees Selection Area -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-widest">Fee Heads Breakdown</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Select All</span>
+                        <input type="checkbox" @change="toggleAll" x-model="allSelected" class="rounded w-4 h-4 text-emerald-600 focus:ring-emerald-500/20 border-gray-200">
+                    </div>
+                </div>
+                
+                <div class="divide-y divide-gray-50">
+                    @forelse($pendingFees as $fee)
+                    <div class="p-6 flex flex-col md:flex-row md:items-center gap-6 group hover:bg-emerald-50/20 transition-all" 
+                         :class="{'bg-emerald-50/50': selections['{{ $fee->id }}']}">
+                        <div class="flex items-center gap-4 flex-1">
+                            <input type="checkbox" x-model="selections['{{ $fee->id }}']" @change="recalculateTotal()" 
+                                   class="rounded-lg w-5 h-5 text-emerald-600 focus:ring-emerald-500/20 border-gray-200 transition-all">
+                            
+                            <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-all border border-transparent group-hover:border-emerald-100">
+                                <i class="fas fa-file-invoice-dollar text-sm"></i>
+                            </div>
+                            
+                            <div>
+                                <div class="text-sm font-bold text-gray-700">{{ $fee->feeName->name ?? 'Registration Fee' }}</div>
+                                <div class="flex items-center gap-3 mt-0.5">
+                                    <span class="text-[10px] font-bold text-teal-600 uppercase">{{ $fee->feeType->name ?? 'One-Time' }}</span>
+                                    <span class="w-1 h-1 rounded-full bg-gray-200"></span>
+                                    <span class="text-[10px] font-medium text-gray-400">{{ $fee->fee_period }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-8 justify-between md:justify-end">
+                            <div class="text-right">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter block mb-0.5">Outstanding</span>
+                                <span class="text-sm font-black text-gray-800">₹ {{ number_format($fee->due_amount, 2) }}</span>
+                            </div>
+
+                            <div class="w-36 relative">
+                                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-300 font-bold text-xs">₹</div>
+                                <input 
+                                    type="number" 
+                                    step="0.01" 
+                                    x-model="amounts['{{ $fee->id }}']" 
+                                    @input="recalculateTotal()"
+                                    :disabled="!selections['{{ $fee->id }}']"
+                                    max="{{ $fee->due_amount }}"
+                                    class="w-full pl-7 pr-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all text-sm font-bold text-gray-700 disabled:opacity-30 disabled:bg-gray-100/50"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                        <div class="p-12 text-center">
+                            <i class="fas fa-check-circle text-4xl text-emerald-100 mb-4"></i>
+                            <p class="text-sm font-bold text-gray-400">Perfect! No pending fees for this year.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Sidebar -->
+        <div class="lg:col-span-4 sticky top-6">
+            <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 space-y-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                        <i class="fas fa-shopping-cart text-sm"></i>
+                    </div>
+                    <h3 class="text-lg font-black text-gray-800 tracking-tight">Summary</h3>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-end pb-4 border-b border-dashed border-gray-100">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Collection Total</span>
+                        <div class="text-right">
+                            <span class="text-2xl font-black text-indigo-700" x-text="'₹ ' + total.toLocaleString('en-IN', {minimumFractionDigits: 2})"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5 pt-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Payment Date</label>
+                            <input type="date" x-model="payment_date" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:border-indigo-500 transition-all font-bold text-gray-700">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Payment Channel</label>
+                            <select x-model="payment_method_id" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:border-indigo-500 transition-all font-bold text-gray-700 appearance-none">
+                                @foreach($paymentMethods as $method)
+                                    <option value="{{ $method->id }}">{{ $method->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div x-show="payment_method_id != 1">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Ref ID / Cheque #</label>
+                            <input type="text" x-model="transaction_id" placeholder="Optional reference" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:border-indigo-500 transition-all font-bold text-gray-700">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Staff Remarks</label>
+                            <textarea x-model="remarks" rows="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-indigo-500 transition-all font-medium text-gray-700 resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        :disabled="total <= 0 || submitting"
+                        class="w-full bg-gradient-to-r from-indigo-600 to-blue-700 hover:from-indigo-700 hover:to-blue-800 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 transition-all active:scale-[0.98] disabled:opacity-30 disabled:grayscale mt-4 flex items-center justify-center gap-3 tracking-wider uppercase text-sm"
+                    >
+                        <template x-if="submitting"><span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span></template>
+                        <i x-show="!submitting" class="fas fa-check-circle"></i>
+                        <span x-text="submitting ? 'Processing...' : 'Complete Payment'"></span>
+                    </button>
+                    
+                    <p class="text-[10px] text-center text-gray-400 font-bold uppercase tracking-tight opacity-60">Receipt will be generated automatically</p>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Success Feedback Overlay (Internal Modal) -->
+    <template x-if="showSuccessOverlay">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <div class="bg-white rounded-3xl p-10 max-w-sm w-full text-center shadow-2xl animate-bounce-in">
+                <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-check text-4xl"></i>
+                </div>
+                <h3 class="text-2xl font-black text-gray-800 mb-2">Payment Recorded!</h3>
+                <p class="text-gray-500 mb-8 text-sm">The fee collection has been processed and recorded successfully.</p>
+                <div class="flex flex-col gap-3">
+                    <a :href="receiptUrl" target="_blank" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg ring-4 ring-emerald-500/10">
+                        <i class="fas fa-print mr-2"></i> Print Receipt
+                    </a>
+                    <button @click="window.location.href='{{ route('school.fee-payments.index') }}'" class="w-full bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200">
+                        Return to Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
 
-<form action="{{ route('fee-payments.store', $student) }}" method="POST" id="payment-form">
-    @csrf
-    <input type="hidden" name="academic_year_id" value="{{ $academicYear->id ?? '' }}">
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Fees Selection -->
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                    <h3 class="font-semibold text-gray-800">Pending Fee Heads</h3>
-                    <div class="text-xs text-gray-500 font-medium">Select heads to pay</div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200" id="fees-table">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left">
-                                    <input type="checkbox" id="select-all" class="rounded text-blue-600 focus:ring-blue-500">
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fee Head</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Period</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Amt</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paying</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            @forelse($pendingFees as $fee)
-                            <tr class="fee-row">
-                                <td class="px-6 py-4">
-                                    <input type="checkbox" name="selected_fees[]" value="{{ $fee->id }}" class="fee-checkbox rounded text-blue-600" data-amount="{{ $fee->due_amount }}">
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $fee->feeName->name ?? 'N/A' }}</div>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ $fee->fee_period }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 font-semibold" data-due="{{ $fee->due_amount }}">
-                                    ₹ {{ number_format($fee->due_amount, 2) }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="relative rounded-md shadow-sm w-32">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <span class="text-gray-500 sm:text-sm">₹</span>
-                                        </div>
-                                        <input type="number" name="payments[{{ $fee->id }}][amount]" 
-                                               class="fee-amount-input focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-3 sm:text-sm border-gray-300 rounded-md" 
-                                               value="{{ $fee->due_amount }}" step="0.01" min="0" max="{{ $fee->due_amount }}" disabled>
-                                        <input type="hidden" name="payments[{{ $fee->id }}][fee_id]" value="{{ $fee->id }}">
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500 italic">No pending fees for this student.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Payment Details Sidebar -->
-        <div class="lg:col-span-1 space-y-6">
-            <div class="bg-white rounded-lg shadow p-6 border-t-4 border-blue-600">
-                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                    <i class="fas fa-receipt mr-2 text-blue-600"></i> Payment Details
-                </h3>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Amount Payable</label>
-                        <div class="text-3xl font-black text-gray-900" id="total-display">₹ 0.00</div>
-                    </div>
-
-                    <div class="border-t pt-4">
-                        <label for="payment_date" class="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-                        <input type="date" name="payment_date" id="payment_date" required value="{{ date('Y-m-d') }}" 
-                               class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="payment_method_id" class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                        <select name="payment_method_id" id="payment_method_id" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            @foreach($paymentMethods as $method)
-                                <option value="{{ $method->id }}">{{ $method->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="transaction_id" class="block text-sm font-medium text-gray-700 mb-1">Transaction ID / Cheque No</label>
-                        <input type="text" name="transaction_id" id="transaction_id" placeholder="Optional" 
-                               class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="remarks" class="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-                        <textarea name="remarks" id="remarks" rows="2" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
-                    </div>
-
-                    <button type="submit" id="submit-btn" disabled class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-4">
-                        <i class="fas fa-check-circle mr-2"></i> RECORD PAYMENT
-                    </button>
-                    <p class="text-xs text-center text-gray-500 italic mt-2">Selecting fees activates the button.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-
+@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const checkboxes = document.querySelectorAll('.fee-checkbox');
-    const selectAll = document.getElementById('select-all');
-    const totalDisplay = document.getElementById('total-display');
-    const submitBtn = document.getElementById('submit-btn');
+document.addEventListener('alpine:init', () => {
+    Alpine.data('feeCollectionManager', () => ({
+        submitting: false,
+        allSelected: false,
+        total: 0,
+        selections: {},
+        amounts: {},
+        payment_date: '{{ date('Y-m-d') }}',
+        payment_method_id: '{{ $paymentMethods->first()->id ?? '' }}',
+        transaction_id: '',
+        remarks: '',
+        showSuccessOverlay: false,
+        receiptUrl: '#',
 
-    function updateTotal() {
-        let total = 0;
-        let count = 0;
-        checkboxes.forEach(cb => {
-            const row = cb.closest('tr');
-            const input = row.querySelector('.fee-amount-input');
-            if (cb.checked) {
-                total += parseFloat(input.value || 0);
-                input.disabled = false;
-                count++;
-            } else {
-                input.disabled = true;
-            }
-        });
-        totalDisplay.textContent = '₹ ' + total.toLocaleString('en-IN', {minimumFractionDigits: 2});
-        submitBtn.disabled = count === 0;
-    }
+        init() {
+            @foreach($pendingFees as $fee)
+                this.selections['{{ $fee->id }}'] = false;
+                this.amounts['{{ $fee->id }}'] = {{ $fee->due_amount }};
+            @endforeach
+        },
 
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', updateTotal);
-    });
-
-    const amountInputs = document.querySelectorAll('.fee-amount-input');
-    amountInputs.forEach(input => {
-        input.addEventListener('input', function() {
-            const max = parseFloat(this.getAttribute('max'));
-            if (parseFloat(this.value) > max) this.value = max;
-            updateTotal();
-        });
-    });
-
-    if(selectAll) {
-        selectAll.addEventListener('change', function() {
-            checkboxes.forEach(cb => {
-                cb.checked = this.checked;
+        toggleAll() {
+            Object.keys(this.selections).forEach(id => {
+                this.selections[id] = this.allSelected;
             });
-            updateTotal();
-        });
-    }
+            this.recalculateTotal();
+        },
+
+        recalculateTotal() {
+            let runningTotal = 0;
+            Object.keys(this.selections).forEach(id => {
+                if (this.selections[id]) {
+                    runningTotal += parseFloat(this.amounts[id] || 0);
+                }
+            });
+            this.total = runningTotal;
+            this.allSelected = Object.values(this.selections).every(v => v);
+        },
+
+        async submitPayment() {
+            const selectedItems = Object.keys(this.selections)
+                .filter(id => this.selections[id])
+                .map(id => ({
+                    fee_id: id,
+                    amount: this.amounts[id]
+                }));
+
+            if (!selectedItems.length) return;
+
+            this.submitting = true;
+            try {
+                const response = await fetch('{{ route('school.fee-payments.store', $student) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        academic_year_id: '{{ $academicYear->id ?? '' }}',
+                        payment_date: this.payment_date,
+                        payment_method_id: this.payment_method_id,
+                        transaction_id: this.transaction_id,
+                        remarks: this.remarks,
+                        payments: selectedItems
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    this.receiptUrl = result.redirect;
+                    this.showSuccessOverlay = true;
+                } else {
+                    throw new Error(result.message || 'Payment processing failed');
+                }
+            } catch (err) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: err.message });
+                } else {
+                    alert(err.message);
+                }
+            } finally {
+                this.submitting = false;
+            }
+        }
+    }));
+});
 </script>
+
+<style>
+@keyframes bounce-in {
+    0% { transform: scale(0.9); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
+.animate-bounce-in {
+    animation: bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+</style>
+@endpush
 @endsection

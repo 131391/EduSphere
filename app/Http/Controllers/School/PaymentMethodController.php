@@ -43,16 +43,30 @@ class PaymentMethodController extends TenantController
     public function store(StorePaymentMethodRequest $request)
     {
         try {
-            $this->service->createMethod(
+            $method = $this->service->createMethod(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment method created successfully!',
+                    'data' => $method
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.payment-methods.index',
                 'Payment method created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create payment method: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create payment method: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class PaymentMethodController extends TenantController
             $method = PaymentMethod::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateMethod($method, $request->validated());
+            $method = $this->service->updateMethod($method, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment method updated successfully!',
+                    'data' => $method
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.payment-methods.index',
                 'Payment method updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update payment method: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update payment method: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class PaymentMethodController extends TenantController
 
             $this->service->deleteMethod($method);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment method deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.payment-methods.index',
                 'Payment method deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete payment method: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.payment-methods.index',
                 'Failed to delete payment method: ' . $e->getMessage()

@@ -16,9 +16,9 @@ class StudentEnquiryController extends TenantController
 {
     public function index(Request $request)
     {
-        $school = auth()->user()->school;
+        $school = $this->getSchool();
         
-        $query = StudentEnquiry::where('school_id', $school->id)
+        $query = StudentEnquiry::where('school_id', $this->getSchoolId())
             ->with(['academicYear', 'class']);
 
         // Search functionality
@@ -33,21 +33,21 @@ class StudentEnquiryController extends TenantController
         }
 
         // Sorting
-        $sortColumn = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
         $query->orderBy($sortColumn, $sortDirection);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $enquiries = $query->paginate($perPage)->withQueryString();
 
         // Statistics - Scoped to school
         $stats = [
-            'total' => StudentEnquiry::where('school_id', $school->id)->count(),
-            'pending' => StudentEnquiry::where('school_id', $school->id)->pending()->count(),
-            'cancelled' => StudentEnquiry::where('school_id', $school->id)->cancelled()->count(),
-            'registration' => StudentEnquiry::where('school_id', $school->id)->completed()->count(),
-            'admitted' => StudentEnquiry::where('school_id', $school->id)->admitted()->count(),
+            'total' => StudentEnquiry::where('school_id', $this->getSchoolId())->count(),
+            'pending' => StudentEnquiry::where('school_id', $this->getSchoolId())->pending()->count(),
+            'cancelled' => StudentEnquiry::where('school_id', $this->getSchoolId())->cancelled()->count(),
+            'registration' => StudentEnquiry::where('school_id', $this->getSchoolId())->completed()->count(),
+            'admitted' => StudentEnquiry::where('school_id', $this->getSchoolId())->admitted()->count(),
         ];
 
         // Get academic years and classes for dropdowns
@@ -67,17 +67,27 @@ class StudentEnquiryController extends TenantController
         // Handle file uploads
         $validated = $this->handleFileUploads($request, $validated);
 
-        StudentEnquiry::create($validated);
+        try {
+            StudentEnquiry::create($validated);
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Student enquiry added successfully.'
-            ]);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student enquiry added successfully.'
+                ]);
+            }
+
+            return redirect()->route('school.student-enquiries.index')
+                ->with('success', 'Student enquiry added successfully.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to add enquiry: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to add enquiry: ' . $e->getMessage());
         }
-
-        return redirect()->route('school.student-enquiries.index')
-            ->with('success', 'Student enquiry added successfully.');
     }
 
     public function update(Request $request, StudentEnquiry $studentEnquiry)
@@ -89,17 +99,27 @@ class StudentEnquiryController extends TenantController
         // Handle file uploads
         $validated = $this->handleFileUploads($request, $validated, $studentEnquiry);
 
-        $studentEnquiry->update($validated);
+        try {
+            $studentEnquiry->update($validated);
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Student enquiry updated successfully.'
-            ]);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student enquiry updated successfully.'
+                ]);
+            }
+
+            return redirect()->route('school.student-enquiries.index')
+                ->with('success', 'Student enquiry updated successfully.');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update enquiry: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to update enquiry: ' . $e->getMessage());
         }
-
-        return redirect()->route('school.student-enquiries.index')
-            ->with('success', 'Student enquiry updated successfully.');
     }
 
     public function destroy(StudentEnquiry $studentEnquiry)
@@ -109,10 +129,31 @@ class StudentEnquiryController extends TenantController
         // Delete associated files
         $this->deleteFiles($studentEnquiry);
 
-        $studentEnquiry->delete();
+        try {
+            // Delete associated files
+            $this->deleteFiles($studentEnquiry);
 
-        return redirect()->route('school.student-enquiries.index')
-            ->with('success', 'Student enquiry deleted successfully.');
+            $studentEnquiry->delete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student enquiry deleted successfully.'
+                ]);
+            }
+
+            return redirect()->route('school.student-enquiries.index')
+                ->with('success', 'Student enquiry deleted successfully.');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete enquiry: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->route('school.student-enquiries.index')
+                ->with('error', 'Failed to delete enquiry: ' . $e->getMessage());
+        }
     }
 
     /**

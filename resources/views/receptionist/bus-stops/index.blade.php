@@ -10,20 +10,16 @@
 
 
     {{-- Page Header with Actions --}}
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        <div class="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h2 class="text-xl font-bold text-gray-800">Bus Stop List</h2>
-                <p class="text-sm text-gray-600 mt-1">Manage all bus stops and pickup points</p>
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Bus Stop Network</h2>
+                <p class="text-sm text-gray-500 mt-1">Configure and monitor transportation pickup nodes</p>
             </div>
-            <div class="flex gap-2">
-                <button @click="openAddModal()" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
-                    Add Bus Stop
-                </button>
-                <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
-                    <i class="fas fa-file-excel mr-2"></i>
-                    Export to Excel
+            <div class="flex gap-3">
+                <button @click="openAddModal()" class="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl hover:shadow-lg hover:shadow-teal-100 transition-all flex items-center font-bold text-sm">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Commission Node
                 </button>
             </div>
         </div>
@@ -35,9 +31,8 @@
                 'key' => 'sr_no',
                 'label' => 'SR NO',
                 'sortable' => false,
-                'render' => function($row) {
-                    static $index = 0;
-                    return ++$index;
+                'render' => function($row, $index, $data) {
+                    return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
                 }
             ],
             [
@@ -59,16 +54,6 @@
                 'sortable' => true,
             ],
             [
-                'key' => 'latitude',
-                'label' => 'LATITUDE',
-                'sortable' => false,
-            ],
-            [
-                'key' => 'longitude',
-                'label' => 'LONGITUDE',
-                'sortable' => false,
-            ],
-            [
                 'key' => 'distance_from_institute',
                 'label' => 'DISTANCE (KM)',
                 'sortable' => false,
@@ -77,15 +62,18 @@
                 'key' => 'charge_per_month',
                 'label' => 'CHARGE/MONTH',
                 'sortable' => false,
+                'render' => function($row) {
+                    return '₹' . number_format($row->charge_per_month, 2);
+                }
             ],
             [
                 'key' => 'area_pin_code',
-                'label' => 'AREA PIN CODE',
+                'label' => 'PIN CODE',
                 'sortable' => false,
             ],
             [
                 'key' => 'vehicle_no',
-                'label' => 'VEHICLE NO',
+                'label' => 'VEHICLE',
                 'sortable' => false,
                 'render' => function($row) {
                     return $row->vehicle ? $row->vehicle->vehicle_no : 'N/A';
@@ -97,10 +85,7 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-busstop'))))";
-                },
-                'data-busstop' => function($row) {
-                    $busStopData = [
+                    $stopData = [
                         'id' => $row->id,
                         'route_id' => $row->route_id,
                         'vehicle_id' => $row->vehicle_id,
@@ -112,19 +97,17 @@
                         'charge_per_month' => $row->charge_per_month,
                         'area_pin_code' => $row->area_pin_code,
                     ];
-                    return base64_encode(json_encode($busStopData));
+                    return "openEditModal(".json_encode($stopData).")";
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',
                 'title' => 'Edit',
             ],
             [
-                'type' => 'form',
-                'url' => function($row) {
-                    return route('receptionist.bus-stops.destroy', $row->id);
+                'type' => 'button',
+                'onclick' => function($row) {
+                    return "confirmDelete('".url('receptionist/bus-stops/'.$row->id)."', '{$row->bus_stop_name}')";
                 },
-                'method' => 'DELETE',
-                'confirm' => 'Are you sure you want to delete this bus stop?',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
@@ -144,148 +127,161 @@
     </x-data-table>
 
     {{-- Add/Edit Bus Stop Modal --}}
-    <x-modal name="bus-stop-modal" alpineTitle="editMode ? 'Edit Bus Stop' : 'Add New Bus Stop'" maxWidth="4xl">
-        {{-- Modal Body --}}
-        <form :action="editMode ? '{{ url('receptionist/bus-stops') }}/' + busStopId : '{{ route('receptionist.bus-stops.store') }}'" 
-              method="POST" class="p-6">
+    <x-modal name="bus-stop-modal" alpineTitle="editMode ? 'Modify Network Node' : 'Commission Bus Stop'" maxWidth="2xl">
+        <form @submit.prevent="save" class="p-0 relative">
             @csrf
-            <input type="hidden" name="_method" x-bind:value="editMode ? 'PUT' : 'POST'">
+            <template x-if="editMode">
+                <input type="hidden" name="_method" value="PUT">
+            </template>
 
-            <div class="space-y-4">
+            {{-- Global Error Announcement --}}
+            <template x-if="Object.keys(errors).length > 0">
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl mx-6 mt-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="(messages, field) in errors" :key="field">
+                            <template x-for="message in messages" :key="message">
+                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
+                            </template>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
+            <div class="p-8 space-y-6">
                 {{-- Row 1: Route and Bus Stop No --}}
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Route <span class="text-red-500">*</span></label>
-                        <select name="route_id" x-model="formData.route_id"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('route_id') border-red-500 @enderror">
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Assigned Route <span class="text-red-500">*</span></label>
+                        <select name="route_id" x-model="formData.route_id" id="route_id"
+                                @change="delete errors.route_id"
+                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                :class="errors.route_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
                             <option value="">Select Route</option>
                             @foreach($routes as $route)
-                                <option value="{{ $route->id }}">
-                                    {{ $route->route_name }}
-                                </option>
+                                <option value="{{ $route->id }}">{{ $route->route_name }}</option>
                             @endforeach
                         </select>
-                        @error('route_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <template x-if="errors.route_id">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.route_id[0]"></p>
+                        </template>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Bus Stop No <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Stop Identifier (No) <span class="text-red-500">*</span></label>
                         <input type="text" name="bus_stop_no" x-model="formData.bus_stop_no"
-                               placeholder="Enter Bus Stop No"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('bus_stop_no') border-red-500 @enderror">
-                        @error('bus_stop_no')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                               placeholder="e.g. ST-001"
+                               @input="delete errors.bus_stop_no"
+                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                :class="errors.bus_stop_no ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                        <template x-if="errors.bus_stop_no">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.bus_stop_no[0]"></p>
+                        </template>
                     </div>
                 </div>
 
                 {{-- Row 2: Bus Stop Name --}}
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Bus Stop Name <span class="text-red-500">*</span></label>
+                    <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Node Description Name <span class="text-red-500">*</span></label>
                     <input type="text" name="bus_stop_name" x-model="formData.bus_stop_name"
-                           placeholder="Enter Bus Stop Name"
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('bus_stop_name') border-red-500 @enderror">
-                    @error('bus_stop_name')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                           placeholder="Enter prominent landmark or area name"
+                           @input="delete errors.bus_stop_name"
+                           class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                           :class="errors.bus_stop_name ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                    <template x-if="errors.bus_stop_name">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.bus_stop_name[0]"></p>
+                    </template>
                 </div>
 
                 {{-- Row 3: Latitude and Longitude --}}
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Latitude</label>
+                        <label class="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">GPS Latitude</label>
                         <input type="number" step="0.00000001" name="latitude" x-model="formData.latitude"
-                               placeholder="Enter Latitude"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('latitude') border-red-500 @enderror">
-                        @error('latitude')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                               placeholder="0.00000000"
+                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white focus:ring-teal-500/10 focus:border-teal-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Longitude</label>
+                        <label class="block text-[10px] font-black text-gray-400 mb-2 uppercase tracking-widest">GPS Longitude</label>
                         <input type="number" step="0.00000001" name="longitude" x-model="formData.longitude"
-                               placeholder="Enter Longitude"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('longitude') border-red-500 @enderror">
-                        @error('longitude')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                               placeholder="0.00000000"
+                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white focus:ring-teal-500/10 focus:border-teal-500">
                     </div>
                 </div>
 
                 {{-- Row 4: Distance and Charge --}}
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Distance from Institute (KM)</label>
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Distance (KM)</label>
                         <input type="number" step="0.01" name="distance_from_institute" x-model="formData.distance_from_institute"
-                               placeholder="Enter Distance"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('distance_from_institute') border-red-500 @enderror">
-                        @error('distance_from_institute')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white focus:ring-teal-500/10 focus:border-teal-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Charge Per Month</label>
-                        <input type="number" step="0.01" name="charge_per_month" x-model="formData.charge_per_month"
-                               placeholder="Enter Charge"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('charge_per_month') border-red-500 @enderror">
-                        @error('charge_per_month')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Monthly Tariff</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                            <input type="number" step="0.01" name="charge_per_month" x-model="formData.charge_per_month"
+                                   class="w-full pl-8 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white focus:ring-teal-500/10 focus:border-teal-500">
+                        </div>
                     </div>
                 </div>
 
                 {{-- Row 5: Area Pin Code and Vehicle --}}
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Area Pin Code</label>
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Postal Code (PIN)</label>
                         <input type="text" name="area_pin_code" x-model="formData.area_pin_code"
-                               placeholder="Enter Area Pin Code"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('area_pin_code') border-red-500 @enderror">
-                        @error('area_pin_code')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                               class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white focus:ring-teal-500/10 focus:border-teal-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle</label>
-                        <select name="vehicle_id" x-model="formData.vehicle_id"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_id') border-red-500 @enderror">
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Link Vehicle (Primary)</label>
+                        <select name="vehicle_id" x-model="formData.vehicle_id" id="vehicle_id"
+                                @change="delete errors.vehicle_id"
+                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white focus:ring-teal-500/10 focus:border-teal-500">
                             <option value="">Select Vehicle</option>
                             @foreach($vehicles as $vehicle)
-                                <option value="{{ $vehicle->id }}">
-                                    {{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
-                                </option>
+                                <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})</option>
                             @endforeach
                         </select>
-                        @error('vehicle_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
                 </div>
             </div>
 
             {{-- Modal Footer --}}
-            <div class="flex items-center justify-center gap-4 mt-6">
+            <div class="flex items-center justify-end gap-3 p-6 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
                 <button type="button" @click="closeModal()"
-                        class="px-8 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
-                    Close
+                        class="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm">
+                    Discard
                 </button>
-                <button type="submit"
-                        class="px-8 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold">
-                    Submit
+                <button type="submit" :disabled="submitting"
+                        class="px-10 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl shadow-lg shadow-teal-100 hover:shadow-xl transition-all font-black text-sm uppercase tracking-widest flex items-center gap-2">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <span x-text="submitting ? 'Syncing...' : (editMode ? 'Update Node' : 'Initialize Stop')"></span>
                 </button>
             </div>
         </form>
     </x-modal>
+
+    <x-confirm-modal 
+        title="Permanently Remove Node?" 
+        message="This action will decommission the bus stop from the network. This cannot be undone."
+        confirm-text="Decommission"
+        confirm-color="red"
+    />
 </div>
 
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('busStopManagement', () => ({
-        showModal: false,
         editMode: false,
         busStopId: null,
+        submitting: false,
+        errors: {},
         formData: {
             route_id: '',
             vehicle_id: '',
@@ -298,31 +294,25 @@ document.addEventListener('alpine:init', () => {
             area_pin_code: '',
         },
         
-        init() {
-            // Check if there are validation errors and reopen modal with old data
-            @if($errors->any())
-                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
-                this.busStopId = '{{ old('bus_stop_id') }}';
-                this.formData = {
-                    route_id: '{{ old('route_id') }}',
-                    vehicle_id: '{{ old('vehicle_id') }}',
-                    bus_stop_no: '{{ old('bus_stop_no') }}',
-                    bus_stop_name: '{{ old('bus_stop_name') }}',
-                    latitude: '{{ old('latitude') }}',
-                    longitude: '{{ old('longitude') }}',
-                    distance_from_institute: '{{ old('distance_from_institute') }}',
-                    charge_per_month: '{{ old('charge_per_month') }}',
-                    area_pin_code: '{{ old('area_pin_code') }}',
-                };
-                this.$nextTick(() => {
-                    this.$dispatch('open-modal', 'bus-stop-modal');
-                });
-            @endif
+        async init() {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $(document).on('change', '#route_id', (e) => {
+                        this.formData.route_id = e.target.value;
+                        if (this.errors.route_id) delete this.errors.route_id;
+                    });
+                    $(document).on('change', '#vehicle_id', (e) => {
+                        this.formData.vehicle_id = e.target.value;
+                        if (this.errors.vehicle_id) delete this.errors.vehicle_id;
+                    });
+                }
+            });
         },
-        
+
         openAddModal() {
             this.editMode = false;
             this.busStopId = null;
+            this.errors = {};
             this.formData = {
                 route_id: '',
                 vehicle_id: '',
@@ -335,11 +325,17 @@ document.addEventListener('alpine:init', () => {
                 area_pin_code: '',
             };
             this.$dispatch('open-modal', 'bus-stop-modal');
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('#route_id, #vehicle_id').val('').trigger('change.select2');
+                }
+            });
         },
         
         openEditModal(busStop) {
             this.editMode = true;
             this.busStopId = busStop.id;
+            this.errors = {};
             this.formData = {
                 route_id: busStop.route_id || '',
                 vehicle_id: busStop.vehicle_id || '',
@@ -353,72 +349,122 @@ document.addEventListener('alpine:init', () => {
             };
             this.$dispatch('open-modal', 'bus-stop-modal');
             
-            // Update Select2 dropdowns after modal is shown
             this.$nextTick(() => {
-                setTimeout(() => {
-                    $('select[name="route_id"]').val(busStop.route_id).trigger('change.select2');
-                    $('select[name="vehicle_id"]').val(busStop.vehicle_id).trigger('change.select2');
-                }, 100);
+                if (typeof $ !== 'undefined') {
+                    $('#route_id').val(busStop.route_id).trigger('change.select2');
+                    $('#vehicle_id').val(busStop.vehicle_id).trigger('change.select2');
+                }
             });
+        },
+
+        async save() {
+            this.submitting = true;
+            this.errors = {};
+
+            const url = this.editMode 
+                ? `{{ url('receptionist/bus-stops') }}/${this.busStopId}`
+                : `{{ route('receptionist.bus-stops.store') }}`;
+            
+            const method = this.editMode ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ...this.formData,
+                        _method: method
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Node configuration propagated'
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        throw new Error(result.message || 'Transmission failed');
+                    }
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        async deleteBusStop(url) {
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'success', title: result.message });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message || 'Decommissioning failed');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            }
         },
         
         closeModal() {
             this.$dispatch('close-modal', 'bus-stop-modal');
+            this.errors = {};
         },
     }));
 });
 
-// Global function to open edit modal (called from table action buttons)
-function openEditModal(busStop) {
-    const component = Alpine.$data(document.querySelector('[x-data*="busStopManagement"]'));
-    if (component) {
-        component.openEditModal(busStop);
+// Global helpers
+window.openEditModal = function(busStop) {
+    const el = document.querySelector('[x-data*="busStopManagement"]');
+    if (el) {
+        const component = Alpine.$data(el);
+        if (component) component.openEditModal(busStop);
     }
-}
+};
 
-// Global script to hide validation errors when user starts typing or selecting
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.querySelector('[x-data*="busStopManagement"]');
-    if (modal) {
-        modal.addEventListener('input', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-500')) {
-                    errorElement.classList.add('hidden');
+window.confirmDelete = function(url, name) {
+    window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+        detail: {
+            message: `Are you sure you want to decommission the bus stop node "${name}"?`,
+            onConfirm: () => {
+                const el = document.querySelector('[x-data*="busStopManagement"]');
+                if (el) {
+                    const component = Alpine.$data(el);
+                    if (component) component.deleteBusStop(url);
                 }
-                e.target.classList.remove('border-red-500');
             }
-        });
-        
-        modal.addEventListener('change', function(e) {
-            if (e.target.tagName === 'SELECT') {
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-500')) {
-                    errorElement.classList.add('hidden');
-                }
-                e.target.classList.remove('border-red-500');
-            }
-        });
-        
-        // Handle Select2 change events specifically
-        $(modal).on('select2:select select2:clear', 'select', function(e) {
-            const select = e.target;
-            let errorElement = select.nextElementSibling;
-            
-            if (errorElement && errorElement.classList.contains('select2')) {
-                errorElement = errorElement.nextElementSibling;
-            }
-            
-            if (errorElement && errorElement.classList.contains('text-red-500')) {
-                errorElement.classList.add('hidden');
-            }
-            
-            select.classList.remove('border-red-500');
-            const select2Container = $(select).next('.select2-container').find('.select2-selection');
-            select2Container.removeClass('border-red-500');
-        });
-    }
-});
+        }
+    }));
+};
 </script>
+</div>
 @endpush
 @endsection

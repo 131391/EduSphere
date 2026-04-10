@@ -25,13 +25,21 @@ class AdmissionNewsController extends TenantController
             'publish_date' => 'required|date',
         ]);
 
-        AdmissionNews::create([
+        $news = AdmissionNews::create([
             'school_id' => $this->getSchoolId(),
             'title' => $request->title,
-            'content' => $request->content,
-            'publish_date' => $request->publish_date,
+            'content' => $request->input('content'),
+            'publish_date' => $request->input('publish_date'),
             'is_active' => true,
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Admission news created successfully!',
+                'data' => $news
+            ]);
+        }
 
         return back()->with('success', 'Admission news created successfully.');
     }
@@ -48,9 +56,17 @@ class AdmissionNewsController extends TenantController
 
         $news->update([
             'title' => $request->title,
-            'content' => $request->content,
-            'publish_date' => $request->publish_date,
+            'content' => $request->input('content'),
+            'publish_date' => $request->input('publish_date'),
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Admission news updated successfully!',
+                'data' => $news
+            ]);
+        }
 
         return back()->with('success', 'Admission news updated successfully.');
     }
@@ -59,6 +75,13 @@ class AdmissionNewsController extends TenantController
     {
         $news = AdmissionNews::where('school_id', $this->getSchoolId())->findOrFail($id);
         $news->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Admission news deleted successfully!'
+            ]);
+        }
 
         return back()->with('success', 'Admission news deleted successfully.');
     }

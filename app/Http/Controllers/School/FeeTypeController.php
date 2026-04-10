@@ -43,16 +43,30 @@ class FeeTypeController extends TenantController
     public function store(StoreFeeTypeRequest $request)
     {
         try {
-            $this->feeTypeService->createFeeType(
+            $feeType = $this->feeTypeService->createFeeType(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee type created successfully!',
+                    'data' => $feeType
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.fee-types.index',
                 'Fee type created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create fee type: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create fee type: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class FeeTypeController extends TenantController
             $feeType = FeeType::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->feeTypeService->updateFeeType($feeType, $request->validated());
+            $feeType = $this->feeTypeService->updateFeeType($feeType, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee type updated successfully!',
+                    'data' => $feeType
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.fee-types.index',
                 'Fee type updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update fee type: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update fee type: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class FeeTypeController extends TenantController
 
             $this->feeTypeService->deleteFeeType($feeType);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee type deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.fee-types.index',
                 'Fee type deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete fee type: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.fee-types.index',
                 'Failed to delete fee type: ' . $e->getMessage()

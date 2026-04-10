@@ -7,6 +7,7 @@ use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Enums\FuelType;
+use Illuminate\Validation\ValidationException;
 
 class VehicleController extends TenantController
 {
@@ -31,12 +32,12 @@ class VehicleController extends TenantController
         }
 
         // Sorting
-        $sortColumn = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
         $query->orderBy($sortColumn, $sortDirection);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $vehicles = $query->paginate($perPage)->withQueryString();
 
         // Statistics for the page
@@ -56,35 +57,55 @@ class VehicleController extends TenantController
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'registration_no' => 'required|string|max:255',
-            'vehicle_no' => 'nullable|string|max:255',
-            'fuel_type' => ['required', 'integer', Rule::enum(FuelType::class)],
-            'capacity' => 'nullable|integer|min:1',
-            'initial_reading' => 'nullable|integer|min:0',
-            'engine_no' => 'nullable|string|max:255',
-            'chassis_no' => 'nullable|string|max:255',
-            'vehicle_type' => 'nullable|string|max:255',
-            'model_no' => 'nullable|string|max:255',
-            'date_of_purchase' => 'nullable|date',
-            'vehicle_group' => 'nullable|string|max:255',
-            'imei_gps_device' => 'nullable|string|max:255',
-            'tracking_url' => 'nullable|url|max:500',
-            'manufacturing_year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
-            'vehicle_create_date' => 'nullable|date',
-        ]);
+        try {
+            $validated = $request->validate([
+                'registration_no' => 'required|string|max:255',
+                'vehicle_no' => 'nullable|string|max:255',
+                'fuel_type' => ['required', 'integer', Rule::enum(FuelType::class)],
+                'capacity' => 'nullable|integer|min:1',
+                'initial_reading' => 'nullable|integer|min:0',
+                'engine_no' => 'nullable|string|max:255',
+                'chassis_no' => 'nullable|string|max:255',
+                'vehicle_type' => 'nullable|string|max:255',
+                'model_no' => 'nullable|string|max:255',
+                'date_of_purchase' => 'nullable|date',
+                'vehicle_group' => 'nullable|string|max:255',
+                'imei_gps_device' => 'nullable|string|max:255',
+                'tracking_url' => 'nullable|url|max:500',
+                'manufacturing_year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
+                'vehicle_create_date' => 'nullable|date',
+            ]);
 
-        $schoolId = $this->getSchoolId();
-        $validated['school_id'] = $schoolId;
-        
-        // Auto-generate vehicle number if not provided
-        if (empty($validated['vehicle_no'])) {
-            $validated['vehicle_no'] = Vehicle::generateVehicleNo($schoolId);
+            $schoolId = $this->getSchoolId();
+            $validated['school_id'] = $schoolId;
+            
+            if (empty($validated['vehicle_no'])) {
+                $validated['vehicle_no'] = Vehicle::generateVehicleNo($schoolId);
+            }
+
+            $vehicle = Vehicle::create($validated);
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Vehicle registry synchronized successfully.',
+                    'vehicle' => $vehicle
+                ]);
+            }
+
+            return redirect()->route('receptionist.vehicles.index')->with('success', 'Vehicle registry synchronized successfully.');
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
         }
-
-        Vehicle::create($validated);
-
-        return redirect()->route('receptionist.vehicles.index')->with('success', 'Vehicle added successfully.');
     }
 
     /**
@@ -94,45 +115,78 @@ class VehicleController extends TenantController
     {
         $this->authorizeTenant($vehicle);
 
-        $validated = $request->validate([
-            'registration_no' => 'required|string|max:255',
-            'vehicle_no' => 'nullable|string|max:255',
-            'fuel_type' => ['required', 'integer', Rule::enum(FuelType::class)],
-            'capacity' => 'nullable|integer|min:1',
-            'initial_reading' => 'nullable|integer|min:0',
-            'engine_no' => 'nullable|string|max:255',
-            'chassis_no' => 'nullable|string|max:255',
-            'vehicle_type' => 'nullable|string|max:255',
-            'model_no' => 'nullable|string|max:255',
-            'date_of_purchase' => 'nullable|date',
-            'vehicle_group' => 'nullable|string|max:255',
-            'imei_gps_device' => 'nullable|string|max:255',
-            'tracking_url' => 'nullable|url|max:500',
-            'manufacturing_year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
-            'vehicle_create_date' => 'nullable|date',
-        ]);
+        try {
+            $validated = $request->validate([
+                'registration_no' => 'required|string|max:255',
+                'vehicle_no' => 'nullable|string|max:255',
+                'fuel_type' => ['required', 'integer', Rule::enum(FuelType::class)],
+                'capacity' => 'nullable|integer|min:1',
+                'initial_reading' => 'nullable|integer|min:0',
+                'engine_no' => 'nullable|string|max:255',
+                'chassis_no' => 'nullable|string|max:255',
+                'vehicle_type' => 'nullable|string|max:255',
+                'model_no' => 'nullable|string|max:255',
+                'date_of_purchase' => 'nullable|date',
+                'vehicle_group' => 'nullable|string|max:255',
+                'imei_gps_device' => 'nullable|string|max:255',
+                'tracking_url' => 'nullable|url|max:500',
+                'manufacturing_year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
+                'vehicle_create_date' => 'nullable|date',
+            ]);
 
-        $vehicle->update($validated);
+            $vehicle->update($validated);
 
-        return redirect()->route('receptionist.vehicles.index')->with('success', 'Vehicle updated successfully.');
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Vehicle metadata updated successfully.',
+                    'vehicle' => $vehicle
+                ]);
+            }
+
+            return redirect()->route('receptionist.vehicles.index')->with('success', 'Vehicle metadata updated successfully.');
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified vehicle.
      */
-    public function destroy(Vehicle $vehicle)
+    public function destroy(Request $request, Vehicle $vehicle)
     {
         $this->authorizeTenant($vehicle);
 
-        // Check if vehicle has assigned routes
-        if ($vehicle->routes()->count() > 0) {
-            return redirect()->route('receptionist.vehicles.index')
-                ->with('error', 'Cannot delete vehicle. It has assigned routes.');
+        try {
+            if ($vehicle->routes()->count() > 0) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Integrity violation',
+                    'errors' => ['registration_no' => ['Cannot strike vehicle record. Active route mappings exist.']]
+                ], 422);
+            }
+
+            $vehicle->delete();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Vehicle record struck from registry.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
         }
-
-        $vehicle->delete();
-
-        return redirect()->route('receptionist.vehicles.index')->with('success', 'Vehicle deleted successfully.');
     }
 
     /**

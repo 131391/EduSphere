@@ -3,130 +3,312 @@
 @section('title', 'Late Fee Management')
 
 @section('content')
-<div class="container mx-auto px-4 py-6" x-data="{}">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Late Fee Management</h1>
-        <button @click="$dispatch('open-modal', 'update-late-fee-modal')" class="bg-[#2e7d32] hover:bg-[#1b5e20] text-white font-bold py-2 px-4 rounded flex items-center transition-colors">
-            Update Late Fee
-        </button>
-    </div>
-
-
-    <div class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">SR NO</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">FINE DATE</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">LATE FEE</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">CREATE DATE</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ACTION</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($lateFees as $index => $feeItem)
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $lateFees->firstItem() + $index }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ $feeItem->fine_date }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">
-                        {{ number_format($feeItem->late_fee_amount, 2) }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {{ $feeItem->created_at->format('M d, Y, h:i a') }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-3">
-                            <button @click="$dispatch('open-modal', {name: 'update-late-fee-modal', fee: {{ $feeItem }}})" class="text-indigo-600 hover:text-indigo-900 transition-colors">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <form id="delete-late-fee-{{ $feeItem->id }}" action="{{ route('school.late-fee.destroy', $feeItem->id) }}" method="POST" class="inline-block">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" @click="$dispatch('confirm-delete', { formId: 'delete-late-fee-{{ $feeItem->id }}', message: 'Are you sure you want to delete this late fee configuration?' })" class="text-red-500 hover:text-red-700 transition-colors">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center py-10">
-                        <div class="flex flex-col items-center">
-                            <i class="fas fa-info-circle text-gray-300 text-4xl mb-2"></i>
-                            <span>No late fee configurations found.</span>
-                        </div>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            {{ $lateFees->links() }}
+<div x-data="lateFeeManagement()">
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-emerald-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <i class="fas fa-clock text-xs"></i>
+                    </div>
+                    Late Fee Management
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure automatic fines for late fee payments</p>
+            </div>
+            <button @click="openAddModal()" 
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2"></i>
+                Update Late Fee
+            </button>
         </div>
     </div>
-</div>
 
-<!-- Update Modal -->
-<div x-data="{
-    fee: { id: '{{ old('fee_id') }}', late_fee_amount: '{{ old('late_fee_amount') }}', fine_date: '{{ old('fine_date') }}' },
-    get action() {
-        return this.fee.id ? '{{ route('school.late-fee.update', ':id') }}'.replace(':id', this.fee.id) : '{{ route('school.late-fee.store') }}';
-    },
-    init() {
-        @if($errors->any())
-            this.$nextTick(() => {
-                this.$dispatch('open-modal', 'update-late-fee-modal');
-            });
-        @endif
-    }
-}" @open-modal.window="if ($event.detail.name === 'update-late-fee-modal') { fee = { ...$event.detail.fee }; } else if ($event.detail === 'update-late-fee-modal') { fee = { id: null, late_fee_amount: '', fine_date: '' }; }">    <x-modal name="update-late-fee-modal" title="Late Fee Configuration" maxWidth="xl">
-        <form :action="action" method="POST" class="p-6 space-y-6">
+    @php
+        $tableColumns = [
+            [
+                'key' => 'fine_date',
+                'label' => 'FINE DATE',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <span class="text-[10px] font-bold">' . e($row->fine_date) . '</span>
+                        </div>
+                        <span class="font-bold text-gray-700 underline decoration-emerald-200 underline-offset-4">Day ' . e($row->fine_date) . ' of Month</span>
+                    </div>';
+                }
+            ],
+            [
+                'key' => 'late_fee_amount',
+                'label' => 'FINE AMOUNT',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<div class="text-emerald-700 font-bold bg-emerald-50 px-3 py-1 rounded-lg inline-block border border-emerald-100">
+                                <span class="text-xs mr-0.5">₹</span>' . number_format($row->late_fee_amount, 2) . '
+                            </div>';
+                }
+            ],
+            [
+                'key' => 'created_at',
+                'label' => 'CONFIGURED ON',
+                'sortable' => true,
+                'render' => function($row) {
+                    return '<div class="text-gray-500 text-sm">' . $row->created_at->format('M d, Y') . '</div>';
+                }
+            ],
+        ];
+
+        $tableActions = [
+            [
+                'type' => 'button',
+                'icon' => 'fas fa-edit',
+                'class' => 'text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors',
+                'onclick' => function($row) {
+                    $encoded = base64_encode(json_encode([
+                        'id' => $row->id,
+                        'fine_date' => $row->fine_date,
+                        'late_fee_amount' => $row->late_fee_amount,
+                    ]));
+                    return "window.dispatchEvent(new CustomEvent('open-edit-late-fee', { detail: JSON.parse(atob('$encoded')) }))";
+                },
+                'title' => 'Edit',
+            ],
+            [
+                'type' => 'button',
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
+                'onclick' => function($row) {
+                    return "window.dispatchEvent(new CustomEvent('open-delete-late-fee', { detail: { id: " . $row->id . ", name: 'Day " . $row->fine_date . "' } }))";
+                },
+                'title' => 'Delete',
+            ],
+        ];
+    @endphp
+
+    <div x-on:open-edit-late-fee.window="openEditModal($event.detail)" 
+         x-on:open-delete-late-fee.window="confirmDelete($event.detail)">
+        <x-data-table 
+            :columns="$tableColumns"
+            :data="$lateFees"
+            :actions="$tableActions"
+            empty-message="No late fee rules configured"
+            empty-icon="fas fa-hourglass-end"
+        >
+            Late Fee Rules
+        </x-data-table>
+    </div>
+
+    <!-- Update Modal -->
+    <x-modal name="late-fee-modal" alpineTitle="editMode ? 'Edit Late Fee Rule' : 'Add Late Fee Rule'" maxWidth="md">
+        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
             @csrf
-            <template x-if="fee.id">
-                @method('PUT')
+            <template x-if="editMode">
+                <input type="hidden" name="_method" value="PUT">
             </template>
-            
-            <div class="space-y-4">
-                <div class="flex items-center">
-                    <label for="late_fee_amount" class="w-32 text-sm font-bold text-gray-700">Late Fee</label>
-                    <div class="flex-1">
-                        <input type="number" name="late_fee_amount" id="late_fee_amount" step="0.01" min="0" x-model="fee.late_fee_amount" placeholder="Enter Late Fee" class="w-full px-4 py-2 border @error('late_fee_amount') border-red-500 @else border-gray-300 @enderror rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                        @error('late_fee_amount')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+
+            <div class="px-8 py-8 space-y-6">
+                <!-- Late Fee Amount -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Late Fine Amount <span class="text-red-500">*</span></label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-emerald-600 text-gray-400">
+                            <span class="text-sm font-bold">₹</span>
+                        </div>
+                        <input 
+                            type="number" 
+                            name="late_fee_amount" 
+                            x-model="formData.late_fee_amount"
+                            @input="if(errors.late_fee_amount) delete errors.late_fee_amount"
+                            step="0.01"
+                            placeholder="0.00"
+                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400 font-medium"
+                            :class="{'border-red-500 ring-red-500/10': errors.late_fee_amount}"
+                        >
+                    </div>
+                    <div class="min-h-[24px] mt-1 ml-1">
+                        <template x-if="errors.late_fee_amount">
+                            <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span x-text="errors.late_fee_amount[0]"></span>
+                            </p>
+                        </template>
                     </div>
                 </div>
-                
-                <div class="flex items-center">
-                    <label for="fine_date" class="w-32 text-sm font-bold text-gray-700">Select Late Fine Date</label>
-                    <div class="flex-1">
-                        <select name="fine_date" id="fine_date" class="w-full px-4 py-2 border @error('fine_date') border-red-500 @else border-gray-300 @enderror rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" x-model="fee.fine_date">
-                            <option value="">Select Late Fine Date</option>
+
+                <!-- Fine Date -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Select Late Fine Date <span class="text-red-500">*</span></label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-emerald-600 text-gray-400">
+                            <i class="fas fa-calendar-day text-sm"></i>
+                        </div>
+                        <select 
+                            name="fine_date" 
+                            x-model="formData.fine_date"
+                            @change="if(errors.fine_date) delete errors.fine_date"
+                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 font-medium appearance-none"
+                            :class="{'border-red-500 ring-red-500/10': errors.fine_date}"
+                        >
+                            <option value="">Select Day of Month</option>
                             @for($i = 1; $i <= 31; $i++)
-                            <option value="{{ $i }}">{{ $i }}</option>
+                                <option value="{{ $i }}">Day {{ $i }}</option>
                             @endfor
                         </select>
-                        @error('fine_date')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
+                        </div>
+                    </div>
+                    <div class="min-h-[24px] mt-1 ml-1">
+                        <template x-if="errors.fine_date">
+                            <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span x-text="errors.fine_date[0]"></span>
+                            </p>
+                        </template>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-3 pt-4 border-t">
-                <input type="hidden" name="fee_id" x-model="fee.id">
-                <button type="button" @click="$dispatch('close-modal', 'update-late-fee-modal')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded transition-colors">
-                    Close
+            <!-- Modal Footer -->
+            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
+                <button 
+                    type="button" 
+                    @click="closeModal()"
+                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
+                >
+                    Cancel
                 </button>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow-md transition-all active:scale-95" x-text="fee.id ? 'Update' : 'Save'">
+                <button 
+                    type="submit"
+                    :disabled="submitting"
+                    class="px-8 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-lg shadow-emerald-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
+                >
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <span x-text="editMode ? (submitting ? 'Saving...' : 'Update Rule') : (submitting ? 'Adding...' : 'Add Rule')"></span>
                 </button>
             </div>
         </form>
     </x-modal>
 </div>
+
+<!-- Confirmation Modal -->
+<x-confirm-modal />
+
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('lateFeeManagement', () => ({
+        editMode: false,
+        feeId: null,
+        submitting: false,
+        errors: {},
+        formData: {
+            late_fee_amount: '',
+            fine_date: ''
+        },
+
+        async submitForm() {
+            this.submitting = true;
+            this.errors = {};
+            
+            const url = this.editMode 
+                ? `/school/late-fee/${this.feeId}` 
+                : '{{ route('school.late-fee.store') }}';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ...this.formData,
+                        _method: this.editMode ? 'PUT' : 'POST'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else if (response.status === 422) {
+                    this.errors = result.errors || {};
+                } else {
+                    throw new Error(result.message || 'Something went wrong');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({
+                        icon: 'error',
+                        title: error.message
+                    });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        openAddModal() {
+            this.editMode = false;
+            this.feeId = null;
+            this.errors = {};
+            this.formData = { late_fee_amount: '', fine_date: '' };
+            this.$dispatch('open-modal', 'late-fee-modal');
+        },
+        
+        openEditModal(fee) {
+            this.editMode = true;
+            this.feeId = fee.id;
+            this.errors = {};
+            this.formData = {
+                late_fee_amount: fee.late_fee_amount,
+                fine_date: fee.fine_date
+            };
+            this.$dispatch('open-modal', 'late-fee-modal');
+        },
+
+        async confirmDelete(fee) {
+            if (window.confirm(`Are you sure you want to delete the late fee rule for "${fee.name}"?`)) {
+                try {
+                    const response = await fetch(`/school/late-fee/${fee.id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ _method: 'DELETE' })
+                    });
+                    
+                    const result = await response.json();
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert(result.message || 'Delete failed');
+                    }
+                } catch (error) {
+                    alert('An error occurred while deleting');
+                }
+            }
+        },
+
+        closeModal() {
+            this.$dispatch('close-modal', 'late-fee-modal');
+        }
+    }));
+});
+</script>
+@endpush
 @endsection

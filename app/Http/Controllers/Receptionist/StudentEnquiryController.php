@@ -33,12 +33,12 @@ class StudentEnquiryController extends TenantController
         }
 
         // Sorting
-        $sortColumn = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
         $query->orderBy($sortColumn, $sortDirection);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $enquiries = $query->paginate($perPage)->withQueryString();
 
         // Statistics - Scoped to school
@@ -59,7 +59,8 @@ class StudentEnquiryController extends TenantController
 
     public function store(Request $request)
     {
-        $validated = $this->validateEnquiry($request);
+        try {
+            $validated = $this->validateEnquiry($request);
 
         $school = auth()->user()->school;
         $validated['school_id'] = $school->id;
@@ -69,37 +70,60 @@ class StudentEnquiryController extends TenantController
 
         StudentEnquiry::create($validated);
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Student enquiry added successfully.'
-            ]);
-        }
-
         return redirect()->route('receptionist.student-enquiries.index')
             ->with('success', 'Student enquiry added successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Operational failure: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Operational failure: ' . $e->getMessage());
+        }
     }
 
     public function update(Request $request, StudentEnquiry $studentEnquiry)
     {
         $this->authorizeTenant($studentEnquiry);
 
-        $validated = $this->validateEnquiry($request, $studentEnquiry->id);
+        try {
+            $validated = $this->validateEnquiry($request, $studentEnquiry->id);
 
         // Handle file uploads
         $validated = $this->handleFileUploads($request, $validated, $studentEnquiry);
 
         $studentEnquiry->update($validated);
 
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Student enquiry updated successfully.'
-            ]);
-        }
-
         return redirect()->route('receptionist.student-enquiries.index')
             ->with('success', 'Student enquiry updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Operational failure: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Operational failure: ' . $e->getMessage());
+        }
     }
 
     public function destroy(StudentEnquiry $studentEnquiry)

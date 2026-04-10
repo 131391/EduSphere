@@ -30,12 +30,12 @@ class HostelFloorController extends TenantController
         }
 
         // Sorting
-        $sortColumn = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
         $query->orderBy($sortColumn, $sortDirection);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $floors = $query->paginate($perPage)->withQueryString();
 
         // Get all hostels for filter
@@ -55,28 +55,45 @@ class HostelFloorController extends TenantController
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'hostel_id' => 'required|exists:hostels,id',
-            'floor_name' => 'required|string|max:255',
-            'total_room' => 'nullable|integer|min:0',
-            'floor_create_date' => 'nullable|date',
-        ]);
-
-        $schoolId = $this->getSchoolId();
-        
-        // Verify hostel belongs to same school
-        $hostel = Hostel::findOrFail($validated['hostel_id']);
-        if ($hostel->school_id !== $schoolId) {
-            return back()->withErrors(['hostel_id' => 'Invalid hostel selected.'])->withInput();
-        }
-
-        $validated['school_id'] = $schoolId;
-
         try {
-            HostelFloor::create($validated);
-            return redirect()->route('receptionist.hostel-floors.index')->with('success', 'Hostel floor added successfully.');
+            $validated = $request->validate([
+                'hostel_id' => 'required|exists:hostels,id',
+                'floor_name' => 'required|string|max:255',
+                'total_room' => 'nullable|integer|min:0',
+                'floor_create_date' => 'nullable|date',
+            ]);
+
+            $schoolId = $this->getSchoolId();
+            
+            // Verify hostel belongs to same school
+            $hostel = Hostel::find($validated['hostel_id']);
+            if (!$hostel || $hostel->school_id !== $schoolId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid hostel resource',
+                    'errors' => ['hostel_id' => ['The selected hostel is invalid or unauthorized.']]
+                ], 422);
+            }
+
+            $validated['school_id'] = $schoolId;
+
+            $floor = HostelFloor::create($validated);
+            return response()->json([
+                'success' => true,
+                'message' => 'Hostel floor established successfully.',
+                'data' => $floor->load('hostel')
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create hostel floor. Please try again.'])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create floor level: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -87,26 +104,43 @@ class HostelFloorController extends TenantController
     {
         $this->authorizeTenant($hostelFloor);
 
-        $validated = $request->validate([
-            'hostel_id' => 'required|exists:hostels,id',
-            'floor_name' => 'required|string|max:255',
-            'total_room' => 'nullable|integer|min:0',
-            'floor_create_date' => 'nullable|date',
-        ]);
-
-        $schoolId = $this->getSchoolId();
-        
-        // Verify hostel belongs to same school
-        $hostel = Hostel::findOrFail($validated['hostel_id']);
-        if ($hostel->school_id !== $schoolId) {
-            return back()->withErrors(['hostel_id' => 'Invalid hostel selected.'])->withInput();
-        }
-
         try {
+            $validated = $request->validate([
+                'hostel_id' => 'required|exists:hostels,id',
+                'floor_name' => 'required|string|max:255',
+                'total_room' => 'nullable|integer|min:0',
+                'floor_create_date' => 'nullable|date',
+            ]);
+
+            $schoolId = $this->getSchoolId();
+            
+            // Verify hostel belongs to same school
+            $hostel = Hostel::find($validated['hostel_id']);
+            if (!$hostel || $hostel->school_id !== $schoolId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid hostel resource',
+                    'errors' => ['hostel_id' => ['Target hostel node resides outside authorized perimeter.']]
+                ], 422);
+            }
+
             $hostelFloor->update($validated);
-            return redirect()->route('receptionist.hostel-floors.index')->with('success', 'Hostel floor updated successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Floor specifications updated successfully.',
+                'data' => $hostelFloor->load('hostel')
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update hostel floor. Please try again.'])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Update transmission failed: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -117,15 +151,28 @@ class HostelFloorController extends TenantController
     {
         $this->authorizeTenant($hostelFloor);
 
-        // TODO: Check if floor has rooms assigned
-        // if ($hostelFloor->rooms()->count() > 0) {
-        //     return redirect()->route('receptionist.hostel-floors.index')
-        //         ->with('error', 'Cannot delete floor. It has assigned rooms.');
-        // }
+        try {
+            // Check if floor has rooms assigned before deletion
+            if (method_exists($hostelFloor, 'rooms') && $hostelFloor->rooms()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot decommission floor level. Active dependency nodes (rooms) detected.',
+                    'errors' => ['floor' => ['Active rooms are linked to this floor.']]
+                ], 422);
+            }
 
-        $hostelFloor->delete();
+            $hostelFloor->delete();
 
-        return redirect()->route('receptionist.hostel-floors.index')->with('success', 'Hostel floor deleted successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Hostel floor successfully struck from registry.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Decommissioning failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

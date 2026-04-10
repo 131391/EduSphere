@@ -97,9 +97,8 @@
                 'key' => 'sr_no',
                 'label' => 'SR NO',
                 'sortable' => false,
-                'render' => function($row) {
-                    static $index = 0;
-                    return ++$index;
+                'render' => function($row, $index, $data) {
+                    return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
                 }
             ],
             [
@@ -195,9 +194,6 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-vehicle'))))";
-                },
-                'data-vehicle' => function($row) {
                     $vehicleData = [
                         'id' => $row->id,
                         'registration_no' => $row->registration_no,
@@ -216,19 +212,17 @@
                         'manufacturing_year' => $row->manufacturing_year,
                         'vehicle_create_date' => $row->vehicle_create_date ? $row->vehicle_create_date->format('Y-m-d') : '',
                     ];
-                    return base64_encode(json_encode($vehicleData));
+                    return "openEditModal(".json_encode($vehicleData).")";
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',
                 'title' => 'Edit',
             ],
             [
-                'type' => 'form',
-                'url' => function($row) {
-                    return route('receptionist.vehicles.destroy', $row->id);
+                'type' => 'button',
+                'onclick' => function($row) {
+                    return "confirmDelete('".route('receptionist.vehicles.destroy', $row->id)."', '{$row->registration_no}')";
                 },
-                'method' => 'DELETE',
-                'confirm' => 'Are you sure you want to delete this vehicle?',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
@@ -248,189 +242,247 @@
     </x-data-table>
 
     {{-- Add/Edit Vehicle Modal --}}
-    <x-modal name="vehicle-modal" alpineTitle="editMode ? 'Edit Vehicle' : 'Add New Vehicle'" maxWidth="5xl">
-        <form :action="editMode ? `/receptionist/vehicles/${vehicleId}` : '{{ route('receptionist.vehicles.store') }}'" 
-              method="POST" class="p-6">
+    <x-modal name="vehicle-modal" alpineTitle="editMode ? 'Edit Vehicle Registry' : 'Register New Vehicle'" maxWidth="5xl">
+        <form @submit.prevent="save" method="POST" class="p-0 relative">
             @csrf
             <template x-if="editMode">
-                @method('PUT')
+                <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="bg-teal-50 dark:bg-teal-900 p-4 rounded-lg mb-6">
-                <h4 class="font-bold text-gray-800 dark:text-white mb-4">Vehicle Information</h4>
-                
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Registration No <span class="text-red-500">*</span></label>
-                        <input type="text" name="registration_no" x-model="formData.registration_no"
-                               placeholder="Enter Vehicle Registration no"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('registration_no') border-red-500 @enderror">
-                        @error('registration_no')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+            {{-- Global Error Announcement --}}
+            <template x-if="Object.keys(errors).length > 0">
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl mx-4 mt-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle No</label>
-                        <input type="text" name="vehicle_no" x-model="formData.vehicle_no"
-                               placeholder="Enter Vehicle No"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_no') border-red-500 @enderror">
-                        @error('vehicle_no')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="(messages, field) in errors" :key="field">
+                            <template x-for="message in messages" :key="message">
+                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
+                            </template>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
+            <div class="p-6">
+                <div class="bg-teal-50 dark:bg-teal-900/20 p-6 rounded-2xl mb-6 border border-teal-100 dark:border-teal-800">
+                    <h4 class="font-bold text-teal-800 dark:text-teal-400 mb-6 flex items-center gap-2 uppercase tracking-tight text-sm">
+                        <i class="fas fa-info-circle"></i>
+                        Vehicle Core Specifications
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Registration No <span class="text-red-500">*</span></label>
+                            <input type="text" name="registration_no" x-model="formData.registration_no"
+                                   placeholder="Enter Vehicle Registration no"
+                                   @input="delete errors.registration_no"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.registration_no ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.registration_no">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.registration_no[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Vehicle No</label>
+                            <input type="text" name="vehicle_no" x-model="formData.vehicle_no"
+                                   placeholder="Auto-generated if empty"
+                                   @input="delete errors.vehicle_no"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.vehicle_no ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.vehicle_no">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.vehicle_no[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Fuel Type <span class="text-red-500">*</span></label>
+                            <select name="fuel_type" x-model="formData.fuel_type" id="fuel_type"
+                                    @change="delete errors.fuel_type"
+                                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                    :class="errors.fuel_type ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                                <option value="">Select Fuel Type</option>
+                                <option value="1">Diesel</option>
+                                <option value="2">Petrol</option>
+                                <option value="3">CNG</option>
+                                <option value="4">Electric</option>
+                            </select>
+                            <template x-if="errors.fuel_type">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.fuel_type[0]"></p>
+                            </template>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Fuel Type <span class="text-red-500">*</span></label>
-                        <select name="fuel_type" x-model="formData.fuel_type"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('fuel_type') border-red-500 @enderror">
-                            <option value="">Select Fuel Type</option>
-                            <option value="1">Diesel</option>
-                            <option value="2">Petrol</option>
-                            <option value="3">CNG</option>
-                            <option value="4">Electric</option>
-                        </select>
-                        @error('fuel_type')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Capacity</label>
+                            <input type="number" name="capacity" x-model="formData.capacity"
+                                   placeholder="Passenger Count"
+                                   @input="delete errors.capacity"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.capacity ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.capacity">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.capacity[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Initial Reading (KM)</label>
+                            <input type="number" name="initial_reading" x-model="formData.initial_reading"
+                                   placeholder="Odometer at Registration"
+                                   @input="delete errors.initial_reading"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.initial_reading ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.initial_reading">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.initial_reading[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Engine No</label>
+                            <input type="text" name="engine_no" x-model="formData.engine_no"
+                                   placeholder="Enter Engine Serial"
+                                   @input="delete errors.engine_no"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.engine_no ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.engine_no">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.engine_no[0]"></p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Chassis No</label>
+                            <input type="text" name="chassis_no" x-model="formData.chassis_no"
+                                   placeholder="Enter Chassis Serial"
+                                   @input="delete errors.chassis_no"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.chassis_no ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.chassis_no">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.chassis_no[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Vehicle Type</label>
+                            <select name="vehicle_type" x-model="formData.vehicle_type" id="vehicle_type"
+                                    @change="delete errors.vehicle_type"
+                                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                    :class="errors.vehicle_type ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                                <option value="">Select type</option>
+                                <option value="bus">Bus</option>
+                                <option value="van">Van</option>
+                                <option value="car">Car</option>
+                                <option value="truck">Truck</option>
+                            </select>
+                            <template x-if="errors.vehicle_type">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.vehicle_type[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Model No</label>
+                            <input type="text" name="model_no" x-model="formData.model_no"
+                                   placeholder="Vehicle Model/Year"
+                                   @input="delete errors.model_no"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.model_no ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.model_no">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.model_no[0]"></p>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4 mt-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Capacity</label>
-                        <input type="number" name="capacity" x-model="formData.capacity"
-                               placeholder="Enter Capacity"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('capacity') border-red-500 @enderror">
-                        @error('capacity')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Initial Reading</label>
-                        <input type="number" name="initial_reading" x-model="formData.initial_reading"
-                               placeholder="Enter Initial Reading"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('initial_reading') border-red-500 @enderror">
-                        @error('initial_reading')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Engine No</label>
-                        <input type="text" name="engine_no" x-model="formData.engine_no"
-                               placeholder="Enter Engine No"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('engine_no') border-red-500 @enderror">
-                        @error('engine_no')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-800">
+                    <h4 class="font-bold text-blue-800 dark:text-blue-400 mb-6 flex items-center gap-2 uppercase tracking-tight text-sm">
+                        <i class="fas fa-microchip"></i>
+                        Auxiliary & Tracking Metadata
+                    </h4>
 
-                <div class="grid grid-cols-3 gap-4 mt-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Chassis No</label>
-                        <input type="text" name="chassis_no" x-model="formData.chassis_no"
-                               placeholder="Enter Chassis No"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('chassis_no') border-red-500 @enderror">
-                        @error('chassis_no')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Date of Purchase</label>
+                            <input type="date" name="date_of_purchase" x-model="formData.date_of_purchase"
+                                   @input="delete errors.date_of_purchase"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.date_of_purchase ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.date_of_purchase">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.date_of_purchase[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Fleet Group</label>
+                            <input type="text" name="vehicle_group" x-model="formData.vehicle_group"
+                                   placeholder="Primary/Standby"
+                                   @input="delete errors.vehicle_group"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.vehicle_group ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.vehicle_group">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.vehicle_group[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">GPS IMEI No</label>
+                            <input type="text" name="imei_gps_device" x-model="formData.imei_gps_device"
+                                   placeholder="15-digit IMEI"
+                                   @input="delete errors.imei_gps_device"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.imei_gps_device ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.imei_gps_device">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.imei_gps_device[0]"></p>
+                            </template>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle type</label>
-                        <select name="vehicle_type" x-model="formData.vehicle_type"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_type') border-red-500 @enderror">
-                            <option value="">Select Vehicle type</option>
-                            <option value="bus">Bus</option>
-                            <option value="van">Van</option>
-                            <option value="car">Car</option>
-                            <option value="truck">Truck</option>
-                        </select>
-                        @error('vehicle_type')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Model No</label>
-                        <input type="text" name="model_no" x-model="formData.model_no"
-                               placeholder="Enter model No"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('model_no') border-red-500 @enderror">
-                        @error('model_no')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
 
-                <div class="grid grid-cols-3 gap-4 mt-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Date of purchase</label>
-                        <input type="date" name="date_of_purchase" x-model="formData.date_of_purchase"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('date_of_purchase') border-red-500 @enderror">
-                        @error('date_of_purchase')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle Group</label>
-                        <input type="text" name="vehicle_group" x-model="formData.vehicle_group"
-                               placeholder="Vehicle Group"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_group') border-red-500 @enderror">
-                        @error('vehicle_group')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">IMEI NO of GPS Device</label>
-                        <input type="text" name="imei_gps_device" x-model="formData.imei_gps_device"
-                               placeholder="IMEI NO of GPS Device"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('imei_gps_device') border-red-500 @enderror">
-                        @error('imei_gps_device')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-4 mt-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Tracking Url</label>
-                        <input type="url" name="tracking_url" x-model="formData.tracking_url"
-                               placeholder="Tracking Url"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('tracking_url') border-red-500 @enderror">
-                        @error('tracking_url')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Manufacturing Year</label>
-                        <input type="number" name="manufacturing_year" x-model="formData.manufacturing_year"
-                               placeholder="dd/mm/yyyy"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('manufacturing_year') border-red-500 @enderror">
-                        @error('manufacturing_year')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vehicle Create Date</label>
-                        <input type="date" name="vehicle_create_date" x-model="formData.vehicle_create_date"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white @error('vehicle_create_date') border-red-500 @enderror">
-                        @error('vehicle_create_date')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Live Tracking URL</label>
+                            <input type="url" name="tracking_url" x-model="formData.tracking_url"
+                                   placeholder="https://maps.google.com/..."
+                                   @input="delete errors.tracking_url"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.tracking_url ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.tracking_url">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.tracking_url[0]"></p>
+                            </template>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">Mfg Year</label>
+                            <input type="number" name="manufacturing_year" x-model="formData.manufacturing_year"
+                                   placeholder="YYYY"
+                                   @input="delete errors.manufacturing_year"
+                                   class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                   :class="errors.manufacturing_year ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <template x-if="errors.manufacturing_year">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.manufacturing_year[0]"></p>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {{-- Modal Footer --}}
-            <div class="flex items-center justify-center gap-4">
-                <button type="button" @click="closeModal()"
-                        class="px-8 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
-                    Close
+            <div class="px-8 py-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-3xl">
+                <button type="button" @click="closeModal()" :disabled="submitting"
+                        class="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm">
+                    Discard
                 </button>
-                <button type="submit"
-                        class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
-                    Submit
+                <button type="submit" :disabled="submitting"
+                        class="px-8 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl hover:from-teal-600 hover:to-emerald-700 transition-all font-black text-sm shadow-lg shadow-teal-100 flex items-center gap-2">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <span x-text="submitting ? 'Committing...' : (editMode ? 'Update Registry' : 'Propagate Record')"></span>
                 </button>
             </div>
         </form>
     </x-modal>
+
+    <x-confirm-modal 
+        title="Permanently Remove Vehicle?" 
+        message="This action will strike the vehicle from the registry. This cannot be undone."
+        confirm-text="Strike Record"
+        confirm-color="red"
+    />
 
 @push('scripts')
 <script>
@@ -456,33 +508,104 @@ document.addEventListener('alpine:init', () => {
             manufacturing_year: '',
             vehicle_create_date: '',
         },
+        errors: {},
+        submitting: false,
         
-        init() {
-            // Check if there are validation errors and reopen modal with old data
-            @if($errors->any())
-                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
-                this.vehicleId = '{{ old('vehicle_id') }}';
-                this.formData = {
-                    registration_no: '{{ old('registration_no') }}',
-                    vehicle_no: '{{ old('vehicle_no') }}',
-                    fuel_type: '{{ old('fuel_type') }}',
-                    capacity: '{{ old('capacity') }}',
-                    initial_reading: '{{ old('initial_reading') }}',
-                    engine_no: '{{ old('engine_no') }}',
-                    chassis_no: '{{ old('chassis_no') }}',
-                    vehicle_type: '{{ old('vehicle_type') }}',
-                    model_no: '{{ old('model_no') }}',
-                    date_of_purchase: '{{ old('date_of_purchase') }}',
-                    vehicle_group: '{{ old('vehicle_group') }}',
-                    imei_gps_device: '{{ old('imei_gps_device') }}',
-                    tracking_url: '{{ old('tracking_url') }}',
-                    manufacturing_year: '{{ old('manufacturing_year') }}',
-                    vehicle_create_date: '{{ old('vehicle_create_date') }}',
-                };
-                this.$nextTick(() => {
-                    this.$dispatch('open-modal', 'vehicle-modal');
+        async init() {
+            // Sync Select2 if present
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $(document).on('change', '#fuel_type', (e) => {
+                        this.formData.fuel_type = e.target.value;
+                        if (this.errors.fuel_type) delete this.errors.fuel_type;
+                    });
+                    $(document).on('change', '#vehicle_type', (e) => {
+                        this.formData.vehicle_type = e.target.value;
+                        if (this.errors.vehicle_type) delete this.errors.vehicle_type;
+                    });
+                }
+            });
+        },
+
+        async save() {
+            this.submitting = true;
+            this.errors = {};
+
+            const url = this.editMode 
+                ? `/receptionist/vehicles/${this.vehicleId}` 
+                : '{{ route('receptionist.vehicles.store') }}';
+            
+            const method = this.editMode ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ...this.formData,
+                        _method: method
+                    })
                 });
-            @endif
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Vehicle registry updated'
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                        console.error('Validation Errors Map:', this.errors);
+                    } else {
+                        throw new Error(result.message || 'Transmission failed');
+                    }
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({
+                        icon: 'error',
+                        title: error.message
+                    });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        async deleteVehicle(url) {
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'success', title: result.message });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message || 'Deletion failed');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            }
         },
         
         openAddModal() {
@@ -503,9 +626,16 @@ document.addEventListener('alpine:init', () => {
                 imei_gps_device: '',
                 tracking_url: '',
                 manufacturing_year: '',
-                vehicle_create_date: '',
+                vehicle_create_date: '{{ date('Y-m-d') }}',
             };
+            this.errors = {};
             this.$dispatch('open-modal', 'vehicle-modal');
+
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('#fuel_type, #vehicle_type').val('').trigger('change.select2');
+                }
+            });
         },
         
         openEditModal(vehicle) {
@@ -528,19 +658,20 @@ document.addEventListener('alpine:init', () => {
                 manufacturing_year: vehicle.manufacturing_year || '',
                 vehicle_create_date: vehicle.vehicle_create_date || '',
             };
+            this.errors = {};
             this.$dispatch('open-modal', 'vehicle-modal');
             
-            // Update Select2 dropdowns after modal is shown
             this.$nextTick(() => {
-                setTimeout(() => {
-                    $('select[name="fuel_type"]').val(vehicle.fuel_type).trigger('change.select2');
-                    $('select[name="vehicle_type"]').val(vehicle.vehicle_type).trigger('change.select2');
-                }, 100);
+                if (typeof $ !== 'undefined') {
+                    $('#fuel_type').val(vehicle.fuel_type).trigger('change.select2');
+                    $('#vehicle_type').val(vehicle.vehicle_type).trigger('change.select2');
+                }
             });
         },
         
         closeModal() {
             this.$dispatch('close-modal', 'vehicle-modal');
+            this.errors = {};
         },
     }));
 });
@@ -553,59 +684,20 @@ function openEditModal(vehicle) {
     }
 }
 
-// Global script to hide validation errors when user starts typing or selecting
-document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners to all inputs and selects in the modal
-    const modal = document.querySelector('[x-data*="vehicleManagement"]');
-    if (modal) {
-        // Handle regular inputs
-        modal.addEventListener('input', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-500')) {
-                    errorElement.classList.add('hidden');
+function confirmDelete(url, regNo) {
+    window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+        detail: {
+            message: `Are you sure you want to strike the vehicle record for "${regNo}"?`,
+            onConfirm: () => {
+                const component = Alpine.$data(document.querySelector('[x-data*="vehicleManagement"]'));
+                if (component) {
+                    component.deleteVehicle(url);
                 }
-                // Also remove red border
-                e.target.classList.remove('border-red-500');
             }
-        });
-        
-        // Handle native selects and Select2 selects
-        modal.addEventListener('change', function(e) {
-            if (e.target.tagName === 'SELECT') {
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-500')) {
-                    errorElement.classList.add('hidden');
-                }
-                // Also remove red border
-                e.target.classList.remove('border-red-500');
-            }
-        });
-        
-        // Handle Select2 change events specifically
-        $(modal).on('select2:select select2:clear', 'select', function(e) {
-            const select = e.target;
-            // Find the error message (it might be after the Select2 container)
-            let errorElement = select.nextElementSibling;
-            
-            // If next sibling is Select2 container, look for error after it
-            if (errorElement && errorElement.classList.contains('select2')) {
-                errorElement = errorElement.nextElementSibling;
-            }
-            
-            if (errorElement && errorElement.classList.contains('text-red-500')) {
-                errorElement.classList.add('hidden');
-            }
-            
-            // Remove red border from original select
-            select.classList.remove('border-red-500');
-            
-            // Also remove red border from Select2 container
-            const select2Container = $(select).next('.select2-container').find('.select2-selection');
-            select2Container.removeClass('border-red-500');
-        });
-    }
-});
+        }
+    }));
+}
 </script>
+</div>
 @endpush
 @endsection

@@ -14,8 +14,13 @@
             </a>
         </div>
 
-        <form action="{{ route('school.student-registrations.store') }}" method="POST" enctype="multipart/form-data"
-            novalidate>
+        <form x-data="registrationForm()" 
+              @submit.prevent="submitForm"
+              action="{{ route('school.student-registrations.store') }}" 
+              method="POST" 
+              id="registrationForm"
+              enctype="multipart/form-data"
+              novalidate>
             @csrf
             @include('school.student-registrations.partials.form')
         </form>
@@ -34,8 +39,93 @@
     </div>
 @endsection
 
-@push('scripts')
     <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('registrationForm', () => ({
+                submitting: false,
+                
+                async submitForm() {
+                    this.submitting = true;
+                    this.clearErrors();
+
+                    const form = document.getElementById('registrationForm');
+                    
+                    // Trigger the JQuery fix for disabled selects before creating FormData
+                    $(form).find('select[disabled]').removeAttr('disabled');
+                    
+                    const formData = new FormData(form);
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        });
+
+                        const result = await response.json();
+
+                        if (response.status === 422) {
+                            this.displayErrors(result.errors);
+                        } else if (response.ok) {
+                            if (window.Toast) {
+                                window.Toast.fire({
+                                    icon: 'success',
+                                    title: result.message || 'Registration successful'
+                                });
+                            }
+                            if (result.redirect) {
+                                setTimeout(() => window.location.href = result.redirect, 1000);
+                            }
+                        } else {
+                            throw new Error(result.message || 'Something went wrong');
+                        }
+                    } catch (error) {
+                        console.error('Submission error:', error);
+                        if (window.Toast) {
+                            window.Toast.fire({
+                                icon: 'error',
+                                title: error.message || 'Could not complete registration'
+                            });
+                        }
+                    } finally {
+                        this.submitting = false;
+                    }
+                },
+
+                displayErrors(errors) {
+                    Object.keys(errors).forEach(field => {
+                        const input = document.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('border-red-500');
+                            
+                            // Find or create error message element
+                            let errorMsg = input.closest('div').querySelector('.error-message');
+                            if (!errorMsg) {
+                                errorMsg = document.createElement('p');
+                                errorMsg.className = 'error-message text-red-500 text-xs mt-1';
+                                input.closest('div').appendChild(errorMsg);
+                            }
+                            errorMsg.innerText = errors[field][0];
+                        }
+                    });
+                    
+                    const firstError = document.querySelector('.border-red-500');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                },
+
+                clearErrors() {
+                    document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+                    document.querySelectorAll('.error-message').forEach(el => el.remove());
+                }
+            }));
+        });
+
         // Helper function to load image preview from storage path
         function loadImagePreview(imagePath, previewId, iconId, removeBtnId) {
             if (!imagePath) return;

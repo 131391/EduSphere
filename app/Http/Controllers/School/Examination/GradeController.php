@@ -28,14 +28,32 @@ class GradeController extends TenantController
 
         $school = auth()->user()->school;
 
-        Grade::create([
-            'school_id' => $school->id,
-            'range_start' => $request->range_start,
-            'range_end' => $request->range_end,
-            'grade' => $request->grade,
-        ]);
+        try {
+            $grade = Grade::create([
+                'school_id' => $this->getSchoolId(),
+                'range_start' => $request->range_start,
+                'range_end' => $request->range_end,
+                'grade' => $request->grade,
+            ]);
 
-        return redirect()->route('school.examination.grades.index')->with('success', 'Grade created successfully.');
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Grade created successfully!',
+                    'data' => $grade
+                ]);
+            }
+
+            return redirect()->route('school.examination.grades.index')->with('success', 'Grade created successfully.');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create grade: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to create grade: ' . $e->getMessage());
+        }
     }
 
     public function update(Request $request, Grade $grade)
@@ -48,21 +66,56 @@ class GradeController extends TenantController
             'grade' => 'required|string|max:10',
         ]);
 
-        $grade->update([
-            'range_start' => $request->range_start,
-            'range_end' => $request->range_end,
-            'grade' => $request->grade,
-        ]);
+        try {
+            $grade->update([
+                'range_start' => $request->range_start,
+                'range_end' => $request->range_end,
+                'grade' => $request->grade,
+            ]);
 
-        return redirect()->route('school.examination.grades.index')->with('success', 'Grade updated successfully.');
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Grade updated successfully!',
+                    'data' => $grade
+                ]);
+            }
+
+            return redirect()->route('school.examination.grades.index')->with('success', 'Grade updated successfully.');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update grade: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to update grade: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Grade $grade)
     {
         $this->authorizeTenant($grade);
         
-        $grade->delete();
+        try {
+            $grade->delete();
 
-        return redirect()->route('school.examination.grades.index')->with('success', 'Grade deleted successfully.');
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Grade deleted successfully!'
+                ]);
+            }
+
+            return redirect()->route('school.examination.grades.index')->with('success', 'Grade deleted successfully.');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete grade: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->route('school.examination.grades.index')->with('error', 'Failed to delete grade: ' . $e->getMessage());
+        }
     }
 }

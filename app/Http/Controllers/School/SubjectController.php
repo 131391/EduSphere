@@ -28,13 +28,21 @@ class SubjectController extends TenantController
 
         $school = auth()->user()->school;
 
-        Subject::create([
+        $subject = Subject::create([
             'school_id' => $school->id,
             'name' => $request->name,
             'code' => $request->code,
             'description' => $request->description,
             'is_active' => true,
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Subject created successfully!',
+                'data' => $subject
+            ]);
+        }
 
         return redirect()->route('school.subjects.index')->with('success', 'Subject created successfully.');
     }
@@ -55,6 +63,14 @@ class SubjectController extends TenantController
             'description' => $request->description,
         ]);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Subject updated successfully!',
+                'data' => $subject
+            ]);
+        }
+
         return redirect()->route('school.subjects.index')->with('success', 'Subject updated successfully.');
     }
 
@@ -64,10 +80,23 @@ class SubjectController extends TenantController
         
         // Check if subject is assigned to any classes
         if ($subject->classes()->exists()) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete subject as it is assigned to one or more classes.'
+                ], 422);
+            }
             return back()->with('error', 'Cannot delete subject as it is assigned to one or more classes.');
         }
 
         $subject->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Subject deleted successfully!'
+            ]);
+        }
 
         return redirect()->route('school.subjects.index')->with('success', 'Subject deleted successfully.');
     }

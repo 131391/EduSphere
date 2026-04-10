@@ -111,44 +111,29 @@
                 }
             ],
             [
-                'key' => 'academic_year',
-                'label' => 'ACADEMIC YEAR',
-                'render' => function($row) {
-                    if (!$row->academicYear) return 'N/A';
-                    return $row->academicYear->name ?? ($row->academicYear->start_date->format('Y') . '-' . $row->academicYear->end_date->format('y'));
-                }
-            ],
-            [
                 'key' => 'vehicle_no',
-                'label' => 'VEHICLE NO',
+                'label' => 'VEHICLE',
                 'render' => function($row) {
                     return $row->vehicle->vehicle_no ?? 'N/A';
                 }
             ],
             [
                 'key' => 'route_name',
-                'label' => 'ROUTE NAME',
+                'label' => 'ROUTE',
                 'render' => function($row) {
                     return $row->route->route_name ?? 'N/A';
                 }
             ],
             [
-                'key' => 'bus_stop_no',
-                'label' => 'BUS STOP NO',
-                'render' => function($row) {
-                    return $row->busStop->bus_stop_no ?? 'N/A';
-                }
-            ],
-            [
                 'key' => 'bus_stop_name',
-                'label' => 'BUS STOP NAME',
+                'label' => 'BUS STOP',
                 'render' => function($row) {
-                    return $row->busStop->bus_stop_name ?? 'N/A';
+                    return ($row->busStop->bus_stop_no ?? '') . ' - ' . ($row->busStop->bus_stop_name ?? 'N/A');
                 }
             ],
             [
                 'key' => 'fee_per_month',
-                'label' => 'FEE PER MONTH',
+                'label' => 'FEE/MONTH',
                 'render' => function($row) {
                     return '₹' . number_format($row->fee_per_month, 2);
                 }
@@ -162,27 +147,25 @@
                 'class' => 'text-blue-600 hover:text-blue-900',
                 'title' => 'Edit',
                 'onclick' => function($row) {
-                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-assignment'))))";
-                },
-                'data-assignment' => function($row) {
-                    return base64_encode(json_encode([
+                    return "openEditModal(".json_encode([
                         'id' => $row->id,
                         'student_id' => $row->student_id,
                         'route_id' => $row->route_id,
                         'bus_stop_id' => $row->bus_stop_id,
                         'vehicle_id' => $row->vehicle_id,
                         'fee_per_month' => $row->fee_per_month,
-                    ]));
+                    ]).")";
                 }
             ],
             [
-                'type' => 'form',
-                'url' => fn($row) => route('receptionist.transport-assignments.destroy', $row->id),
-                'method' => 'DELETE',
+                'type' => 'button',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
-                'confirm' => 'Are you sure you want to delete this transport assignment?'
+                'onclick' => function($row) {
+                    $name = trim($row->student->first_name . ' ' . $row->student->last_name);
+                    return "confirmDelete('".route('receptionist.transport-assignments.destroy', $row->id)."', '{$name}')";
+                }
             ],
         ];
 
@@ -190,23 +173,18 @@
         $filters = [
             [
                 'name' => 'class_id',
-                'label' => 'Select Class',
+                'label' => 'Class',
                 'options' => $classes->pluck('name', 'id')->toArray()
             ],
             [
                 'name' => 'vehicle_id',
-                'label' => 'Select Vehicle',
+                'label' => 'Vehicle',
                 'options' => $vehicles->pluck('vehicle_no', 'id')->toArray()
             ],
             [
                 'name' => 'route_id',
-                'label' => 'Select Route Name',
+                'label' => 'Route',
                 'options' => $routes->pluck('route_name', 'id')->toArray()
-            ],
-            [
-                'name' => 'bus_stop_id',
-                'label' => 'Select Bus Stop',
-                'options' => $busStops->pluck('bus_stop_name', 'id')->toArray()
             ],
         ];
     @endphp
@@ -222,124 +200,153 @@
         Transport Assignments
     </x-data-table>
 
-<!-- Add/Edit Transport Assignment Modal -->
-<x-modal name="assignment-modal" maxWidth="4xl" alpineTitle="editMode ? 'Edit Transport Assignment' : 'Assign Transport Facility'">
-        <form :action="editMode ? `/receptionist/transport-assignments/${assignmentId}` : '{{ route('receptionist.transport-assignments.store') }}'" 
-              method="POST" class="p-6">
+    {{-- Add/Edit Transport Assignment Modal --}}
+    <x-modal name="assignment-modal" maxWidth="4xl" alpineTitle="editMode ? 'Modify Transport Assignment' : 'Assign Transport Facility'">
+        <form @submit.prevent="save" method="POST" class="p-0 relative">
             @csrf
             <template x-if="editMode">
-                @method('PUT')
+                <input type="hidden" name="_method" value="PUT">
             </template>
-            <input type="hidden" name="assignment_id" :value="assignmentId" x-show="editMode">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Student Selection -->
-            <div>
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Student <span class="text-red-500">*</span>
-                </label>
-                <select name="student_id" 
-                        x-model="formData.student_id"
-                        class="w-full px-4 py-2 border @error('student_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Select Student</option>
-                    @foreach($students as $student)
-                        <option value="{{ $student->id }}" 
-                                data-admission="{{ $student->admission_no }}"
-                                data-class="{{ $student->class->name ?? 'N/A' }}">
-                            {{ trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name) }} ({{ $student->admission_no }})
-                        </option>
-                    @endforeach
-                </select>
-                @error('student_id')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+            {{-- Global Error Announcement --}}
+            <template x-if="Object.keys(errors).length > 0">
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl mx-6 mt-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="(messages, field) in errors" :key="field">
+                            <template x-for="message in messages" :key="message">
+                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
+                            </template>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
+            <div class="p-8 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Student Selection -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">
+                            Target Student <span class="text-red-500">*</span>
+                        </label>
+                        <select name="student_id" x-model="formData.student_id" id="student_id"
+                                @change="delete errors.student_id"
+                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                :class="errors.student_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <option value="">Select Student</option>
+                            @foreach($students as $student)
+                                <option value="{{ $student->id }}">
+                                    {{ trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name) }} ({{ $student->admission_no }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.student_id">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.student_id[0]"></p>
+                        </template>
+                    </div>
+
+                    <!-- Route Selection -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">
+                            Primary Route <span class="text-red-500">*</span>
+                        </label>
+                        <select name="route_id" x-model="formData.route_id" id="route_id"
+                                @change="delete errors.route_id; loadBusStops()"
+                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                :class="errors.route_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <option value="">Select Route</option>
+                            @foreach($routes as $route)
+                                <option value="{{ $route->id }}">{{ $route->route_name }}</option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.route_id">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.route_id[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Bus Stop Selection -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">
+                            Network Node (Stop) <span class="text-red-500">*</span>
+                        </label>
+                        <select name="bus_stop_id" x-model="formData.bus_stop_id" id="bus_stop_id"
+                                @change="delete errors.bus_stop_id; updateFee()"
+                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                :class="errors.bus_stop_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <option value="">Select Bus Stop</option>
+                        </select>
+                        <template x-if="errors.bus_stop_id">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.bus_stop_id[0]"></p>
+                        </template>
+                    </div>
+
+                    <!-- Vehicle Selection -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest">
+                            Assigned Vehicle
+                        </label>
+                        <select name="vehicle_id" x-model="formData.vehicle_id" id="vehicle_id"
+                                @change="delete errors.vehicle_id"
+                                class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
+                                :class="errors.vehicle_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            <option value="">Select Vehicle</option>
+                            @foreach($vehicles as $vehicle)
+                                <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->vehicle_type }})</option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.vehicle_id">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.vehicle_id[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Fee Per Month -->
+                <div class="bg-teal-50 dark:bg-teal-900/20 p-6 rounded-2xl border border-teal-100 dark:border-teal-800">
+                    <label class="block text-xs font-black text-teal-800 dark:text-teal-400 mb-2 uppercase tracking-widest">
+                        Computed Monthly Tariff (Incurred Fee) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-teal-600 font-black">₹</span>
+                        <input type="number" name="fee_per_month" x-model="formData.fee_per_month"
+                               step="0.01" readonly
+                               class="w-full pl-10 pr-4 py-4 bg-white border border-teal-200 rounded-xl focus:outline-none dark:bg-gray-900 dark:text-white font-black text-lg cursor-not-allowed shadow-inner"
+                               :class="errors.fee_per_month ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 border-teal-200'">
+                    </div>
+                    <p class="text-[10px] text-teal-600 mt-2 font-bold uppercase tracking-widest">Computed based on network node selection</p>
+                    <template x-if="errors.fee_per_month">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.fee_per_month[0]"></p>
+                    </template>
+                </div>
             </div>
 
-            <!-- Route Selection -->
-            <div>
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Route <span class="text-red-500">*</span>
-                </label>
-                <select name="route_id" 
-                        x-model="formData.route_id"
-                        @change="loadBusStops()"
-                        x-ref="routeSelect"
-                        class="w-full px-4 py-2 border @error('route_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Select Route</option>
-                    @foreach($routes as $route)
-                        <option value="{{ $route->id }}">{{ $route->route_name }}</option>
-                    @endforeach
-                </select>
-                @error('route_id')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Bus Stop Selection (Filtered by Route) -->
-            <div>
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Bus Stop <span class="text-red-500">*</span>
-                </label>
-                <select name="bus_stop_id" 
-                        x-model="formData.bus_stop_id"
-                        @change="updateFee()"
-                        x-ref="busStopSelect"
-                        class="w-full px-4 py-2 border @error('bus_stop_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Select Bus Stop</option>
-                </select>
-                @error('bus_stop_id')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Vehicle Selection -->
-            <div>
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Vehicle (Optional)
-                </label>
-                <select name="vehicle_id" 
-                        x-model="formData.vehicle_id"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    <option value="">Select Vehicle</option>
-                    @foreach($vehicles as $vehicle)
-                        <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} - {{ $vehicle->vehicle_type }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Fee Per Month (Auto-filled, Read-only) -->
-            <div>
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Fee Per Month (₹) <span class="text-red-500">*</span>
-                </label>
-                <input type="number" 
-                       name="fee_per_month"
-                       x-model="formData.fee_per_month"
-                       step="0.01" 
-                       readonly 
-                       required
-                       class="w-full px-4 py-2 border @error('fee_per_month') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg bg-gray-100 dark:bg-gray-800 dark:text-white cursor-not-allowed">
-                @error('fee_per_month')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Form Footer with Buttons -->
-            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200 dark-border-gray-600">
-                <button type="button" 
-                        @click="closeModal()"
-                        class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-colors">
-                    Cancel
+            <!-- Modal Footer -->
+            <div class="px-8 py-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-xl">
+                <button type="button" @click="closeModal()" :disabled="submitting"
+                        class="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm">
+                    Discard
                 </button>
-                <button type="submit" 
-                        class="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-md transition-colors">
-                    <span x-text="editMode ? 'Update Assignment' : 'Save Assignment'"></span>
+                <button type="submit" :disabled="submitting"
+                        class="px-8 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl hover:from-teal-600 hover:to-emerald-700 transition-all font-black text-sm shadow-lg shadow-teal-100 flex items-center gap-2">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Assignment' : 'Assign Facility')"></span>
                 </button>
             </div>
         </form>
-</x-modal>
+    </x-modal>
 
-<!-- close main x-data wrapper -->
+    <x-confirm-modal 
+        title="Strike Transport Record?" 
+        message="This will terminate the student's transport facility access. This record will be archived."
+        confirm-text="Strike Record"
+        confirm-color="red"
+    />
 </div>
 
 @push('scripts')
@@ -360,107 +367,116 @@ document.addEventListener('alpine:init', () => {
             vehicle_id: '',
             fee_per_month: '',
         },
+        errors: {},
+        submitting: false,
         
-        init() {
-            // Listen for modal open/close events
-            window.addEventListener('open-modal', (event) => {
-                if (event.detail === 'assignment-modal') {
-                    const errorBanner = document.getElementById('error-banner');
-                    if (errorBanner) {
-                        errorBanner.style.display = 'none';
-                        if (errorBanner.__x) {
-                            errorBanner.__x.$data.show = false;
-                        }
-                    }
-                    
-                    // Setup Select2 change handlers for route and bus stop selects after modal opens
-                    this.$nextTick(() => {
-                        setTimeout(() => {
-                            // Setup route select handler
-                            let routeSelect = this.$refs.routeSelect || document.querySelector('select[name="route_id"]');
-                            if (typeof $ !== 'undefined' && routeSelect) {
-                                const $routeSelect = $(routeSelect);
-                                // Remove existing handlers to avoid duplicates
-                                $routeSelect.off('select2:select.select2:change.change');
-                                // Add handler for Select2 events
-                                $routeSelect.on('select2:select select2:change', (e) => {
-                                    const newRouteId = e.target.value;
-                                    const oldRouteId = this.formData.route_id;
-                                    
-                                    // Only clear bus stop if route actually changed (not initial load)
-                                    if (oldRouteId && oldRouteId !== newRouteId) {
-                                        this.formData.bus_stop_id = '';
-                                        this.formData.fee_per_month = '';
-                                    }
-                                    
-                                    this.formData.route_id = newRouteId;
-                                    // Load bus stops for the new route
-                                    this.loadBusStops();
-                                });
-                                // Also handle native change event as fallback
-                                $routeSelect.on('change', (e) => {
-                                    const newRouteId = e.target.value;
-                                    const oldRouteId = this.formData.route_id;
-                                    
-                                    // Only clear bus stop if route actually changed (not initial load)
-                                    if (oldRouteId && oldRouteId !== newRouteId) {
-                                        this.formData.bus_stop_id = '';
-                                        this.formData.fee_per_month = '';
-                                    }
-                                    
-                                    this.formData.route_id = newRouteId;
-                                    this.loadBusStops();
-                                });
-                            }
-                            
-                            // Setup bus stop select handler
-                            let busStopSelect = this.$refs.busStopSelect || document.querySelector('select[name="bus_stop_id"]');
-                            if (typeof $ !== 'undefined' && busStopSelect) {
-                                const $busStopSelect = $(busStopSelect);
-                                // Remove existing handlers to avoid duplicates
-                                $busStopSelect.off('select2:select.select2:change.change');
-                                // Add handler for Select2 events
-                                $busStopSelect.on('select2:select select2:change', (e) => {
-                                    this.formData.bus_stop_id = e.target.value;
-                                    this.updateFee();
-                                });
-                                // Also handle native change event as fallback
-                                $busStopSelect.on('change', (e) => {
-                                    this.formData.bus_stop_id = e.target.value;
-                                    this.updateFee();
-                                });
-                            }
-                        }, 500);
+        async init() {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    // Initialize Select2 Sync
+                    $(document).on('change', '#student_id', (e) => {
+                        this.formData.student_id = e.target.value;
+                        if (this.errors.student_id) delete this.errors.student_id;
+                    });
+                    $(document).on('change', '#route_id', (e) => {
+                        this.formData.route_id = e.target.value;
+                        if (this.errors.route_id) delete this.errors.route_id;
+                        this.loadBusStops();
+                    });
+                    $(document).on('change', '#bus_stop_id', (e) => {
+                        this.formData.bus_stop_id = e.target.value;
+                        if (this.errors.bus_stop_id) delete this.errors.bus_stop_id;
+                        this.updateFee();
+                    });
+                    $(document).on('change', '#vehicle_id', (e) => {
+                        this.formData.vehicle_id = e.target.value;
+                        if (this.errors.vehicle_id) delete this.errors.vehicle_id;
                     });
                 }
             });
+        },
+
+        async save() {
+            this.submitting = true;
+            this.errors = {};
+
+            const url = this.editMode 
+                ? `/receptionist/transport-assignments/${this.assignmentId}` 
+                : '{{ route('receptionist.transport-assignments.store') }}';
             
-            // Check if there are validation errors and reopen modal with old data
-            @if($errors->any())
-                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
-                this.assignmentId = '{{ old('assignment_id') }}';
-                this.formData = {
-                    student_id: '{{ old('student_id') }}',
-                    route_id: '{{ old('route_id') }}',
-                    bus_stop_id: '{{ old('bus_stop_id') }}',
-                    vehicle_id: '{{ old('vehicle_id') }}',
-                    fee_per_month: '{{ old('fee_per_month') }}',
-                };
-                
-                // Load bus stops if route is selected
-                if (this.formData.route_id) {
-                    this.loadBusStops();
-                }
-                
-                this.$nextTick(() => {
-                    this.$dispatch('open-modal', 'assignment-modal');
+            const method = this.editMode ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ...this.formData,
+                        _method: method
+                    })
                 });
-            @endif
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Assignment state synchronized'
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = result.errors || {};
+                    } else {
+                        throw new Error(result.message || 'Transmission failed');
+                    }
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        async deleteAssignment(url) {
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'success', title: result.message || 'Assignment terminated' });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message || 'Severing record failed');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            }
         },
         
         openAddModal() {
             this.editMode = false;
             this.assignmentId = null;
+            this.errors = {};
             this.formData = {
                 student_id: '',
                 route_id: '',
@@ -470,11 +486,17 @@ document.addEventListener('alpine:init', () => {
             };
             this.busStops = [];
             this.$dispatch('open-modal', 'assignment-modal');
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('#student_id, #route_id, #bus_stop_id, #vehicle_id').val('').trigger('change.select2');
+                }
+            });
         },
         
         openEditModal(assignment) {
             this.editMode = true;
             this.assignmentId = assignment.id;
+            this.errors = {};
             this.formData = {
                 student_id: assignment.student_id || '',
                 route_id: assignment.route_id || '',
@@ -483,397 +505,115 @@ document.addEventListener('alpine:init', () => {
                 fee_per_month: assignment.fee_per_month || '',
             };
             
-            // Store original values for later use
-            const originalRouteId = this.formData.route_id;
-            const originalBusStopId = this.formData.bus_stop_id;
-            const originalFee = this.formData.fee_per_month;
-            
-            // Load bus stops for the selected route first
+            // Initial load of stops for this route
             if (this.formData.route_id) {
-                this.loadBusStops();
+                this.loadBusStops(true);
             }
             
             this.$dispatch('open-modal', 'assignment-modal');
             
-            // Wait for modal to open and Select2 to initialize, then set all values
             this.$nextTick(() => {
-                setTimeout(() => {
-                    if (typeof $ !== 'undefined') {
-                        // Set student select
-                        const $studentSelect = $('select[name="student_id"]');
-                        if ($studentSelect.length && this.formData.student_id) {
-                            $studentSelect.val(this.formData.student_id).trigger('change');
-                        }
-                        
-                        // Set route select without triggering change (to avoid clearing bus stop)
-                        const $routeSelect = $('select[name="route_id"]');
-                        if ($routeSelect.length && this.formData.route_id) {
-                            // Temporarily disable change handlers to prevent clearing bus stop
-                            $routeSelect.off('select2:select.select2:change.change');
-                            $routeSelect.val(this.formData.route_id).trigger('change.select2');
-                            // Re-enable handlers after a short delay
-                            setTimeout(() => {
-                                $routeSelect.on('select2:select select2:change', (e) => {
-                                    const newRouteId = e.target.value;
-                                    const oldRouteId = this.formData.route_id;
-                                    
-                                    // Only clear bus stop if route actually changed (not initial load)
-                                    if (oldRouteId && oldRouteId !== newRouteId) {
-                                        this.formData.bus_stop_id = '';
-                                        this.formData.fee_per_month = '';
-                                    }
-                                    
-                                    this.formData.route_id = newRouteId;
-                                    // Load bus stops for the new route
-                                    this.loadBusStops();
-                                });
-                                $routeSelect.on('change', (e) => {
-                                    const newRouteId = e.target.value;
-                                    const oldRouteId = this.formData.route_id;
-                                    
-                                    // Only clear bus stop if route actually changed (not initial load)
-                                    if (oldRouteId && oldRouteId !== newRouteId) {
-                                        this.formData.bus_stop_id = '';
-                                        this.formData.fee_per_month = '';
-                                    }
-                                    
-                                    this.formData.route_id = newRouteId;
-                                    this.loadBusStops();
-                                });
-                            }, 100);
-                        }
-                        
-                        // Wait for bus stops to load, then set bus stop and fee
-                        // Use a longer delay to ensure bus stops are fully loaded
-                        setTimeout(() => {
-                            // Ensure bus stops are loaded
-                            if (originalRouteId && this.busStops.length === 0) {
-                                this.loadBusStops();
-                            }
-                            
-                            // Wait a bit more for Select2 to be ready
-                            setTimeout(() => {
-                                if (originalBusStopId) {
-                                    const $busStopSelect = $('select[name="bus_stop_id"]');
-                                    if ($busStopSelect.length) {
-                                        // Check if the option exists in the select
-                                        const optionExists = $busStopSelect.find(`option[value="${originalBusStopId}"]`).length > 0;
-                                        
-                                        if (optionExists) {
-                                            // Set the bus stop value
-                                            $busStopSelect.val(originalBusStopId).trigger('change');
-                                            
-                                            // Update formData to ensure Alpine reactivity
-                                            this.formData.bus_stop_id = originalBusStopId;
-                                            
-                                            // Update fee - try from bus stop data first
-                                            this.updateFee();
-                                            
-                                            // If fee wasn't updated from bus stop, use original fee
-                                            if (!this.formData.fee_per_month && originalFee) {
-                                                this.formData.fee_per_month = parseFloat(originalFee).toFixed(2);
-                                            }
-                                        } else {
-                                            // Option doesn't exist yet, wait a bit more and try again
-                                            setTimeout(() => {
-                                                if (this.busStops.length > 0) {
-                                                    $busStopSelect.val(originalBusStopId).trigger('change');
-                                                    this.formData.bus_stop_id = originalBusStopId;
-                                                    this.updateFee();
-                                                    if (!this.formData.fee_per_month && originalFee) {
-                                                        this.formData.fee_per_month = parseFloat(originalFee).toFixed(2);
-                                                    }
-                                                }
-                                            }, 200);
-                                        }
-                                    }
-                                }
-                            }, 400);
-                        }, 600);
-                        
-                        // Set vehicle select
-                        const $vehicleSelect = $('select[name="vehicle_id"]');
-                        if ($vehicleSelect.length && this.formData.vehicle_id) {
-                            $vehicleSelect.val(this.formData.vehicle_id).trigger('change');
-                        }
-                    }
-                }, 500);
+                if (typeof $ !== 'undefined') {
+                    $('#student_id').val(assignment.student_id).trigger('change.select2');
+                    $('#route_id').val(assignment.route_id).trigger('change.select2');
+                    $('#vehicle_id').val(assignment.vehicle_id).trigger('change.select2');
+                    
+                    // Specific timing for bus stop because it's dynamic
+                    setTimeout(() => {
+                        $('#bus_stop_id').val(assignment.bus_stop_id).trigger('change.select2');
+                    }, 300);
+                }
             });
         },
         
-        loadBusStops() {
-            // Store the current bus stop ID and fee before clearing (for edit mode)
-            const currentBusStopId = this.formData.bus_stop_id;
-            const currentFee = this.formData.fee_per_month;
-            
+        loadBusStops(isInitial = false) {
             if (!this.formData.route_id) {
                 this.busStops = [];
-                this.formData.bus_stop_id = '';
-                this.formData.fee_per_month = '';
-                this.routeVehicleId = null;
-                this.formData.vehicle_id = '';
-                
-                // Clear select options and refresh Select2
-                this.$nextTick(() => {
-                    const select = this.$refs.busStopSelect || document.querySelector('select[name="bus_stop_id"]');
-                    if (select && typeof $ !== 'undefined') {
-                        const $select = $(select);
-                        const isSelect2 = $select.hasClass('select2-hidden-accessible');
-                        
-                        // Destroy Select2 if initialized
-                        if (isSelect2) {
-                            $select.select2('destroy');
-                        }
-                        
-                        // Clear options
-                        while (select.options.length > 1) {
-                            select.remove(1);
-                        }
-                        
-                        // Reinitialize Select2
-                        $select.select2({
-                            placeholder: 'Select Bus Stop',
-                            allowClear: false,
-                            width: '100%'
-                        });
-                    }
-                });
+                if (!isInitial) {
+                    this.formData.bus_stop_id = '';
+                    this.formData.fee_per_month = '';
+                }
+                this.updateBusStopSelect();
                 return;
             }
             
             const routeId = Number(this.formData.route_id);
+            this.busStops = this.allBusStops.filter(stop => Number(stop.route_id) === routeId);
             
-            // Filter bus stops by route (type-safe)
-            const filtered = this.allBusStops.filter(stop => {
-                const stopRouteId = Number(stop.route_id);
-                return stopRouteId === routeId;
-            });
-            
-            // Update busStops array (create new array to trigger reactivity)
-            this.busStops = [...filtered];
-            
-            // Check if current bus stop is still valid for the new route
-            const busStopStillValid = this.busStops.some(stop => Number(stop.id) === Number(currentBusStopId));
-            if (!busStopStillValid && currentBusStopId) {
-                // Only clear bus stop and fee if it's not valid for the new route AND we're not in edit mode
-                // In edit mode, we want to preserve the values until we confirm they're invalid
-                if (!this.editMode) {
-                    this.formData.bus_stop_id = '';
-                    this.formData.fee_per_month = '';
-                }
-            }
-            
-            // Manually update select options and refresh Select2
-            // Use setTimeout to ensure modal is fully rendered
-            setTimeout(() => {
-                const select = this.$refs.busStopSelect || document.querySelector('select[name="bus_stop_id"]');
-                
-                if (!select) {
-                    return;
-                }
-                
-                if (typeof $ === 'undefined') {
-                    return;
-                }
-                
-                // Update options while preserving the current value to avoid flickering
-                this.updateSelectOptions(select, currentBusStopId, busStopStillValid, currentFee);
-            }, 200);
+            this.updateBusStopSelect();
 
-            // Store the route's default vehicle (if any)
-            const route = this.allRoutes.find(r => Number(r.id) === routeId);
-            this.routeVehicleId = route ? route.vehicle_id : null;
-            // Preselect the route vehicle if present
-            this.formData.vehicle_id = this.routeVehicleId || '';
-            
-            // Clear bus stop selection if current selection is not in the filtered list
-            if (this.formData.bus_stop_id) {
-                const exists = this.busStops.some(stop => Number(stop.id) === Number(this.formData.bus_stop_id));
-                if (!exists) {
-                    this.formData.bus_stop_id = '';
-                    this.formData.fee_per_month = '';
+            if (!isInitial) {
+                // Preselect the route's default vehicle if present
+                const route = this.allRoutes.find(r => Number(r.id) === routeId);
+                if (route && route.vehicle_id) {
+                    this.formData.vehicle_id = route.vehicle_id;
+                    if (typeof $ !== 'undefined') $('#vehicle_id').val(route.vehicle_id).trigger('change.select2');
                 }
             }
         },
-        
-        updateSelectOptions(select, preserveValue = null, isValid = true, preserveFee = null) {
-            const $select = $(select);
-            const isSelect2 = $select.hasClass('select2-hidden-accessible');
-            
-            // Store current value before updating options
-            const currentValue = preserveValue || this.formData.bus_stop_id || $select.val();
-            
-            // If Select2 is initialized and we're preserving a valid value, update more smoothly
-            if (isSelect2 && currentValue && isValid) {
-                try {
-                    // Temporarily disable Select2 to update options without visual disruption
-                    const wasSelected = $select.val() === currentValue;
-                    
-                    // Clear existing options except the first one
-                    while (select.options.length > 1) {
-                        select.remove(1);
-                    }
-                    
-                    // Add filtered bus stops
-                    this.busStops.forEach((stop) => {
-                        const option = document.createElement('option');
-                        option.value = stop.id;
-                        option.textContent = `${stop.bus_stop_no || ''} - ${stop.bus_stop_name || ''}`;
-                        option.setAttribute('data-fee', stop.charge_per_month || '');
-                        select.appendChild(option);
-                    });
-                    
-                    // Restore the value immediately before Select2 updates
-                    select.value = currentValue;
-                    
-                    // Update Select2 display without destroying (just refresh the display)
-                    $select.trigger('change.select2');
-                    
-                    // Ensure formData is in sync
-                    if (wasSelected) {
-                        this.formData.bus_stop_id = currentValue;
-                        // Update fee if needed
-                        if (preserveFee && !this.formData.fee_per_month) {
-                            this.formData.fee_per_month = preserveFee;
-                        } else {
-                            this.updateFee();
-                        }
-                    }
-                    
-                    return; // Exit early, no need to destroy/reinitialize
-                } catch (e) {
-                    // If update fails, fall through to destroy/reinitialize method
-                }
-            }
-            
-            // Fallback: Destroy and reinitialize (for when Select2 isn't initialized or value is invalid)
-            if (isSelect2) {
-                try {
-                    $select.select2('destroy');
-                } catch (e) {
-                    // Silently handle error
-                }
-            }
-            
-            // Clear existing options except the first one
-            while (select.options.length > 1) {
-                select.remove(1);
-            }
-            
-            // Add filtered bus stops
-            this.busStops.forEach((stop) => {
-                const option = document.createElement('option');
-                option.value = stop.id;
-                option.textContent = `${stop.bus_stop_no || ''} - ${stop.bus_stop_name || ''}`;
-                option.setAttribute('data-fee', stop.charge_per_month || '');
-                select.appendChild(option);
-            });
-            
-            // Reinitialize Select2
-            try {
-                $select.select2({
-                    placeholder: 'Select Bus Stop',
-                    allowClear: false,
-                    width: '100%'
-                });
+
+        updateBusStopSelect() {
+            this.$nextTick(() => {
+                const select = document.getElementById('bus_stop_id');
+                if (!select) return;
                 
-                // Restore the value if it still exists in the new options
-                if (currentValue && isValid) {
-                    const optionExists = $select.find(`option[value="${currentValue}"]`).length > 0;
-                    if (optionExists) {
-                        $select.val(currentValue).trigger('change.select2');
-                        this.formData.bus_stop_id = currentValue;
-                        this.updateFee();
-                        if (preserveFee && !this.formData.fee_per_month) {
-                            this.formData.fee_per_month = preserveFee;
-                        }
-                    }
-                } else if (!isValid) {
-                    $select.val('').trigger('change.select2');
-                }
-            } catch (e) {
-                // Silently handle error
-            }
+                // Clear and add options
+                while (select.options.length > 1) select.remove(1);
+                
+                this.busStops.forEach(stop => {
+                    const option = document.createElement('option');
+                    option.value = stop.id;
+                    option.textContent = `${stop.bus_stop_no || ''} - ${stop.bus_stop_name || ''}`;
+                    option.setAttribute('data-fee', stop.charge_per_month || '');
+                    select.appendChild(option);
+                });
+
+                if (typeof $ !== 'undefined') $(select).trigger('change.select2');
+            });
         },
         
         updateFee() {
             if (!this.formData.bus_stop_id) {
                 this.formData.fee_per_month = '';
-                // If no bus stop selected, fall back to route vehicle
-                this.formData.vehicle_id = this.routeVehicleId || '';
                 return;
             }
             
-            // Try to find selected stop from busStops array
-            let selectedStop = this.busStops.find(
-                stop => Number(stop.id) === Number(this.formData.bus_stop_id)
-            );
-            
-            // If not found in array, try to get from select element's data attribute
-            if (!selectedStop && typeof $ !== 'undefined') {
-                const busStopSelect = this.$refs.busStopSelect || document.querySelector('select[name="bus_stop_id"]');
-                if (busStopSelect) {
-                    const $select = $(busStopSelect);
-                    const selectedOption = $select.find('option:selected');
-                    if (selectedOption.length && selectedOption.val()) {
-                        const fee = selectedOption.data('fee') || selectedOption.attr('data-fee');
-                        if (fee) {
-                            this.formData.fee_per_month = parseFloat(fee).toFixed(2);
-                        }
-                    }
-                }
-            }
-            
+            const selectedStop = this.busStops.find(stop => Number(stop.id) === Number(this.formData.bus_stop_id));
             if (selectedStop) {
-                if (selectedStop.charge_per_month != null) {
-                    this.formData.fee_per_month = parseFloat(selectedStop.charge_per_month).toFixed(2);
-                } else {
-                    this.formData.fee_per_month = '';
-                }
-
-                // Set vehicle from the selected bus stop if available; otherwise keep route vehicle
+                this.formData.fee_per_month = selectedStop.charge_per_month ? parseFloat(selectedStop.charge_per_month).toFixed(2) : '0.00';
+                
+                // If stop has a specific vehicle, we could pre-select it, but usually route-level vehicle is primary.
                 if (selectedStop.vehicle_id) {
                     this.formData.vehicle_id = selectedStop.vehicle_id;
-                } else {
-                    this.formData.vehicle_id = this.routeVehicleId || '';
+                    if (typeof $ !== 'undefined') $('#vehicle_id').val(selectedStop.vehicle_id).trigger('change.select2');
                 }
             }
         },
         
         closeModal() {
             this.$dispatch('close-modal', 'assignment-modal');
+            this.errors = {};
         },
     }));
 });
 
-// Global function to open edit modal (called from table action buttons)
+// Global Helpers
 function openEditModal(assignment) {
-    const component = Alpine.$data(document.querySelector('[x-data*="transportAssignmentManagement"]'));
-    if (component) {
-        component.openEditModal(assignment);
-    }
+    const el = document.querySelector('[x-data*="transportAssignmentManagement"]');
+    if (el) Alpine.$data(el).openEditModal(assignment);
 }
 
-// Global script to hide validation errors when user starts typing or selecting
-document.addEventListener('DOMContentLoaded', function() {
-    // Clear errors on input/change
-    $(document).on('input change', 'input, select, textarea', function() {
-        const fieldName = $(this).attr('name');
-        if (fieldName) {
-            // Remove red border
-            $(this).removeClass('border-red-500').addClass('border-gray-300');
-            
-            // Remove error message
-            $(this).siblings('p.text-red-500').remove();
-            $(this).closest('div').find('p.text-red-500').remove();
+function confirmDelete(url, name) {
+    window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+        detail: {
+            message: `Strike transport facility record for "${name}"?`,
+            onConfirm: () => {
+                const el = document.querySelector('[x-data*="transportAssignmentManagement"]');
+                if (el) Alpine.$data(el).deleteAssignment(url);
+            }
         }
-    });
-    
-    // Hide error banner when modal opens
-    $(document).on('shown.bs.modal', function() {
-        $('#error-banner').hide();
-    });
-});
+    }));
+}
 </script>
 @endpush
 @endsection

@@ -116,51 +116,59 @@ class StudentRegistrationController extends TenantController
         
         $school = Auth::user()->school;
 
-        $validated = $request->validate([
-            // Registration Form Information
-            'enquiry_id' => 'nullable|exists:student_enquiries,id',
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'class_id' => 'required|exists:classes,id',
-            'registration_fee' => 'nullable|numeric',
-            
-            // Personal Information
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'nullable|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
-            'dob' => 'nullable|date',
-            'email' => 'nullable|email|max:150',
-            'mobile_no' => 'required|string|max:20',
-            
-            // Father's Details
-            'father_first_name' => 'required|string|max:100',
-            'father_last_name' => 'required|string|max:100',
-            'father_mobile_no' => 'required|string|max:20',
-            
-            // Mother's Details
-            'mother_first_name' => 'required|string|max:100',
-            'mother_last_name' => 'required|string|max:100',
-            'mother_mobile_no' => 'required|string|max:20',
-            
-            // Permanent Address
-            'permanent_address' => 'required|string',
-            'permanent_country_id' => 'required',
-            'permanent_state_id' => 'required',
-            'permanent_city_id' => 'required',
-            'permanent_pin' => 'required|string|max:20',
-            'correspondence_address' => 'nullable|string',
-            'correspondence_country_id' => 'nullable|exists:countries,id',
-            'correspondence_state_id' => 'nullable|exists:states,id',
-            'correspondence_city_id' => 'nullable|exists:cities,id',
-            
-            // Photos & Signatures
-            'father_photo' => 'nullable|image|max:2048',
-            'mother_photo' => 'nullable|image|max:2048',
-            'student_photo' => 'nullable|image|max:2048',
-            'father_signature' => 'nullable|image|max:2048',
-            'mother_signature' => 'nullable|image|max:2048',
-            'student_signature' => 'nullable|image|max:2048',
-        ]);
+        try {
+            $validated = $request->validate([
+                // Registration Form Information
+                'enquiry_id' => 'nullable|exists:student_enquiries,id',
+                'academic_year_id' => 'required|exists:academic_years,id',
+                'class_id' => 'required|exists:classes,id',
+                'registration_fee' => 'nullable|numeric',
+                
+                // Personal Information
+                'first_name' => 'required|string|max:100',
+                'middle_name' => 'nullable|string|max:100',
+                'last_name' => 'required|string|max:100',
+                'gender' => ['required', 'integer', Rule::enum(Gender::class)],
+                'dob' => 'nullable|date',
+                'email' => 'nullable|email|max:150',
+                'mobile_no' => 'required|string|max:20',
+                
+                // Father's Details
+                'father_first_name' => 'required|string|max:100',
+                'father_last_name' => 'required|string|max:100',
+                'father_mobile_no' => 'required|string|max:20',
+                
+                // Mother's Details
+                'mother_first_name' => 'required|string|max:100',
+                'mother_last_name' => 'required|string|max:100',
+                'mother_mobile_no' => 'required|string|max:20',
+                
+                // Permanent Address
+                'permanent_address' => 'required|string',
+                'permanent_country_id' => 'required',
+                'permanent_state_id' => 'required',
+                'permanent_city_id' => 'required',
+                'permanent_pin' => 'required|string|max:20',
+                'correspondence_address' => 'nullable|string',
+                'correspondence_country_id' => 'nullable|exists:countries,id',
+                'correspondence_state_id' => 'nullable|exists:states,id',
+                'correspondence_city_id' => 'nullable|exists:cities,id',
+                
+                // Photos & Signatures
+                'father_photo' => 'nullable|image|max:2048',
+                'mother_photo' => 'nullable|image|max:2048',
+                'student_photo' => 'nullable|image|max:2048',
+                'father_signature' => 'nullable|image|max:2048',
+                'mother_signature' => 'nullable|image|max:2048',
+                'student_signature' => 'nullable|image|max:2048',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation Failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         // Pre-check Registration Fee setup if fee is provided
         if ($request->registration_fee > 0) {
@@ -169,7 +177,11 @@ class StudentRegistrationController extends TenantController
                 ->first();
             
             if (!$regFeeName) {
-                return back()->withErrors(['registration_fee' => 'Financial system error: "Registration Fee" type not found in school settings. Please contact administrator.'])->withInput();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Financial system error',
+                    'errors' => ['registration_fee' => ['Financial system error: "Registration Fee" type not found in school settings. Please contact administrator.']]
+                ], 422);
             }
         }
 
@@ -235,7 +247,11 @@ class StudentRegistrationController extends TenantController
             }
 
             DB::commit();
-            return redirect()->route('receptionist.student-registrations.index')->with('success', 'Student registered successfully with financial records.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Student registered successfully with financial records.',
+                'redirect' => route('receptionist.student-registrations.index')
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error("Registration Error: " . $e->getMessage());
@@ -243,10 +259,17 @@ class StudentRegistrationController extends TenantController
             // Try to provide a more helpful field-level error if it's a common issue
             $errorMessage = $e->getMessage();
             if (str_contains($errorMessage, 'Registration Fee')) {
-                return back()->withErrors(['registration_fee' => 'Error calculating registration fee: ' . $errorMessage])->withInput();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Financial system error',
+                    'errors' => ['registration_fee' => ['Error calculating registration fee: ' . $errorMessage]]
+                ], 422);
             }
             
-            return back()->with('error', 'Critical Error: ' . $errorMessage)->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Critical Error: ' . $errorMessage
+            ], 500);
         }
     }
 
@@ -282,20 +305,28 @@ class StudentRegistrationController extends TenantController
     {
         $school = Auth::user()->school;
 
-        $validated = $request->validate([
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'class_id' => 'required|exists:classes,id',
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'mobile_no' => 'required|string|max:20',
-            'admission_status' => ['required', Rule::enum(AdmissionStatus::class)],
-            'permanent_country_id' => 'nullable|exists:countries,id',
-            'permanent_state_id' => 'nullable|exists:states,id',
-            'permanent_city_id' => 'nullable|exists:cities,id',
-            'correspondence_country_id' => 'nullable|exists:countries,id',
-            'correspondence_state_id' => 'nullable|exists:states,id',
-            'correspondence_city_id' => 'nullable|exists:cities,id',
-        ]);
+        try {
+            $validated = $request->validate([
+                'academic_year_id' => 'required|exists:academic_years,id',
+                'class_id' => 'required|exists:classes,id',
+                'first_name' => 'required|string|max:100',
+                'last_name' => 'required|string|max:100',
+                'mobile_no' => 'required|string|max:20',
+                'admission_status' => ['required', Rule::enum(AdmissionStatus::class)],
+                'permanent_country_id' => 'nullable|exists:countries,id',
+                'permanent_state_id' => 'nullable|exists:states,id',
+                'permanent_city_id' => 'nullable|exists:cities,id',
+                'correspondence_country_id' => 'nullable|exists:countries,id',
+                'correspondence_state_id' => 'nullable|exists:states,id',
+                'correspondence_city_id' => 'nullable|exists:cities,id',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation Failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         $data = $request->all();
 
@@ -331,8 +362,12 @@ class StudentRegistrationController extends TenantController
         }
 
         $studentRegistration->update($data);
-
-        return redirect()->route('receptionist.student-registrations.index')->with('success', 'Registration updated successfully.');
+ 
+        return response()->json([
+            'success' => true,
+            'message' => 'Registration updated successfully.',
+            'redirect' => route('receptionist.student-registrations.index')
+        ]);
     }
 
     public function destroy(StudentRegistration $studentRegistration)
@@ -395,5 +430,15 @@ class StudentRegistrationController extends TenantController
         $pdf = Pdf::loadView('pdf.student-registration', compact('studentRegistration', 'school'));
         
         return $pdf->download('student-registration-' . $studentRegistration->registration_no . '.pdf');
+    }
+
+    public function downloadTemplate()
+    {
+        return back()->with('info', 'The CSV template for registration import is being prepared. Please check back shortly.');
+    }
+
+    public function import(Request $request)
+    {
+        return back()->with('info', 'Bulk import feature for student registrations is currently under maintenance. Please register students individually for now.');
     }
 }

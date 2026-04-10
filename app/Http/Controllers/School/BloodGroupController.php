@@ -43,16 +43,30 @@ class BloodGroupController extends TenantController
     public function store(StoreBloodGroupRequest $request)
     {
         try {
-            $this->service->createGroup(
+            $group = $this->service->createGroup(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Blood group created successfully!',
+                    'data' => $group
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.blood-groups.index',
                 'Blood group created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create blood group: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create blood group: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class BloodGroupController extends TenantController
             $group = BloodGroup::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateGroup($group, $request->validated());
+            $group = $this->service->updateGroup($group, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Blood group updated successfully!',
+                    'data' => $group
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.blood-groups.index',
                 'Blood group updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update blood group: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update blood group: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class BloodGroupController extends TenantController
 
             $this->service->deleteGroup($group);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Blood group deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.blood-groups.index',
                 'Blood group deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete blood group: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.blood-groups.index',
                 'Failed to delete blood group: ' . $e->getMessage()

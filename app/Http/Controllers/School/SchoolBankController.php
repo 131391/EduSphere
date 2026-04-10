@@ -43,16 +43,30 @@ class SchoolBankController extends TenantController
     public function store(StoreSchoolBankRequest $request)
     {
         try {
-            $this->service->createBank(
+            $bank = $this->service->createBank(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'School bank created successfully!',
+                    'data' => $bank
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.school-banks.index',
                 'School bank created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create school bank: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create school bank: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class SchoolBankController extends TenantController
             $bank = SchoolBank::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateBank($bank, $request->validated());
+            $bank = $this->service->updateBank($bank, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'School bank updated successfully!',
+                    'data' => $bank
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.school-banks.index',
                 'School bank updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update school bank: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update school bank: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class SchoolBankController extends TenantController
 
             $this->service->deleteBank($bank);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'School bank deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.school-banks.index',
                 'School bank deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete school bank: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.school-banks.index',
                 'Failed to delete school bank: ' . $e->getMessage()

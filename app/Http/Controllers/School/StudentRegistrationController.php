@@ -41,9 +41,9 @@ class StudentRegistrationController extends TenantController
 
     public function index(Request $request)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
         
-        $query = StudentRegistration::where('school_id', $school->id)
+        $query = StudentRegistration::where('school_id', $this->getSchoolId())
             ->with(['class', 'academicYear']);
 
         // Search
@@ -84,20 +84,20 @@ class StudentRegistrationController extends TenantController
 
     public function create()
     {
-        $school = Auth::user()->school;
-        $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
-        $academicYears = AcademicYear::where('school_id', $school->id)->get();
-        $enquiries = StudentEnquiry::where('school_id', $school->id)
+        $school = $this->getSchool();
+        $classes = ClassModel::where('school_id', $this->getSchoolId())->with('registrationFee')->get();
+        $academicYears = AcademicYear::where('school_id', $this->getSchoolId())->get();
+        $enquiries = StudentEnquiry::where('school_id', $this->getSchoolId())
             ->pending()
             ->get();
             
-        $studentTypes = StudentType::where('school_id', $school->id)->get();
-        $bloodGroups = BloodGroup::where('school_id', $school->id)->get();
-        $religions = Religion::where('school_id', $school->id)->get();
-        $categories = Category::where('school_id', $school->id)->get();
-        $boardingTypes = BoardingType::where('school_id', $school->id)->get();
-        $correspondingRelatives = CorrespondingRelative::where('school_id', $school->id)->get();
-        $qualifications = Qualification::where('school_id', $school->id)->get();
+        $studentTypes = StudentType::where('school_id', $this->getSchoolId())->get();
+        $bloodGroups = BloodGroup::where('school_id', $this->getSchoolId())->get();
+        $religions = Religion::where('school_id', $this->getSchoolId())->get();
+        $categories = Category::where('school_id', $this->getSchoolId())->get();
+        $boardingTypes = BoardingType::where('school_id', $this->getSchoolId())->get();
+        $correspondingRelatives = CorrespondingRelative::where('school_id', $this->getSchoolId())->get();
+        $qualifications = Qualification::where('school_id', $this->getSchoolId())->get();
         $countries = $this->locationService->getCountries();
 
         return view('school.student-registrations.create', compact(
@@ -114,7 +114,7 @@ class StudentRegistrationController extends TenantController
             'session' => session()->all()
         ]);
         
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
 
         $validated = $request->validate([
             // Registration Form Information
@@ -235,13 +235,29 @@ class StudentRegistrationController extends TenantController
             }
 
             DB::commit();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student registered successfully with financial records.',
+                    'redirect' => route('school.student-registrations.index')
+                ]);
+            }
+
             return redirect()->route('school.student-registrations.index')->with('success', 'Student registered successfully with financial records.');
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error("Registration Error: " . $e->getMessage());
             
-            // Try to provide a more helpful field-level error if it's a common issue
             $errorMessage = $e->getMessage();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Registration failed: ' . $errorMessage
+                ], 500);
+            }
+            
             if (str_contains($errorMessage, 'Registration Fee')) {
                 return back()->withErrors(['registration_fee' => 'Error calculating registration fee: ' . $errorMessage])->withInput();
             }
@@ -258,7 +274,7 @@ class StudentRegistrationController extends TenantController
 
     public function edit(StudentRegistration $studentRegistration)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
         $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
         $academicYears = AcademicYear::where('school_id', $school->id)->get();
         $enquiries = StudentEnquiry::where('school_id', $school->id)->get();
@@ -280,7 +296,7 @@ class StudentRegistrationController extends TenantController
 
     public function update(Request $request, StudentRegistration $studentRegistration)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
 
         $validated = $request->validate([
             'academic_year_id' => 'required|exists:academic_years,id',
@@ -332,6 +348,14 @@ class StudentRegistrationController extends TenantController
 
         $studentRegistration->update($data);
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration updated successfully.',
+                'redirect' => route('school.student-registrations.index')
+            ]);
+        }
+
         return redirect()->route('school.student-registrations.index')->with('success', 'Registration updated successfully.');
     }
 
@@ -345,14 +369,31 @@ class StudentRegistrationController extends TenantController
             }
         }
 
-        $studentRegistration->delete();
+        try {
+            $studentRegistration->delete();
 
-        return redirect()->route('school.student-registrations.index')->with('success', 'Registration deleted successfully.');
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Registration deleted successfully.'
+                ]);
+            }
+
+            return redirect()->route('school.student-registrations.index')->with('success', 'Registration deleted successfully.');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Deletion failed: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->route('school.student-registrations.index')->with('error', 'Deletion failed: ' . $e->getMessage());
+        }
     }
 
     public function getEnquiryData($id)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
         $enquiry = StudentEnquiry::where('school_id', $school->id)
             ->where('id', $id)
             ->first();
@@ -386,7 +427,7 @@ class StudentRegistrationController extends TenantController
 
     public function downloadPdf($id)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
         
         $studentRegistration = StudentRegistration::with(['class', 'academicYear'])
             ->where('school_id', $school->id)

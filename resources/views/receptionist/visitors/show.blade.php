@@ -5,7 +5,7 @@
 @section('page-description', 'View visitor information and meeting details')
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8">
+<div class="w-full px-4 sm:px-6 lg:px-8" x-data="visitorShowManager()">
     {{-- Header Actions --}}
     {{-- Header Actions --}}
     <div class="mb-8">
@@ -16,14 +16,15 @@
             </div>
             <div class="flex flex-wrap gap-3">
                 @if(!$visitor->check_out)
-                <button onclick="document.getElementById('checkout-form').submit()" 
-                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm">
-                    <i class="fas fa-sign-out-alt mr-2"></i>
-                    Check Out
+                <button @click="checkOut" 
+                        :disabled="submitting"
+                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 gap-2">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <i x-show="!submitting" class="fas fa-sign-out-alt"></i>
+                    <span x-text="submitting ? 'Checking Out...' : 'Check Out'"></span>
                 </button>
-                <form id="checkout-form" action="{{ route('receptionist.visitors.check-out', $visitor->id) }}" method="POST" class="hidden">
-                    @csrf
-                </form>
                 @endif
                 <a href="{{ route('receptionist.visitors.index') }}" 
                    class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors shadow-sm">
@@ -329,4 +330,46 @@
     </div>
     @endif
 </div>
+@push('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('visitorShowManager', () => ({
+        submitting: false,
+
+        async checkOut() {
+            if (!confirm('Are you sure you want to check out this visitor?')) return;
+            
+            this.submitting = true;
+            try {
+                const response = await fetch('{{ route('receptionist.visitors.check-out', $visitor->id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'success', title: result.message });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message || 'Operation failed');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        }
+    }));
+});
+</script>
+@endpush
 @endsection

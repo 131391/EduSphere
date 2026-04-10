@@ -55,11 +55,25 @@ class AcademicYearController extends TenantController
                 $request->validated()
             );
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Academic year created successfully!',
+                    'data' => $academicYear
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.academic-years.index',
                 'Academic year created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create academic year: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create academic year: ' . $e->getMessage());
         }
     }
@@ -101,11 +115,25 @@ class AcademicYearController extends TenantController
                 $request->validated()
             );
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Academic year updated successfully!',
+                    'data' => $academicYear
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.academic-years.index',
                 'Academic year updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update academic year: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update academic year: ' . $e->getMessage());
         }
     }
@@ -118,11 +146,24 @@ class AcademicYearController extends TenantController
 
             $this->academicYearService->deleteAcademicYear($academicYear);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Academic year deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.academic-years.index',
                 'Academic year deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete academic year: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.academic-years.index',
                 'Failed to delete academic year: ' . $e->getMessage()

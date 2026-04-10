@@ -6,15 +6,18 @@
 <div class="space-y-6">
     <!-- Success Message -->
 
-    {{-- Page Header with Actions --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Transport Assign History</h2>
-            <div class="flex flex-wrap gap-2">
+    {{-- Page Header --}}
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        <div class="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Assignment Archive</h2>
+                <p class="text-sm text-gray-500 mt-1">Audit trail of historical transport allocations and withdrawals</p>
+            </div>
+            <div class="flex gap-3">
                 <a href="{{ route('receptionist.transport-assignments.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Back
+                   class="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all flex items-center font-bold text-sm">
+                    <i class="fas fa-arrow-left mr-2 font-black"></i>
+                    Back to Active
                 </a>
             </div>
         </div>

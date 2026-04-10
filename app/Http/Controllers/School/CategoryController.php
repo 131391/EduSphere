@@ -43,16 +43,30 @@ class CategoryController extends TenantController
     public function store(StoreCategoryRequest $request)
     {
         try {
-            $this->service->createCategory(
+            $category = $this->service->createCategory(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Category created successfully!',
+                    'data' => $category
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.categories.index',
                 'Category created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create category: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create category: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class CategoryController extends TenantController
             $category = Category::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateCategory($category, $request->validated());
+            $category = $this->service->updateCategory($category, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Category updated successfully!',
+                    'data' => $category
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.categories.index',
                 'Category updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update category: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update category: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class CategoryController extends TenantController
 
             $this->service->deleteCategory($category);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Category deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.categories.index',
                 'Category deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete category: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.categories.index',
                 'Failed to delete category: ' . $e->getMessage()

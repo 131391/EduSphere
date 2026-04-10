@@ -33,11 +33,19 @@ class AdmissionFeeController extends TenantController
             'amount' => 'required|numeric|min:0',
         ]);
 
-        AdmissionFee::create([
+        $fee = AdmissionFee::create([
             'school_id' => $this->getSchoolId(),
             'class_id' => $validated['class_id'],
             'amount' => $validated['amount'],
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Admission fee added successfully!',
+                'data' => $fee
+            ]);
+        }
 
         return redirect()->route('school.settings.admission-fee.index')
             ->with('success', 'Admission fee added successfully.');
@@ -68,6 +76,14 @@ class AdmissionFeeController extends TenantController
             'amount' => $validated['amount'],
         ]);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Admission fee updated successfully!',
+                'data' => $admissionFee
+            ]);
+        }
+
         return redirect()->route('school.settings.admission-fee.index')
             ->with('success', 'Admission fee updated successfully.');
     }
@@ -77,6 +93,13 @@ class AdmissionFeeController extends TenantController
         $admissionFee = AdmissionFee::findOrFail($id);
         $this->authorizeTenant($admissionFee);
         $admissionFee->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Admission fee deleted successfully!'
+            ]);
+        }
 
         return redirect()->route('school.settings.admission-fee.index')
             ->with('success', 'Admission fee deleted successfully.');

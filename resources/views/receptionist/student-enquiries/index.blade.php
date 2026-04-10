@@ -221,6 +221,23 @@
               class="p-6">
             @csrf
             <input type="hidden" name="enquiry_id" x-model="enquiryId">
+ 
+            {{-- Centralized Validation Summary --}}
+            <template x-if="Object.keys(errors).length > 0">
+                <div class="mb-6 mx-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl animate-fade-in">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="(messages, field) in errors" :key="field">
+                            <template x-for="message in messages" :key="message">
+                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
+                            </template>
+                        </template>
+                    </ul>
+                </div>
+            </template>
 
             @include('receptionist.student-enquiries.partials.form')
 
@@ -253,6 +270,7 @@ document.addEventListener('alpine:init', () => {
         editMode: false,
         enquiryId: null,
         submitting: false,
+        errors: {},
         
         init() {
             // No longer reopening modal via server-side errors since we use AJAX
@@ -326,7 +344,7 @@ document.addEventListener('alpine:init', () => {
 
         async submitForm() {
             this.submitting = true;
-            this.clearErrors();
+            this.errors = {};
 
             const form = document.getElementById('enquiryForm');
             const formData = new FormData(form);
@@ -352,9 +370,20 @@ document.addEventListener('alpine:init', () => {
                 });
 
                 const result = await response.json();
-
+ 
                 if (response.status === 422) {
-                    this.displayErrors(result.errors);
+                    this.errors = result.errors;
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'error',
+                            title: 'Please check the form for errors'
+                        });
+                    }
+                    // Scroll to the first error or the summary
+                    this.$nextTick(() => {
+                        const firstError = document.querySelector('.border-red-500, .bg-red-50');
+                        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
                 } else if (response.ok) {
                     // Success!
                     if (window.Toast) {
@@ -380,48 +409,10 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        displayErrors(errors) {
-            Object.keys(errors).forEach(field => {
-                const input = document.querySelector(`[name="${field}"]`);
-                if (input) {
-                    input.classList.add('border-red-500');
-                    input.classList.remove('border-gray-300');
-                    
-                    // Handle Select2 containers
-                    if ($(input).hasClass('select2-hidden-accessible')) {
-                        const select2Container = $(input).next('.select2-container').find('.select2-selection');
-                        select2Container.addClass('!border-red-500');
-                    }
-                    
-                    // Create or find error message element
-                    let errorMsg = input.closest('div').querySelector('.error-message');
-                    if (!errorMsg) {
-                        errorMsg = document.createElement('p');
-                        errorMsg.className = 'error-message text-red-500 text-xs mt-1';
-                        input.closest('div').appendChild(errorMsg);
-                    }
-                    errorMsg.innerText = errors[field][0];
-                }
-            });
-            
-            // Focus the first error field
-            const firstErrorField = document.querySelector('.border-red-500');
-            if (firstErrorField) {
-                firstErrorField.focus();
-                firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
         },
-
+ 
         clearErrors() {
-            document.querySelectorAll('.border-red-500').forEach(el => {
-                el.classList.remove('border-red-500');
-                el.classList.add('border-gray-300');
-            });
-            // Clear Select2 error borders
-            if (typeof $ !== 'undefined') {
-                $('.select2-selection').removeClass('!border-red-500');
-            }
-            document.querySelectorAll('.error-message').forEach(el => el.remove());
+            this.errors = {};
         }
     }));
 });

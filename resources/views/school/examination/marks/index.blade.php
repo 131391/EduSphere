@@ -1,131 +1,78 @@
-<?php
+@extends('layouts.school')
 
-namespace App\Http\Controllers\School;
+@section('title', 'Mark Entry Gateway - Examination')
 
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\TenantController;
-use App\Models\Book;
-use App\Models\BookCategory;
-use App\Models\BookIssue;
-use App\Models\Student;
-use App\Models\Staff;
-use App\Services\School\LibraryService;
-use Illuminate\Http\Request;
+@section('content')
+<div x-data="marksEntryGateway()">
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-indigo-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+                        <i class="fas fa-edit text-xs"></i>
+                    </div>
+                    Marks & Assessment Gateway
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Select examination parameters to start recording student performance</p>
+            </div>
+        </div>
+    </div>
 
-class LibraryController extends TenantController
-{
-    protected $libraryService;
+    <!-- Selection Matrix -->
+    <form action="{{ route('school.examination.marks.enter') }}" method="GET" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Exam Selection -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:border-indigo-200 transition-colors group">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+                <label class="block text-sm font-black text-gray-800 uppercase tracking-wider mb-2">1. Select Examination</label>
+                <select name="exam_id" required class="w-full bg-gray-50 border-transparent rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all font-bold text-gray-700 py-3">
+                    <option value="">-- Targeted Exam --</option>
+                    @foreach($exams as $exam)
+                        <option value="{{ $exam->id }}">
+                            {{ $exam->examType->name }} ({{ $exam->month }})
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-    public function __construct(LibraryService $libraryService)
-    {
-        $this->libraryService = $libraryService;
-    }
+            <!-- Class Selection -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:border-indigo-200 transition-colors group">
+                <div class="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-users"></i>
+                </div>
+                <label class="block text-sm font-black text-gray-800 uppercase tracking-wider mb-2">2. Select Class</label>
+                <select name="class_id" required class="w-full bg-gray-50 border-transparent rounded-xl focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 focus:bg-white transition-all font-bold text-gray-700 py-3">
+                    <option value="">-- Target Class --</option>
+                    @foreach($classes as $class)
+                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-    /**
-     * Display a listing of books
-     */
-    public function index()
-    {
-        $this->ensureSchoolActive();
-        $books = Book::where('school_id', $this->getSchoolId())
-            ->with('category')
-            ->latest()
-            ->paginate(10);
-        
-        $categories = BookCategory::where('school_id', $this->getSchoolId())->get();
+            <!-- Subject Selection -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:border-indigo-200 transition-colors group">
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <label class="block text-sm font-black text-gray-800 uppercase tracking-wider mb-2">3. Select Subject</label>
+                <select name="subject_id" required class="w-full bg-gray-50 border-transparent rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all font-bold text-gray-700 py-3">
+                    <option value="">-- Targeted Subject --</option>
+                    @foreach($subjects as $subject)
+                        <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
 
-        return view('school.library.index', compact('books', 'categories'));
-    }
-
-    /**
-     * Store a new book
-     */
-    public function storeBook(Request $request)
-    {
-        $this->ensureSchoolActive();
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'category_id' => 'required|exists:book_categories,id',
-            'quantity' => 'required|integer|min:1',
-            'price' => 'nullable|numeric|min:0',
-        ]);
-
-        Book::create([
-            'school_id' => $this->getSchoolId(),
-            'title' => $request->title,
-            'author' => $request->author,
-            'isbn' => $request->isbn,
-            'category_id' => $request->category_id,
-            'quantity' => $request->quantity,
-            'available_quantity' => $request->quantity,
-            'price' => $request->price,
-        ]);
-
-        return back()->with('success', 'Book added to catalog.');
-    }
-
-    /**
-     * Display issue form and active issues
-     */
-    public function issues()
-    {
-        $this->ensureSchoolActive();
-        $activeIssues = BookIssue::where('school_id', $this->getSchoolId())
-            ->where('status', 'issued')
-            ->with(['book', 'student', 'staff'])
-            ->latest()
-            ->paginate(10);
-
-        $books = Book::where('school_id', $this->getSchoolId())
-            ->where('available_quantity', '>', 0)
-            ->get();
-            
-        $students = Student::where('school_id', $this->getSchoolId())->active()->get();
-
-        return view('school.library.issues', compact('activeIssues', 'books', 'students'));
-    }
-
-    /**
-     * Issue a book
-     */
-    public function issueBook(Request $request)
-    {
-        $this->ensureSchoolActive();
-        $request->validate([
-            'book_id' => 'required|exists:books,id',
-            'student_id' => 'required|exists:students,id',
-            'due_date' => 'required|date|after:today',
-        ]);
-
-        $data = $request->all();
-        $data['school_id'] = $this->getSchoolId();
-
-        $result = $this->libraryService.issueBook($data);
-
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
-        }
-
-        return back()->with('error', $result['message']);
-    }
-
-    /**
-     * Return a book
-     */
-    public function returnBook(BookIssue $issue)
-    {
-        $this->authorizeTenant($issue);
-        $result = $this->libraryService->returnBook($issue);
-
-        if ($result['success']) {
-            $msg = $result['message'];
-            if ($result['fine'] > 0) {
-                $msg .= " Fine of " . number_format($result['fine'], 2) . " applied.";
-            }
-            return back()->with('success', $msg);
-        }
-
-        return back()->with('error', $result['message']);
-    }
-}
+        <div class="flex items-center justify-center pt-8">
+            <button type="submit" class="px-12 py-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 hover:from-indigo-700 hover:to-violet-800 transition-all active:scale-95 flex items-center gap-3 group">
+                <i class="fas fa-th-large group-hover:rotate-12 transition-transform"></i>
+                Open Marks Entry Grid
+            </button>
+        </div>
+    </form>
+</div>
+@endsection

@@ -43,18 +43,36 @@ class LibraryController extends TenantController
             'price' => 'nullable|numeric|min:0',
         ]);
 
-        Book::create([
-            'school_id' => $this->getSchoolId(),
-            'title' => $request->title,
-            'author' => $request->author,
-            'isbn' => $request->isbn,
-            'category_id' => $request->category_id,
-            'quantity' => $request->quantity,
-            'available_quantity' => $request->quantity,
-            'price' => $request->price,
-        ]);
+        try {
+            $book = Book::create([
+                'school_id' => $this->getSchoolId(),
+                'title' => $request->title,
+                'author' => $request->author,
+                'isbn' => $request->isbn,
+                'category_id' => $request->category_id,
+                'quantity' => $request->quantity,
+                'available_quantity' => $request->quantity,
+                'price' => $request->price,
+            ]);
 
-        return back()->with('success', 'Book added to catalog.');
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Book added to catalog successfully!',
+                    'data' => $book->load('category')
+                ]);
+            }
+
+            return back()->with('success', 'Book added to catalog.');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to add book: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to add book: ' . $e->getMessage());
+        }
     }
 
     public function issues()
@@ -84,23 +102,58 @@ class LibraryController extends TenantController
             'due_date' => 'required|date|after:today',
         ]);
 
-        $data = $request->all();
-        $data['school_id'] = $this->getSchoolId();
+        try {
+            $data = $request->all();
+            $data['school_id'] = $this->getSchoolId();
 
-        $result = $this->libraryService->issueBook($data);
+            $result = $this->libraryService->issueBook($data);
 
-        return $result['success'] 
-            ? back()->with('success', $result['message']) 
-            : back()->with('error', $result['message']);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => $result['success'],
+                    'message' => $result['message'],
+                    'data' => $result['success'] ? $result['issue']->load(['book', 'student']) : null
+                ], $result['success'] ? 200 : 422);
+            }
+
+            return $result['success'] 
+                ? back()->with('success', $result['message']) 
+                : back()->with('error', $result['message']);
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to issue book: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to issue book: ' . $e->getMessage());
+        }
     }
 
     public function returnBook(BookIssue $issue)
     {
-        $this->authorizeTenant($issue);
-        $result = $this->libraryService->returnBook($issue);
+        try {
+            $result = $this->libraryService->returnBook($issue);
 
-        return $result['success'] 
-            ? back()->with('success', $result['message']) 
-            : back()->with('error', $result['message']);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => $result['success'],
+                    'message' => $result['message'],
+                    'fine' => $result['success'] ? $result['fine'] : 0
+                ], $result['success'] ? 200 : 422);
+            }
+
+            return $result['success'] 
+                ? back()->with('success', $result['message']) 
+                : back()->with('error', $result['message']);
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to process return: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to process return: ' . $e->getMessage());
+        }
     }
 }

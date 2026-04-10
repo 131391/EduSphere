@@ -270,10 +270,27 @@ class AdmissionController extends TenantController
             }
 
             DB::commit();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student admitted successfully and fee records generated.',
+                    'redirect' => route('school.admission.index')
+                ]);
+            }
+
             return redirect()->route('school.admission.index')->with('success', 'Student admitted successfully and fee records generated.');
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error("Admission Error: " . $e->getMessage());
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admission failed: ' . $e->getMessage()
+                ], 500);
+            }
+
             return back()->with('error', 'Error admitting student: ' . $e->getMessage())->withInput();
         }
     }
@@ -485,17 +502,52 @@ class AdmissionController extends TenantController
             $student->save();
 
             DB::commit();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student details updated successfully.',
+                    'redirect' => route('school.admission.index')
+                ]);
+            }
+
             return redirect()->route('school.admission.index')->with('success', 'Student details updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Update failed: ' . $e->getMessage()
+                ], 500);
+            }
+
             return back()->with('error', 'Error updating student: ' . $e->getMessage())->withInput();
         }
     }
 
     public function destroy(Student $student)
     {
-        $student->forceDelete();
-        return redirect()->route('school.admission.index')->with('success', 'Student record deleted successfully.');
+        try {
+            $student->forceDelete();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student record deleted successfully.'
+                ]);
+            }
+
+            return redirect()->route('school.admission.index')->with('success', 'Student record deleted successfully.');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Deletion failed: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->route('school.admission.index')->with('error', 'Deletion failed: ' . $e->getMessage());
+        }
     }
 
     public function getClassData($classId)

@@ -27,11 +27,19 @@ class RegistrationFeeController extends TenantController
 
     public function store(StoreRegistrationFeeRequest $request)
     {
-        RegistrationFee::create([
+        $fee = RegistrationFee::create([
             'school_id' => $this->getSchoolId(),
             'class_id' => $request->class_id,
             'amount' => $request->amount,
         ]);
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration fee added successfully!',
+                'data' => $fee
+            ]);
+        }
 
         return back()->with('success', 'Registration fee added successfully.');
     }
@@ -44,6 +52,14 @@ class RegistrationFeeController extends TenantController
             'amount' => $request->amount,
         ]);
 
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration fee updated successfully!',
+                'data' => $registrationFee
+            ]);
+        }
+
         return back()->with('success', 'Registration fee updated successfully.');
     }
 
@@ -51,6 +67,13 @@ class RegistrationFeeController extends TenantController
     {
         $this->authorizeTenant($registrationFee);
         $registrationFee->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration fee deleted successfully!'
+            ]);
+        }
 
         return back()->with('success', 'Registration fee deleted successfully.');
     }

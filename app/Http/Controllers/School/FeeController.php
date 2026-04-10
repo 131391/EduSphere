@@ -70,14 +70,56 @@ class FeeController extends TenantController
             'due_date' => 'required|date|after_or_equal:today',
         ]);
 
+        try {
+            $result = $this->feeService->generateClassFees($this->school, $validated);
 
-        $result = $this->feeService->generateClassFees($this->school, $validated);
+            if ($result['success']) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $result['message']
+                    ]);
+                }
+                return redirect()->route('school.fees.index')->with('success', $result['message']);
+            }
 
-        if ($result['success']) {
-            return redirect()->route('school.fees.index')->with('success', $result['message']);
+            throw new \Exception($result['message']);
+
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Generation failed: ' . $e->getMessage()
+                ], 422);
+            }
+            return back()->with('error', 'Generation failed: ' . $e->getMessage())->withInput();
         }
+    }
 
-        return back()->with('error', $result['message'])->withInput();
+    public function destroy(Fee $fee)
+    {
+        $this->authorizeTenant($fee);
+        
+        try {
+            $fee->delete();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee record removed successfully!'
+                ]);
+            }
+
+            return redirect()->route('school.fees.index')->with('success', 'Fee deleted successfully.');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to remove fee: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to remove fee: ' . $e->getMessage());
+        }
     }
 
     public function show(Fee $fee)

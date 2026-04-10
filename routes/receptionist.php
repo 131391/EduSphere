@@ -28,6 +28,8 @@ Route::resource('student-enquiries', \App\Http\Controllers\Receptionist\StudentE
 // Student Registration Management
 Route::get('student-registrations/enquiry/{id}', [\App\Http\Controllers\Receptionist\StudentRegistrationController::class, 'getEnquiryData'])->name('student-registrations.enquiry-data');
 Route::get('student-registrations/registration-fee/{classId}', [\App\Http\Controllers\Receptionist\StudentRegistrationController::class, 'getRegistrationFee'])->name('student-registrations.registration-fee');
+Route::get('student-registrations/download-template', [\App\Http\Controllers\Receptionist\StudentRegistrationController::class, 'downloadTemplate'])->name('registrations.download-template');
+Route::post('student-registrations/import', [\App\Http\Controllers\Receptionist\StudentRegistrationController::class, 'import'])->name('registrations.import');
 Route::get('student-registrations/{id}/pdf', [\App\Http\Controllers\Receptionist\StudentRegistrationController::class, 'downloadPdf'])->name('student-registrations.pdf');
 Route::resource('student-registrations', \App\Http\Controllers\Receptionist\StudentRegistrationController::class);
 

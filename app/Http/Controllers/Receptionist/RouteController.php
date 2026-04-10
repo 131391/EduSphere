@@ -8,6 +8,7 @@ use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Enums\RouteStatus;
+use Illuminate\Validation\ValidationException;
 
 class RouteController extends TenantController
 {
@@ -32,12 +33,12 @@ class RouteController extends TenantController
         }
 
         // Sorting
-        $sortColumn = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
         $query->orderBy($sortColumn, $sortDirection);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $routes = $query->paginate($perPage)->withQueryString();
 
         return view('receptionist.routes.index', compact('routes'));
@@ -48,27 +49,53 @@ class RouteController extends TenantController
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'route_name' => 'required|string|max:255',
-            'vehicle_id' => 'nullable|exists:vehicles,id',
-            'route_create_date' => 'nullable|date',
-        ]);
+        try {
+            $validated = $request->validate([
+                'route_name' => 'required|string|max:255',
+                'vehicle_id' => 'required|exists:vehicles,id',
+                'route_create_date' => 'required|date',
+            ]);
 
-        $schoolId = $this->getSchoolId();
-        $validated['school_id'] = $schoolId;
-        $validated['status'] = RouteStatus::Active;
+            $schoolId = $this->getSchoolId();
+            $validated['school_id'] = $schoolId;
+            $validated['status'] = RouteStatus::Active;
 
-        // Verify vehicle belongs to same school if provided
-        if (!empty($validated['vehicle_id'])) {
-            $vehicle = Vehicle::find($validated['vehicle_id']);
-            if ($vehicle && $vehicle->school_id !== $schoolId) {
-                return back()->withErrors(['vehicle_id' => 'Invalid vehicle selected.'])->withInput();
+            // Verify vehicle belongs to same school
+            $vehicle = Vehicle::where('id', $validated['vehicle_id'])
+                ->where('school_id', $schoolId)
+                ->first();
+                
+            if (!$vehicle) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Integrity violation',
+                    'errors' => ['vehicle_id' => ['The selected vehicle is not part of this institutional fleet.']]
+                ], 422);
             }
+
+            $route = TransportRoute::create($validated);
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Route mapping established successfully.',
+                    'route' => $route
+                ]);
+            }
+
+            return redirect()->route('receptionist.routes.index')->with('success', 'Route mapping established successfully.');
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
         }
-
-        TransportRoute::create($validated);
-
-        return redirect()->route('receptionist.routes.index')->with('success', 'Route added successfully.');
     }
 
     /**
@@ -78,38 +105,76 @@ class RouteController extends TenantController
     {
         $this->authorizeTenant($route);
 
-        $validated = $request->validate([
-            'route_name' => 'required|string|max:255',
-            'vehicle_id' => 'nullable|exists:vehicles,id',
-            'route_create_date' => 'nullable|date',
-            'status' => ['required', 'integer', Rule::enum(RouteStatus::class)],
-        ]);
+        try {
+            $validated = $request->validate([
+                'route_name' => 'required|string|max:255',
+                'vehicle_id' => 'required|exists:vehicles,id',
+                'route_create_date' => 'required|date',
+                'status' => ['required', 'integer', Rule::enum(RouteStatus::class)],
+            ]);
 
-        $schoolId = $this->getSchoolId();
+            $schoolId = $this->getSchoolId();
 
-        // Verify vehicle belongs to same school if provided
-        if (!empty($validated['vehicle_id'])) {
-            $vehicle = Vehicle::find($validated['vehicle_id']);
-            if ($vehicle && $vehicle->school_id !== $schoolId) {
-                return back()->withErrors(['vehicle_id' => 'Invalid vehicle selected.'])->withInput();
+            // Verify vehicle belongs to same school
+            $vehicle = Vehicle::where('id', $validated['vehicle_id'])
+                ->where('school_id', $schoolId)
+                ->first();
+                
+            if (!$vehicle) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Integrity violation',
+                    'errors' => ['vehicle_id' => ['The selected vehicle is not part of this institutional fleet.']]
+                ], 422);
             }
+
+            $route->update($validated);
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Route configuration updated successfully.',
+                    'route' => $route
+                ]);
+            }
+
+            return redirect()->route('receptionist.routes.index')->with('success', 'Route configuration updated successfully.');
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
         }
-
-        $route->update($validated);
-
-        return redirect()->route('receptionist.routes.index')->with('success', 'Route updated successfully.');
     }
 
     /**
      * Remove the specified route.
      */
-    public function destroy(TransportRoute $route)
+    public function destroy(Request $request, TransportRoute $route)
     {
         $this->authorizeTenant($route);
 
-        $route->delete();
+        try {
+            // Future check: ensure no students are assigned (once that relation exists)
+            
+            $route->delete();
 
-        return redirect()->route('receptionist.routes.index')->with('success', 'Route deleted successfully.');
+            return response()->json([
+                'success' => true, 
+                'message' => 'Route record struck from registry.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

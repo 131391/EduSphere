@@ -3,38 +3,13 @@
 @section('title', 'User Management')
 
 @section('content')
-<div class="space-y-6" x-data="userManagement" x-init="init()">
-
-
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">User Management</h1>
-            <p class="text-gray-600 mt-1">Manage school staff users (teachers, receptionists, etc.)</p>
-        </div>
-        <button 
-            @click="openAddModal()" 
-            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center transition-colors shadow-md"
-        >
-            <i class="fas fa-plus mr-2"></i>
-            Add User
-        </button>
-    </div>
-
+<div x-data="userManagement()">
     @php
         $tableColumns = [
-            [
-                'key' => 'id',
-                'label' => 'SR NO',
-                'render' => function($row) use ($users) {
-                    static $index = 0;
-                    return $users->firstItem() + $index++;
-                }
-            ],
             [
                 'key' => 'name',
                 'label' => 'NAME',
                 'sortable' => true,
-                'render' => fn($row) => '<span class="font-medium text-gray-900">' . e($row->name) . '</span>'
             ],
             [
                 'key' => 'email',
@@ -44,6 +19,8 @@
             [
                 'key' => 'phone',
                 'label' => 'PHONE',
+                'sortable' => true,
+                'render' => fn($row) => $row->phone ?? '-'
             ],
             [
                 'key' => 'role',
@@ -56,15 +33,15 @@
                 'label' => 'STATUS',
                 'sortable' => true,
                 'render' => function($row) {
-                    $colors = [
-                        \App\Models\User::STATUS_ACTIVE => 'bg-green-100 text-green-800',
-                        \App\Models\User::STATUS_INACTIVE => 'bg-gray-100 text-gray-800',
-                        \App\Models\User::STATUS_SUSPENDED => 'bg-red-100 text-red-800',
-                        \App\Models\User::STATUS_PENDING => 'bg-yellow-100 text-yellow-800',
-                    ];
-                    $color = $colors[$row->status] ?? 'bg-gray-100 text-gray-800';
-                    $label = \App\Models\User::STATUS_LABELS[$row->status] ?? 'Unknown';
-                    return '<span class="px-2 py-1 rounded-full text-xs font-semibold ' . $color . '">' . ucfirst($label) . '</span>';
+                    $colorClass = match($row->status->color()) {
+                        'green' => 'bg-green-100 text-green-800',
+                        'gray' => 'bg-gray-100 text-gray-800',
+                        'red' => 'bg-red-100 text-red-800',
+                        'yellow' => 'bg-yellow-100 text-yellow-800',
+                        default => 'bg-gray-100 text-gray-800',
+                    };
+                    $label = $row->status->label();
+                    return '<span class="px-2 py-1 rounded-full text-xs font-semibold ' . $colorClass . '">' . ucfirst($label) . '</span>';
                 }
             ],
         ];
@@ -74,28 +51,45 @@
                 'type' => 'button',
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',
+                'onclick' => function($row) {
+                    $encoded = base64_encode(json_encode($row));
+                    return "window.dispatchEvent(new CustomEvent('open-edit-user', { detail: JSON.parse(atob('$encoded')) }))";
+                },
                 'title' => 'Edit',
-                'onClick' => 'openEditModal(row)'
             ],
             [
                 'type' => 'form',
-                'url' => fn($row) => route('school.users.destroy', $row->id),
+                'action' => function($row) {
+                    return route('school.users.destroy', $row->id);
+                },
                 'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
-                'dispatch' => [
-                    'event' => 'open-confirm-modal',
-                    'title' => 'Delete User',
-                    'message' => 'Are you sure you want to delete this user?'
-                ]
+                'confirm' => 'Are you sure you want to delete this user?',
             ],
         ];
     @endphp
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6" x-on:open-edit-user.window="openEditModal($event.detail)">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">User Management</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Manage school staff users (teachers, receptionists, etc.)</p>
+            </div>
+            <button @click="openAddModal()" 
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
+                <i class="fas fa-plus mr-2"></i>
+                Add User
+            </button>
+        </div>
+    </div>
 
+    <!-- Users Table -->
     <x-data-table 
         :columns="$tableColumns"
         :data="$users"
+        :searchable="true"
         :actions="$tableActions"
         empty-message="No users found"
         empty-icon="fas fa-users"
@@ -104,70 +98,108 @@
     </x-data-table>
 
     <!-- Add/Edit User Modal -->
-    <x-modal name="user-modal" alpineTitle="editMode ? 'Edit User' : 'Add User'" maxWidth="2xl">
-        <form :action="editMode ? `/school/users/${userId}` : '{{ route('school.users.store') }}'" method="POST" class="p-6" novalidate>
+    <x-modal name="user-modal" alpineTitle="editMode ? 'Edit User' : 'Create New Staff User'" maxWidth="2xl">
+        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
             @csrf
             <template x-if="editMode">
-                @method('PUT')
+                <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="grid grid-cols-2 gap-6">
-                <!-- Name -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Full Name <span class="text-red-500">*</span></label>
-                    <input 
-                        type="text" 
-                        name="name" 
-                        x-model="formData.name"
-                        placeholder="Enter full name"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('name') border-red-500 @enderror"
-                    >
-                    @error('name')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
+            <div class="px-8 py-8">
+                <div class="grid grid-cols-2 gap-x-8 gap-y-2">
+                    <!-- Full Name -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Full Name <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
+                                <i class="fas fa-user text-sm"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                name="name" 
+                                x-model="formData.name"
+                                @input="if(errors.name) delete errors.name"
+                                placeholder="John Doe"
+                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm placeholder:text-gray-400 text-gray-700"
+                                :class="{'border-red-500 ring-red-500/10': errors.name}"
+                            >
+                        </div>
+                        <div class="min-h-[24px] mt-1 ml-1">
+                            <template x-if="errors.name">
+                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span x-text="errors.name[0]"></span>
+                                </p>
+                            </template>
+                        </div>
+                    </div>
 
-                <!-- Email -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Email <span class="text-red-500">*</span></label>
-                    <input 
-                        type="text" 
-                        name="email" 
-                        x-model="formData.email"
-                        placeholder="Enter email address"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('email') border-red-500 @enderror"
-                    >
-                    @error('email')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
+                    <!-- Email -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Email <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
+                                <i class="fas fa-envelope text-sm"></i>
+                            </div>
+                            <input 
+                                type="email" 
+                                name="email" 
+                                x-model="formData.email"
+                                @input="if(errors.email) delete errors.email"
+                                placeholder="example@school.com"
+                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm placeholder:text-gray-400 text-gray-700"
+                                :class="{'border-red-500 ring-red-500/10': errors.email}"
+                            >
+                        </div>
+                        <div class="min-h-[24px] mt-1 ml-1">
+                            <template x-if="errors.email">
+                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span x-text="errors.email[0]"></span>
+                                </p>
+                            </template>
+                        </div>
+                    </div>
 
-                <!-- Password -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">
-                        Password <span class="text-red-500" x-show="!editMode">*</span>
-                        <span class="text-xs text-gray-500 font-normal" x-show="editMode">(Leave blank to keep current)</span>
-                    </label>
-                    <input 
-                        type="password" 
-                        name="password" 
-                        x-model="formData.password"
-                        placeholder="Enter password"
-                        minlength="8"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('password') border-red-500 @enderror"
-                    >
-                    @error('password')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
+                    <!-- Password -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">
+                            Password <span class="text-red-500" x-show="!editMode">*</span>
+                            <span class="text-[11px] text-gray-400 font-normal italic ml-1" x-show="editMode">Leave blank to keep current</span>
+                        </label>
+                        <div class="relative group" x-data="{ show: false }">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
+                                <i class="fas fa-lock text-sm"></i>
+                            </div>
+                            <input 
+                                :type="show ? 'text' : 'password'" 
+                                name="password" 
+                                x-model="formData.password"
+                                @input="if(errors.password) delete errors.password"
+                                placeholder="••••••••"
+                                class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm placeholder:text-gray-400 text-gray-700"
+                                :class="{'border-red-500 ring-red-500/10': errors.password}"
+                            >
+                            <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-indigo-600 transition-colors">
+                                <i class="fas" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                            </button>
+                        </div>
+                        <div class="min-h-[24px] mt-1 ml-1">
+                            <template x-if="errors.password">
+                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span x-text="errors.password[0]"></span>
+                                </p>
+                            </template>
+                        </div>
+                    </div>
 
-                <!-- Phone -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Phone</label>
-                    <div x-data="{ phoneValue: formData.phone }" x-init="$watch('formData.phone', value => phoneValue = value)">
-                        <div class="relative phone-input-wrapper">
-                            <div class="absolute inset-y-0 left-0 flex items-center pointer-events-none z-10">
-                                <span class="px-3 py-2 text-gray-700 font-medium bg-gray-50 border-r border-gray-300 rounded-l-md h-full flex items-center select-none">
+                    <!-- Phone Number -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Phone Number</label>
+                        <div class="relative group phone-input-wrapper">
+                            <div class="absolute inset-y-0 left-0 flex items-center pointer-events-none z-10 transition-colors duration-200 group-focus-within:text-indigo-600">
+                                <span class="px-3.5 py-2.5 text-gray-500 font-bold bg-gray-100/50 border-r border-gray-200 rounded-l-xl h-full flex items-center select-none text-xs">
                                     +91
                                 </span>
                             </div>
@@ -175,80 +207,106 @@
                                 type="tel" 
                                 name="phone" 
                                 x-model="formData.phone"
-                                placeholder="Enter 10 digit mobile number"
+                                @input="if(errors.phone) delete errors.phone"
+                                placeholder="888 888 8888"
                                 inputmode="numeric"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
-                                class="w-full pl-[70px] pr-16 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 @error('phone') border-red-500 focus:ring-red-500 @enderror"
+                                class="w-full pl-[70px] pr-16 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm placeholder:text-gray-400 text-gray-700"
+                                :class="{'border-red-500 ring-red-500/10': errors.phone}"
                             >
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <span class="text-xs font-medium" 
-                                      :class="formData.phone.length === 10 ? 'text-green-500' : (formData.phone.length > 0 ? 'text-yellow-500' : 'text-gray-400')"
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none">
+                                <span class="text-[10px] font-bold tracking-tighter" 
+                                      :class="formData.phone.length === 10 ? 'text-green-500' : (formData.phone.length > 0 ? 'text-amber-500' : 'text-gray-300')"
                                       x-text="formData.phone.length + '/10'">0/10</span>
                             </div>
                         </div>
+                        <div class="min-h-[24px] mt-1 ml-1">
+                            <template x-if="errors.phone">
+                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span x-text="errors.phone[0]"></span>
+                                </p>
+                            </template>
+                        </div>
                     </div>
-                    @error('phone')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
 
-                <!-- Role -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Role <span class="text-red-500">*</span></label>
-                    <select 
-                        name="role" 
-                        x-model="formData.role"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('role') border-red-500 @enderror"
-                    >
-                        <option value="">Select Role</option>
-                        @foreach($roles as $value => $label)
-                        <option value="{{ $value }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    @error('role')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
+                    <!-- Role -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Account Role <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <select 
+                                name="role" 
+                                x-model="formData.role"
+                                @change="if(errors.role) delete errors.role"
+                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
+                                :class="{'border-red-500 ring-red-500/10': errors.role}"
+                            >
+                                <option value="">Choose a role</option>
+                                @foreach($roles as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="min-h-[24px] mt-1 ml-1">
+                            <template x-if="errors.role">
+                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span x-text="errors.role[0]"></span>
+                                </p>
+                            </template>
+                        </div>
+                    </div>
 
-                <!-- Status (only in edit mode) -->
-                <div x-show="editMode">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Status <span class="text-red-500">*</span></label>
-                    <select 
-                        name="status" 
-                        x-model="formData.status"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all @error('status') border-red-500 @enderror"
-                    >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="suspended">Suspended</option>
-                    </select>
-                    @error('status')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <!-- Status -->
+                    <div class="col-span-1" x-show="editMode">
+                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Account Status <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select 
+                                name="status" 
+                                x-model="formData.status"
+                                @change="if(errors.status) delete errors.status"
+                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
+                                :class="{'border-red-500 ring-red-500/10': errors.status}"
+                            >
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </div>
+                        <div class="min-h-[24px] mt-1 ml-1">
+                            <template x-if="errors.status">
+                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span x-text="errors.status[0]"></span>
+                                </p>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="mt-8 flex items-center justify-end gap-4">
+            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
                 <button 
                     type="button" 
                     @click="closeModal()"
-                    class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
                 >
                     Cancel
                 </button>
                 <button 
                     type="submit"
-                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+                    :disabled="submitting"
+                    class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all duration-200 shadow-lg shadow-indigo-200 flex items-center justify-center min-w-[140px] gap-2 active:scale-95 disabled:opacity-50"
                 >
-                    <span x-text="editMode ? 'Update User' : 'Create User'"></span>
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <span x-text="editMode ? (submitting ? 'Updating' : 'Update Changes') : (submitting ? 'Creating' : 'Create User')"></span>
                 </button>
             </div>
         </form>
     </x-modal>
-
-    <!-- Confirmation Modal -->
-    <x-confirm-modal />
 </div>
 
 @push('scripts')
@@ -258,6 +316,8 @@ document.addEventListener('alpine:init', () => {
         showModal: false,
         editMode: false,
         userId: null,
+        submitting: false,
+        errors: {},
         formData: {
             name: '',
             email: '',
@@ -268,26 +328,79 @@ document.addEventListener('alpine:init', () => {
         },
         
         init() {
-            @if($errors->any())
-                this.formData = {
-                    name: '{{ old('name') }}',
-                    email: '{{ old('email') }}',
-                    password: '',
-                    phone: '{{ old('phone') }}',
-                    role: '{{ old('role') }}',
-                    status: '{{ old('status', 'active') }}'
-                };
-                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
-                this.userId = '{{ old('user_id') }}';
+            // Sync Select2 with Alpine state
+            if (typeof $ !== 'undefined') {
                 this.$nextTick(() => {
-                    this.$dispatch('open-modal', 'user-modal');
+                    const $role = $('select[name="role"]');
+                    const $status = $('select[name="status"]');
+
+                    $role.on('change', (e) => {
+                        this.formData.role = e.target.value;
+                        if (this.errors.role) delete this.errors.role;
+                    });
+
+                    $status.on('change', (e) => {
+                        this.formData.status = e.target.value;
+                        if (this.errors.status) delete this.errors.status;
+                    });
                 });
-            @endif
+            }
+        },
+        
+        async submitForm() {
+            this.submitting = true;
+            this.errors = {};
+            
+            const url = this.editMode 
+                ? `/school/users/${this.userId}` 
+                : '{{ route('school.users.store') }}';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ...this.formData,
+                        _method: this.editMode ? 'PUT' : 'POST'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'User saved successfully'
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else if (response.status === 422) {
+                    this.errors = result.errors || {};
+                } else {
+                    throw new Error(result.message || 'Something went wrong');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                if (window.Toast) {
+                    window.Toast.fire({
+                        icon: 'error',
+                        title: error.message || 'Could not save user'
+                    });
+                }
+            } finally {
+                this.submitting = false;
+            }
         },
         
         openAddModal() {
             this.editMode = false;
             this.userId = null;
+            this.errors = {};
             this.formData = { 
                 name: '', 
                 email: '', 
@@ -303,6 +416,7 @@ document.addEventListener('alpine:init', () => {
             console.log('Opening edit modal for user:', user);
             this.editMode = true;
             this.userId = user.id;
+            this.errors = {};
             
             // Map status integer to string
             const statusMap = {
@@ -344,62 +458,6 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
-</script>
-<script>
-// Global script to hide validation errors when user starts typing or selecting
-document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners to all inputs and selects in the modal
-    const modal = document.querySelector('[x-data*="userManagement"]');
-    if (modal) {
-        // Handle regular inputs
-        modal.addEventListener('input', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-600')) {
-                    errorElement.classList.add('hidden');
-                }
-                // Also remove red border
-                e.target.classList.remove('border-red-500');
-            }
-        });
-        
-        // Handle native selects and Select2 selects
-        modal.addEventListener('change', function(e) {
-            if (e.target.tagName === 'SELECT') {
-                const errorElement = e.target.nextElementSibling;
-                if (errorElement && errorElement.classList.contains('text-red-600')) {
-                    errorElement.classList.add('hidden');
-                }
-                // Also remove red border
-                e.target.classList.remove('border-red-500');
-            }
-        });
-        
-        // Handle Select2 change events specifically
-        if (typeof $ !== 'undefined') {
-            $(modal).on('select2:select select2:clear', 'select', function(e) {
-                const select = e.target;
-                // Find the error message (it might be after the Select2 container)
-                let errorElement = select.nextElementSibling;
-                
-                // If next sibling is Select2 container, look for error after it
-                if (errorElement && errorElement.classList.contains('select2')) {
-                    errorElement = errorElement.nextElementSibling;
-                }
-                
-                if (errorElement && errorElement.classList.contains('text-red-600')) {
-                    errorElement.classList.add('hidden');
-                }
-                
-                // Remove red border from original select
-                select.classList.remove('border-red-500');
-                
-                // Also remove red border from Select2 container
-                const select2Container = $(select).next('.select2-container').find('.select2-selection');
-                select2Container.removeClass('border-red-500');
-            });
-        }
-    }
 </script>
 @endpush
 @endsection

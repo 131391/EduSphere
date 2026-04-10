@@ -40,7 +40,7 @@ class UserController extends TenantController
 
         $role = \App\Models\Role::where('slug', $validated['role'])->firstOrFail();
 
-        User::create([
+        $user = User::create([
             'school_id' => $school->id,
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -49,6 +49,14 @@ class UserController extends TenantController
             'phone' => $validated['phone'],
             'status' => UserStatus::Active,
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully.',
+                'user' => $user
+            ]);
+        }
 
         return redirect()->route('school.users.index')->with('success', 'User created successfully.');
     }
@@ -79,6 +87,14 @@ class UserController extends TenantController
         }
 
         $user->update($data);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User updated successfully.',
+                'user' => $user->load('role')
+            ]);
+        }
 
         return redirect()->route('school.users.index')->with('success', 'User updated successfully.');
     }

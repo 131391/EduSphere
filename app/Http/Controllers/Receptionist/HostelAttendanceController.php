@@ -33,97 +33,122 @@ class HostelAttendanceController extends TenantController
      */
     public function getStudents(Request $request)
     {
-        $schoolId = $this->getSchoolId();
-        
-        $request->validate([
-            'hostel_id' => 'required|exists:hostels,id',
-        ]);
-
-        $hostel = Hostel::findOrFail($request->hostel_id);
-        
-        // Verify tenant ownership
-        if ($hostel->school_id !== $schoolId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        // Get active bed assignments for this hostel
-        $assignments = HostelBedAssignment::where('school_id', $schoolId)
-            ->where('hostel_id', $request->hostel_id)
-            ->with([
-                'student' => function($query) {
-                    $query->with(['class', 'section']);
-                },
-                'floor', 
-                'room'
-            ])
-            ->has('student') // Only get assignments with valid students
-            ->get();
-
-        $studentsArray = $assignments->map(function($assignment) {
-            $student = $assignment->student;
-            if (!$student) {
-                return null;
-            }
+        try {
+            $schoolId = $this->getSchoolId();
             
-            return [
-                'id' => $student->id,
-                'admission_no' => $student->admission_no,
-                'name' => trim($student->first_name . ' ' . ($student->middle_name ?? '') . ' ' . ($student->last_name ?? '')),
-                'class_name' => $student->class ? $student->class->name : 'N/A',
-                'section_name' => $student->section ? $student->section->name : '',
-                'floor_name' => $assignment->floor ? $assignment->floor->floor_name : 'N/A',
-                'room_name' => $assignment->room ? $assignment->room->room_name : 'N/A',
-                'bed_no' => $assignment->bed_no ?? 'N/A',
-            ];
-        })->filter()->values()->toArray();
+            $request->validate([
+                'hostel_id' => 'required|exists:hostels,id',
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'students' => $studentsArray,
-        ]);
+            $hostel = Hostel::findOrFail($request->hostel_id);
+            
+            // Verify tenant ownership
+            if ($hostel->school_id !== $schoolId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Integrity violation',
+                    'errors' => ['hostel_id' => ['The selected hostel block is not part of this institutional registry.']]
+                ], 422);
+            }
+
+            // Get active bed assignments for this hostel
+            $assignments = HostelBedAssignment::where('school_id', $schoolId)
+                ->where('hostel_id', $request->hostel_id)
+                ->with([
+                    'student' => function($query) {
+                        $query->with(['class', 'section']);
+                    },
+                    'floor', 
+                    'room'
+                ])
+                ->has('student') // Only get assignments with valid students
+                ->get();
+
+            $studentsArray = $assignments->map(function($assignment) {
+                $student = $assignment->student;
+                if (!$student) {
+                    return null;
+                }
+                
+                return [
+                    'id' => $student->id,
+                    'admission_no' => $student->admission_no,
+                    'name' => trim($student->first_name . ' ' . ($student->middle_name ?? '') . ' ' . ($student->last_name ?? '')),
+                    'class_name' => $student->class ? $student->class->name : 'N/A',
+                    'section_name' => $student->section ? $student->section->name : '',
+                    'floor_name' => $assignment->floor ? $assignment->floor->floor_name : 'N/A',
+                    'room_name' => $assignment->room ? $assignment->room->room_name : 'N/A',
+                    'bed_no' => $assignment->bed_no ?? 'N/A',
+                ];
+            })->filter()->values()->toArray();
+
+            return response()->json([
+                'success' => true,
+                'students' => $studentsArray,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Manifest retrieval failure: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Store hostel attendance records.
+     * Store hostel attendance records (AJAX).
      */
     public function store(Request $request)
     {
         $schoolId = $this->getSchoolId();
         
-        $validated = $request->validate([
-            'hostel_id' => 'required|exists:hostels,id',
-            'attendance_date' => 'required|date',
-            'students' => 'required|array',
-            'students.*.student_id' => 'required|exists:students,id',
-            'students.*.is_present' => 'required|boolean',
-            'students.*.remarks' => 'nullable|string|max:500',
-        ]);
-
-        // Verify hostel belongs to school
-        $hostel = Hostel::findOrFail($validated['hostel_id']);
-        if ($hostel->school_id !== $schoolId) {
-            return back()->withErrors(['hostel_id' => 'Invalid hostel selected.'])->withInput();
-        }
-
-        // Verify all students belong to the selected hostel
-        $studentIds = collect($validated['students'])->pluck('student_id')->toArray();
-        $validAssignments = HostelBedAssignment::where('school_id', $schoolId)
-            ->where('hostel_id', $validated['hostel_id'])
-            ->whereIn('student_id', $studentIds)
-            ->pluck('student_id')
-            ->toArray();
-
-        $invalidStudents = array_diff($studentIds, $validAssignments);
-        if (!empty($invalidStudents)) {
-            return back()->withErrors(['students' => 'Some selected students are not assigned to this hostel.'])->withInput();
-        }
-
-        // Process attendance in a transaction
-        DB::beginTransaction();
         try {
+            $validated = $request->validate([
+                'hostel_id' => 'required|exists:hostels,id',
+                'attendance_date' => 'required|date',
+                'students' => 'required|array',
+                'students.*.student_id' => 'required|exists:students,id',
+                'students.*.is_present' => 'required|boolean',
+                'students.*.remarks' => 'nullable|string|max:500',
+            ]);
+
+            // Verify hostel belongs to school
+            $hostel = Hostel::where('id', $validated['hostel_id'])->where('school_id', $schoolId)->first();
+            if (!$hostel) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized block',
+                    'errors' => ['hostel_id' => ['Unauthorized hostel block selection.']]
+                ], 422);
+            }
+
+            // Verify all students belong to the selected hostel (multi-tenant boundary check)
+            $studentIds = collect($validated['students'])->pluck('student_id')->toArray();
+            $validAssignments = HostelBedAssignment::where('school_id', $schoolId)
+                ->where('hostel_id', $validated['hostel_id'])
+                ->whereIn('student_id', $studentIds)
+                ->pluck('student_id')
+                ->toArray();
+
+            $invalidStudents = array_diff($studentIds, $validAssignments);
+            if (!empty($invalidStudents)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Residency mismatch',
+                    'errors' => ['students' => ['Some student nodes are not mapped to the selected block hierarchy.']]
+                ], 422);
+            }
+
+            // Process attendance in a transaction
+            DB::beginTransaction();
             foreach ($validated['students'] as $studentData) {
                 $studentId = $studentData['student_id'];
-                $isPresent = $studentData['is_present'] ?? true;
+                $isPresent = $studentData['is_present'];
                 $remarks = $studentData['remarks'] ?? null;
 
                 // Check if attendance already exists for this student and date
@@ -133,14 +158,13 @@ class HostelAttendanceController extends TenantController
                     ->first();
 
                 if ($existingAttendance) {
-                    // Update existing record
                     $existingAttendance->update([
+                        'hostel_id' => $validated['hostel_id'], // Ensure hostel is consistent
                         'is_present' => $isPresent,
                         'remarks' => $remarks,
                         'marked_by' => Auth::id(),
                     ]);
                 } else {
-                    // Create new record
                     HostelAttendance::create([
                         'school_id' => $schoolId,
                         'student_id' => $studentId,
@@ -155,11 +179,22 @@ class HostelAttendanceController extends TenantController
 
             DB::commit();
 
-            return redirect()->route('receptionist.hostel-attendance.index')
-                ->with('success', 'Hostel attendance marked successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Hostel attendance metrics synchronized successfully for ' . count($validated['students']) . ' student nodes.'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to save attendance: ' . $e->getMessage()])->withInput();
+            if (DB::transactionLevel() > 0) DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception during batch synchronization: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -210,8 +245,8 @@ class HostelAttendanceController extends TenantController
         }
 
         // Sorting - use joins but ensure we select the primary key to preserve model hydration
-        $sortColumn = $request->get('sort', 'attendance_date');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'attendance_date');
+        $sortDirection = $request->input('direction', 'desc');
         $allowedSortColumns = ['attendance_date', 'admission_no', 'hostel_name'];
         if (in_array($sortColumn, $allowedSortColumns)) {
             if ($sortColumn === 'admission_no') {
@@ -241,7 +276,7 @@ class HostelAttendanceController extends TenantController
         }
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $attendances = $query->paginate($perPage)->withQueryString();
 
         // Debug logging

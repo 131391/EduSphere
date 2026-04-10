@@ -43,16 +43,30 @@ class BoardingTypeController extends TenantController
     public function store(StoreBoardingTypeRequest $request)
     {
         try {
-            $this->service->createType(
+            $type = $this->service->createType(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Boarding type created successfully!',
+                    'data' => $type
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.boarding-types.index',
                 'Boarding type created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create boarding type: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create boarding type: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class BoardingTypeController extends TenantController
             $type = BoardingType::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateType($type, $request->validated());
+            $type = $this->service->updateType($type, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Boarding type updated successfully!',
+                    'data' => $type
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.boarding-types.index',
                 'Boarding type updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update boarding type: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update boarding type: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class BoardingTypeController extends TenantController
 
             $this->service->deleteType($type);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Boarding type deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.boarding-types.index',
                 'Boarding type deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete boarding type: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.boarding-types.index',
                 'Failed to delete boarding type: ' . $e->getMessage()

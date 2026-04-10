@@ -92,7 +92,22 @@ class FeePaymentController extends TenantController
         $result = $this->paymentService->collectPayment($this->school, $data);
 
         if ($result['success']) {
-            return redirect()->route('fee-payments.index')->with('success', $result['message']);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'receipt_no' => $result['receipt_no'] ?? null,
+                    'redirect' => route('school.fee-payments.receipt', $result['receipt_no'] ?? 0)
+                ]);
+            }
+            return redirect()->route('school.fee-payments.index')->with('success', $result['message']);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message']
+            ], 422);
         }
 
         return back()->with('error', $result['message'])->withInput();

@@ -61,16 +61,34 @@ class ExamController extends TenantController
             return back()->with('error', 'No active academic year found. Please set an active academic year first.');
         }
 
-        Exam::create([
-            'school_id' => $this->getSchoolId(),
-            'academic_year_id' => $activeAcademicYear->id,
-            'class_id' => $request->class_id,
-            'exam_type_id' => $request->exam_type_id,
-            'month' => $request->month,
-            'status' => 'scheduled',
-        ]);
+        try {
+            $exam = Exam::create([
+                'school_id' => $this->getSchoolId(),
+                'academic_year_id' => $activeAcademicYear->id,
+                'class_id' => $request->class_id,
+                'exam_type_id' => $request->exam_type_id,
+                'month' => $request->month,
+                'status' => \App\Enums\ExamStatus::Scheduled,
+            ]);
 
-        return redirect()->route('school.examination.exams.index')->with('success', 'Exam created successfully.');
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Exam scheduled successfully!',
+                    'data' => $exam->load(['academicYear', 'class', 'examType'])
+                ]);
+            }
+
+            return redirect()->route('school.examination.exams.index')->with('success', 'Exam created successfully.');
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to schedule exam: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to schedule exam: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -101,6 +119,8 @@ class ExamController extends TenantController
         ]);
 
         $exam = Exam::findOrFail($request->exam_id);
+        $this->authorizeTenant($exam);
+
         $class = ClassModel::findOrFail($request->class_id);
         $subject = Subject::findOrFail($request->subject_id);
         
@@ -135,13 +155,33 @@ class ExamController extends TenantController
             'academic_year_id' => 'required|exists:academic_years,id',
         ]);
 
-        $result = $this->resultService->saveMarks($this->school, $validated);
+        try {
+            $exam = Exam::findOrFail($validated['exam_id']);
+            $this->authorizeTenant($exam);
 
-        if ($result['success']) {
-            return redirect()->route('school.examination.marks.index')->with('success', $result['message']);
+            $result = $this->resultService->saveMarks($this->school, $validated);
+
+            if ($result['success']) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $result['message']
+                    ]);
+                }
+                return redirect()->route('school.examination.marks.index')->with('success', $result['message']);
+            }
+
+            throw new \Exception($result['message']);
+
+        } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to save marks: ' . $e->getMessage()
+                ], 422);
+            }
+            return back()->with('error', 'Failed to save marks: ' . $e->getMessage())->withInput();
         }
-
-        return back()->with('error', $result['message'])->withInput();
     }
 
     /**
@@ -177,9 +217,25 @@ class ExamController extends TenantController
 
     public function destroy(Exam $exam)
     {
-        $this->authorizeTenant($exam);
-        $exam->delete();
+        try {
+            $exam->delete();
 
-        return redirect()->route('school.examination.exams.index')->with('success', 'Exam deleted successfully.');
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Exam schedule removed successfully!'
+                ]);
+            }
+
+            return redirect()->route('school.examination.exams.index')->with('success', 'Exam deleted successfully.');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to remove examination: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->route('school.examination.exams.index')->with('error', 'Failed to remove exam: ' . $e->getMessage());
+        }
     }
 }

@@ -54,39 +54,56 @@ class TransportAttendanceController extends TenantController
      */
     public function getRoutes(Request $request)
     {
-        $schoolId = $this->getSchoolId();
-        
-        $request->validate([
-            'vehicle_id' => 'required|exists:vehicles,id',
-        ]);
+        try {
+            $schoolId = $this->getSchoolId();
+            
+            $request->validate([
+                'vehicle_id' => 'required|exists:vehicles,id',
+            ]);
 
-        $vehicle = Vehicle::findOrFail($request->vehicle_id);
-        
-        // Verify tenant ownership
-        if ($vehicle->school_id !== $schoolId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            $vehicle = Vehicle::findOrFail($request->vehicle_id);
+            
+            // Verify tenant ownership
+            if ($vehicle->school_id !== $schoolId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Integrity violation',
+                    'errors' => ['vehicle_id' => ['The selected vehicle is not part of this institutional registry.']]
+                ], 422);
+            }
+
+            // Get routes for this vehicle
+            $routes = TransportRoute::where('school_id', $schoolId)
+                ->where('vehicle_id', $request->vehicle_id)
+                ->where('status', RouteStatus::Active)
+                ->orderBy('route_name')
+                ->get(['id', 'route_name']);
+            
+            $routesArray = $routes->map(function($route) {
+                    return [
+                        'id' => $route->id,
+                        'route_name' => $route->route_name,
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            return response()->json([
+                'success' => true,
+                'routes' => $routesArray,
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Get routes for this vehicle
-        $routes = TransportRoute::where('school_id', $schoolId)
-            ->where('vehicle_id', $request->vehicle_id)
-            ->where('status', RouteStatus::Active)
-            ->orderBy('route_name')
-            ->get(['id', 'route_name']);
-        
-        $routesArray = $routes->map(function($route) {
-                return [
-                    'id' => $route->id,
-                    'route_name' => $route->route_name,
-                ];
-            })
-            ->values()
-            ->toArray();
-
-        return response()->json([
-            'success' => true,
-            'routes' => $routesArray,
-        ]);
     }
 
     /**
@@ -94,72 +111,87 @@ class TransportAttendanceController extends TenantController
      */
     public function getStudents(Request $request)
     {
-        $schoolId = $this->getSchoolId();
-        
-        $request->validate([
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'route_id' => 'required|exists:transport_routes,id',
-        ]);
+        try {
+            $schoolId = $this->getSchoolId();
+            
+            $request->validate([
+                'vehicle_id' => 'required|exists:vehicles,id',
+                'route_id' => 'required|exists:transport_routes,id',
+            ]);
 
-        $vehicle = Vehicle::findOrFail($request->vehicle_id);
-        $route = TransportRoute::findOrFail($request->route_id);
-        
-        // Verify tenant ownership
-        if ($vehicle->school_id !== $schoolId || $route->school_id !== $schoolId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+            $vehicle = Vehicle::findOrFail($request->vehicle_id);
+            $route = TransportRoute::findOrFail($request->route_id);
+            
+            // Verify tenant ownership
+            if ($vehicle->school_id !== $schoolId || $route->school_id !== $schoolId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Integrity violation',
+                    'errors' => ['vehicle_id' => ['Unauthorized data access detected.']]
+                ], 422);
+            }
 
-        // Verify route belongs to vehicle
-        if ($route->vehicle_id !== $vehicle->id) {
-            return response()->json(['error' => 'Route does not belong to the selected vehicle'], 400);
-        }
+            // Verify route belongs to vehicle
+            if ($route->vehicle_id !== $vehicle->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Topology mismatch',
+                    'errors' => ['route_id' => ['The selected route does not belong to the selected vehicle manifest.']]
+                ], 422);
+            }
 
-        // Get current academic year
-        $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
-            ->where('is_current', true)
-            ->first();
-
-        if (!$currentAcademicYear) {
+            // Get current academic year
             $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
-                ->latest('start_date')
-                ->first();
-        }
+                ->where('is_current', true)
+                ->first() ?: AcademicYear::where('school_id', $schoolId)->latest('start_date')->first();
 
-        if (!$currentAcademicYear) {
+            if (!$currentAcademicYear) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Temporal context missing',
+                    'errors' => ['academic_year' => ['No active academic session found. Please establish an academic year before verifying boarding.']]
+                ], 422);
+            }
+
+            // Get students assigned to this route in the current academic year
+            $students = StudentTransportAssignment::with([
+                    'student.class',
+                    'student.section',
+                    'busStop'
+                ])
+                ->where('school_id', $schoolId)
+                ->where('route_id', $request->route_id)
+                ->where('academic_year_id', $currentAcademicYear->id)
+                ->whereNull('deleted_at') // Only active assignments
+                ->get()
+                ->map(function ($assignment) {
+                    return [
+                        'id' => $assignment->student_id,
+                        'assignment_id' => $assignment->id,
+                        'admission_no' => $assignment->student->admission_no,
+                        'name' => trim($assignment->student->first_name . ' ' . $assignment->student->middle_name . ' ' . $assignment->student->last_name),
+                        'class' => $assignment->student->class->name ?? 'N/A',
+                        'section' => $assignment->student->section->name ?? 'N/A',
+                        'bus_stop_name' => $assignment->busStop->bus_stop_name ?? 'N/A',
+                    ];
+                });
+
             return response()->json([
                 'success' => true,
-                'students' => [],
-                'message' => 'No academic year found',
+                'students' => $students,
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Get students assigned to this route in the current academic year
-        $students = StudentTransportAssignment::with([
-                'student.class',
-                'student.section',
-                'busStop'
-            ])
-            ->where('school_id', $schoolId)
-            ->where('route_id', $request->route_id)
-            ->where('academic_year_id', $currentAcademicYear->id)
-            ->whereNull('deleted_at') // Only active assignments
-            ->get()
-            ->map(function ($assignment) {
-                return [
-                    'id' => $assignment->student_id,
-                    'assignment_id' => $assignment->id,
-                    'admission_no' => $assignment->student->admission_no,
-                    'name' => trim($assignment->student->first_name . ' ' . $assignment->student->middle_name . ' ' . $assignment->student->last_name),
-                    'class' => $assignment->student->class->name ?? 'N/A',
-                    'section' => $assignment->student->section->name ?? 'N/A',
-                    'bus_stop_name' => $assignment->busStop->bus_stop_name ?? 'N/A',
-                ];
-            });
-
-        return response()->json([
-            'success' => true,
-            'students' => $students,
-        ]);
     }
 
     /**
@@ -167,135 +199,95 @@ class TransportAttendanceController extends TenantController
      */
     public function store(Request $request)
     {
-        $schoolId = $this->getSchoolId();
-        
-        $validated = $request->validate([
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'route_id' => 'required|exists:transport_routes,id',
-            'attendance_type' => ['required', 'integer', Rule::enum(TransportAttendanceType::class)],
-            'attendance_date' => 'required|date',
-            'students' => 'required|array|min:1',
-            'students.*' => 'required|exists:students,id',
-        ]);
-
-        // Verify tenant ownership
-        $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
-        $route = TransportRoute::findOrFail($validated['route_id']);
-
-        if ($vehicle->school_id !== $schoolId || $route->school_id !== $schoolId) {
-            abort(403, 'Unauthorized access');
-        }
-
-        // Verify route belongs to vehicle
-        if ($route->vehicle_id !== $vehicle->id) {
-            return back()->withErrors(['route_id' => 'Route does not belong to the selected vehicle.'])->withInput();
-        }
-
-        // Get current academic year
-        $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
-            ->where('is_current', true)
-            ->first();
-
-        if (!$currentAcademicYear) {
-            $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
-                ->latest('start_date')
-                ->first();
-        }
-
-        if (!$currentAcademicYear) {
-            return back()->withErrors(['academic_year' => 'No academic year found. Please create an academic year first.'])->withInput();
-        }
-
-        // Get student assignments to verify they belong to the route
-        $assignments = StudentTransportAssignment::where('school_id', $schoolId)
-            ->where('route_id', $validated['route_id'])
-            ->where('academic_year_id', $currentAcademicYear->id)
-            ->whereIn('student_id', $validated['students'])
-            ->whereNull('deleted_at')
-            ->get()
-            ->keyBy('student_id');
-
-        // Check if all students are assigned to this route
-        $invalidStudents = array_diff($validated['students'], $assignments->pluck('student_id')->toArray());
-        if (!empty($invalidStudents)) {
-            return back()->withErrors(['students' => 'Some selected students are not assigned to this route.'])->withInput();
-        }
-
-        // Get students that were checked (present) vs unchecked (absent)
-        $checkedStudents = $request->input('checked_students', []);
-        // Convert to integers for comparison
-        $checkedStudents = array_map('intval', $checkedStudents);
-        $isPresentMap = [];
-        foreach ($validated['students'] as $studentId) {
-            $isPresentMap[$studentId] = in_array((int)$studentId, $checkedStudents, true);
-        }
-
-        // Use transaction to ensure data consistency
-        DB::beginTransaction();
         try {
-            $attendanceRecords = [];
+            $schoolId = $this->getSchoolId();
+            
+            $validated = $request->validate([
+                'vehicle_id' => 'required|exists:vehicles,id',
+                'route_id' => 'required|exists:transport_routes,id',
+                'attendance_type' => ['required', 'integer', Rule::enum(TransportAttendanceType::class)],
+                'attendance_date' => 'required|date',
+                'students' => 'required|array|min:1',
+                'students.*' => 'required|exists:students,id',
+                'checked_students' => 'nullable|array',
+            ]);
+
+            // Verify tenant ownership
+            $vehicle = Vehicle::where('id', $validated['vehicle_id'])->where('school_id', $schoolId)->firstOrFail();
+            $route = TransportRoute::where('id', $validated['route_id'])->where('school_id', $schoolId)->firstOrFail();
+
+            if ($route->vehicle_id !== $vehicle->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Topology mismatch',
+                    'errors' => ['route_id' => ['The selected route does not belong to the selected vehicle manifest.']]
+                ], 422);
+            }
+
+            $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
+                ->where('is_current', true)
+                ->first() ?: AcademicYear::where('school_id', $schoolId)->latest('start_date')->first();
+
+            if (!$currentAcademicYear) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Temporal context missing',
+                    'errors' => ['academic_year' => ['No active academic session found.']]
+                ], 422);
+            }
+
+            // Get students that were checked (present)
+            $checkedStudents = $request->input('checked_students', []);
+            $checkedStudents = array_map('intval', $checkedStudents);
+            
+            DB::beginTransaction();
+            
             $markedBy = auth()->id();
+            $presentCount = 0;
+            $absentCount = 0;
 
             foreach ($validated['students'] as $studentId) {
-                try {
-                    // Check if attendance already exists for this student, date, and type
-                    $existing = TransportAttendance::where('school_id', $schoolId)
-                        ->where('student_id', $studentId)
-                        ->where('attendance_date', $validated['attendance_date'])
-                        ->where('attendance_type', (int)$validated['attendance_type'])
-                        ->first();
+                $isPresent = in_array((int)$studentId, $checkedStudents, true);
+                
+                TransportAttendance::updateOrCreate(
+                    [
+                        'school_id' => $schoolId,
+                        'student_id' => $studentId,
+                        'attendance_date' => $validated['attendance_date'],
+                        'attendance_type' => (int)$validated['attendance_type'],
+                    ],
+                    [
+                        'vehicle_id' => $validated['vehicle_id'],
+                        'route_id' => $validated['route_id'],
+                        'academic_year_id' => $currentAcademicYear->id,
+                        'is_present' => $isPresent,
+                        'marked_by' => $markedBy,
+                    ]
+                );
 
-                    if ($existing) {
-                        // Update existing record
-                        $existing->update([
-                            'is_present' => $isPresentMap[$studentId] ?? false,
-                            'marked_by' => $markedBy,
-                        ]);
-                        $attendanceRecords[] = $existing;
-                    } else {
-                        // Create new record
-                        $attendanceRecords[] = TransportAttendance::create([
-                            'school_id' => $schoolId,
-                            'student_id' => $studentId,
-                            'vehicle_id' => $validated['vehicle_id'],
-                            'route_id' => $validated['route_id'],
-                            'academic_year_id' => $currentAcademicYear->id,
-                            'attendance_date' => $validated['attendance_date'],
-                            'attendance_type' => (int)$validated['attendance_type'], // Ensure integer
-                            'is_present' => $isPresentMap[$studentId] ?? false,
-                            'marked_by' => $markedBy,
-                        ]);
-                    }
-                } catch (\Exception $e) {
-                    throw $e; // Re-throw to trigger rollback
-                }
+                if ($isPresent) $presentCount++; else $absentCount++;
             }
 
             DB::commit();
 
-            $presentCount = count(array_filter($isPresentMap));
-            $absentCount = count($isPresentMap) - $presentCount;
+            return response()->json([
+                'success' => true,
+                'message' => "Attendance synchronized. Present: {$presentCount}, Absent: {$absentCount}",
+                'stats' => ['present' => $presentCount, 'absent' => $absentCount]
+            ]);
 
-            return redirect()->route('receptionist.transport-attendance.index')
-                ->with('success', "Attendance marked successfully. Present: {$presentCount}, Absent: {$absentCount}");
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            return back()->withErrors($e->errors())->withInput();
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            // Show user-friendly error message
-            $errorMessage = 'Failed to save attendance. ';
-            if (str_contains($e->getMessage(), 'Table') && str_contains($e->getMessage(), "doesn't exist")) {
-                $errorMessage .= 'Database table not found. Please contact administrator.';
-            } elseif (str_contains($e->getMessage(), 'SQLSTATE')) {
-                $errorMessage .= 'Database error occurred. Please try again.';
-            } else {
-                $errorMessage .= $e->getMessage();
-            }
-            
-            return back()->withErrors(['error' => $errorMessage])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -313,15 +305,15 @@ class TransportAttendanceController extends TenantController
 
         $selectedVehicle = null;
         $selectedRoute = null;
-        $selectedMonth = $request->get('month', date('Y-m'));
+        $selectedMonth = $request->input('month', date('Y-m'));
         $attendanceData = [];
         $students = [];
 
         // If filters are provided, fetch data
         if ($request->filled('vehicle_id') && $request->filled('route_id') && $request->filled('month')) {
-            $vehicleId = $request->get('vehicle_id');
-            $routeId = $request->get('route_id');
-            $month = $request->get('month');
+            $vehicleId = $request->input('vehicle_id');
+            $routeId = $request->input('route_id');
+            $month = $request->input('month');
 
             // Validate vehicle and route
             $selectedVehicle = Vehicle::where('school_id', $schoolId)
@@ -432,39 +424,56 @@ class TransportAttendanceController extends TenantController
      */
     public function getRoutesForReport(Request $request)
     {
-        $schoolId = $this->getSchoolId();
-        
-        $request->validate([
-            'vehicle_id' => 'required|exists:vehicles,id',
-        ]);
+        try {
+            $schoolId = $this->getSchoolId();
+            
+            $request->validate([
+                'vehicle_id' => 'required|exists:vehicles,id',
+            ]);
 
-        $vehicle = Vehicle::findOrFail($request->vehicle_id);
-        
-        // Verify tenant ownership
-        if ($vehicle->school_id !== $schoolId) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            $vehicle = Vehicle::findOrFail($request->vehicle_id);
+            
+            // Verify tenant ownership
+            if ($vehicle->school_id !== $schoolId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Integrity violation',
+                    'errors' => ['vehicle_id' => ['The selected vehicle is not part of this institutional registry.']]
+                ], 422);
+            }
+
+            // Get routes for this vehicle
+            $routes = TransportRoute::where('school_id', $schoolId)
+                ->where('vehicle_id', $request->vehicle_id)
+                ->where('status', RouteStatus::Active)
+                ->orderBy('route_name')
+                ->get(['id', 'route_name']);
+            
+            $routesArray = $routes->map(function($route) {
+                    return [
+                        'id' => $route->id,
+                        'route_name' => $route->route_name,
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            return response()->json([
+                'success' => true,
+                'routes' => $routesArray,
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'System exception: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Get routes for this vehicle
-        $routes = TransportRoute::where('school_id', $schoolId)
-            ->where('vehicle_id', $request->vehicle_id)
-            ->where('status', RouteStatus::Active)
-            ->orderBy('route_name')
-            ->get(['id', 'route_name']);
-        
-        $routesArray = $routes->map(function($route) {
-                return [
-                    'id' => $route->id,
-                    'route_name' => $route->route_name,
-                ];
-            })
-            ->values()
-            ->toArray();
-
-        return response()->json([
-            'success' => true,
-            'routes' => $routesArray,
-        ]);
     }
 }
 

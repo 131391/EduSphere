@@ -43,16 +43,30 @@ class FeeNameController extends TenantController
     public function store(StoreFeeNameRequest $request)
     {
         try {
-            $this->service->createFeeName(
+            $feeName = $this->service->createFeeName(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee name created successfully!',
+                    'data' => $feeName
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.fee-names.index',
                 'Fee name created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create fee name: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create fee name: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class FeeNameController extends TenantController
             $feeName = FeeName::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateFeeName($feeName, $request->validated());
+            $feeName = $this->service->updateFeeName($feeName, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee name updated successfully!',
+                    'data' => $feeName
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.fee-names.index',
                 'Fee name updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update fee name: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update fee name: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class FeeNameController extends TenantController
 
             $this->service->deleteFeeName($feeName);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee name deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.fee-names.index',
                 'Fee name deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete fee name: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.fee-names.index',
                 'Failed to delete fee name: ' . $e->getMessage()

@@ -27,12 +27,12 @@ class HostelController extends TenantController
         }
 
         // Sorting
-        $sortColumn = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'created_at');
+        $sortDirection = $request->input('direction', 'desc');
         $query->orderBy($sortColumn, $sortDirection);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $hostels = $query->paginate($perPage)->withQueryString();
 
         // Statistics for the page
@@ -52,21 +52,34 @@ class HostelController extends TenantController
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'hostel_name' => 'required|string|max:255',
-            'hostel_incharge' => 'nullable|string|max:255',
-            'capability' => 'nullable|integer|min:1',
-            'hostel_create_date' => 'nullable|date',
-        ]);
-
-        $schoolId = $this->getSchoolId();
-        $validated['school_id'] = $schoolId;
-
         try {
-            Hostel::create($validated);
-            return redirect()->route('receptionist.hostels.index')->with('success', 'Hostel added successfully.');
+            $validated = $request->validate([
+                'hostel_name' => 'required|string|max:255',
+                'hostel_incharge' => 'nullable|string|max:255',
+                'capability' => 'nullable|integer|min:1',
+                'hostel_create_date' => 'nullable|date',
+            ]);
+
+            $schoolId = $this->getSchoolId();
+            $validated['school_id'] = $schoolId;
+
+            $hostel = Hostel::create($validated);
+            return response()->json([
+                'success' => true,
+                'message' => 'Hostel added successfully to the registry.',
+                'data' => $hostel
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create hostel. Please try again.'])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to establish new hostel node: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -77,18 +90,31 @@ class HostelController extends TenantController
     {
         $this->authorizeTenant($hostel);
 
-        $validated = $request->validate([
-            'hostel_name' => 'required|string|max:255',
-            'hostel_incharge' => 'nullable|string|max:255',
-            'capability' => 'nullable|integer|min:1',
-            'hostel_create_date' => 'nullable|date',
-        ]);
-
         try {
+            $validated = $request->validate([
+                'hostel_name' => 'required|string|max:255',
+                'hostel_incharge' => 'nullable|string|max:255',
+                'capability' => 'nullable|integer|min:1',
+                'hostel_create_date' => 'nullable|date',
+            ]);
+
             $hostel->update($validated);
-            return redirect()->route('receptionist.hostels.index')->with('success', 'Hostel updated successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Hostel specification updated successfully.',
+                'data' => $hostel
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update hostel. Please try again.'])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Update transmission failed: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -99,15 +125,28 @@ class HostelController extends TenantController
     {
         $this->authorizeTenant($hostel);
 
-        // TODO: Check if hostel has floors/rooms/beds assigned
-        // if ($hostel->floors()->count() > 0) {
-        //     return redirect()->route('receptionist.hostels.index')
-        //         ->with('error', 'Cannot delete hostel. It has assigned floors.');
-        // }
+        try {
+            // Check if hostel has floors/rooms/beds assigned before deletion
+            if (method_exists($hostel, 'floors') && $hostel->floors()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot decommission hostel. Active dependency nodes (floors) detected.',
+                    'errors' => ['hostel' => ['Active floors are linked to this hostel.']]
+                ], 422);
+            }
 
-        $hostel->delete();
+            $hostel->delete();
 
-        return redirect()->route('receptionist.hostels.index')->with('success', 'Hostel deleted successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Hostel successfully struck from registry.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Decommissioning failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

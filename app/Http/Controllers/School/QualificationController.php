@@ -43,16 +43,30 @@ class QualificationController extends TenantController
     public function store(StoreQualificationRequest $request)
     {
         try {
-            $this->service->createQualification(
+            $qualification = $this->service->createQualification(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Qualification created successfully!',
+                    'data' => $qualification
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.qualifications.index',
                 'Qualification created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create qualification: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create qualification: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class QualificationController extends TenantController
             $qualification = Qualification::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateQualification($qualification, $request->validated());
+            $qualification = $this->service->updateQualification($qualification, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Qualification updated successfully!',
+                    'data' => $qualification
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.qualifications.index',
                 'Qualification updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update qualification: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update qualification: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class QualificationController extends TenantController
 
             $this->service->deleteQualification($qualification);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Qualification deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.qualifications.index',
                 'Qualification deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete qualification: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.qualifications.index',
                 'Failed to delete qualification: ' . $e->getMessage()

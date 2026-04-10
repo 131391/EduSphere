@@ -9,9 +9,9 @@ class StudentController extends TenantController
 {
     public function index(Request $request)
     {
-        $school = app('currentSchool');
+        $school = $this->getSchool();
         
-        $query = \App\Models\Student::where('school_id', $school->id)
+        $query = \App\Models\Student::where('school_id', $this->getSchoolId())
             ->with(['class', 'section']);
 
         // Filters
@@ -35,7 +35,7 @@ class StudentController extends TenantController
         }
 
         $students = $query->latest()->paginate(20);
-        $classes = \App\Models\ClassModel::where('school_id', $school->id)->get();
+        $classes = \App\Models\ClassModel::where('school_id', $this->getSchoolId())->get();
         $sections = $request->filled('class_id') 
             ? \App\Models\Section::where('class_id', $request->class_id)->get()
             : collect();
@@ -53,8 +53,8 @@ class StudentController extends TenantController
 
     public function show($id)
     {
-        $school = app('currentSchool');
-        $student = \App\Models\Student::where('school_id', $school->id)
+        $school = $this->getSchool();
+        $student = \App\Models\Student::where('school_id', $this->getSchoolId())
             ->with(['class', 'section', 'fees' => function($q) {
                 $q->latest()->take(10);
             }, 'attendance' => function($q) {
@@ -67,9 +67,9 @@ class StudentController extends TenantController
 
     public function edit($id)
     {
-        $school = app('currentSchool');
-        $student = \App\Models\Student::where('school_id', $school->id)->findOrFail($id);
-        $classes = \App\Models\ClassModel::where('school_id', $school->id)->get();
+        $school = $this->getSchool();
+        $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
+        $classes = \App\Models\ClassModel::where('school_id', $this->getSchoolId())->get();
         $sections = \App\Models\Section::where('class_id', $student->class_id)->get();
         
         return view('school.students.edit', compact('student', 'classes', 'sections'));
@@ -77,8 +77,8 @@ class StudentController extends TenantController
 
     public function update(Request $request, $id)
     {
-        $school = app('currentSchool');
-        $student = \App\Models\Student::where('school_id', $school->id)->findOrFail($id);
+        $school = $this->getSchool();
+        $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -99,8 +99,8 @@ class StudentController extends TenantController
 
     public function destroy($id)
     {
-        $school = app('currentSchool');
-        $student = \App\Models\Student::where('school_id', $school->id)->findOrFail($id);
+        $school = $this->getSchool();
+        $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
         
         $student->delete();
 

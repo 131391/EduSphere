@@ -44,6 +44,13 @@ class FeeMasterController extends TenantController
             }
         }
 
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fee configurations saved successfully!'
+            ]);
+        }
+
         return back()->with('success', 'Fee configurations saved successfully.');
     }
 
@@ -55,6 +62,14 @@ class FeeMasterController extends TenantController
             'amount' => $request->amount,
         ]);
 
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fee configuration updated successfully!',
+                'data' => $feeMaster
+            ]);
+        }
+
         return back()->with('success', 'Fee configuration updated successfully.');
     }
 
@@ -62,6 +77,13 @@ class FeeMasterController extends TenantController
     {
         $this->authorizeTenant($feeMaster);
         $feeMaster->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fee configuration deleted successfully!'
+            ]);
+        }
 
         return back()->with('success', 'Fee configuration deleted successfully.');
     }

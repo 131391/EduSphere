@@ -14,11 +14,50 @@
             </a>
         </div>
 
-        <form action="{{ route('receptionist.student-registrations.store') }}" method="POST" enctype="multipart/form-data"
-            novalidate>
-            @csrf
-            @include('receptionist.student-registrations.partials.form')
-        </form>
+        <div x-data="registrationManagement()">
+            <form id="registrationForm" @submit.prevent="submitForm">
+                @csrf
+                
+                {{-- Centralized Validation Summary --}}
+                <template x-if="Object.keys(errors).length > 0">
+                    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl animate-fade-in shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                            <span class="text-xs font-black text-red-700 uppercase tracking-widest">Registration Validation Exceptions</span>
+                        </div>
+                        <ul class="list-disc list-inside space-y-1">
+                            <template x-for="(messages, field) in errors" :key="field">
+                                <template x-for="message in messages" :key="message">
+                                    <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
+                                </template>
+                            </template>
+                        </ul>
+                    </div>
+                </template>
+
+                @include('receptionist.student-registrations.partials.form')
+
+                {{-- Action Buttons --}}
+                <div class="mt-8 flex items-center justify-end gap-4 bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                    <a href="{{ route('receptionist.student-registrations.index') }}" 
+                       class="px-6 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="px-10 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-lg shadow-teal-200 dark:shadow-none transition-all flex items-center gap-2"
+                            :class="submitting ? 'opacity-75 cursor-wait' : ''"
+                            :disabled="submitting">
+                        <template x-if="!submitting">
+                            <i class="fas fa-check-circle"></i>
+                        </template>
+                        <template x-if="submitting">
+                            <i class="fas fa-circle-notch animate-spin"></i>
+                        </template>
+                        <span x-text="submitting ? 'Processing Registration...' : 'Complete Registration'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
 
         @if($errors->any())
             <script>
@@ -36,29 +75,73 @@
 
 @push('scripts')
     <script>
-        // Helper function to load image preview from storage path
-        function loadImagePreview(imagePath, previewId, iconId, removeBtnId) {
-            if (!imagePath) return;
+        function registrationManagement() {
+            return {
+                submitting: false,
+                errors: {},
 
-            const preview = document.getElementById(previewId);
-            const icon = document.getElementById(iconId);
-            const removeBtn = document.getElementById(removeBtnId);
+                async submitForm() {
+                    this.submitting = true;
+                    this.errors = {};
 
-            if (preview) {
-                // Construct the full URL to the image
-                const imageUrl = `/storage/${imagePath}`;
-                preview.src = imageUrl;
-                preview.classList.remove('hidden');
-            }
-            if (icon) {
-                icon.classList.add('hidden');
-            }
-            if (removeBtn) {
-                removeBtn.classList.remove('hidden');
+                    const form = document.getElementById('registrationForm');
+                    const formData = new FormData(form);
+
+                    try {
+                        const response = await fetch("{{ route('receptionist.student-registrations.store') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (response.status === 422) {
+                            this.errors = result.errors;
+                            if (window.Toast) {
+                                window.Toast.fire({
+                                    icon: 'error',
+                                    title: 'Please check the form for errors'
+                                });
+                            }
+                            // Scroll to the first error or the summary
+                            this.$nextTick(() => {
+                                const firstError = document.querySelector('.border-red-500, .bg-red-50');
+                                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            });
+                        } else if (response.ok) {
+                            if (window.Toast) {
+                                await window.Toast.fire({
+                                    icon: 'success',
+                                    title: result.message || 'Registration completed successfully'
+                                });
+                            }
+                            if (result.redirect) {
+                                window.location.href = result.redirect;
+                            }
+                        } else {
+                            throw new Error(result.message || 'Something went wrong');
+                        }
+                    } catch (error) {
+                        console.error('Registration Error:', error);
+                        if (window.Toast) {
+                            window.Toast.fire({
+                                icon: 'error',
+                                title: error.message || 'Failed to process registration'
+                            });
+                        }
+                    } finally {
+                        this.submitting = false;
+                    }
+                }
             }
         }
 
         $(document).ready(function () {
+            // ... the rest of the existing script ...
             // Restore photos from sessionStorage if validation errors occurred
             @if($errors->any())
                 const photoFields = [

@@ -58,8 +58,8 @@ class SchoolController extends Controller
         }
 
         // Sorting
-        $sortColumn = $request->get('sort', 'id');
-        $sortDirection = $request->get('direction', 'desc');
+        $sortColumn = $request->input('sort', 'id');
+        $sortDirection = $request->input('direction', 'desc');
         
         // Validate sort column to prevent SQL injection
         $allowedSortColumns = ['id', 'name', 'code', 'email', 'status', 'created_at', 'subscription_end_date'];
@@ -75,7 +75,7 @@ class SchoolController extends Controller
         $query->orderBy($sortColumn, $sortDirection);
 
         // Per page
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $allowedPerPage = [10, 15, 25, 50, 100];
         if (!in_array($perPage, $allowedPerPage)) {
             $perPage = 15;

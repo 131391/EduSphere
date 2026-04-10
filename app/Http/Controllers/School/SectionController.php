@@ -65,11 +65,25 @@ class SectionController extends TenantController
                 $request->validated()
             );
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Section created successfully!',
+                    'data' => $section
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.sections.index',
                 'Section created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create section: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create section: ' . $e->getMessage());
         }
     }
@@ -112,11 +126,25 @@ class SectionController extends TenantController
 
             $section = $this->sectionService->updateSection($section, $request->validated());
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Section updated successfully!',
+                    'data' => $section
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.sections.index',
                 'Section updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update section: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update section: ' . $e->getMessage());
         }
     }
@@ -129,11 +157,24 @@ class SectionController extends TenantController
 
             $this->sectionService->deleteSection($section);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Section deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.sections.index',
                 'Section deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete section: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.sections.index',
                 'Failed to delete section: ' . $e->getMessage()

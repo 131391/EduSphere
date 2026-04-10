@@ -30,9 +30,14 @@
                     </div>
                     <input type="file" name="father_photo" accept="image/*" 
                            onchange="previewImage(event, 'father-photo-preview', 'father-photo-icon', 'father-photo-remove')"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                           @change="delete errors.father_photo"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all"
+                           :class="errors.father_photo ? 'ring-1 ring-red-500 rounded-lg' : ''">
+                    <template x-if="errors.father_photo">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.father_photo[0]"></p>
+                    </template>
                     @error('father_photo')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-1 hidden">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
@@ -58,9 +63,14 @@
                     </div>
                     <input type="file" name="mother_photo" accept="image/*" 
                            onchange="previewImage(event, 'mother-photo-preview', 'mother-photo-icon', 'mother-photo-remove')"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                           @change="delete errors.mother_photo"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all"
+                           :class="errors.mother_photo ? 'ring-1 ring-red-500 rounded-lg' : ''">
+                    <template x-if="errors.mother_photo">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.mother_photo[0]"></p>
+                    </template>
                     @error('mother_photo')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-1 hidden">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
@@ -86,9 +96,14 @@
                     </div>
                     <input type="file" name="student_photo" accept="image/*" 
                            onchange="previewImage(event, 'student-photo-preview', 'student-photo-icon', 'student-photo-remove')"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                           @change="delete errors.student_photo"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all"
+                           :class="errors.student_photo ? 'ring-1 ring-red-500 rounded-lg' : ''">
+                    <template x-if="errors.student_photo">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.student_photo[0]"></p>
+                    </template>
                     @error('student_photo')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-1 hidden">{{ $message }}</p>
                     @enderror
                 </div>
             </div>

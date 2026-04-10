@@ -187,15 +187,13 @@
                 'title' => 'Edit',
             ],
             [
-                'type' => 'form',
-                'action' => function($row) {
-                    return route('school.student-enquiries.destroy', $row->id);
+                'type' => 'button',
+                'onclick' => function($row) {
+                    return "confirmDelete({$row->id})";
                 },
-                'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
-                'confirm' => 'Are you sure you want to delete this enquiry?',
             ],
         ];
     @endphp
@@ -253,9 +251,18 @@ document.addEventListener('alpine:init', () => {
         editMode: false,
         enquiryId: null,
         submitting: false,
+        errors: {},
+        showDeleteModal: false,
+        deleteEnquiryId: null,
         
         init() {
-            // No longer reopening modal via server-side errors since we use AJAX
+            // Listen for global confirmDelete events from the data table
+            window.confirmDelete = (id) => {
+                this.deleteEnquiryId = id;
+                if (confirm('Are you sure you want to delete this enquiry?')) {
+                    this.deleteEnquiry();
+                }
+            };
         },
 
         closeModal() {
@@ -380,7 +387,43 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        async deleteEnquiry() {
+            if (!this.deleteEnquiryId) return;
+            
+            this.submitting = true;
+            try {
+                const response = await fetch(`/school/student-enquiries/${this.deleteEnquiryId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ _method: 'DELETE' })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'success', title: result.message });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message || 'Deletion failed');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            } finally {
+                this.submitting = false;
+                this.deleteEnquiryId = null;
+            }
+        },
+
         displayErrors(errors) {
+            this.errors = errors;
             Object.keys(errors).forEach(field => {
                 const input = document.querySelector(`[name="${field}"]`);
                 if (input) {
@@ -413,6 +456,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         clearErrors() {
+            this.errors = {};
             document.querySelectorAll('.border-red-500').forEach(el => {
                 el.classList.remove('border-red-500');
                 el.classList.add('border-gray-300');

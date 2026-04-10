@@ -1,171 +1,190 @@
 @extends('layouts.receptionist')
 
-@section('title', 'Student Attendance - Hostel')
+@section('title', 'Hostel Registry - Receptionist')
+@section('page-title', 'Hostel Registry')
+@section('page-description', 'Track and synchronize student residential attendance metrics')
 
 @section('content')
 <div class="space-y-6" x-data="hostelAttendanceManagement()" x-init="init()">
-    <!-- Success Message -->
-
-    {{-- Page Header --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    {{-- Statistics Overview --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
             <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Student Attendance</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Mark attendance for students assigned to hostels</p>
+                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Managed Blocks</p>
+                <p class="text-3xl font-black text-gray-800">{{ $hostels->count() }}</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Back
-                </a>
+            <div class="bg-indigo-100 p-4 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-building text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Residents</p>
+                <p class="text-3xl font-black text-gray-800" x-text="students.length || '0'">0</p>
+            </div>
+            <div class="bg-emerald-100 p-4 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-users text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group text-emerald-600">
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Synchronized</p>
+                <p class="text-3xl font-black" x-text="checkedStudents.length || '0'">0</p>
+            </div>
+            <div class="bg-emerald-50 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-check-circle text-2xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group text-red-600">
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Exceptions</p>
+                <p class="text-3xl font-black" x-text="students.length - checkedStudents.length || '0'">0</p>
+            </div>
+            <div class="bg-red-50 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
             </div>
         </div>
     </div>
 
-    <!-- Attendance Form -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <form id="attendanceForm" method="POST" action="{{ route('receptionist.hostel-attendance.store') }}">
-            @csrf
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <!-- Hostel Selection -->
+    {{-- Configuration Header --}}
+    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
+        <div class="flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div class="flex items-center gap-4 w-full lg:w-auto">
+                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}" 
+                   class="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        Select Hostel <span class="text-red-500">*</span>
-                    </label>
-                    <select 
-                        name="hostel_id" 
-                        id="hostel_id"
-                        x-ref="hostelSelect"
-                        class="w-full px-4 py-2 border @error('hostel_id') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        required
-                    >
-                        <option value="">Select Hostel</option>
+                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">Hostel Registry</h2>
+                    <p class="text-sm text-gray-500 font-medium">Capture real-time occupancy and presence metrics</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+                <div class="w-full sm:w-64">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic px-1">Hostel Block</label>
+                    <select x-model="formData.hostel_id" @change="loadStudents(); delete errors.hostel_id"
+                            class="w-full px-5 py-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 shadow-sm text-sm font-bold"
+                            :class="errors.hostel_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                        <option value="">Select Block</option>
                         @foreach($hostels as $hostel)
-                            <option value="{{ $hostel->id }}" {{ old('hostel_id') == $hostel->id ? 'selected' : '' }}>
-                                {{ $hostel->hostel_name }}
-                            </option>
+                            <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
                         @endforeach
                     </select>
-                    @error('hostel_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
                 </div>
 
-                <!-- Attendance Date -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        Date <span class="text-red-500">*</span>
-                    </label>
-                    <input 
-                        type="date" 
-                        name="attendance_date" 
-                        id="attendance_date"
-                        x-model="formData.attendance_date"
-                        value="{{ old('attendance_date', date('Y-m-d')) }}"
-                        max="{{ date('Y-m-d') }}"
-                        class="w-full px-4 py-2 border @error('attendance_date') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                        required
-                    >
-                    @error('attendance_date')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                <div class="w-full sm:w-48">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic px-1">Registry Date</label>
+                    <input type="date" x-model="formData.attendance_date" @change="loadStudents(); delete errors.attendance_date"
+                           max="{{ date('Y-m-d') }}"
+                           class="w-full px-5 py-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 shadow-sm text-sm font-bold"
+                           :class="errors.attendance_date ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                </div>
+
+                <div class="w-full sm:w-auto pt-6 lg:pt-0">
+                    <button @click="save()" :disabled="!canSubmit || submitting"
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-sm font-black rounded-xl transition-all shadow-xl shadow-emerald-100 disabled:opacity-50 group">
+                        <template x-if="submitting">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span>
+                        </template>
+                        <i x-show="!submitting" class="fas fa-check-double mr-2 group-hover:scale-110 transition-transform"></i>
+                        <span x-text="submitting ? 'Propagating...' : 'Finalize Registry'"></span>
+                    </button>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Submit Button -->
-            <div class="flex justify-end mb-6">
-                <button 
-                    type="submit"
-                    :disabled="!canSubmit"
-                    class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                    <i class="fas fa-check mr-2"></i>
-                    Submit
-                </button>
+    {{-- Registry Grid --}}
+    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl shadow-gray-100/50 border border-gray-100 overflow-hidden relative min-h-[400px]">
+        {{-- Loading Overlay --}}
+        <div x-show="loading" class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center transition-all">
+            <div class="flex flex-col items-center gap-4">
+                <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                <p class="text-xs font-black text-indigo-600 uppercase tracking-widest">Querying Matrix...</p>
             </div>
+        </div>
 
-            <!-- Students List -->
-            <div x-show="students.length > 0" class="mt-6">
-                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-                            <i class="fas fa-users mr-2"></i>
-                            Students List (<span x-text="students.length"></span>)
+        {{-- Global Error Announcement --}}
+        <template x-if="Object.keys(errors).length > 0">
+            <div class="m-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                    <span class="text-xs font-black text-red-700 uppercase tracking-widest">Synchronization Exceptions</span>
+                </div>
+                <ul class="list-disc list-inside space-y-1">
+                    <template x-for="(messages, field) in errors" :key="field">
+                        <template x-for="message in messages" :key="message">
+                            <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
+                        </template>
+                    </template>
+                </ul>
+            </div>
+        </template>
+
+        <template x-if="students.length > 0">
+            <div class="p-0">
+                <div class="bg-gray-50/50 border-b border-gray-100 px-8 py-4 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fas fa-users-viewfinder"></i>
+                            Occupancy Segment
                         </h3>
-                        <div class="flex gap-2">
-                            <button 
-                                type="button"
-                                @click="checkAll()"
-                                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-                            >
-                                <i class="fas fa-check-double mr-2"></i>
-                                Check All
-                            </button>
-                            <button 
-                                type="button"
-                                @click="uncheckAll()"
-                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-                            >
-                                <i class="fas fa-times mr-2"></i>
-                                Uncheck All
-                            </button>
-                        </div>
+                        <span class="px-3 py-1 bg-white border border-gray-100 rounded-lg text-[10px] font-black text-indigo-600" x-text="students.length + ' Nodes Loaded'"></span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="checkAll()" class="px-4 py-2 bg-white border border-gray-200 text-indigo-600 text-[10px] font-black uppercase rounded-lg hover:bg-indigo-50 transition-colors">Select All</button>
+                        <button @click="uncheckAll()" class="px-4 py-2 bg-white border border-gray-200 text-red-600 text-[10px] font-black uppercase rounded-lg hover:bg-red-50 transition-colors">Clear All</button>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-teal-50 dark:bg-gray-700">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50/30">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                    <input 
-                                        type="checkbox" 
-                                        @change="toggleAll($event)"
-                                        :checked="checkedStudents.length === students.length && students.length > 0"
-                                        class="rounded border-gray-300 text-teal-600 focus:ring-teal-500 w-4 h-4"
-                                    >
+                                <th class="px-8 py-5 text-left">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" @change="toggleAll($event)" :checked="checkedStudents.length === students.length"
+                                               class="w-5 h-5 rounded-lg border-gray-200 text-indigo-600 focus:ring-indigo-500/20 transition-all cursor-pointer">
+                                        <span class="text-[10px] text-gray-400 uppercase font-black tracking-widest">Status</span>
+                                    </div>
                                 </th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Admission No</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Student Name</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Class</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Floor</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Room</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Bed No</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Remarks</th>
+                                <th class="px-6 py-5 text-left text-[10px] text-gray-400 uppercase font-black tracking-widest">Resident Identity</th>
+                                <th class="px-6 py-5 text-left text-[10px] text-gray-400 uppercase font-black tracking-widest">Residential Node</th>
+                                <th class="px-8 py-5 text-left text-[10px] text-gray-400 uppercase font-black tracking-widest">Observations / Remarks</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="divide-y divide-gray-50">
                             <template x-for="(student, index) in students" :key="student.id">
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input 
-                                            type="checkbox" 
-                                            :id="'student_' + student.id"
-                                            :checked="checkedStudents.includes(String(student.id))"
-                                            @change="updateAttendanceStatus(student.id, $event.target.checked)"
-                                            class="rounded border-gray-300 text-teal-600 focus:ring-teal-500 w-4 h-4"
-                                        >
-                                        <input type="hidden" :name="'students[' + index + '][student_id]'" :value="student.id">
-                                        <input type="hidden" :name="'students[' + index + '][is_present]'" :id="'is_present_' + student.id" :value="checkedStudents.includes(String(student.id)) ? '1' : '0'">
+                                <tr class="hover:bg-indigo-50/10 transition-colors group">
+                                    <td class="px-8 py-6">
+                                        <label class="flex items-center gap-3 cursor-pointer">
+                                            <input type="checkbox" 
+                                                   :checked="checkedStudents.includes(String(student.id))"
+                                                   @change="updateStatus(student.id, $event.target.checked)"
+                                                   class="w-6 h-6 rounded-xl border-gray-200 text-emerald-600 focus:ring-emerald-500/20 transition-all cursor-pointer shadow-sm">
+                                            <span class="text-xs font-black uppercase tracking-widest" :class="checkedStudents.includes(String(student.id)) ? 'text-emerald-600' : 'text-gray-400'" x-text="checkedStudents.includes(String(student.id)) ? 'Present' : 'Absent'"></span>
+                                        </label>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white" x-text="student.admission_no"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="student.name"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        <span x-text="student.class_name || 'N/A'"></span>
-                                        <span x-show="student.section_name" x-text="' - ' + student.section_name" class="text-gray-500"></span>
+                                    <td class="px-6 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="font-black text-gray-800" x-text="student.name"></span>
+                                            <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter" x-text="student.admission_no + ' • ' + (student.class_name || 'N/A') + ' ' + (student.section_name || '')"></span>
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="student.floor_name || 'N/A'"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="student.room_name || 'N/A'"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" x-text="student.bed_no || 'N/A'"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <input 
-                                            type="text" 
-                                            :name="'students[' + index + '][remarks]'"
-                                            placeholder="Optional remarks..."
-                                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                                        >
+                                    <td class="px-6 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-gray-700 text-xs" x-text="'Room ' + student.room_name"></span>
+                                            <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter" x-text="student.floor_name + ' • Unit ' + student.bed_no"></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <input type="text" x-model="student.remarks"
+                                               placeholder="Add observational note..."
+                                               class="w-full px-4 py-2 bg-gray-50/50 border border-transparent rounded-xl focus:bg-white focus:border-indigo-100 transition-all text-xs font-bold placeholder:text-gray-300">
                                     </td>
                                 </tr>
                             </template>
@@ -173,196 +192,156 @@
                     </table>
                 </div>
             </div>
+        </template>
 
-            <!-- Empty State -->
-            <div x-show="students.length === 0 && formData.hostel_id" class="text-center py-12">
-                <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
-                <p class="text-gray-500 dark:text-gray-400">No students found for the selected hostel.</p>
+        {{-- Initial/Empty State --}}
+        <div x-show="!loading && students.length === 0" class="flex flex-col items-center justify-center py-24 px-8 text-center animate-fade-in">
+            <div class="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-200 mb-8 rotate-12 group-hover:rotate-0 transition-transform duration-500">
+                <i class="fas fa-users-viewfinder text-5xl"></i>
             </div>
-        </form>
+            <h3 class="text-xl font-black text-gray-800 tracking-tight mb-2" x-text="formData.hostel_id ? 'Matrix Exhausted' : 'Segment Unselected'"></h3>
+            <p class="text-sm text-gray-500 max-w-sm font-medium" x-text="formData.hostel_id ? 'No student nodes are currently mapped to this residential block.' : 'Please select a hostel block to initialize the occupancy matrix.'"></p>
+        </div>
     </div>
 </div>
 
 @push('scripts')
 <script>
-function hostelAttendanceManagement() {
-    return {
+document.addEventListener('alpine:init', () => {
+    Alpine.data('hostelAttendanceManagement', () => ({
+        loading: false,
+        submitting: false,
+        errors: {},
         formData: {
             hostel_id: '',
-            attendance_date: '{{ old('attendance_date', date('Y-m-d')) }}',
+            attendance_date: '{{ date('Y-m-d') }}',
         },
         students: [],
         checkedStudents: [],
 
         init() {
-            // Initialize Select2 for hostel dropdown
-            this.$nextTick(() => {
-                setTimeout(() => {
-                    if (typeof $ !== 'undefined') {
-                        const $hostelSelect = $('#hostel_id');
-                        
-                        // Only initialize if not already initialized by global script
-                        if (!$hostelSelect.hasClass('select2-hidden-accessible')) {
-                            $hostelSelect.select2({
-                                placeholder: 'Select Hostel',
-                                allowClear: false,
-                                width: '100%'
-                            });
-                        }
-                        
-                        // Attach event handlers
-                        $hostelSelect.off('select2:select select2:change').on('select2:select select2:change', (e) => {
-                            this.formData.hostel_id = e.target.value || $hostelSelect.val();
-                            this.loadStudents();
-                        });
-
-                        // Apply error styling if needed
-                        @if($errors->has('hostel_id'))
-                            setTimeout(() => {
-                                $hostelSelect.next('.select2-container').find('.select2-selection').addClass('border-red-500');
-                            }, 50);
-                        @endif
-
-                        // Sync Select2 value with Alpine.js if old value exists
-                        @if(old('hostel_id'))
-                            setTimeout(() => {
-                                $hostelSelect.val('{{ old('hostel_id') }}').trigger('change');
-                                this.formData.hostel_id = '{{ old('hostel_id') }}';
-                                this.loadStudents();
-                            }, 200);
-                        @endif
-                    }
-                }, 100);
-            });
         },
 
         get canSubmit() {
-            return this.formData.hostel_id && 
-                   this.formData.attendance_date && 
-                   this.students.length > 0;
+            return this.formData.hostel_id && this.formData.attendance_date && this.students.length > 0;
         },
 
         async loadStudents() {
+            this.errors = {};
             if (!this.formData.hostel_id) {
                 this.students = [];
                 this.checkedStudents = [];
                 return;
             }
 
+            this.loading = true;
             try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-                
                 const response = await fetch('{{ route('receptionist.hostel-attendance.get-students') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({
-                        hostel_id: this.formData.hostel_id,
-                    }),
+                    body: JSON.stringify({ hostel_id: this.formData.hostel_id })
                 });
 
-                if (!response.ok) {
-                    throw new Error('Failed to load students');
-                }
-
                 const data = await response.json();
-                
-                if (data.success && Array.isArray(data.students)) {
-                    this.students = data.students;
-                    // Check all students by default
+                if (data.success) {
+                    this.students = data.students.map(s => ({ ...s, remarks: '' }));
                     this.checkedStudents = this.students.map(s => String(s.id));
-                    
-                    // Initialize hidden inputs after DOM update
-                    this.$nextTick(() => {
-                        this.students.forEach(student => {
-                            const hiddenInput = document.getElementById('is_present_' + student.id);
-                            if (hiddenInput) {
-                                hiddenInput.value = '1';
-                            }
-                        });
-                    });
                 } else {
                     this.students = [];
                     this.checkedStudents = [];
                 }
             } catch (error) {
-                this.students = [];
-                this.checkedStudents = [];
+                console.error('Matrix Query failure:', error);
+                if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Operational failure: Matrix retrieval blocked.' });
+            } finally {
+                this.loading = false;
             }
         },
 
         checkAll() {
             this.checkedStudents = this.students.map(s => String(s.id));
-            // Update all hidden inputs
-            this.students.forEach(student => {
-                const hiddenInput = document.getElementById('is_present_' + student.id);
-                if (hiddenInput) {
-                    hiddenInput.value = '1';
-                }
-            });
         },
 
         uncheckAll() {
             this.checkedStudents = [];
-            // Update all hidden inputs
-            this.students.forEach(student => {
-                const hiddenInput = document.getElementById('is_present_' + student.id);
-                if (hiddenInput) {
-                    hiddenInput.value = '0';
-                }
-            });
         },
 
         toggleAll(event) {
-            if (event.target.checked) {
-                this.checkAll();
-            } else {
-                this.uncheckAll();
-            }
+            if (event.target.checked) this.checkAll();
+            else this.uncheckAll();
         },
 
-        updateAttendanceStatus(studentId, isChecked) {
-            const hiddenInput = document.getElementById('is_present_' + studentId);
-            if (hiddenInput) {
-                hiddenInput.value = isChecked ? '1' : '0';
-            }
-        },
-    };
-}
-
-// Close date picker when clicking outside or on sidebar
-document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('attendance_date');
-    const sidebar = document.querySelector('aside');
-    
-    if (dateInput && sidebar) {
-        // Close date picker when clicking on sidebar
-        sidebar.addEventListener('click', function(e) {
-            // Only blur if clicking on a link or button
-            if (e.target.closest('a') || e.target.closest('button')) {
-                dateInput.blur();
-            }
-        });
-        
-        // Close date picker when clicking outside the input
-        document.addEventListener('click', function(e) {
-            if (!dateInput.contains(e.target) && !e.target.closest('aside')) {
-                // Only blur if the date input is focused
-                if (document.activeElement === dateInput) {
-                    // Small delay to allow date selection
-                    setTimeout(() => {
-                        if (document.activeElement === dateInput) {
-                            dateInput.blur();
-                        }
-                    }, 100);
+        updateStatus(studentId, isChecked) {
+            if (isChecked) {
+                if (!this.checkedStudents.includes(String(studentId))) {
+                    this.checkedStudents.push(String(studentId));
                 }
+            } else {
+                this.checkedStudents = this.checkedStudents.filter(id => id !== String(studentId));
             }
-        });
-    }
+        },
+
+        async save() {
+            if (this.submitting) return;
+
+            this.submitting = true;
+            this.errors = {};
+            
+            try {
+                const payload = {
+                    hostel_id: this.formData.hostel_id,
+                    attendance_date: this.formData.attendance_date,
+                    students: this.students.map(s => ({
+                        student_id: s.id,
+                        is_present: this.checkedStudents.includes(String(s.id)),
+                        remarks: s.remarks
+                    }))
+                };
+
+                const response = await fetch('{{ route('receptionist.hostel-attendance.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        await window.Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Attendance synchronized'
+                        });
+                    }
+                } else if (response.status === 422) {
+                    this.errors = result.errors || {};
+                } else {
+                    throw new Error(result.message || 'Registry synchronization failure');
+                }
+            } catch (error) {
+                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
+            } finally {
+                this.submitting = false;
+            }
+        }
+    }));
 });
 </script>
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+    }
+</style>
 @endpush
 @endsection
-

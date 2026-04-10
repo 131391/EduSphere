@@ -183,12 +183,10 @@
                 'title' => 'Edit',
             ],
             [
-                'type' => 'form',
-                'action' => function($row) {
-                    return route('receptionist.visitors.destroy', $row->id);
+                'type' => 'button',
+                'onclick' => function($row) {
+                    return "confirmDelete({$row->id})";
                 },
-                'method' => 'DELETE',
-                'confirm' => 'Are you sure you want to delete this visitor?',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
@@ -207,10 +205,10 @@
         Visitor List
     </x-data-table>
 
-    <!-- Add/Edit Visitor Modal -->
     <x-modal name="visitor-modal" alpineTitle="editMode ? 'Edit Visitor' : 'Add New Visitor'" maxWidth="4xl">
-        <form :action="editMode ? `/receptionist/visitors/${visitorId}` : '{{ route('receptionist.visitors.store') }}'" 
-              method="POST" enctype="multipart/form-data" 
+        <form @submit.prevent="submitForm"
+              method="POST" 
+              enctype="multipart/form-data" 
               class="p-6"
               >
             @csrf
@@ -219,21 +217,40 @@
             </template>
             <input type="hidden" name="visitor_id" :value="visitorId" x-show="editMode">
 
+            {{-- Centralized Validation Summary --}}
+            <template x-if="Object.keys(errors).length > 0">
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl animate-fade-in">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
+                    </div>
+                    <ul class="list-disc list-inside space-y-1">
+                        <template x-for="(messages, field) in errors" :key="field">
+                            <template x-for="message in messages" :key="message">
+                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
+                            </template>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
             <div class="grid grid-cols-2 gap-6">
                 <!-- Left Column -->
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Mobile No <span class="text-red-500">*</span></label>
-                        <input type="tel" name="mobile" x-model="formData.mobile" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                               class="w-full px-4 py-2 border @error('mobile') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        @error('mobile')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="tel" name="mobile" x-model="formData.mobile" @input="delete errors.mobile" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                               :class="errors.mobile ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.mobile">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.mobile[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visit Purpose <span class="text-red-500">*</span></label>
-                        <select name="visit_purpose" x-model="formData.visit_purpose"
-                                class="w-full px-4 py-2 border @error('visit_purpose') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="visit_purpose" x-model="formData.visit_purpose" @change="delete errors.visit_purpose"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                                :class="errors.visit_purpose ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                             <option value="">Select Purpose</option>
                             <option value="Walk in">Walk in</option>
                             <option value="General">General</option>
@@ -247,39 +264,41 @@
                             <option value="For Document">For Document</option>
                             <option value="Transfer Certificate">Transfer Certificate</option>
                         </select>
-                        @error('visit_purpose')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <template x-if="errors.visit_purpose">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.visit_purpose[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email ID</label>
-                        <input type="email" name="email" x-model="formData.email"
-                               class="w-full px-4 py-2 border @error('email') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        @error('email')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="email" name="email" x-model="formData.email" @input="delete errors.email"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                               :class="errors.email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.email">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.email[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Purpose</label>
-                        <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose"
-                               class="w-full px-4 py-2 border @error('meeting_purpose') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        @error('meeting_purpose')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose" @input="delete errors.meeting_purpose"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                               :class="errors.meeting_purpose ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.meeting_purpose">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_purpose[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Priority <span class="text-red-500">*</span></label>
-                        <select name="priority" 
-                                x-model="formData.priority"
-                                class="w-full px-4 py-2 border @error('priority') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="priority" x-model="formData.priority" @change="delete errors.priority"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                                :class="errors.priority ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                             <option value="">Select Priority</option>
                             @foreach($priorities as $priority)
                             <option value="{{ $priority->value }}">{{ $priority->label() }}</option>
                             @endforeach
                         </select>
-                        @error('priority')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <template x-if="errors.priority">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.priority[0]"></p>
+                        </template>
                     </div>
                 </div>
 
@@ -287,36 +306,40 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" x-model="formData.name"
-                               class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        @error('name')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="text" name="name" x-model="formData.name" @input="delete errors.name"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                               :class="errors.name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.name">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.name[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor Type <span class="text-red-500">*</span></label>
-                        <select name="visitor_type" x-model="formData.visitor_type"
-                                class="w-full px-4 py-2 border @error('visitor_type') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="visitor_type" x-model="formData.visitor_type" @change="delete errors.visitor_type"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                                :class="errors.visitor_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                             <option value="">Select Type</option>
                             <option value="Parent">Parent</option>
                             <option value="General Visitor">General Visitor</option>
                         </select>
-                        @error('visitor_type')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <template x-if="errors.visitor_type">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.visitor_type[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Address</label>
-                        <input type="text" name="address" x-model="formData.address"
-                               class="w-full px-4 py-2 border @error('address') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        @error('address')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="text" name="address" x-model="formData.address" @input="delete errors.address"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                               :class="errors.address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.address">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.address[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Meeting with <span class="text-red-500">*</span></label>
-                        <select name="meeting_with" x-model="formData.meeting_with"
-                                class="w-full px-4 py-2 border @error('meeting_with') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="meeting_with" x-model="formData.meeting_with" @change="delete errors.meeting_with"
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                                :class="errors.meeting_with ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                             <option value="">Select Person</option>
                             <option value="Principal">Principal</option>
                             <option value="Teacher">Teacher</option>
@@ -324,17 +347,18 @@
                             <option value="Student">Student</option>
                             <option value="Non Teaching">Non Teaching</option>
                         </select>
-                        @error('meeting_with')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <template x-if="errors.meeting_with">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_with[0]"></p>
+                        </template>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">No. of Guest(s)</label>
-                        <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1"
-                               class="w-full px-4 py-2 border @error('no_of_guests') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        @error('no_of_guests')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1" @input="delete errors.no_of_guests"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                               :class="errors.no_of_guests ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.no_of_guests">
+                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.no_of_guests[0]"></p>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -342,16 +366,17 @@
             <!-- Meeting Type -->
             <div class="mt-4">
                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Type <span class="text-red-500">*</span></label>
-                <select name="meeting_type" x-model="formData.meeting_type"
-                        class="w-full px-4 py-2 border @error('meeting_type') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="meeting_type" x-model="formData.meeting_type" @change="delete errors.meeting_type"
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.meeting_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Select Meeting Type</option>
                     @foreach($meetingTypes as $meetingType)
                     <option value="{{ $meetingType->value }}">{{ $meetingType->label() }}</option>
                     @endforeach
                 </select>
-                @error('meeting_type')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.meeting_type">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_type[0]"></p>
+                </template>
             </div>
 
             <!-- Upload Section -->
@@ -404,8 +429,12 @@
                     Close
                 </button>
                 <button type="submit"
-                        class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
-                    Submit
+                        :disabled="submitting"
+                        class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md disabled:opacity-50 flex items-center gap-2">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <span x-text="submitting ? 'Processing...' : 'Submit'"></span>
                 </button>
             </div>
         </form>
@@ -450,14 +479,14 @@
                         class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
                     Cancel
                 </button>
-                <form :action="`/receptionist/visitors/${deleteVisitorId}`" method="POST" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-md">
-                        Delete
-                    </button>
-                </form>
+                <button @click="deleteVisitor"
+                        :disabled="submitting"
+                        class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-md disabled:opacity-50 flex items-center gap-2">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <span x-text="submitting ? 'Deleting...' : 'Delete'"></span>
+                </button>
             </div>
         </div>
     </div>
@@ -467,11 +496,8 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('visitorManagement', () => ({
-        showModal: false,
-        showDeleteModal: false,
-        editMode: false,
-        visitorId: null,
-        deleteVisitorId: null,
+        submitting: false,
+        errors: {},
         formData: {
             name: '',
             mobile: '',
@@ -627,17 +653,86 @@ document.addEventListener('alpine:init', () => {
         },
         
         openAddModal() {
-            // Hide error banner when opening modal
-            const errorBanner = document.getElementById('error-banner');
-            if (errorBanner) {
-                errorBanner.style.display = 'none';
-            }
-            
-            // Reset form to ensure clean state
             this.resetForm();
-            
-            // Open the modal
             this.$dispatch('open-modal', 'visitor-modal');
+        },
+
+        async submitForm() {
+            this.submitting = true;
+            this.errors = {};
+            
+            try {
+                const url = this.editMode 
+                    ? `/receptionist/visitors/${this.visitorId}` 
+                    : '{{ route('receptionist.visitors.store') }}';
+                
+                const method = this.editMode ? 'POST' : 'POST'; // We use POST for both, adding _method for PUT
+                const formData = new FormData(this.$el);
+                
+                if (this.editMode) {
+                    formData.append('_method', 'PUT');
+                }
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'success', title: result.message });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else if (response.status === 422) {
+                    this.errors = result.errors || {};
+                } else {
+                    throw new Error(result.message || 'Operation failed');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        async deleteVisitor() {
+            this.submitting = true;
+            try {
+                const response = await fetch(`/receptionist/visitors/${this.deleteVisitorId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ _method: 'DELETE' })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'success', title: result.message });
+                    }
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message || 'Deletion failed');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({ icon: 'error', title: error.message });
+                }
+            } finally {
+                this.submitting = false;
+            }
         },
         
         openEditModal(visitor) {

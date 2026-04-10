@@ -77,11 +77,25 @@ class ClassController extends TenantController
                 'name' => $class->name,
             ]);
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Class "' . $class->name . '" created successfully!',
+                    'data' => $class
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.classes.index',
                 'Class "' . $class->name . '" created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create class: ' . $e->getMessage()
+                ], 500);
+            }
             $this->logActivity('class.create.error', 'Failed to create class', [
                 'error' => $e->getMessage(),
                 'data' => $request->validated(),
@@ -145,11 +159,25 @@ class ClassController extends TenantController
                 'name' => $class->name,
             ]);
 
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Class "' . $class->name . '" updated successfully!',
+                    'data' => $class
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.classes.index',
                 'Class "' . $class->name . '" updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update class: ' . $e->getMessage()
+                ], 500);
+            }
             $this->logActivity('class.update.error', 'Failed to update class', [
                 'class_id' => $id,
                 'error' => $e->getMessage(),
@@ -177,11 +205,24 @@ class ClassController extends TenantController
                 'name' => $className,
             ]);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Class "' . $className . '" deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.classes.index',
                 'Class "' . $className . '" deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete class: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.classes.index',
                 'Failed to delete class: ' . $e->getMessage()

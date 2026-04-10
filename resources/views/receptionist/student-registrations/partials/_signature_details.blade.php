@@ -30,9 +30,14 @@
                     </div>
                     <input type="file" name="father_signature" accept="image/*" 
                            onchange="previewImage(event, 'father-signature-preview', 'father-signature-icon', 'father-signature-remove')"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                           @change="delete errors.father_signature"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all"
+                           :class="errors.father_signature ? 'ring-1 ring-red-500 rounded-lg' : ''">
+                    <template x-if="errors.father_signature">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.father_signature[0]"></p>
+                    </template>
                     @error('father_signature')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-1 hidden">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
@@ -58,9 +63,14 @@
                     </div>
                     <input type="file" name="mother_signature" accept="image/*" 
                            onchange="previewImage(event, 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove')"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                           @change="delete errors.mother_signature"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all"
+                           :class="errors.mother_signature ? 'ring-1 ring-red-500 rounded-lg' : ''">
+                    <template x-if="errors.mother_signature">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.mother_signature[0]"></p>
+                    </template>
                     @error('mother_signature')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-1 hidden">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
@@ -86,9 +96,14 @@
                     </div>
                     <input type="file" name="student_signature" accept="image/*" 
                            onchange="previewImage(event, 'student-signature-preview', 'student-signature-icon', 'student-signature-remove')"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                           @change="delete errors.student_signature"
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-all"
+                           :class="errors.student_signature ? 'ring-1 ring-red-500 rounded-lg' : ''">
+                    <template x-if="errors.student_signature">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.student_signature[0]"></p>
+                    </template>
                     @error('student_signature')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        <p class="text-red-500 text-xs mt-1 hidden">{{ $message }}</p>
                     @enderror
                 </div>
             </div>

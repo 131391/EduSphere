@@ -43,16 +43,30 @@ class ReligionController extends TenantController
     public function store(StoreReligionRequest $request)
     {
         try {
-            $this->service->createReligion(
+            $religion = $this->service->createReligion(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Religion created successfully!',
+                    'data' => $religion
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.religions.index',
                 'Religion created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create religion: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to create religion: ' . $e->getMessage());
         }
     }
@@ -63,13 +77,27 @@ class ReligionController extends TenantController
             $religion = Religion::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
-            $this->service->updateReligion($religion, $request->validated());
+            $religion = $this->service->updateReligion($religion, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Religion updated successfully!',
+                    'data' => $religion
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.religions.index',
                 'Religion updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update religion: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->backWithError('Failed to update religion: ' . $e->getMessage());
         }
     }
@@ -82,11 +110,24 @@ class ReligionController extends TenantController
 
             $this->service->deleteReligion($religion);
 
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Religion deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.religions.index',
                 'Religion deleted successfully!'
             );
         } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete religion: ' . $e->getMessage()
+                ], 500);
+            }
             return $this->redirectWithError(
                 'school.religions.index',
                 'Failed to delete religion: ' . $e->getMessage()
