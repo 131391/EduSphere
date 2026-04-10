@@ -120,6 +120,8 @@
 
     {{-- Search and Table Section --}}
     @php
+        use App\Enums\AdmissionStatus;
+
         $tableColumns = [
             [
                 'key' => 'registration_no',
@@ -194,7 +196,7 @@
             [
                 'name' => 'admission_status',
                 'label' => 'Status',
-                'options' => collect(\App\Enums\AdmissionStatus::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray(),
+                'options' => collect(AdmissionStatus::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray(),
             ],
         ];
 

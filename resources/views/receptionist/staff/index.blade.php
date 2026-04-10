@@ -1,3 +1,7 @@
+@php
+    use App\Enums\StaffPost;
+    use App\Enums\Gender;
+@endphp
 @extends('layouts.receptionist')
 
 @section('title', 'Staff Management - Receptionist')
@@ -170,7 +174,7 @@
                                     x-model="formData.post"
                                     class="w-full px-4 py-2 border {{ $errors->has('post') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                                 <option value="">Select Post</option>
-                                @foreach(\App\Enums\StaffPost::cases() as $post)
+                                @foreach(StaffPost::cases() as $post)
                                     <option value="{{ $post->value }}" {{ old('post') == $post->value ? 'selected' : '' }}>
                                         {{ $post->label() }}
                                     </option>
@@ -249,7 +253,7 @@
                                     x-model="formData.gender"
                                     class="w-full px-4 py-2 border {{ $errors->has('gender') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                                 <option value="">Choose Gender</option>
-                                @foreach(\App\Enums\Gender::cases() as $gender)
+                                @foreach(Gender::cases() as $gender)
                                     <option value="{{ $gender->value }}" {{ old('gender') == $gender->value ? 'selected' : '' }}>
                                         {{ $gender->label() }}
                                     </option>

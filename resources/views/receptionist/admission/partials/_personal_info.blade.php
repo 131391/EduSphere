@@ -1,3 +1,6 @@
+@php
+    use App\Enums\Gender;
+@endphp
 {{-- Personal Information --}}
 <div class="mb-6">
     <div class="bg-teal-500 text-white px-4 py-3 rounded-t-lg font-semibold">
@@ -44,7 +47,7 @@
                     @foreach(\App\Constants\Gender::getOptions() as $value => $label)
                         @php
                             $currentGender = old('gender', isset($student) ? $student->gender : '');
-                            $currentValue = $currentGender instanceof \App\Enums\Gender ? $currentGender->value : $currentGender;
+                            $currentValue = $currentGender instanceof Gender ? $currentGender->value : $currentGender;
                         @endphp
                         <option value="{{ $value }}" {{ $currentValue == $value ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach

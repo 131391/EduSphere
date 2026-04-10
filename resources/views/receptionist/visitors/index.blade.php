@@ -127,7 +127,7 @@
                 'label' => 'Meeting Type',
                 'sortable' => true,
                 'render' => function($row) {
-                    $meetingType = $row->meeting_type instanceof \App\Enums\VisitorMode 
+                    $meetingType = $row->meeting_type instanceof VisitorMode 
                         ? $row->meeting_type->label() 
                         : ($row->meeting_type ?? 'N/A');
                     return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">' 

@@ -1,3 +1,6 @@
+@php
+    use App\Enums\YesNo;
+@endphp
 @extends('layouts.receptionist')
 
 @section('title', 'Room Inventory - Receptionist')
@@ -94,9 +97,9 @@
                 'label' => 'AMENITIES',
                 'sortable' => false,
                 'render' => function($row) {
-                    $ac = $row->ac->value === \App\Enums\YesNo::Yes->value ? '<span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center" title="AC Available"><i class="fas fa-snowflake text-[10px]"></i></span>' : '';
-                    $cooler = $row->cooler->value === \App\Enums\YesNo::Yes->value ? '<span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center" title="Cooler Available"><i class="fas fa-wind text-[10px]"></i></span>' : '';
-                    $fan = $row->fan->value === \App\Enums\YesNo::Yes->value ? '<span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center" title="Fan Available"><i class="fas fa-fan text-[10px]"></i></span>' : '';
+                    $ac = $row->ac->value === YesNo::Yes->value ? '<span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center" title="AC Available"><i class="fas fa-snowflake text-[10px]"></i></span>' : '';
+                    $cooler = $row->cooler->value === YesNo::Yes->value ? '<span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center" title="Cooler Available"><i class="fas fa-wind text-[10px]"></i></span>' : '';
+                    $fan = $row->fan->value === YesNo::Yes->value ? '<span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center" title="Fan Available"><i class="fas fa-fan text-[10px]"></i></span>' : '';
                     
                     return '<div class="flex items-center gap-2">' . ($ac . $cooler . $fan ?: '<span class="text-gray-300 text-[10px] font-bold italic">Standard</span>') . '</div>';
                 }
@@ -242,7 +245,7 @@
                         <select name="ac" x-model="formData.ac"
                                 @change="delete errors.ac"
                                 class="w-full px-4 py-3 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
-                            @foreach(\App\Enums\YesNo::options() as $value => $label)
+                            @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
@@ -252,7 +255,7 @@
                         <select name="cooler" x-model="formData.cooler"
                                 @change="delete errors.cooler"
                                 class="w-full px-4 py-3 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
-                            @foreach(\App\Enums\YesNo::options() as $value => $label)
+                            @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
@@ -262,7 +265,7 @@
                         <select name="fan" x-model="formData.fan"
                                 @change="delete errors.fan"
                                 class="w-full px-4 py-3 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
-                            @foreach(\App\Enums\YesNo::options() as $value => $label)
+                            @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
@@ -316,9 +319,9 @@ document.addEventListener('alpine:init', () => {
             hostel_id: '',
             hostel_floor_id: '',
             room_name: '',
-            ac: '{{ \App\Enums\YesNo::No->value }}',
-            cooler: '{{ \App\Enums\YesNo::No->value }}',
-            fan: '{{ \App\Enums\YesNo::Yes->value }}',
+            ac: '{{ YesNo::No->value }}',
+            cooler: '{{ YesNo::No->value }}',
+            fan: '{{ YesNo::Yes->value }}',
             room_create_date: '',
         },
         floors: [],
@@ -448,9 +451,9 @@ document.addEventListener('alpine:init', () => {
                 hostel_id: '',
                 hostel_floor_id: '',
                 room_name: '',
-                ac: '{{ \App\Enums\YesNo::No->value }}',
-                cooler: '{{ \App\Enums\YesNo::No->value }}',
-                fan: '{{ \App\Enums\YesNo::Yes->value }}',
+                ac: '{{ YesNo::No->value }}',
+                cooler: '{{ YesNo::No->value }}',
+                fan: '{{ YesNo::Yes->value }}',
                 room_create_date: '{{ date('Y-m-d') }}',
             };
             this.floors = [];

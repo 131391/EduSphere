@@ -1,3 +1,8 @@
+@php
+    use App\Enums\VisitorStatus;
+    use App\Enums\VisitorMode;
+    use App\Enums\VisitorPriority;
+@endphp
 @extends('layouts.receptionist')
 
 @section('title', 'Visitor Details')
@@ -61,13 +66,13 @@
                     </span>
                     <span class="px-3 py-1 bg-white/20 rounded-full text-sm font-medium capitalize">
                         @php
-                            $status = $visitor->status instanceof \App\Enums\VisitorStatus 
+                            $status = $visitor->status instanceof VisitorStatus 
                                 ? $visitor->status 
-                                : \App\Enums\VisitorStatus::Scheduled;
+                                : VisitorStatus::Scheduled;
                             $statusColor = match($status) {
-                                \App\Enums\VisitorStatus::Completed => 'text-green-300',
-                                \App\Enums\VisitorStatus::CheckedIn => 'text-blue-300',
-                                \App\Enums\VisitorStatus::Cancelled => 'text-red-300',
+                                VisitorStatus::Completed => 'text-green-300',
+                                VisitorStatus::CheckedIn => 'text-blue-300',
+                                VisitorStatus::Cancelled => 'text-red-300',
                                 default => 'text-yellow-300',
                             };
                             $statusLabel = $status->label();
@@ -102,7 +107,7 @@
                 <div class="flex-shrink-0">
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         @php
-                            $meetingTypeValue = $visitor->meeting_type instanceof \App\Enums\VisitorMode 
+                            $meetingTypeValue = $visitor->meeting_type instanceof VisitorMode 
                                 ? $visitor->meeting_type->value 
                                 : $visitor->meeting_type;
                             $icon = match($meetingTypeValue) {
@@ -117,7 +122,7 @@
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Meeting Type</p>
                     <p class="text-lg font-semibold text-gray-900">
-                        {{ $visitor->meeting_type instanceof \App\Enums\VisitorMode ? $visitor->meeting_type->label() : ($visitor->meeting_type ?? 'N/A') }}
+                        {{ $visitor->meeting_type instanceof VisitorMode ? $visitor->meeting_type->label() : ($visitor->meeting_type ?? 'N/A') }}
                     </p>
                 </div>
             </div>
@@ -134,7 +139,7 @@
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Priority</p>
                     <p class="text-lg font-semibold text-gray-900">
-                        {{ $visitor->priority instanceof \App\Enums\VisitorPriority ? $visitor->priority->label() : ($visitor->priority ?? 'N/A') }}
+                        {{ $visitor->priority instanceof VisitorPriority ? $visitor->priority->label() : ($visitor->priority ?? 'N/A') }}
                     </p>
                 </div>
             </div>

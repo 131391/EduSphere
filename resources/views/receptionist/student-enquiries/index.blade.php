@@ -97,6 +97,8 @@
 
     <!-- Enquiries Table -->
     @php
+        use App\Enums\EnquiryStatus;
+        
         $tableColumns = [
             [
                 'key' => 'enquiry_no',
@@ -148,7 +150,7 @@
                 'sortable' => true,
                 'render' => function($row) {
                     // Convert enum to string for array key lookup
-                    if ($row->form_status instanceof \App\Enums\EnquiryStatus) {
+                    if ($row->form_status instanceof EnquiryStatus) {
                         // Get the enum name (e.g., "PENDING") and convert to lowercase
                         $statusKey = strtolower($row->form_status->name);
                         $label = $row->form_status->label();

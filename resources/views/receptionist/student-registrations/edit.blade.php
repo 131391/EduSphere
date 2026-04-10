@@ -1,3 +1,6 @@
+@php
+    use App\Enums\AdmissionStatus;
+@endphp
 @extends('layouts.receptionist')
 
 @section('content')
@@ -31,7 +34,7 @@
                     <select name="admission_status" @change="delete errors.admission_status"
                         class="w-full md:w-1/3 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                         :class="errors.admission_status ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                        @foreach(\App\Enums\AdmissionStatus::cases() as $status)
+                        @foreach(AdmissionStatus::cases() as $status)
                             <option value="{{ $status->value }}" {{ old('admission_status', $studentRegistration->admission_status->value ?? $studentRegistration->admission_status) == $status->value ? 'selected' : '' }}>{{ $status->label() }}
                             </option>
                         @endforeach

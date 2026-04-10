@@ -1,3 +1,7 @@
+@php
+    use App\Enums\EnquiryStatus;
+    use App\Enums\Gender;
+@endphp
 @extends('layouts.receptionist')
 
 @section('title', 'Enquiry Details')
@@ -49,13 +53,13 @@
                     </span>
                     <span class="px-3 py-1 bg-white/20 rounded-full text-sm font-medium capitalize">
                         @php
-                            $status = $studentEnquiry->form_status instanceof \App\Enums\EnquiryStatus 
+                            $status = $studentEnquiry->form_status instanceof EnquiryStatus 
                                 ? $studentEnquiry->form_status 
-                                : \App\Enums\EnquiryStatus::Pending;
+                                : EnquiryStatus::Pending;
                             $statusColor = match($status) {
-                                \App\Enums\EnquiryStatus::Completed => 'text-blue-300',
-                                \App\Enums\EnquiryStatus::Admitted => 'text-green-300',
-                                \App\Enums\EnquiryStatus::Cancelled => 'text-red-300',
+                                EnquiryStatus::Completed => 'text-blue-300',
+                                EnquiryStatus::Admitted => 'text-green-300',
+                                EnquiryStatus::Cancelled => 'text-red-300',
                                 default => 'text-yellow-300',
                             };
                             $statusLabel = $status->label();
@@ -112,7 +116,7 @@
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Gender</p>
                     <p class="text-lg font-semibold text-gray-900">
-                        {{ $studentEnquiry->gender instanceof \App\Enums\Gender ? $studentEnquiry->gender->label() : 'N/A' }}
+                        {{ $studentEnquiry->gender instanceof Gender ? $studentEnquiry->gender->label() : 'N/A' }}
                     </p>
                 </div>
             </div>
