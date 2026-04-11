@@ -19,9 +19,11 @@
         "laravel-vite-plugin": "^1.0",
         "postcss": "^8.4.38",
         "tailwindcss": "^3.4.3",
+        "terser": "^5.46.1",
         "vite": "^5.4.0"
     },
     "dependencies": {
+        "@alpinejs/collapse": "^3.15.11",
         "@inertiajs/vue3": "^2.0.0",
         "@vitejs/plugin-vue": "^5.0.4",
         "@vitejs/plugin-vue-jsx": "^5.0.4",

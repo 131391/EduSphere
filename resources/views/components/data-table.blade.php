@@ -149,7 +149,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @if($data && $data->count() > 0)
                     @foreach($data as $row)
-                    <tr class="hover:bg-gray-50 transition-colors" @click.self.stop x-data="{ row: {{ json_encode($row) }} }">
+                    <tr class="hover:bg-gray-50 transition-colors" x-data="{ row: {{ json_encode($row) }} }">
                         @foreach($columns as $column)
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             @if(isset($column['render']))
@@ -288,19 +288,7 @@
 @push('scripts')
 <script>
 (function() {
-    // Initialize immediately if Alpine is already loaded, otherwise wait for it
-    function initDataTable() {
-        if (typeof Alpine === 'undefined') {
-            // Wait for Alpine to load
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initDataTable);
-            } else {
-                // Check again after a short delay
-                setTimeout(initDataTable, 100);
-            }
-            return;
-        }
-        
+    document.addEventListener('alpine:init', () => {
         Alpine.data('dataTable', () => ({
         searchQuery: '{{ $currentSearch }}',
         currentSort: '{{ $currentSort }}',
@@ -421,17 +409,7 @@
             form.submit();
         }
     }));
-    }
-    
-    // Try to initialize
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDataTable);
-    } else {
-        initDataTable();
-    }
-    
-    // Also listen for alpine:init as a fallback
-    document.addEventListener('alpine:init', initDataTable);
+    });
 })();
 </script>
 @endpush

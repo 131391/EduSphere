@@ -18,12 +18,6 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    <!-- Alpine.js Plugins (must load before Alpine core) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-
-    <!-- Alpine.js Core -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     @stack('styles')
 
     <!-- Dark Mode Persistence -->
@@ -936,8 +930,6 @@
     @stack('scripts')
 
     <x-delete-confirmation />
-
-    <!-- Alpine.js is now loaded in <head> with defer for earlier initialization -->
 
     <script>
         document.addEventListener('alpine:init', () => {

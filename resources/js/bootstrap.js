@@ -1,5 +1,6 @@
 import axios from 'axios';
-// import Alpine from 'alpinejs';
+import Alpine from 'alpinejs';
+import collapse from '@alpinejs/collapse';
 
 // Setup Axios with CSRF token
 window.axios = axios;
@@ -11,9 +12,10 @@ if (token) {
     window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
 }
 
-// Initialize Alpine.js (handled via CDN in layouts or by Livewire v3)
-// window.Alpine = Alpine;
-// Alpine.start();
+// Initialize Alpine.js via Vite bundle (replaces CDN loading)
+Alpine.plugin(collapse);
+window.Alpine = Alpine;
+Alpine.start();
 
 // Global error handling
 window.axios.interceptors.response.use(
