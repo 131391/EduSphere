@@ -17,6 +17,7 @@ class AttendanceReportController extends TenantController
 
     public function __construct(AttendanceReportService $reportService)
     {
+        parent::__construct();
         $this->reportService = $reportService;
     }
 

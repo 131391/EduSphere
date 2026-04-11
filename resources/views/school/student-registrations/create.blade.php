@@ -36,9 +36,9 @@
                 });
             </script>
         @endif
-    </div>
 @endsection
 
+@push('scripts')
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('registrationForm', () => ({

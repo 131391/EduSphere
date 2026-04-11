@@ -36,6 +36,7 @@ class StudentRegistrationController extends TenantController
 
     public function __construct(LocationService $locationService)
     {
+        parent::__construct();
         $this->locationService = $locationService;
     }
 

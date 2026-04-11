@@ -34,8 +34,15 @@ class CorrespondingRelativeController extends TenantController
                 $filters
             );
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return view('school.corresponding-relatives.index', compact('relatives'))->fragment('table');
+            }
+
             return view('school.corresponding-relatives.index', compact('relatives'));
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to load relatives.'], 500);
+            }
             return $this->backWithError('Failed to load corresponding relatives.');
         }
     }
@@ -43,16 +50,27 @@ class CorrespondingRelativeController extends TenantController
     public function store(StoreCorrespondingRelativeRequest $request)
     {
         try {
-            $this->service->createRelative(
+            $relative = $this->service->createRelative(
                 $this->getSchool(),
                 $request->validated()
             );
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Corresponding relative created successfully!',
+                    'data' => $relative
+                ]);
+            }
 
             return $this->redirectWithSuccess(
                 'school.corresponding-relatives.index',
                 'Corresponding relative created successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
             return $this->backWithError('Failed to create corresponding relative: ' . $e->getMessage());
         }
     }
@@ -65,16 +83,27 @@ class CorrespondingRelativeController extends TenantController
 
             $this->service->updateRelative($relative, $request->validated());
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Corresponding relative updated successfully!',
+                    'data' => $relative->fresh()
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.corresponding-relatives.index',
                 'Corresponding relative updated successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
             return $this->backWithError('Failed to update corresponding relative: ' . $e->getMessage());
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             $relative = CorrespondingRelative::where('school_id', $this->getSchoolId())
@@ -82,11 +111,21 @@ class CorrespondingRelativeController extends TenantController
 
             $this->service->deleteRelative($relative);
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Corresponding relative deleted successfully!'
+                ]);
+            }
+
             return $this->redirectWithSuccess(
                 'school.corresponding-relatives.index',
                 'Corresponding relative deleted successfully!'
             );
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
             return $this->redirectWithError(
                 'school.corresponding-relatives.index',
                 'Failed to delete corresponding relative: ' . $e->getMessage()

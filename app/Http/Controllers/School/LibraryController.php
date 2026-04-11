@@ -16,6 +16,7 @@ class LibraryController extends TenantController
 
     public function __construct(LibraryService $libraryService)
     {
+        parent::__construct();
         $this->libraryService = $libraryService;
     }
 
