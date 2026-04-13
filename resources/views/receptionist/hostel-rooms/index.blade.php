@@ -175,96 +175,91 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            {{-- Global Error Announcement --}}
-            <template x-if="Object.keys(errors).length > 0">
-                <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl mx-6 mt-6">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-exclamation-circle text-red-500"></i>
-                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
-                    </div>
-                    <ul class="list-disc list-inside space-y-1">
-                        <template x-for="(messages, field) in errors" :key="field">
-                            <template x-for="message in messages" :key="message">
-                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
-                            </template>
-                        </template>
-                    </ul>
-                </div>
-            </template>
-
-            <div class="p-0 space-y-6">
+            <!-- Form Body - Academic Year Standard -->
+            <div class="space-y-6">
+                <!-- Block & Level Grid -->
                 <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label class="modal-label-premium">Hostel Block <span class="text-red-500">*</span></label>
-                        <select name="hostel_id" x-model="formData.hostel_id" 
-                                @change="loadFloors(); delete errors.hostel_id"
-                                class="modal-input-premium"
-                                :class="errors.hostel_id ? 'border-red-500' : ''">
-                            <option value="">Choose Hostel Block</option>
-                            @foreach($hostels as $hostel)
-                                <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
-                            @endforeach
-                        </select>
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Hostel Block <span class="text-red-500 font-bold">*</span></label>
+                        <div class="relative group">
+                            <select name="hostel_id" x-model="formData.hostel_id" @change="loadFloors(); clearError('hostel_id')"
+                                    class="modal-input-premium appearance-none pr-10" :class="errors.hostel_id ? 'border-red-500 ring-red-500/10' : ''">
+                                <option value="">Choose Hostel Block</option>
+                                @foreach($hostels as $hostel)
+                                    <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:rotate-180 transition-transform duration-300">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
                         <template x-if="errors.hostel_id">
-                            <p class="text-red-500 text-[10px] font-black mt-1 uppercase" x-text="errors.hostel_id[0]"></p>
+                            <p class="modal-error-message" x-text="errors.hostel_id[0]"></p>
                         </template>
                     </div>
 
-                    <div>
-                        <label class="modal-label-premium">Floor Level <span class="text-red-500">*</span></label>
-                        <select name="hostel_floor_id" x-model="formData.hostel_floor_id" :disabled="!formData.hostel_id" id="hostel_floor_id"
-                                @change="delete errors.hostel_floor_id"
-                                class="modal-input-premium"
-                                :class="errors.hostel_floor_id ? 'border-red-500' : ''">
-                            <option value="">Select Floor</option>
-                            <template x-for="floor in floors" :key="floor.id">
-                                <option :value="floor.id" x-text="floor.floor_name"></option>
-                            </template>
-                        </select>
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Floor Level <span class="text-red-500 font-bold">*</span></label>
+                        <div class="relative group">
+                            <select name="hostel_floor_id" x-model="formData.hostel_floor_id" :disabled="!formData.hostel_id"
+                                    @change="clearError('hostel_floor_id')"
+                                    class="modal-input-premium appearance-none pr-10" :class="errors.hostel_floor_id ? 'border-red-500 ring-red-500/10' : ''">
+                                <option value="">Select Floor</option>
+                                <template x-for="floor in floors" :key="floor.id">
+                                    <option :value="floor.id" x-text="floor.floor_name"></option>
+                                </template>
+                            </select>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:rotate-180 transition-transform duration-300">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
                         <template x-if="errors.hostel_floor_id">
-                            <p class="text-red-500 text-[10px] font-black mt-1 uppercase" x-text="errors.hostel_floor_id[0]"></p>
+                            <p class="modal-error-message" x-text="errors.hostel_floor_id[0]"></p>
                         </template>
                     </div>
                 </div>
 
-                <div>
-                    <label class="modal-label-premium">Room Identifier <span class="text-red-500">*</span></label>
-                    <input type="text" name="room_name" x-model="formData.room_name"
-                           placeholder="e.g., Room 101, Deluxe Suite"
-                           @input="delete errors.room_name"
-                           class="modal-input-premium"
-                           :class="errors.room_name ? 'border-red-500' : ''">
+                <!-- Room Designation -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Room Identifier <span class="text-red-500 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input type="text" name="room_name" x-model="formData.room_name" placeholder="e.g., Room 101, Deluxe Suite"
+                               @input="clearError('room_name')" class="modal-input-premium pr-10" :class="errors.room_name ? 'border-red-500 ring-red-500/10' : ''">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                            <i class="fas fa-door-open text-[10px]"></i>
+                        </div>
+                    </div>
                     <template x-if="errors.room_name">
-                        <p class="text-red-500 text-[10px] font-black mt-1 uppercase" x-text="errors.room_name[0]"></p>
+                        <p class="modal-error-message" x-text="errors.room_name[0]"></p>
                     </template>
                 </div>
 
-                <div class="grid grid-cols-3 gap-6">
-                    <div>
-                        <label class="modal-label-premium">Air Cond.</label>
-                        <select name="ac" x-model="formData.ac"
-                                @change="delete errors.ac"
-                                class="modal-input-premium">
+                <!-- Guidance Notification Card sits between sections -->
+                <div class="mb-8 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Occupancy Notice</span>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            Room units serve as <span class="text-indigo-600 italic underline decoration-indigo-100">occupancy nodes</span>. Select amenities below to accurately reflect the room's facilities.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Amenities Cluster -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium text-emerald-600">Air Conditioning</label>
+                        <select name="ac" x-model="formData.ac" class="modal-input-premium">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label class="modal-label-premium">Cooling Unit</label>
-                        <select name="cooler" x-model="formData.cooler"
-                                @change="delete errors.cooler"
-                                class="modal-input-premium">
-                            @foreach(YesNo::options() as $value => $label)
-                                <option value="{{ $value }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="modal-label-premium">Fan Node</label>
-                        <select name="fan" x-model="formData.fan"
-                                @change="delete errors.fan"
-                                class="modal-input-premium">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium text-indigo-600">Cooling Unit</label>
+                        <select name="cooler" x-model="formData.cooler" class="modal-input-premium">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -272,14 +267,20 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="modal-label-premium">Configuration Date</label>
-                    <input type="date" name="room_create_date" x-model="formData.room_create_date"
-                           @input="delete errors.room_create_date"
-                           class="modal-input-premium">
-                    <template x-if="errors.room_create_date">
-                        <p class="text-red-500 text-[10px] font-black mt-1 uppercase" x-text="errors.room_create_date[0]"></p>
-                    </template>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium text-amber-600">Fan Node</label>
+                        <select name="fan" x-model="formData.fan" class="modal-input-premium">
+                            @foreach(YesNo::options() as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Configuration Date</label>
+                        <input type="date" name="room_create_date" x-model="formData.room_create_date"
+                               class="modal-input-premium">
+                    </div>
                 </div>
             </div>
 
@@ -332,6 +333,12 @@ document.addEventListener('alpine:init', () => {
             // Initializing logic
         },
 
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
+        },
+
         async loadFloors(targetFloorId = null) {
             if (!this.formData.hostel_id) {
                 this.floors = [];
@@ -356,7 +363,7 @@ document.addEventListener('alpine:init', () => {
                 if (data.success) {
                     this.floors = data.floors;
                     if (targetFloorId) {
-                        this.formData.hostel_floor_id = targetFloorId;
+                        this.formData.hostel_floor_id = String(targetFloorId);
                     } else if (!this.editMode) {
                         this.formData.hostel_floor_id = '';
                     }
@@ -465,17 +472,17 @@ document.addEventListener('alpine:init', () => {
             this.roomId = room.id;
             this.errors = {};
             this.formData = {
-                hostel_id: room.hostel_id || '',
-                hostel_floor_id: room.hostel_floor_id || '',
+                hostel_id: room.hostel_id ? String(room.hostel_id) : '',
+                hostel_floor_id: room.hostel_floor_id ? String(room.hostel_floor_id) : '',
                 room_name: room.room_name || '',
                 ac: String(room.ac),
                 cooler: String(room.cooler),
                 fan: String(room.fan),
                 room_create_date: room.room_create_date || '',
             };
-            
+
             // Wait for floors to load before showing modal to ensure correct floor is selected
-            await this.loadFloors(room.hostel_floor_id);
+            await this.loadFloors(String(room.hostel_floor_id));
             this.$dispatch('open-modal', 'hostel-room-modal');
         },
         

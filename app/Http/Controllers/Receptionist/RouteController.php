@@ -41,7 +41,17 @@ class RouteController extends TenantController
         $perPage = $request->input('per_page', 15);
         $routes = $query->paginate($perPage)->withQueryString();
 
-        return view('receptionist.routes.index', compact('routes'));
+        // Statistics for the premium dashboard
+        $stats = [
+            'total_routes' => TransportRoute::where('school_id', $schoolId)->count(),
+            'active_routes' => TransportRoute::where('school_id', $schoolId)->where('status', RouteStatus::Active)->count(),
+            'mapped_vehicles' => TransportRoute::where('school_id', $schoolId)->distinct('vehicle_id')->count(),
+            'total_capacity' => TransportRoute::where('school_id', $schoolId)->with('vehicle')->get()->sum(function($route) {
+                return $route->vehicle->capacity ?? 0;
+            }),
+        ];
+
+        return view('receptionist.routes.index', compact('routes', 'stats'));
     }
 
     /**

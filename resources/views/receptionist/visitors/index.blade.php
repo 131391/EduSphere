@@ -223,7 +223,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Mobile No <span class="text-red-500">*</span></label>
-                        <input type="tel" name="mobile" x-model="formData.mobile" @input="delete errors.mobile" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        <input type="tel" name="mobile" x-model="formData.mobile" @input="clearError('mobile')" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                :class="errors.mobile ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                         <template x-if="errors.mobile">
@@ -232,7 +232,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visit Purpose <span class="text-red-500">*</span></label>
-                        <select name="visit_purpose" x-model="formData.visit_purpose" @change="delete errors.visit_purpose"
+                        <select name="visit_purpose" x-model="formData.visit_purpose" @change="clearError('visit_purpose')"
                                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                 :class="errors.visit_purpose ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                             <option value="">Select Purpose</option>
@@ -254,7 +254,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email ID</label>
-                        <input type="email" name="email" x-model="formData.email" @input="delete errors.email"
+                        <input type="email" name="email" x-model="formData.email" @input="clearError('email')"
                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                :class="errors.email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                         <template x-if="errors.email">
@@ -263,7 +263,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Purpose</label>
-                        <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose" @input="delete errors.meeting_purpose"
+                        <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose" @input="clearError('meeting_purpose')"
                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                :class="errors.meeting_purpose ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                         <template x-if="errors.meeting_purpose">
@@ -272,7 +272,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Priority <span class="text-red-500">*</span></label>
-                        <select name="priority" x-model="formData.priority" @change="delete errors.priority"
+                        <select name="priority" x-model="formData.priority" @change="clearError('priority')"
                                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                 :class="errors.priority ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                             <option value="">Select Priority</option>
@@ -290,7 +290,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" x-model="formData.name" @input="delete errors.name"
+                        <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                :class="errors.name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                         <template x-if="errors.name">
@@ -299,7 +299,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor Type <span class="text-red-500">*</span></label>
-                        <select name="visitor_type" x-model="formData.visitor_type" @change="delete errors.visitor_type"
+                        <select name="visitor_type" x-model="formData.visitor_type" @change="clearError('visitor_type')"
                                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                 :class="errors.visitor_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                             <option value="">Select Type</option>
@@ -312,7 +312,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Address</label>
-                        <input type="text" name="address" x-model="formData.address" @input="delete errors.address"
+                        <input type="text" name="address" x-model="formData.address" @input="clearError('address')"
                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                :class="errors.address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                         <template x-if="errors.address">
@@ -321,7 +321,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Meeting with <span class="text-red-500">*</span></label>
-                        <select name="meeting_with" x-model="formData.meeting_with" @change="delete errors.meeting_with"
+                        <select name="meeting_with" x-model="formData.meeting_with" @change="clearError('meeting_with')"
                                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                 :class="errors.meeting_with ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                             <option value="">Select Person</option>
@@ -337,7 +337,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">No. of Guest(s)</label>
-                        <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1" @input="delete errors.no_of_guests"
+                        <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1" @input="clearError('no_of_guests')"
                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                                :class="errors.no_of_guests ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                         <template x-if="errors.no_of_guests">
@@ -350,7 +350,7 @@
             <!-- Meeting Type -->
             <div class="mt-4">
                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Type <span class="text-red-500">*</span></label>
-                <select name="meeting_type" x-model="formData.meeting_type" @change="delete errors.meeting_type"
+                <select name="meeting_type" x-model="formData.meeting_type" @change="clearError('meeting_type')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                         :class="errors.meeting_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Select Meeting Type</option>
@@ -498,6 +498,12 @@ document.addEventListener('alpine:init', () => {
             meeting_scheduled: '',
         },
         
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
+        },
+
         init() {
             // Listen for modal close event to reset form
             window.addEventListener('close-modal', (event) => {
@@ -510,8 +516,8 @@ document.addEventListener('alpine:init', () => {
             this.$nextTick(() => {
                 $(this.$el).find('select').on('change', (e) => {
                     const fieldName = e.target.getAttribute('name');
-                    if (fieldName && this.errors[fieldName]) {
-                        delete this.errors[fieldName];
+                    if (fieldName) {
+                        this.clearError(fieldName);
                     }
                 });
             });
@@ -741,18 +747,19 @@ document.addEventListener('alpine:init', () => {
             
             this.editMode = true;
             this.visitorId = visitor.id;
+            this.errors = {};
             this.formData = {
-                name: visitor.name,
-                mobile: visitor.mobile,
+                name: visitor.name || '',
+                mobile: visitor.mobile || '',
                 email: visitor.email || '',
                 address: visitor.address || '',
-                visitor_type: visitor.visitor_type || '',
-                visit_purpose: visitor.visit_purpose || '',
+                visitor_type: visitor.visitor_type ? String(visitor.visitor_type) : '',
+                visit_purpose: visitor.visit_purpose ? String(visitor.visit_purpose) : '',
                 meeting_purpose: visitor.meeting_purpose || '',
-                meeting_with: visitor.meeting_with || '',
-                priority: String(visitor.priority?.value || visitor.priority || '{{ VisitorPriority::Medium->value }}'), // Convert enum to integer string
-                no_of_guests: visitor.no_of_guests,
-                meeting_type: String(visitor.meeting_type?.value || visitor.meeting_type || '{{ VisitorMode::Offline->value }}'), // Convert enum to integer string
+                meeting_with: visitor.meeting_with ? String(visitor.meeting_with) : '',
+                priority: String(visitor.priority?.value || visitor.priority || '{{ VisitorPriority::Medium->value }}'),
+                no_of_guests: visitor.no_of_guests || 1,
+                meeting_type: String(visitor.meeting_type?.value || visitor.meeting_type || '{{ VisitorMode::Offline->value }}'),
             };
             this.$dispatch('open-modal', 'visitor-modal');
             

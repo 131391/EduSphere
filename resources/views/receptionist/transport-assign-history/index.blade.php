@@ -7,17 +7,22 @@
     <!-- Success Message -->
 
     {{-- Page Header --}}
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-        <div class="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Assignment Archive</h2>
-                <p class="text-sm text-gray-500 mt-1">Audit trail of historical transport allocations and withdrawals</p>
+    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-gradient-to-br from-slate-700 to-slate-900 p-3 rounded-2xl shadow-lg shadow-slate-200">
+                    <i class="fas fa-archive text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">Assignment Archive</h2>
+                    <p class="text-sm text-gray-500 font-medium">Historical audit trail of student transit mapping</p>
+                </div>
             </div>
-            <div class="flex gap-3">
-                <a href="{{ route('receptionist.transport-assignments.index') }}" 
-                   class="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all flex items-center font-bold text-sm">
-                    <i class="fas fa-arrow-left mr-2 font-black"></i>
-                    Back to Active
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('receptionist.transport-assignments.index') }}"
+                    class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
+                    <i class="fas fa-arrow-left mr-2 text-indigo-500"></i>
+                    Back to Registry
                 </a>
             </div>
         </div>

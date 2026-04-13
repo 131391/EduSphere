@@ -23,7 +23,16 @@ class BusStopController extends TenantController
         $routes = TransportRoute::where('school_id', $schoolId)->get();
         $vehicles = Vehicle::where('school_id', $schoolId)->get();
 
-        return view('receptionist.bus-stops.index', compact('busStops', 'routes', 'vehicles'));
+        // Premium statistics for coverage cards
+        $stats = [
+            'total_stops' => BusStop::where('school_id', $schoolId)->count(),
+            'total_routes' => TransportRoute::where('school_id', $schoolId)->count(),
+            'distinct_areas' => BusStop::where('school_id', $schoolId)->whereNotNull('area_pin_code')->distinct('area_pin_code')->count(),
+            'average_distance' => round(BusStop::where('school_id', $schoolId)->avg('distance_from_institute') ?? 0, 2),
+            'total_mapped' => BusStop::where('school_id', $schoolId)->whereNotNull('vehicle_id')->count(),
+        ];
+
+        return view('receptionist.bus-stops.index', compact('busStops', 'routes', 'vehicles', 'stats'));
     }
 
     public function store(Request $request)

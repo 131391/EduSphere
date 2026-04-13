@@ -766,24 +766,24 @@ document.addEventListener('alpine:init', () => {
             this.editMode = true;
             this.staffId = staff.id;
             this.formData = {
-                post: staff.post || '',
-                class_id: staff.class_id || '',
-                section_id: staff.section_id || '',
+                post: staff.post ? String(staff.post) : '',
+                class_id: staff.class_id ? String(staff.class_id) : '',
+                section_id: staff.section_id ? String(staff.section_id) : '',
                 name: staff.name || '',
                 mobile: staff.mobile || '',
                 email: staff.email || '',
-                gender: staff.gender || '',
+                gender: staff.gender ? String(staff.gender) : '',
                 total_experience: staff.total_experience || '',
                 previous_school_salary: staff.previous_school_salary || '',
                 current_salary: staff.current_salary || '',
-                country_id: staff.country_id || '',
-                state_id: staff.state_id || '',
-                city_id: staff.city_id || '',
+                country_id: staff.country_id ? String(staff.country_id) : '',
+                state_id: staff.state_id ? String(staff.state_id) : '',
+                city_id: staff.city_id ? String(staff.city_id) : '',
                 zip_code: staff.zip_code || '',
                 address: staff.address || '',
                 aadhar_no: staff.aadhar_no || '',
                 joining_date: staff.joining_date || '',
-                higher_qualification_id: staff.higher_qualification_id || '',
+                higher_qualification_id: staff.higher_qualification_id ? String(staff.higher_qualification_id) : '',
                 previous_school_company_name: staff.previous_school_company_name || '',
             };
             

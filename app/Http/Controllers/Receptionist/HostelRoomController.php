@@ -49,7 +49,16 @@ class HostelRoomController extends TenantController
         $hostels = Hostel::where('school_id', $schoolId)->orderBy('hostel_name')->get();
         $floors = HostelFloor::where('school_id', $schoolId)->with('hostel')->orderBy('floor_name')->get();
 
-        return view('receptionist.hostel-rooms.index', compact('rooms', 'hostels', 'floors'));
+        // Calculate statistics for the UI
+        $stats = [
+            'total_room' => HostelRoom::where('school_id', $schoolId)->count(),
+            'ac_rooms' => HostelRoom::where('school_id', $schoolId)->where('ac', YesNo::Yes->value)->count(),
+            'total_beds' => \App\Models\HostelBedAssignment::whereHas('room', function($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            })->count(), // Note: In a full implementation, you might count actual beds if that model exists
+        ];
+
+        return view('receptionist.hostel-rooms.index', compact('rooms', 'hostels', 'floors', 'stats'));
     }
 
     /**

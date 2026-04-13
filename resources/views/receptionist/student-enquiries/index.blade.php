@@ -258,13 +258,19 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         errors: {},
         
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
+        },
+
         init() {
             // Robust error clearing for selects (including Select2)
             this.$nextTick(() => {
                 $(this.$el).find('select').on('change', (e) => {
                     const fieldName = e.target.getAttribute('name');
-                    if (fieldName && this.errors[fieldName]) {
-                        delete this.errors[fieldName];
+                    if (fieldName) {
+                        this.clearError(fieldName);
                     }
                 });
             });

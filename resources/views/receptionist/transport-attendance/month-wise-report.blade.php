@@ -4,44 +4,50 @@
 
 @section('content')
 <div class="space-y-6" x-data="transportAttendanceReport()" x-init="init()">
-    <!-- Page Header -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Transport Attendance Month Wise</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">View monthly attendance reports for transport routes</p>
+    {{-- Page Header --}}
+    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-2xl shadow-lg shadow-purple-100/50">
+                    <i class="fas fa-file-invoice text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800 tracking-tight text-shadow-sm">Transit Analytics</h2>
+                    <p class="text-sm text-gray-500 font-medium">Consolidated boarding audit & manifest telemetry</p>
+                </div>
             </div>
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('receptionist.transport-attendance.index') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Back
+                <a href="{{ route('receptionist.transport-attendance.index') }}"
+                    class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
+                    <i class="fas fa-arrow-left mr-2 text-purple-500"></i>
+                    Back to Verification
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Filters Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8 transition-all hover:shadow-md">
+    <!-- Audit Parameters Section -->
+    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8 transition-all hover:shadow-md">
         <div class="p-8">
-            <div class="mb-6 flex items-center justify-between">
+            <div class="mb-8 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100 shadow-sm">
+                    <i class="fas fa-sliders-h text-sm"></i>
+                </div>
                 <div>
-                    <h3 class="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight">Audit Parameters</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Select vehicle, route, and temporal period to generate the report</p>
+                    <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Audit Parameters</h4>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Define temporal & operational scope</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <!-- Vehicle Select -->
-                <div>
-                    <label for="vehicle_id" class="block text-[10px] font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest leading-none">
-                        Institutional Fleet <span class="text-red-500">*</span>
-                    </label>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Institutional Fleet <span class="text-red-500 font-bold">*</span></label>
                     <select id="vehicle_id" 
                             x-model="formData.vehicle_id"
                             @change="delete errors.vehicle_id; loadRoutes(true)"
-                            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
-                            :class="errors.vehicle_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            class="modal-input-premium"
+                            :class="errors.vehicle_id ? 'border-red-500 ring-red-500/10' : ''">
                         <option value="">Select Vehicle</option>
                         @foreach($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}" {{ old('vehicle_id', $selectedVehicle?->id) == $vehicle->id ? 'selected' : '' }}>
@@ -50,138 +56,128 @@
                         @endforeach
                     </select>
                     <template x-if="errors.vehicle_id">
-                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.vehicle_id[0]"></p>
+                        <p class="modal-error-message" x-text="errors.vehicle_id[0]"></p>
                     </template>
                 </div>
 
                 <!-- Route Select -->
-                <div>
-                    <label for="route_id" class="block text-[10px] font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest leading-none">
-                        Active Route <span class="text-red-500">*</span>
-                    </label>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Active Transit Channel <span class="text-red-500 font-bold">*</span></label>
                     <select id="route_id" 
                             x-model="formData.route_id"
                             @change="delete errors.route_id"
                             x-ref="routeSelect"
-                            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
-                            :class="errors.route_id ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
+                            class="modal-input-premium"
+                            :class="errors.route_id ? 'border-red-500 ring-red-500/10' : ''">
                         <option value="">Select Route</option>
                         <template x-for="route in routes" :key="route.id">
                             <option :value="route.id" x-text="route.route_name"></option>
                         </template>
                     </select>
                     <template x-if="errors.route_id">
-                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.route_id[0]"></p>
+                        <p class="modal-error-message" x-text="errors.route_id[0]"></p>
                     </template>
                 </div>
 
                 <!-- Month Select -->
-                <div>
-                    <label for="month" class="block text-[10px] font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-widest leading-none">
-                        Audit Month <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative group">
-                        <input type="month" 
-                               id="month"
-                               x-model="formData.month"
-                               @input="delete errors.month"
-                               value="{{ old('month', $selectedMonth) }}"
-                               class="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-4 transition-all dark:bg-gray-800 dark:text-white"
-                               :class="errors.month ? 'border-red-500 ring-red-500/10' : 'focus:ring-teal-500/10 focus:border-teal-500'">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <i class="fas fa-calendar-alt text-gray-300 group-hover:text-teal-500 transition-colors"></i>
-                        </div>
-                    </div>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Audit / Billing Month <span class="text-red-500 font-bold">*</span></label>
+                    <input type="month" id="month" x-model="formData.month"
+                            @input="delete errors.month"
+                            value="{{ old('month', $selectedMonth) }}"
+                            class="modal-input-premium"
+                            :class="errors.month ? 'border-red-500 ring-red-500/10' : ''">
                     <template x-if="errors.month">
-                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.month[0]"></p>
+                        <p class="modal-error-message" x-text="errors.month[0]"></p>
                     </template>
                 </div>
 
                 <!-- Search Button -->
                 <div class="flex items-end">
                     <button @click="searchReport()" 
-                            class="w-full px-8 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black rounded-xl transition-all shadow-lg shadow-teal-100/50 hover:shadow-teal-200/50 flex items-center justify-center gap-2 uppercase text-xs tracking-widest">
-                        <i class="fas fa-chart-bar"></i>
-                        Generate Audit
+                            class="w-full h-[54px] bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-purple-100/50 flex items-center justify-center gap-3 uppercase text-xs tracking-widest group">
+                        <i class="fas fa-analytics group-hover:scale-110 transition-transform"></i>
+                        Execute Audit
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Information Display -->
+    <!-- Audit Context & Legend -->
     @if($selectedVehicle && $selectedRoute)
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <!-- Vehicle Info Card -->
-            <div class="relative group overflow-hidden bg-blue-50/50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-100/50">
-                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-bus text-5xl text-blue-600"></i>
-                </div>
-                <p class="text-[10px] font-black text-blue-600 dark:text-blue-300 uppercase tracking-widest mb-1">Fleet Identity</p>
-                <p class="text-xl font-black text-gray-800 dark:text-blue-100">{{ $selectedVehicle->vehicle_no }}</p>
-                <p class="text-[10px] text-blue-500 font-bold mt-1 uppercase tracking-tighter">{{ $selectedVehicle->registration_no }}</p>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 transition-all hover:shadow-md">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm">
+                <i class="fas fa-bus text-lg"></i>
             </div>
-
-            <!-- Route Info Card -->
-            <div class="relative group overflow-hidden bg-emerald-50/50 dark:bg-emerald-900/20 rounded-2xl p-6 border border-emerald-100/50">
-                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-route text-5xl text-emerald-600"></i>
-                </div>
-                <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-300 uppercase tracking-widest mb-1">Transit Channel</p>
-                <p class="text-xl font-black text-gray-800 dark:text-emerald-100">{{ $selectedRoute->route_name }}</p>
-                <p class="text-[10px] text-emerald-500 font-bold mt-1 uppercase tracking-tighter">Active Manifest</p>
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fleet Asset</p>
+                <p class="text-sm font-black text-slate-800">{{ $selectedVehicle->vehicle_no }}</p>
+                <p class="text-[10px] text-blue-500 font-bold uppercase tracking-tighter mt-0.5">{{ $selectedVehicle->registration_no }}</p>
             </div>
+        </div>
 
-            <!-- Month Info Card -->
-            <div class="relative group overflow-hidden bg-purple-50/50 dark:bg-purple-900/20 rounded-2xl p-6 border border-purple-100/50">
-                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-calendar-check text-5xl text-purple-600"></i>
-                </div>
-                <p class="text-[10px] font-black text-purple-600 dark:text-purple-300 uppercase tracking-widest mb-1">Temporal Context</p>
-                <p class="text-xl font-black text-gray-800 dark:text-purple-100">
-                    {{ $selectedMonth ? \Carbon\Carbon::createFromFormat('Y-m', $selectedMonth)->format('M Y') : '' }}
-                </p>
-                <p class="text-[10px] text-purple-500 font-bold mt-1 uppercase tracking-tighter">Billing Period</p>
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 transition-all hover:shadow-md">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
+                <i class="fas fa-route text-lg"></i>
             </div>
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Transit Channel</p>
+                <p class="text-sm font-black text-slate-800">{{ $selectedRoute->route_name }}</p>
+                <p class="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter mt-0.5">Active Network</p>
+            </div>
+        </div>
 
-            <!-- Legend Card -->
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 border border-gray-100">
-                <p class="text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest mb-4">Code Legend</p>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-2">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center w-7 h-5 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 rounded-md font-black text-[9px]">PBS</span>
-                        <span class="text-[9px] text-gray-500 font-bold uppercase">Pickup</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center w-7 h-5 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 rounded-md font-black text-[9px]">DSC</span>
-                        <span class="text-[9px] text-gray-500 font-bold uppercase">Drop (S)</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center w-7 h-5 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 rounded-md font-black text-[9px]">PSC</span>
-                        <span class="text-[9px] text-gray-500 font-bold uppercase">Pickup (S)</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center w-7 h-5 bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 rounded-md font-black text-[9px]">DBS</span>
-                        <span class="text-[9px] text-gray-500 font-bold uppercase">Drop</span>
-                    </div>
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 transition-all hover:shadow-md">
+            <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100 shadow-sm">
+                <i class="fas fa-calendar-check text-lg"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Audit Period</p>
+                <p class="text-sm font-black text-slate-800">{{ \Carbon\Carbon::createFromFormat('Y-m', $selectedMonth)->format('F Y') }}</p>
+                <p class="text-[10px] text-purple-500 font-bold uppercase tracking-tighter mt-0.5">Billing Cycle</p>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-2xl p-5 shadow-lg border border-slate-800 relative overflow-hidden group">
+            <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+                <i class="fas fa-key text-white text-6xl"></i>
+            </div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 relative z-10">Telemetry Legend</p>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2 relative z-10">
+                <div class="flex items-center gap-2">
+                    <span class="w-5 h-4 bg-teal-500 rounded flex items-center justify-center text-[8px] font-black text-white">PBS</span>
+                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Pickup (B)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-5 h-4 bg-teal-500 rounded flex items-center justify-center text-[8px] font-black text-white">DSC</span>
+                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Drop (S)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-5 h-4 bg-indigo-500 rounded flex items-center justify-center text-[8px] font-black text-white">PSC</span>
+                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Pickup (S)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-5 h-4 bg-indigo-500 rounded flex items-center justify-center text-[8px] font-black text-white">DBS</span>
+                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Drop (B)</span>
                 </div>
             </div>
         </div>
     </div>
     @endif
 
-    <!-- Attendance Table -->
+    {{-- Consolidated Audit Trail --}}
     @if($selectedVehicle && $selectedRoute && count($students) > 0)
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white sticky left-0">
+    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-12">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/50 sticky left-0 z-30">
             <div>
-                <h3 class="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight">Consolidated Audit Trail</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Manifest tracking for <span class="font-bold text-teal-600">{{ count($students) }}</span> pupils</p>
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Consolidated Audit Trail</h3>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Manifest tracking for <span class="font-bold text-indigo-600">{{ count($students) }}</span> pupil profiles</p>
             </div>
-            <div class="flex items-center gap-3">
-                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cycle Duration</span>
-                <span class="px-4 py-1.5 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-200 rounded-full text-xs font-black uppercase tracking-widest border border-teal-100/50">
+            <div class="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cycle Duration</span>
+                <span class="px-3 py-1 bg-white border border-slate-200 text-indigo-600 rounded-lg text-xs font-black tracking-widest">
                     @php
                         $year = (int)substr($selectedMonth, 0, 4);
                         $monthNum = (int)substr($selectedMonth, 5, 2);
@@ -191,56 +187,55 @@
                 </span>
             </div>
         </div>
-        <div class="overflow-x-auto custom-scrollbar">
-            <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
-                <thead class="bg-gray-50/50 dark:bg-gray-700">
+
+        <div class="overflow-x-auto custom-scrollbar relative">
+            <table class="min-w-full divide-y divide-slate-100 border-collapse">
+                <thead class="bg-slate-50/80 sticky top-0 z-20">
                     <tr>
-                        <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest sticky left-0 bg-gray-50 z-20 border-r border-gray-100">
-                            Admission Registry
+                        <th class="px-8 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-30 border-r border-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                            Boarder Registry
                         </th>
-                        @php
-                            if (!isset($daysInMonth)) {
-                                $year = (int)substr($selectedMonth, 0, 4);
-                                $monthNum = (int)substr($selectedMonth, 5, 2);
-                                $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $monthNum, $year);
-                            }
-                        @endphp
                         @for($day = 1; $day <= $daysInMonth; $day++)
-                            <th class="px-3 py-5 text-center text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-widest min-w-[65px] border-l border-gray-50">
-                                <span class="block text-gray-400 opacity-50 mb-0.5">D-{{ $day }}</span>
-                                <span class="block text-gray-800 text-[11px] font-black">
+                            <th class="px-4 py-6 text-center min-w-[70px] border-l border-slate-100/50">
+                                <span class="block text-[9px] font-black text-slate-300 uppercase tracking-tighter mb-1">D-{{ sprintf('%02d', $day) }}</span>
+                                <span class="block text-[11px] font-black text-slate-700 uppercase leading-none">
                                     {{ \Carbon\Carbon::createFromDate($year, $monthNum, $day)->format('D') }}
                                 </span>
                             </th>
                         @endfor
                     </tr>
                 </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-50 dark:divide-gray-700">
+                <tbody class="bg-white divide-y divide-slate-50">
                     @foreach($students as $student)
-                        <tr class="hover:bg-gray-50 transition-colors group">
-                            <td class="px-8 py-5 sticky left-0 bg-white group-hover:bg-gray-50 transition-colors z-10 border-r border-gray-100">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900 rounded-xl flex items-center justify-center border border-teal-100/50 shadow-sm">
-                                        <span class="text-teal-600 dark:text-teal-200 font-black text-xs">{{ substr($student['admission_no'], -2) }}</span>
+                        <tr class="hover:bg-indigo-50/20 transition-all group">
+                            <td class="px-8 py-5 sticky left-0 bg-white group-hover:bg-indigo-50/40 transition-all z-20 border-r border-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 shadow-inner group-hover:scale-110 transition-transform">
+                                        <i class="fas fa-user text-[10px] text-slate-300"></i>
                                     </div>
-                                    <div>
-                                        <p class="text-xs font-black text-gray-800 dark:text-white">{{ $student['admission_no'] }}</p>
-                                        <p class="text-[10px] text-gray-400 font-bold truncate max-w-[120px]">{{ $student['name'] }}</p>
+                                    <div class="flex flex-col min-w-[140px]">
+                                        <span class="text-xs font-black text-slate-800 leading-tight">{{ $student['name'] }}</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{{ $student['admission_no'] }}</span>
                                     </div>
                                 </div>
                             </td>
                             @for($day = 1; $day <= $daysInMonth; $day++)
-                                <td class="px-3 py-5 text-center align-middle border-l border-gray-50 group-hover:bg-gray-50/50 transition-colors">
+                                @php
+                                    $isWeekend = in_array(\Carbon\Carbon::createFromDate($year, $monthNum, $day)->format('l'), ['Saturday', 'Sunday']);
+                                @endphp
+                                <td class="px-3 py-5 text-center align-middle border-l border-slate-50 group-hover:bg-indigo-50/10 transition-all {{ $isWeekend ? 'bg-slate-50/30' : '' }}">
                                     @if(isset($student['days'][$day]) && count($student['days'][$day]) > 0)
                                         <div class="flex flex-col gap-1.5 items-center justify-center">
                                             @foreach($student['days'][$day] as $code)
-                                                <span class="inline-flex items-center justify-center w-9 h-6 bg-teal-500/10 text-teal-600 dark:bg-teal-900/50 dark:text-teal-200 rounded-lg font-black text-[9px] uppercase tracking-tighter border border-teal-500/20 shadow-sm">
+                                                <span class="inline-flex items-center justify-center w-10 h-6 rounded-lg font-black text-[9px] uppercase tracking-tighter border shadow-sm transition-all hover:scale-110"
+                                                    class="{{ in_array($code, ['PBS', 'DSC']) ? 'bg-teal-500 text-white border-teal-600' : 'bg-indigo-500 text-white border-indigo-600' }}"
+                                                    :style="`background-color: ${'{{ in_array($code, ['PBS', 'DSC']) ? '#10b981' : '#6366f1' }}'}; color: white; border-color: ${'{{ in_array($code, ['PBS', 'DSC']) ? '#059669' : '#4f46e5' }}'}`">
                                                     {{ $code }}
                                                 </span>
                                             @endforeach
                                         </div>
                                     @else
-                                        <span class="text-gray-200 dark:text-gray-600 font-black">-</span>
+                                        <span class="text-slate-200 font-black">-</span>
                                     @endif
                                 </td>
                             @endfor

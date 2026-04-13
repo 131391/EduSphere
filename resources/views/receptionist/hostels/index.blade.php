@@ -146,94 +146,90 @@
     </div>
 
     {{-- Add/Edit Hostel Modal --}}
+    <!-- Add/Edit Hostel Modal -->
     <x-modal name="hostel-modal" alpineTitle="editMode ? 'Modify Hostel Specifications' : 'Establish New Hostel Node'" maxWidth="xl">
-        <form @submit.prevent="save" method="POST" class="p-0 relative">
+        <form @submit.prevent="save" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            {{-- Global Error Announcement --}}
-            <template x-if="Object.keys(errors).length > 0">
-                <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl mx-6 mt-6">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-exclamation-circle text-red-500"></i>
-                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
+            <!-- Form Body - Academic Year Standard -->
+            <div class="space-y-6">
+                <!-- Hostel Identity Block -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Hostel Name <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input type="text" name="hostel_name" x-model="formData.hostel_name" @input="clearError('hostel_name')" placeholder="e.g., Aravali Boys Hostel"
+                            class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.hostel_name}">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:scale-110 transition-transform">
+                            <i class="fas fa-building text-[10px]"></i>
+                        </div>
                     </div>
-                    <ul class="list-disc list-inside space-y-1">
-                        <template x-for="(messages, field) in errors" :key="field">
-                            <template x-for="message in messages" :key="message">
-                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
-                            </template>
-                        </template>
-                    </ul>
+                    <template x-if="errors.hostel_name">
+                        <p class="modal-error-message" x-text="errors.hostel_name[0]"></p>
+                    </template>
                 </div>
-            </template>
 
-            <div class="p-8 space-y-6">
-                {{-- Form Sections --}}
-                <div class="grid grid-cols-1 gap-6">
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Hostel Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="hostel_name" x-model="formData.hostel_name"
-                               placeholder="e.g., Aravali Boys Hostel"
-                               @input="delete errors.hostel_name"
-                               class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all"
-                               :class="errors.hostel_name ? 'border-red-300 ring-red-500/5 bg-red-50/20' : 'focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white'">
-                        <template x-if="errors.hostel_name">
-                            <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_name[0]"></p>
-                        </template>
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Hostel Incharge</label>
-                        <input type="text" name="hostel_incharge" x-model="formData.hostel_incharge"
-                               placeholder="Assigned Warden Name"
-                               @input="delete errors.hostel_incharge"
-                               class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
-                        <template x-if="errors.hostel_incharge">
-                            <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_incharge[0]"></p>
-                        </template>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Total Capacity</label>
-                            <input type="number" name="capability" x-model="formData.capability"
-                                   placeholder="0" min="1"
-                                   @input="delete errors.capability"
-                                   class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
-                            <template x-if="errors.capability">
-                                <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.capability[0]"></p>
-                            </template>
+                <!-- Incharge Assignment -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Assigned Incharge / Warden</label>
+                    <div class="relative group">
+                        <input type="text" name="hostel_incharge" x-model="formData.hostel_incharge" @input="clearError('hostel_incharge')" placeholder="Assigned Warden Name"
+                            class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.hostel_incharge}">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                            <i class="fas fa-user-tie text-[10px]"></i>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Establish Date</label>
-                            <input type="date" name="hostel_create_date" x-model="formData.hostel_create_date"
-                                   @input="delete errors.hostel_create_date"
-                                   class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
-                            <template x-if="errors.hostel_create_date">
-                                <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_create_date[0]"></p>
-                            </template>
+                    </div>
+                </div>
+
+                <!-- Configuration Grid -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Total Capacity (Beds)</label>
+                        <div class="relative group">
+                            <input type="number" name="capability" x-model="formData.capability" @input="clearError('capability')" placeholder="0"
+                                class="modal-input-premium pr-10 font-bold" :class="{'border-red-500 ring-red-500/10': errors.capability}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                                <i class="fas fa-bed text-[10px]"></i>
+                            </div>
                         </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Establishment Date</label>
+                        <div class="relative group">
+                            <input type="date" name="hostel_create_date" x-model="formData.hostel_create_date" @input="clearError('hostel_create_date')"
+                                class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.hostel_create_date}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guidance Notification Card -->
+                <div class="mb-8 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Administrative Notice</span>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            Establishing a hostel creates a <span class="text-indigo-600 italic underline decoration-indigo-100">primary facility node</span>. Floors and rooms must be configured subsequently.
+                        </p>
                     </div>
                 </div>
             </div>
 
-            {{-- Modal Footer --}}
-            <div class="px-8 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-xl">
-                <button type="button" @click="closeModal()" :disabled="submitting"
-                        class="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm disabled:opacity-50">
+            <!-- Modal Footer - Exact Match Academic Year -->
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
                     Discard
                 </button>
-                <button type="submit" :disabled="submitting"
-                        class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all font-black text-sm shadow-xl shadow-indigo-100 flex items-center gap-2">
+                <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
                     <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Registry' : 'Establish Hostel')"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 
@@ -270,6 +266,12 @@ document.addEventListener('alpine:init', () => {
         
         init() {
             // Initial state sync
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
         },
 
         async save() {

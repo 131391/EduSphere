@@ -9,7 +9,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Academic Year <span class="text-red-500">*</span>
                 </label>
-                <select name="academic_year_id" @change="delete errors.academic_year_id"
+                <select name="academic_year_id" @change="clearError('academic_year_id')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.academic_year_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Academic Year</option>
@@ -28,7 +28,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Class <span class="text-red-500">*</span>
                 </label>
-                <select name="class_id" @change="delete errors.class_id"
+                <select name="class_id" @change="clearError('class_id')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.class_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Class</option>
@@ -45,7 +45,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject Name</label>
-                <input type="text" name="subject_name" value="{{ old('subject_name') }}" placeholder="Subject Name" @input="delete errors.subject_name"
+                <input type="text" name="subject_name" value="{{ old('subject_name') }}" placeholder="Subject Name" @input="clearError('subject_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.subject_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.subject_name">
@@ -57,7 +57,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Student's Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="student_name" value="{{ old('student_name') }}" placeholder="Student's Name" @input="delete errors.student_name"
+                <input type="text" name="student_name" value="{{ old('student_name') }}" placeholder="Student's Name" @input="clearError('student_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.student_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.student_name">
@@ -67,7 +67,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gender</label>
-                <select name="gender" id="gender" @change="delete errors.gender"
+                <select name="gender" id="gender" @change="clearError('gender')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.gender ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Gender</option>
@@ -82,7 +82,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Follow Up Date</label>
-                <input type="date" name="follow_up_date" value="{{ old('follow_up_date') }}" @change="delete errors.follow_up_date"
+                <input type="date" name="follow_up_date" value="{{ old('follow_up_date') }}" @change="clearError('follow_up_date')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.follow_up_date ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.follow_up_date">
@@ -106,7 +106,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Father's Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="father_name" value="{{ old('father_name') }}" placeholder="Enter Father's Name" @input="delete errors.father_name"
+                <input type="text" name="father_name" value="{{ old('father_name') }}" placeholder="Enter Father's Name" @input="clearError('father_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_name">
@@ -118,7 +118,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Father Contact No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="father_contact" value="{{ old('father_contact') }}" placeholder="Enter Father contact no" @input="delete errors.father_contact"
+                <input type="text" name="father_contact" value="{{ old('father_contact') }}" placeholder="Enter Father contact no" @input="clearError('father_contact')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_contact ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_contact">
@@ -135,7 +135,7 @@
              class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Father Email Id</label>
-                <input type="email" name="father_email" value="{{ old('father_email') }}" placeholder="Enter Father Email id" @input="delete errors.father_email"
+                <input type="email" name="father_email" value="{{ old('father_email') }}" placeholder="Enter Father Email id" @input="clearError('father_email')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_email">
@@ -145,7 +145,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Father Qualification</label>
-                <input type="text" name="father_qualification" value="{{ old('father_qualification') }}" placeholder="Enter Father qualification" @input="delete errors.father_qualification"
+                <input type="text" name="father_qualification" value="{{ old('father_qualification') }}" placeholder="Enter Father qualification" @input="clearError('father_qualification')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_qualification ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_qualification">
@@ -155,7 +155,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Father Occupation</label>
-                <input type="text" name="father_occupation" value="{{ old('father_occupation') }}" placeholder="Enter Father Occupation" @input="delete errors.father_occupation"
+                <input type="text" name="father_occupation" value="{{ old('father_occupation') }}" placeholder="Enter Father Occupation" @input="clearError('father_occupation')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_occupation ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_occupation">
@@ -165,7 +165,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Father Annual Income</label>
-                <input type="number" step="0.01" name="father_annual_income" value="{{ old('father_annual_income') }}" placeholder="Enter Father Annual Income" @input="delete errors.father_annual_income"
+                <input type="number" step="0.01" name="father_annual_income" value="{{ old('father_annual_income') }}" placeholder="Enter Father Annual Income" @input="clearError('father_annual_income')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_annual_income ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_annual_income">
@@ -175,7 +175,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Organization</label>
-                <input type="text" name="father_organization" value="{{ old('father_organization') }}" placeholder="Organization" @input="delete errors.father_organization"
+                <input type="text" name="father_organization" value="{{ old('father_organization') }}" placeholder="Organization" @input="clearError('father_organization')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_organization ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_organization">
@@ -185,7 +185,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Father Office Address</label>
-                <input type="text" name="father_office_address" value="{{ old('father_office_address') }}" placeholder="Enter Father Office Address" @input="delete errors.father_office_address"
+                <input type="text" name="father_office_address" value="{{ old('father_office_address') }}" placeholder="Enter Father Office Address" @input="clearError('father_office_address')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_office_address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_office_address">
@@ -195,7 +195,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department</label>
-                <input type="text" name="father_department" value="{{ old('father_department') }}" placeholder="Enter Department" @input="delete errors.father_department"
+                <input type="text" name="father_department" value="{{ old('father_department') }}" placeholder="Enter Department" @input="clearError('father_department')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_department ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_department">
@@ -205,7 +205,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Designation</label>
-                <input type="text" name="father_designation" value="{{ old('father_designation') }}" placeholder="Enter Designation" @input="delete errors.father_designation"
+                <input type="text" name="father_designation" value="{{ old('father_designation') }}" placeholder="Enter Designation" @input="clearError('father_designation')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.father_designation ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_designation">
@@ -229,7 +229,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mother's Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="mother_name" value="{{ old('mother_name') }}" placeholder="Enter mother's Name" @input="delete errors.mother_name"
+                <input type="text" name="mother_name" value="{{ old('mother_name') }}" placeholder="Enter mother's Name" @input="clearError('mother_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_name">
@@ -241,7 +241,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mother Contact No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="mother_contact" value="{{ old('mother_contact') }}" placeholder="Enter Mother contact no" @input="delete errors.mother_contact"
+                <input type="text" name="mother_contact" value="{{ old('mother_contact') }}" placeholder="Enter Mother contact no" @input="clearError('mother_contact')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_contact ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_contact">
@@ -258,7 +258,7 @@
              class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mother Email Id</label>
-                <input type="email" name="mother_email" value="{{ old('mother_email') }}" placeholder="Enter Mother Email id" @input="delete errors.mother_email"
+                <input type="email" name="mother_email" value="{{ old('mother_email') }}" placeholder="Enter Mother Email id" @input="clearError('mother_email')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_email">
@@ -268,7 +268,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mother Qualification</label>
-                <input type="text" name="mother_qualification" value="{{ old('mother_qualification') }}" placeholder="Enter Mother qualification" @input="delete errors.mother_qualification"
+                <input type="text" name="mother_qualification" value="{{ old('mother_qualification') }}" placeholder="Enter Mother qualification" @input="clearError('mother_qualification')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_qualification ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_qualification">
@@ -278,7 +278,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mother Occupation</label>
-                <input type="text" name="mother_occupation" value="{{ old('mother_occupation') }}" placeholder="Enter Mother Occupation" @input="delete errors.mother_occupation"
+                <input type="text" name="mother_occupation" value="{{ old('mother_occupation') }}" placeholder="Enter Mother Occupation" @input="clearError('mother_occupation')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_occupation ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_occupation">
@@ -288,7 +288,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mother Annual Income</label>
-                <input type="number" step="0.01" name="mother_annual_income" value="{{ old('mother_annual_income') }}" placeholder="Enter Mother Annual Income" @input="delete errors.mother_annual_income"
+                <input type="number" step="0.01" name="mother_annual_income" value="{{ old('mother_annual_income') }}" placeholder="Enter Mother Annual Income" @input="clearError('mother_annual_income')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_annual_income ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_annual_income">
@@ -298,7 +298,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Organization</label>
-                <input type="text" name="mother_organization" value="{{ old('mother_organization') }}" placeholder="Organization" @input="delete errors.mother_organization"
+                <input type="text" name="mother_organization" value="{{ old('mother_organization') }}" placeholder="Organization" @input="clearError('mother_organization')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_organization ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_organization">
@@ -308,7 +308,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mother Office Address</label>
-                <input type="text" name="mother_office_address" value="{{ old('mother_office_address') }}" placeholder="Enter Mother Office Address" @input="delete errors.mother_office_address"
+                <input type="text" name="mother_office_address" value="{{ old('mother_office_address') }}" placeholder="Enter Mother Office Address" @input="clearError('mother_office_address')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_office_address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_office_address">
@@ -318,7 +318,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department</label>
-                <input type="text" name="mother_department" value="{{ old('mother_department') }}" placeholder="Enter Department" @input="delete errors.mother_department"
+                <input type="text" name="mother_department" value="{{ old('mother_department') }}" placeholder="Enter Department" @input="clearError('mother_department')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_department ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_department">
@@ -328,7 +328,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Designation</label>
-                <input type="text" name="mother_designation" value="{{ old('mother_designation') }}" placeholder="Enter Designation" @input="delete errors.mother_designation"
+                <input type="text" name="mother_designation" value="{{ old('mother_designation') }}" placeholder="Enter Designation" @input="clearError('mother_designation')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.mother_designation ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.mother_designation">
@@ -352,7 +352,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Contact No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="contact_no" value="{{ old('contact_no') }}" placeholder="Enter Contact no" @input="delete errors.contact_no"
+                <input type="text" name="contact_no" value="{{ old('contact_no') }}" placeholder="Enter Contact no" @input="clearError('contact_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.contact_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.contact_no">
@@ -364,7 +364,7 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Whatsapp No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="whatsapp_no" value="{{ old('whatsapp_no') }}" placeholder="Enter whatsapp  no" @input="delete errors.whatsapp_no"
+                <input type="text" name="whatsapp_no" value="{{ old('whatsapp_no') }}" placeholder="Enter whatsapp  no" @input="clearError('whatsapp_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.whatsapp_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.whatsapp_no">
@@ -381,7 +381,7 @@
              class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Facebook Id</label>
-                <input type="text" name="facebook_id" value="{{ old('facebook_id') }}" placeholder="Enter Facebook Id" @input="delete errors.facebook_id"
+                <input type="text" name="facebook_id" value="{{ old('facebook_id') }}" placeholder="Enter Facebook Id" @input="clearError('facebook_id')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.facebook_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.facebook_id">
@@ -391,7 +391,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Id</label>
-                <input type="email" name="email_id" value="{{ old('email_id') }}" placeholder="Enter Email id" @input="delete errors.email_id"
+                <input type="email" name="email_id" value="{{ old('email_id') }}" placeholder="Enter Email id" @input="clearError('email_id')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.email_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.email_id">
@@ -401,7 +401,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SMS No</label>
-                <input type="text" name="sms_no" value="{{ old('sms_no') }}" placeholder="Enter SMS no" @input="delete errors.sms_no"
+                <input type="text" name="sms_no" value="{{ old('sms_no') }}" placeholder="Enter SMS no" @input="clearError('sms_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.sms_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.sms_no">
@@ -411,7 +411,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Twitter Id</label>
-                <input type="text" name="twitter_id" value="{{ old('twitter_id') }}" placeholder="Enter Twitter Id" @input="delete errors.twitter_id"
+                <input type="text" name="twitter_id" value="{{ old('twitter_id') }}" placeholder="Enter Twitter Id" @input="clearError('twitter_id')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.twitter_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.twitter_id">
@@ -421,7 +421,7 @@
 
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Emergency Contact No</label>
-                <input type="text" name="emergency_contact_no" value="{{ old('emergency_contact_no') }}" placeholder="Emergency Contact no" @input="delete errors.emergency_contact_no"
+                <input type="text" name="emergency_contact_no" value="{{ old('emergency_contact_no') }}" placeholder="Emergency Contact no" @input="clearError('emergency_contact_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.emergency_contact_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.emergency_contact_no">
@@ -443,7 +443,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">DOB</label>
-                <input type="date" name="dob" value="{{ old('dob') }}" @change="delete errors.dob"
+                <input type="date" name="dob" value="{{ old('dob') }}" @change="clearError('dob')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.dob ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.dob">
@@ -453,7 +453,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Aadhar No</label>
-                <input type="text" name="aadhar_no" value="{{ old('aadhar_no') }}" placeholder="Aadhar no of the Students" @input="delete errors.aadhar_no"
+                <input type="text" name="aadhar_no" value="{{ old('aadhar_no') }}" placeholder="Aadhar no of the Students" @input="clearError('aadhar_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.aadhar_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.aadhar_no">
@@ -463,7 +463,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Grand Father Name</label>
-                <input type="text" name="grand_father_name" value="{{ old('grand_father_name') }}" placeholder="Enter Grand father name" @input="delete errors.grand_father_name"
+                <input type="text" name="grand_father_name" value="{{ old('grand_father_name') }}" placeholder="Enter Grand father name" @input="clearError('grand_father_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.grand_father_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.grand_father_name">
@@ -473,7 +473,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Annual Income</label>
-                <input type="number" step="0.01" name="annual_income" value="{{ old('annual_income') }}" placeholder="Enter Annual Income" @input="delete errors.annual_income"
+                <input type="number" step="0.01" name="annual_income" value="{{ old('annual_income') }}" placeholder="Enter Annual Income" @input="clearError('annual_income')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.annual_income ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.annual_income">
@@ -483,7 +483,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">No of Brother's</label>
-                <input type="number" step="0.01" name="no_of_brothers" value="{{ old('no_of_brothers', 0) }}" placeholder="Choose No of Brother's" @input="delete errors.no_of_brothers"
+                <input type="number" step="0.01" name="no_of_brothers" value="{{ old('no_of_brothers', 0) }}" placeholder="Choose No of Brother's" @input="clearError('no_of_brothers')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.no_of_brothers ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.no_of_brothers">
@@ -493,7 +493,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">No of Sister's</label>
-                <input type="number" step="0.01" name="no_of_sisters" value="{{ old('no_of_sisters', 0) }}" placeholder="Choose No of Sister's" @input="delete errors.no_of_sisters"
+                <input type="number" step="0.01" name="no_of_sisters" value="{{ old('no_of_sisters', 0) }}" placeholder="Choose No of Sister's" @input="clearError('no_of_sisters')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.no_of_sisters ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.no_of_sisters">
@@ -503,7 +503,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
-                <select name="category" @change="delete errors.category"
+                <select name="category" @change="clearError('category')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.category ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Category</option>
@@ -520,7 +520,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Minority</label>
-                <select name="minority" @change="delete errors.minority"
+                <select name="minority" @change="clearError('minority')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.minority ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Minority</option>
@@ -534,7 +534,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Religion</label>
-                <select name="religion" @change="delete errors.religion"
+                <select name="religion" @change="clearError('religion')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.religion ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Religion</option>
@@ -551,7 +551,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transport Facility</label>
-                <select name="transport_facility" @change="delete errors.transport_facility"
+                <select name="transport_facility" @change="clearError('transport_facility')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.transport_facility ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Transport Facility</option>
@@ -565,7 +565,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hostel Facility</label>
-                <select name="hostel_facility" @change="delete errors.hostel_facility"
+                <select name="hostel_facility" @change="clearError('hostel_facility')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.hostel_facility ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Hostel Facility</option>
@@ -579,7 +579,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Previous Class</label>
-                <input type="text" name="previous_class" value="{{ old('previous_class') }}" placeholder="Choose Previous Class" @input="delete errors.previous_class"
+                <input type="text" name="previous_class" value="{{ old('previous_class') }}" placeholder="Choose Previous Class" @input="clearError('previous_class')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.previous_class ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.previous_class">
@@ -589,7 +589,7 @@
 
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Identity Marks</label>
-                <textarea name="identity_marks" rows="3" placeholder="Enter Identity Marks" @input="delete errors.identity_marks"
+                <textarea name="identity_marks" rows="3" placeholder="Enter Identity Marks" @input="clearError('identity_marks')"
                           class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                           :class="errors.identity_marks ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">{{ old('identity_marks') }}</textarea>
                 <template x-if="errors.identity_marks">
@@ -599,7 +599,7 @@
 
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Permanent Address</label>
-                <textarea name="permanent_address" rows="3" placeholder="Enter Permanent Address" @input="delete errors.permanent_address"
+                <textarea name="permanent_address" rows="3" placeholder="Enter Permanent Address" @input="clearError('permanent_address')"
                           class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                           :class="errors.permanent_address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">{{ old('permanent_address') }}</textarea>
                 <template x-if="errors.permanent_address">
@@ -609,7 +609,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Country <span class="text-red-500">*</span></label>
-                <select name="country_id" @change="delete errors.country_id"
+                <select name="country_id" @change="clearError('country_id')"
                         class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                         :class="errors.country_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     @foreach(config('countries') as $id => $name)
@@ -623,7 +623,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Previous School Name</label>
-                <input type="text" name="previous_school_name" value="{{ old('previous_school_name') }}" placeholder="Previous School Name" @input="delete errors.previous_school_name"
+                <input type="text" name="previous_school_name" value="{{ old('previous_school_name') }}" placeholder="Previous School Name" @input="clearError('previous_school_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.previous_school_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.previous_school_name">
@@ -633,7 +633,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Student's Roll No</label>
-                <input type="text" name="student_roll_no" value="{{ old('student_roll_no') }}" placeholder="Student's Roll No" @input="delete errors.student_roll_no"
+                <input type="text" name="student_roll_no" value="{{ old('student_roll_no') }}" placeholder="Student's Roll No" @input="clearError('student_roll_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.student_roll_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.student_roll_no">
@@ -644,7 +644,7 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Passing Year</label>
                 <input type="number" name="passing_year" value="{{ old('passing_year') }}" placeholder="Passing Year" 
-                       min="1950" max="{{ date('Y') + 20 }}" step="1" @input="delete errors.passing_year"
+                       min="1950" max="{{ date('Y') + 20 }}" step="1" @input="clearError('passing_year')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.passing_year ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.passing_year">
@@ -654,7 +654,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name Of The Exam</label>
-                <input type="text" name="exam_name" value="{{ old('exam_name') }}" placeholder="Name Of The Exam" @input="delete errors.exam_name"
+                <input type="text" name="exam_name" value="{{ old('exam_name') }}" placeholder="Name Of The Exam" @input="clearError('exam_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.exam_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.exam_name">
@@ -664,7 +664,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Board / University Name</label>
-                <input type="text" name="board_university" value="{{ old('board_university') }}" placeholder="Board / University Name" @input="delete errors.board_university"
+                <input type="text" name="board_university" value="{{ old('board_university') }}" placeholder="Board / University Name" @input="clearError('board_university')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white transition-all shadow-sm"
                        :class="errors.board_university ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.board_university">
@@ -705,7 +705,7 @@
                     </div>
                     <input type="file" name="father_photo" accept="image/*" 
                            onchange="previewImage(event, 'father-photo-preview', 'father-photo-icon', 'father-photo-remove')"
-                           @change="delete errors.father_photo"
+                           @change="clearError('father_photo')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                     <template x-if="errors.father_photo">
                         <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.father_photo[0]"></p>
@@ -728,7 +728,7 @@
                     </div>
                     <input type="file" name="mother_photo" accept="image/*" 
                            onchange="previewImage(event, 'mother-photo-preview', 'mother-photo-icon', 'mother-photo-remove')"
-                           @change="delete errors.mother_photo"
+                           @change="clearError('mother_photo')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                     <template x-if="errors.mother_photo">
                         <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.mother_photo[0]"></p>
@@ -751,7 +751,7 @@
                     </div>
                     <input type="file" name="student_photo" accept="image/*" 
                            onchange="previewImage(event, 'student-photo-preview', 'student-photo-icon', 'student-photo-remove')"
-                           @change="delete errors.student_photo"
+                           @change="clearError('student_photo')"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                     <template x-if="errors.student_photo">
                         <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.student_photo[0]"></p>

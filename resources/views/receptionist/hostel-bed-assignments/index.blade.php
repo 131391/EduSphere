@@ -5,717 +5,746 @@
 @section('page-description', 'Manage student-to-residential mapping and room assignments')
 
 @section('content')
-<div class="space-y-6" x-data="hostelBedAssignmentManagement" x-init="init()">
-    {{-- Statistics Overview --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Active Mappings</p>
-                <p class="text-3xl font-black text-gray-800">{{ $assignments->total() }}</p>
-            </div>
-            <div class="bg-indigo-100 p-4 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-link text-2xl"></i>
-            </div>
-        </div>
-
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Hostel Blocks</p>
-                <p class="text-3xl font-black text-gray-800">{{ $hostels->count() }}</p>
-            </div>
-            <div class="bg-emerald-100 p-4 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-building text-2xl"></i>
-            </div>
-        </div>
-
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Capacity</p>
-                <p class="text-3xl font-black text-gray-800">{{ \App\Models\HostelRoom::where('school_id', auth()->user()->school_id)->count() * 4 }}</p> {{-- Conceptual capacity --}}
-            </div>
-            <div class="bg-amber-100 p-4 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-bed text-2xl"></i>
-            </div>
-        </div>
-
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Revenue Stream</p>
-                <p class="text-2xl font-black text-gray-800">₹{{ number_format($assignments->sum('rent'), 0) }}</p>
-            </div>
-            <div class="bg-purple-100 p-4 rounded-2xl text-purple-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-wallet text-2xl"></i>
-            </div>
-        </div>
-    </div>
-
-    {{-- Page Header --}}
-    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div class="flex items-center gap-4">
-                <a href="{{ route('receptionist.hostels.index') }}" 
-                   class="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
+    <div class="space-y-6" x-data="hostelBedAssignmentManagement" x-init="init()">
+        {{-- Statistics Overview --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div
+                class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
                 <div>
-                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">Residential Mapping</h2>
-                    <p class="text-sm text-gray-500 font-medium">Synchronize student profiles with available residential units</p>
+                    <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Active Mappings</p>
+                    <p class="text-3xl font-black text-gray-800">{{ $assignments->total() }}</p>
+                </div>
+                <div
+                    class="bg-indigo-100 p-4 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-link text-2xl"></i>
                 </div>
             </div>
-            <div class="flex flex-wrap gap-3">
-                <button @click="openAddModal()" 
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
-                    <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
-                    Initialize Mapping
-                </button>
-                <a href="{{ route('receptionist.hostel-bed-assignments.export') }}" 
-                   class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                    <i class="fas fa-file-excel mr-2 text-emerald-500"></i>
-                    Export Records
-                </a>
+
+            <div
+                class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
+                <div>
+                    <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Hostel Blocks</p>
+                    <p class="text-3xl font-black text-gray-800">{{ $hostels->count() }}</p>
+                </div>
+                <div
+                    class="bg-emerald-100 p-4 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-building text-2xl"></i>
+                </div>
+            </div>
+
+            <div
+                class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
+                <div>
+                    <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Capacity</p>
+                    <p class="text-3xl font-black text-gray-800">
+                        {{ \App\Models\HostelRoom::where('school_id', auth()->user()->school_id)->count() * 4 }}</p> {{--
+                    Conceptual capacity --}}
+                </div>
+                <div
+                    class="bg-amber-100 p-4 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-bed text-2xl"></i>
+                </div>
+            </div>
+
+            <div
+                class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
+                <div>
+                    <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Revenue Stream</p>
+                    <p class="text-2xl font-black text-gray-800">₹{{ number_format($assignments->sum('rent'), 0) }}</p>
+                </div>
+                <div
+                    class="bg-purple-100 p-4 rounded-2xl text-purple-600 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fas fa-wallet text-2xl"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    {{-- Assignments Table --}    @php
+        {{-- Page Header --}}
+        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <a href="{{ route('receptionist.hostels.index') }}"
+                        class="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-800 tracking-tight">Residential Mapping</h2>
+                        <p class="text-sm text-gray-500 font-medium">Synchronize student profiles with available residential
+                            units</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <button @click="openAddModal()"
+                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
+                        <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
+                        Initialize Mapping
+                    </button>
+                    <a href="{{ route('receptionist.hostel-bed-assignments.export') }}"
+                        class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
+                        <i class="fas fa-file-excel mr-2 text-emerald-500"></i>
+                        Export Records
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- Assignments Table --} @php
         $tableColumns = [
-            [
-                'key' => 'sr_no',
-                'label' => 'SR NO',
-                'sortable' => false,
-                'render' => function($row, $index, $data) {
-                    return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
-                }
-            ],
-            [
-                'key' => 'student_identity',
-                'label' => 'STUDENT IDENTITY',
-                'sortable' => false,
-                'render' => function($row) {
-                    $student = $row->student;
-                    $name = $student ? trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name) : 'N/A';
-                    $admission = $student->admission_no ?? 'N/A';
-                    return '<div class="flex flex-col">
-                                <span class="font-black text-gray-800">' . $name . '</span>
-                                <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter">' . $admission . ' • ' . ($student->class->name ?? 'N/A') . '</span>
-                            </div>';
-                }
-            ],
-            [
-                'key' => 'block_map',
-                'label' => 'BLOCK MAPPING',
-                'sortable' => false,
-                'render' => function($row) {
-                    return '<div class="flex flex-col">
-                                <span class="font-bold text-gray-700 text-xs">' . ($row->hostel->hostel_name ?? 'N/A') . '</span>
-                                <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter">' . ($row->floor->floor_name ?? 'N/A') . ' • Room ' . ($row->room->room_name ?? 'N/A') . '</span>
-                            </div>';
-                }
-            ],
-            [
-                'key' => 'bed_no',
-                'label' => 'UNIT ID',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-[10px] font-black uppercase tracking-widest">' . ($row->bed_no ?: 'GENERIC') . '</span>';
-                }
-            ],
-            [
-                'key' => 'rent',
-                'label' => 'MONTHLY RENT',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<span class="font-black text-gray-800">₹' . number_format($row->rent, 2) . '</span>';
-                }
-            ],
-            [
-                'key' => 'timestamp',
-                'label' => 'ASSIGNED ON',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<div class="text-gray-500 text-xs font-bold">' . 
-                           ($row->hostel_assign_date ? $row->hostel_assign_date->format('d M, Y') : 'N/A') . 
-                           '</div>';
-                }
-            ],
+        [
+        'key' => 'sr_no',
+        'label' => 'SR NO',
+        'sortable' => false,
+        'render' => function($row, $index, $data) {
+        return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
+        }
+        ],
+        [
+        'key' => 'student_identity',
+        'label' => 'STUDENT IDENTITY',
+        'sortable' => false,
+        'render' => function($row) {
+        $student = $row->student;
+        $name = $student ? trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name) : 'N/A';
+        $admission = $student->admission_no ?? 'N/A';
+        return '<div class="flex flex-col">
+            <span class="font-black text-gray-800">' . $name . '</span>
+            <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter">' . $admission . ' • ' .
+                ($student->class->name ?? 'N/A') . '</span>
+        </div>';
+        }
+        ],
+        [
+        'key' => 'block_map',
+        'label' => 'BLOCK MAPPING',
+        'sortable' => false,
+        'render' => function($row) {
+        return '<div class="flex flex-col">
+            <span class="font-bold text-gray-700 text-xs">' . ($row->hostel->hostel_name ?? 'N/A') . '</span>
+            <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter">' . ($row->floor->floor_name ??
+                'N/A') . ' • Room ' . ($row->room->room_name ?? 'N/A') . '</span>
+        </div>';
+        }
+        ],
+        [
+        'key' => 'bed_no',
+        'label' => 'UNIT ID',
+        'sortable' => true,
+        'render' => function($row) {
+        return '<span
+            class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-[10px] font-black uppercase tracking-widest">' .
+            ($row->bed_no ?: 'GENERIC') . '</span>';
+        }
+        ],
+        [
+        'key' => 'rent',
+        'label' => 'MONTHLY RENT',
+        'sortable' => true,
+        'render' => function($row) {
+        return '<span class="font-black text-gray-800">₹' . number_format($row->rent, 2) . '</span>';
+        }
+        ],
+        [
+        'key' => 'timestamp',
+        'label' => 'ASSIGNED ON',
+        'sortable' => true,
+        'render' => function($row) {
+        return '<div class="text-gray-500 text-xs font-bold">' .
+            ($row->hostel_assign_date ? $row->hostel_assign_date->format('d M, Y') : 'N/A') .
+            '</div>';
+        }
+        ],
         ];
 
         $tableActions = [
-            [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    $assignmentData = [
-                        'id' => $row->id,
-                        'student_id' => $row->student_id,
-                        'student_name' => trim($row->student->first_name . ' ' . $row->student->middle_name . ' ' . $row->student->last_name),
-                        'admission_no' => $row->student->admission_no,
-                        'class_name' => $row->student->class->name ?? 'N/A',
-                        'hostel_id' => $row->hostel_id,
-                        'hostel_floor_id' => $row->hostel_floor_id,
-                        'hostel_room_id' => $row->hostel_room_id,
-                        'bed_no' => $row->bed_no,
-                        'rent' => $row->rent,
-                        'hostel_assign_date' => $row->hostel_assign_date ? $row->hostel_assign_date->format('Y-m-d') : '',
-                        'starting_month' => $row->starting_month,
-                    ];
-                    return "openEditModal(".json_encode($assignmentData).")";
-                },
-                'icon' => 'fas fa-edit',
-                'class' => 'text-indigo-600 hover:text-indigo-900',
-                'title' => 'Edit Mapping',
-            ],
-            [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    $student = $row->student;
-                    $name = $student ? trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name) : 'N/A';
-                    return "confirmDelete('".route('receptionist.hostel-bed-assignments.destroy', $row->id)."', '{$name}')";
-                },
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900',
-                'title' => 'Dismantle Mapping',
-            ],
+        [
+        'type' => 'button',
+        'onclick' => function($row) {
+        $assignmentData = [
+        'id' => $row->id,
+        'student_id' => $row->student_id,
+        'student_name' => trim($row->student->first_name . ' ' . $row->student->middle_name . ' ' .
+        $row->student->last_name),
+        'admission_no' => $row->student->admission_no,
+        'class_name' => $row->student->class->name ?? 'N/A',
+        'hostel_id' => $row->hostel_id,
+        'hostel_floor_id' => $row->hostel_floor_id,
+        'hostel_room_id' => $row->hostel_room_id,
+        'bed_no' => $row->bed_no,
+        'rent' => $row->rent,
+        'hostel_assign_date' => $row->hostel_assign_date ? $row->hostel_assign_date->format('Y-m-d') : '',
+        'starting_month' => $row->starting_month,
         ];
-    @endphp
+        return "openEditModal(".json_encode($assignmentData).")";
+        },
+        'icon' => 'fas fa-edit',
+        'class' => 'text-indigo-600 hover:text-indigo-900',
+        'title' => 'Edit Mapping',
+        ],
+        [
+        'type' => 'button',
+        'onclick' => function($row) {
+        $student = $row->student;
+        $name = $student ? trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name) : 'N/A';
+        return "confirmDelete('".route('receptionist.hostel-bed-assignments.destroy', $row->id)."', '{$name}')";
+        },
+        'icon' => 'fas fa-trash',
+        'class' => 'text-red-600 hover:text-red-900',
+        'title' => 'Dismantle Mapping',
+        ],
+        ];
+        @endphp
 
-    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl shadow-gray-100/50 border border-gray-100 overflow-hidden">
-        <x-data-table 
-            :columns="$tableColumns"
-            :data="$assignments"
-            :searchable="true"
-            :actions="$tableActions"
-            empty-message="No residential mappings initialized"
-            empty-icon="fas fa-link-slash"
-        />
-    </div>
+        <div
+            class="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl shadow-gray-100/50 border border-gray-100 overflow-hidden">
+            <x-data-table :columns="$tableColumns" :data="$assignments" :searchable="true" :actions="$tableActions"
+                empty-message="No residential mappings initialized" empty-icon="fas fa-link-slash" />
+        </div>
 
-    {{-- Add/Edit Mapping Modal --}}
-    <x-modal name="assignment-modal" alpineTitle="editMode ? 'Synchronize Residential Revision' : 'Initialize Residential Mapping'" maxWidth="3xl">
-        <form @submit.prevent="save" method="POST" class="p-0 relative">
-            @csrf
-            <template x-if="editMode">
-                <input type="hidden" name="_method" value="PUT">
-            </template>
+        {{-- Add/Edit Mapping Modal --}}
+        <x-modal name="assignment-modal"
+            alpineTitle="editMode ? 'Synchronize Residential Revision' : 'Initialize Residential Mapping'" maxWidth="3xl">
+            <form @submit.prevent="save" method="POST" class="p-0 relative">
+                @csrf
+                <template x-if="editMode">
+                    <input type="hidden" name="_method" value="PUT">
+                </template>
 
-            {{-- Global Error Announcement --}}
-            <template x-if="Object.keys(errors).length > 0">
-                <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl mx-6 mt-6">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fas fa-exclamation-circle text-red-500"></i>
-                        <span class="text-xs font-black text-red-700 uppercase tracking-widest">Validation Exceptions</span>
-                    </div>
-                    <ul class="list-disc list-inside space-y-1">
-                        <template x-for="(messages, field) in errors" :key="field">
-                            <template x-for="message in messages" :key="message">
-                                <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
-                            </template>
-                        </template>
-                    </ul>
-                </div>
-            </template>
+                <div class="p-8 space-y-8">
+                    {{-- Student Selection --}}
+                    <div class="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 space-y-6">
+                        <h4
+                            class="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fas fa-user-graduate"></i>
+                            Student Identification
+                        </h4>
 
-            <div class="p-8 space-y-8">
-                {{-- Student Selection --}}
-                <div class="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 space-y-6">
-                    <h4 class="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                        <i class="fas fa-user-graduate"></i>
-                        Student Identification
-                    </h4>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="relative">
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Admission No / Search <span class="text-red-500">*</span></label>
-                            <div class="relative group">
-                                <input type="text" 
-                                       x-model="admissionSearch"
-                                       @input="searchStudents(); delete errors.student_id"
-                                       @focus="showStudentDropdown = true"
-                                       placeholder="Type student name or ID..."
-                                       class="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 shadow-sm"
-                                       :class="errors.student_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''"
-                                       autocomplete="off">
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                                    <i class="fas fa-search"></i>
-                                </div>
-                            </div>
-
-                            {{-- Student Dropdown Results --}}
-                            <div x-show="showStudentDropdown && studentResults.length > 0" 
-                                 @click.outside="showStudentDropdown = false"
-                                 class="absolute z-[60] w-full mt-2 bg-white rounded-2xl shadow-2xl shadow-indigo-100/50 border border-gray-100 max-h-72 overflow-y-auto overflow-x-hidden transition-all py-2">
-                                <template x-for="student in studentResults" :key="student.id">
-                                    <div @click="selectStudent(student)" 
-                                         class="px-5 py-3 hover:bg-indigo-50/50 cursor-pointer border-b border-gray-50 last:border-0 transition-colors flex items-center gap-4">
-                                        <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 font-black text-xs" x-text="student.admission_no.slice(-2)"></div>
-                                        <div class="flex-1">
-                                            <div class="font-black text-gray-800 text-sm" x-text="student.name"></div>
-                                            <div class="text-[10px] text-gray-400 uppercase font-black tracking-tighter" x-text="student.admission_no + ' • ' + student.class_name"></div>
-                                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="relative">
+                                <label
+                                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Admission
+                                    No / Search <span class="text-red-500">*</span></label>
+                                <div class="relative group">
+                                    <input type="text" x-model="admissionSearch"
+                                        @input="searchStudents(); clearError('student_id')"
+                                        @focus="showStudentDropdown = true" placeholder="Type student name or ID..."
+                                        class="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 shadow-sm"
+                                        :class="errors.student_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''"
+                                        autocomplete="off">
+                                    <div
+                                        class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                                        <i class="fas fa-search"></i>
                                     </div>
+                                </div>
+
+                                {{-- Student Dropdown Results --}}
+                                <div x-show="showStudentDropdown && studentResults.length > 0"
+                                    @click.outside="showStudentDropdown = false"
+                                    class="absolute z-[60] w-full mt-2 bg-white rounded-2xl shadow-2xl shadow-indigo-100/50 border border-gray-100 max-h-72 overflow-y-auto overflow-x-hidden transition-all py-2">
+                                    <template x-for="student in studentResults" :key="student.id">
+                                        <div @click="selectStudent(student)"
+                                            class="px-5 py-3 hover:bg-indigo-50/50 cursor-pointer border-b border-gray-50 last:border-0 transition-colors flex items-center gap-4">
+                                            <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 font-black text-xs"
+                                                x-text="student.admission_no.slice(-2)"></div>
+                                            <div class="flex-1">
+                                                <div class="font-black text-gray-800 text-sm" x-text="student.name"></div>
+                                                <div class="text-[10px] text-gray-400 uppercase font-black tracking-tighter"
+                                                    x-text="student.admission_no + ' • ' + student.class_name"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <template x-if="errors.student_id">
+                                    <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                        x-text="errors.student_id[0]"></p>
                                 </template>
                             </div>
-                            <template x-if="errors.student_id">
-                                <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.student_id[0]"></p>
-                            </template>
-                        </div>
 
-                        <div>
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Authenticated Profile</label>
-                            <div class="px-5 py-3.5 bg-indigo-50/30 border border-indigo-100 rounded-2xl flex items-center justify-between">
-                                <div>
-                                    <span class="block text-sm font-black text-gray-800" x-text="formData.student_name || 'No selection'"></span>
-                                    <span class="block text-[10px] text-indigo-500 font-black uppercase" x-text="formData.class_name"></span>
+                            <div>
+                                <label
+                                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Authenticated
+                                    Profile</label>
+                                <div
+                                    class="px-5 py-3.5 bg-indigo-50/30 border border-indigo-100 rounded-2xl flex items-center justify-between">
+                                    <div>
+                                        <span class="block text-sm font-black text-gray-800"
+                                            x-text="formData.student_name || 'No selection'"></span>
+                                        <span class="block text-[10px] text-indigo-500 font-black uppercase"
+                                            x-text="formData.class_name"></span>
+                                    </div>
+                                    <template x-if="formData.student_id">
+                                        <i class="fas fa-check-circle text-emerald-500"></i>
+                                    </template>
                                 </div>
-                                <template x-if="formData.student_id">
-                                    <i class="fas fa-check-circle text-emerald-500"></i>
-                                </template>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {{-- Residential Mapping --}}
-                <div class="space-y-6">
-                    <h4 class="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2 px-1">
-                        <i class="fas fa-map-location-dot"></i>
-                        Residential Hierarchy
-                    </h4>
+                    {{-- Residential Mapping --}}
+                    <div class="space-y-6">
+                        <h4
+                            class="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2 px-1">
+                            <i class="fas fa-map-location-dot"></i>
+                            Residential Hierarchy
+                        </h4>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Hostel Block <span class="text-red-500">*</span></label>
-                            <select x-model="formData.hostel_id" 
-                                    @change="loadFloors(); delete errors.hostel_id"
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label
+                                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Hostel
+                                    Block <span class="text-red-500">*</span></label>
+                                <select x-model="formData.hostel_id" @change="loadFloors(); clearError('hostel_id')"
                                     class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
                                     :class="errors.hostel_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                                <option value="">Select Block</option>
-                                @foreach($hostels as $hostel)
-                                    <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
-                                @endforeach
-                            </select>
-                            <template x-if="errors.hostel_id">
-                                <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_id[0]"></p>
-                            </template>
-                        </div>
+                                    <option value="">Select Block</option>
+                                    @foreach($hostels as $hostel)
+                                        <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
+                                    @endforeach
+                                </select>
+                                <template x-if="errors.hostel_id">
+                                    <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                        x-text="errors.hostel_id[0]"></p>
+                                </template>
+                            </div>
 
-                        <div>
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Floor Level <span class="text-red-500">*</span></label>
-                            <select x-model="formData.hostel_floor_id" 
-                                    @change="loadRooms(); delete errors.hostel_floor_id" 
-                                    :disabled="!formData.hostel_id"
+                            <div>
+                                <label
+                                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Floor
+                                    Level <span class="text-red-500">*</span></label>
+                                <select x-model="formData.hostel_floor_id"
+                                    @change="loadRooms(); clearError('hostel_floor_id')" :disabled="!formData.hostel_id"
                                     class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 disabled:opacity-50"
                                     :class="errors.hostel_floor_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                                <option value="">Select Floor</option>
-                                <template x-for="floor in floors" :key="floor.id">
-                                    <option :value="floor.id" x-text="floor.floor_name"></option>
+                                    <option value="">Select Floor</option>
+                                    <template x-for="floor in floors" :key="floor.id">
+                                        <option :value="floor.id" x-text="floor.floor_name"></option>
+                                    </template>
+                                </select>
+                                <template x-if="errors.hostel_floor_id">
+                                    <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                        x-text="errors.hostel_floor_id[0]"></p>
                                 </template>
-                            </select>
-                            <template x-if="errors.hostel_floor_id">
-                                <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_floor_id[0]"></p>
-                            </template>
-                        </div>
+                            </div>
 
-                        <div>
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Residential Unit <span class="text-red-500">*</span></label>
-                            <select x-model="formData.hostel_room_id" 
-                                    @change="delete errors.hostel_room_id"
+                            <div>
+                                <label
+                                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Residential
+                                    Unit <span class="text-red-500">*</span></label>
+                                <select x-model="formData.hostel_room_id" @change="clearError('hostel_room_id')"
                                     :disabled="!formData.hostel_floor_id"
                                     class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 disabled:opacity-50"
                                     :class="errors.hostel_room_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                                <option value="">Select Room</option>
-                                <template x-for="room in rooms" :key="room.id">
-                                    <option :value="room.id" x-text="room.room_name"></option>
-                                </template>
-                            </select>
-                            <template x-if="errors.hostel_room_id">
-                                <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_room_id[0]"></p>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Financial & Scheduling --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-6">
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Mapping Specifications</label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Unit Identifier</label>
-                                <input type="text" x-model="formData.bed_no"
-                                       @input="delete errors.bed_no"
-                                       placeholder="e.g., Bed A"
-                                       class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
-                                       :class="errors.bed_no ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                                <template x-if="errors.bed_no">
-                                    <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.bed_no[0]"></p>
-                                </template>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Fee Structure</label>
-                                <div class="relative">
-                                    <input type="number" x-model="formData.rent"
-                                           @input="delete errors.rent"
-                                           placeholder="0.00"
-                                           class="w-full pl-8 pr-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
-                                           :class="errors.rent ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                                </div>
-                                <template x-if="errors.rent">
-                                    <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.rent[0]"></p>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-6">
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Mapping Schedule</label>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Effective Date</label>
-                                <input type="date" x-model="formData.hostel_assign_date"
-                                       @input="delete errors.hostel_assign_date"
-                                       class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
-                                       :class="errors.hostel_assign_date ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                                <template x-if="errors.hostel_assign_date">
-                                    <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_assign_date[0]"></p>
-                                </template>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Billing Cycle <span class="text-red-500">*</span></label>
-                                <select x-model="formData.starting_month"
-                                        @change="delete errors.starting_month"
-                                        class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
-                                        :class="errors.starting_month ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                                    <option value="">Choose Cycle</option>
-                                    <template x-for="month in months" :key="month.value">
-                                        <option :value="month.value" x-text="month.label"></option>
+                                    <option value="">Select Room</option>
+                                    <template x-for="room in rooms" :key="room.id">
+                                        <option :value="room.id" x-text="room.room_name"></option>
                                     </template>
                                 </select>
-                                <template x-if="errors.starting_month">
-                                    <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.starting_month[0]"></p>
+                                <template x-if="errors.hostel_room_id">
+                                    <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                        x-text="errors.hostel_room_id[0]"></p>
                                 </template>
                             </div>
                         </div>
                     </div>
+
+                    {{-- Financial & Scheduling --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Mapping
+                                Specifications</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Unit
+                                        Identifier</label>
+                                    <input type="text" x-model="formData.bed_no" @input="clearError('bed_no')"
+                                        placeholder="e.g., Bed A"
+                                        class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
+                                        :class="errors.bed_no ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                                    <template x-if="errors.bed_no">
+                                        <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                            x-text="errors.bed_no[0]"></p>
+                                    </template>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Fee
+                                        Structure</label>
+                                    <div class="relative">
+                                        <input type="number" x-model="formData.rent" @input="clearError('rent')"
+                                            placeholder="0.00"
+                                            class="w-full pl-8 pr-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
+                                            :class="errors.rent ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                                        <span
+                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                                    </div>
+                                    <template x-if="errors.rent">
+                                        <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                            x-text="errors.rent[0]"></p>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Mapping
+                                Schedule</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Effective
+                                        Date</label>
+                                    <input type="date" x-model="formData.hostel_assign_date"
+                                        @input="clearError('hostel_assign_date')"
+                                        class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
+                                        :class="errors.hostel_assign_date ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                                    <template x-if="errors.hostel_assign_date">
+                                        <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                            x-text="errors.hostel_assign_date[0]"></p>
+                                    </template>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Billing
+                                        Cycle <span class="text-red-500">*</span></label>
+                                    <select x-model="formData.starting_month" @change="clearError('starting_month')"
+                                        class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
+                                        :class="errors.starting_month ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                                        <option value="">Choose Cycle</option>
+                                        <template x-for="month in months" :key="month.value">
+                                            <option :value="month.value" x-text="month.label"></option>
+                                        </template>
+                                    </select>
+                                    <template x-if="errors.starting_month">
+                                        <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                            x-text="errors.starting_month[0]"></p>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            {{-- Modal Footer --}}
-            <div class="px-8 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-3xl">
-                <button type="button" @click="closeModal()" :disabled="submitting"
+                {{-- Modal Footer --}}
+                <div
+                    class="px-8 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-3xl">
+                    <button type="button" @click="closeModal()" :disabled="submitting"
                         class="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm disabled:opacity-50">
-                    Discard
-                </button>
-                <button type="submit" :disabled="submitting"
+                        Discard
+                    </button>
+                    <button type="submit" :disabled="submitting"
                         class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all font-black text-sm shadow-xl shadow-indigo-100 flex items-center gap-2">
-                    <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    </template>
-                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Synch Revision' : 'Confirm Mapping')"></span>
-                </button>
-            </div>
-        </form>
-    </x-modal>
+                        <template x-if="submitting">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        </template>
+                        <span
+                            x-text="submitting ? 'Propagating...' : (editMode ? 'Synch Revision' : 'Confirm Mapping')"></span>
+                    </button>
+                </div>
+            </form>
+        </x-modal>
 
-    {{-- Custom Confirm Modal --}}
-    <x-confirm-modal 
-        title="Dismantle Residential Mapping?" 
-        message="This operation will terminate the student's residential assignment. This action will be audited."
-        confirm-text="Confirm Decommission"
-        confirm-color="red"
-    />
-</div>
+        {{-- Custom Confirm Modal --}}
+        <x-confirm-modal title="Dismantle Residential Mapping?"
+            message="This operation will terminate the student's residential assignment. This action will be audited."
+            confirm-text="Confirm Decommission" confirm-color="red" />
+    </div>
 
-@push('scripts')
-<script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('hostelBedAssignmentManagement', () => ({
-        editMode: false,
-        assignmentId: null,
-        submitting: false,
-        admissionSearch: '',
-        showStudentDropdown: false,
-        studentResults: [],
-        searchTimeout: null,
-        errors: {},
-        formData: {
-            student_id: '',
-            student_name: '',
-            class_name: '',
-            hostel_id: '',
-            hostel_floor_id: '',
-            hostel_room_id: '',
-            bed_no: '',
-            rent: '',
-            hostel_assign_date: '',
-            starting_month: '',
-        },
-        floors: [],
-        rooms: [],
-        months: [],
-        
-        async init() {
-            await this.loadMonths();
-        },
-
-        async loadMonths() {
-            try {
-                const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-months') }}');
-                const data = await response.json();
-                if (data.success) this.months = data.months;
-            } catch (error) {
-                console.error('Fee Cycle Refresh Failure:', error);
-            }
-        },
-
-        async searchStudents() {
-            if (this.searchTimeout) clearTimeout(this.searchTimeout);
-            if (this.admissionSearch.length < 2) {
-                this.studentResults = [];
-                this.showStudentDropdown = false;
-                return;
-            }
-
-            this.searchTimeout = setTimeout(async () => {
-                try {
-                    const response = await fetch('{{ route('receptionist.hostel-bed-assignments.search-students') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ search: this.admissionSearch })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        this.studentResults = data.students;
-                        this.showStudentDropdown = true;
-                    }
-                } catch (error) {
-                    console.error('Student Index Probe Failed:', error);
-                }
-            }, 300);
-        },
-
-        selectStudent(student) {
-            this.formData.student_id = student.id;
-            this.formData.student_name = student.name;
-            this.formData.class_name = student.class_name;
-            this.admissionSearch = student.admission_no;
-            this.showStudentDropdown = false;
-            if (this.errors.student_id) delete this.errors.student_id;
-        },
-
-        async loadFloors(targetId = null) {
-            if (!this.formData.hostel_id) {
-                this.floors = [];
-                this.formData.hostel_floor_id = '';
-                return;
-            }
-
-            try {
-                const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-floors') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
+    @push('scripts')
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('hostelBedAssignmentManagement', () => ({
+                    editMode: false,
+                    assignmentId: null,
+                    submitting: false,
+                    admissionSearch: '',
+                    showStudentDropdown: false,
+                    studentResults: [],
+                    searchTimeout: null,
+                    errors: {},
+                    formData: {
+                        student_id: '',
+                        student_name: '',
+                        class_name: '',
+                        hostel_id: '',
+                        hostel_floor_id: '',
+                        hostel_room_id: '',
+                        bed_no: '',
+                        rent: '',
+                        hostel_assign_date: '',
+                        starting_month: '',
                     },
-                    body: JSON.stringify({ hostel_id: this.formData.hostel_id })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    this.floors = data.floors;
-                    if (targetId) {
-                        this.formData.hostel_floor_id = targetId;
-                    } else if (!this.editMode) {
-                        this.formData.hostel_floor_id = '';
+                    floors: [],
+                    rooms: [],
+                    months: [],
+
+                    clearError(field) {
+                        if (this.errors[field]) {
+                            delete this.errors[field];
+                        }
+                    },
+
+                    async init() {
+                        await this.loadMonths();
+                    },
+
+                    async loadMonths() {
+                        try {
+                            const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-months') }}');
+                            const data = await response.json();
+                            if (data.success) this.months = data.months;
+                        } catch (error) {
+                            console.error('Fee Cycle Refresh Failure:', error);
+                        }
+                    },
+
+                    async searchStudents() {
+                        if (this.searchTimeout) clearTimeout(this.searchTimeout);
+                        if (this.admissionSearch.length < 2) {
+                            this.studentResults = [];
+                            this.showStudentDropdown = false;
+                            return;
+                        }
+
+                        this.searchTimeout = setTimeout(async () => {
+                            try {
+                                const response = await fetch('{{ route('receptionist.hostel-bed-assignments.search-students') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Accept': 'application/json'
+                                    },
+                                    body: JSON.stringify({ search: this.admissionSearch })
+                                });
+                                const data = await response.json();
+                                if (data.success) {
+                                    this.studentResults = data.students;
+                                    this.showStudentDropdown = true;
+                                }
+                            } catch (error) {
+                                console.error('Student Index Probe Failed:', error);
+                            }
+                        }, 300);
+                    },
+
+                    selectStudent(student) {
+                        this.formData.student_id = student.id;
+                        this.formData.student_name = student.name;
+                        this.formData.class_name = student.class_name;
+                        this.admissionSearch = student.admission_no;
+                        this.showStudentDropdown = false;
+                        if (this.errors.student_id) delete this.errors.student_id;
+                    },
+
+                    async loadFloors(targetId = null) {
+                        if (!this.formData.hostel_id) {
+                            this.floors = [];
+                            this.formData.hostel_floor_id = '';
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-floors') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({ hostel_id: this.formData.hostel_id })
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                this.floors = data.floors;
+                                if (targetId) {
+                                    this.formData.hostel_floor_id = targetId;
+                                } else if (!this.editMode) {
+                                    this.formData.hostel_floor_id = '';
+                                    this.rooms = [];
+                                    this.formData.hostel_room_id = '';
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Floor Chain Interrupted:', error);
+                        }
+                    },
+
+                    async loadRooms(targetId = null) {
+                        if (!this.formData.hostel_floor_id) {
+                            this.rooms = [];
+                            this.formData.hostel_room_id = '';
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-rooms') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({ hostel_floor_id: this.formData.hostel_floor_id })
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                this.rooms = data.rooms;
+                                if (targetId) {
+                                    this.formData.hostel_room_id = targetId;
+                                } else if (!this.editMode) {
+                                    this.formData.hostel_room_id = '';
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Room Chain Interrupted:', error);
+                        }
+                    },
+
+                    async save() {
+                        this.submitting = true;
+                        this.errors = {};
+
+                        const url = this.editMode
+                            ? `/receptionist/hostel-bed-assignments/${this.assignmentId}`
+                            : '{{ route('receptionist.hostel-bed-assignments.store') }}';
+
+                        const method = this.editMode ? 'PUT' : 'POST';
+
+                        try {
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    ...this.formData,
+                                    _method: method
+                                })
+                            });
+
+                            const result = await response.json();
+
+                            if (response.ok) {
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'success',
+                                        title: result.message || 'Mapping synchronized successfully'
+                                    });
+                                }
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else if (response.status === 422) {
+                                this.errors = result.errors || {};
+                            } else {
+                                throw new Error(result.message || 'System sync failure');
+                            }
+                        } catch (error) {
+                            if (window.Toast) {
+                                window.Toast.fire({ icon: 'error', title: error.message });
+                            }
+                        } finally {
+                            this.submitting = false;
+                        }
+                    },
+
+                    async deleteAssignment(url) {
+                        try {
+                            const response = await fetch(url, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                }
+                            });
+                            const result = await response.json();
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                throw new Error(result.message || 'Strike failure');
+                            }
+                        } catch (error) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
+                        }
+                    },
+
+                    openAddModal() {
+                        this.editMode = false;
+                        this.assignmentId = null;
+                        this.errors = {};
+                        this.resetForm();
+                        this.$dispatch('open-modal', 'assignment-modal');
+                    },
+
+                    async openEditModal(assignment) {
+                        this.editMode = true;
+                        this.assignmentId = assignment.id;
+                        this.errors = {};
+                        this.formData = {
+                            student_id: assignment.student_id,
+                            student_name: assignment.student_name,
+                            class_name: assignment.class_name,
+                            hostel_id: String(assignment.hostel_id),
+                            hostel_floor_id: String(assignment.hostel_floor_id),
+                            hostel_room_id: String(assignment.hostel_room_id),
+                            bed_no: assignment.bed_no || '',
+                            rent: assignment.rent || '',
+                            hostel_assign_date: assignment.hostel_assign_date || '',
+                            starting_month: String(assignment.starting_month),
+                        };
+                        this.admissionSearch = assignment.admission_no;
+
+                        // Re-chain dropdowns
+                        await this.loadFloors(assignment.hostel_floor_id);
+                        await this.loadRooms(assignment.hostel_room_id);
+
+                        this.$dispatch('open-modal', 'assignment-modal');
+                    },
+
+                    resetForm() {
+                        this.formData = {
+                            student_id: '',
+                            student_name: '',
+                            class_name: '',
+                            hostel_id: '',
+                            hostel_floor_id: '',
+                            hostel_room_id: '',
+                            bed_no: '',
+                            rent: '',
+                            hostel_assign_date: '{{ date('Y-m-d') }}',
+                            starting_month: '',
+                        };
+                        this.admissionSearch = '';
+                        this.floors = [];
                         this.rooms = [];
-                        this.formData.hostel_room_id = '';
-                    }
-                }
-            } catch (error) {
-                console.error('Floor Chain Interrupted:', error);
-            }
-        },
-
-        async loadRooms(targetId = null) {
-            if (!this.formData.hostel_floor_id) {
-                this.rooms = [];
-                this.formData.hostel_room_id = '';
-                return;
-            }
-
-            try {
-                const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-rooms') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
+                        this.errors = {};
                     },
-                    body: JSON.stringify({ hostel_floor_id: this.formData.hostel_floor_id })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    this.rooms = data.rooms;
-                    if (targetId) {
-                        this.formData.hostel_room_id = targetId;
-                    } else if (!this.editMode) {
-                        this.formData.hostel_room_id = '';
+
+                    closeModal() {
+                        this.$dispatch('close-modal', 'assignment-modal');
+                        this.errors = {};
                     }
-                }
-            } catch (error) {
-                console.error('Room Chain Interrupted:', error);
-            }
-        },
+                }));
+            });
 
-        async save() {
-            this.submitting = true;
-            this.errors = {};
-
-            const url = this.editMode 
-                ? `/receptionist/hostel-bed-assignments/${this.assignmentId}` 
-                : '{{ route('receptionist.hostel-bed-assignments.store') }}';
-            
-            const method = this.editMode ? 'PUT' : 'POST';
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        ...this.formData,
-                        _method: method
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    if (window.Toast) {
-                        window.Toast.fire({
-                            icon: 'success',
-                            title: result.message || 'Mapping synchronized successfully'
-                        });
-                    }
-                    setTimeout(() => window.location.reload(), 1000);
-                } else if (response.status === 422) {
-                    this.errors = result.errors || {};
-                } else {
-                    throw new Error(result.message || 'System sync failure');
-                }
-            } catch (error) {
-                if (window.Toast) {
-                    window.Toast.fire({ icon: 'error', title: error.message });
-                }
-            } finally {
-                this.submitting = false;
-            }
-        },
-
-        async deleteAssignment(url) {
-            try {
-                const response = await fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    throw new Error(result.message || 'Strike failure');
-                }
-            } catch (error) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
-            }
-        },
-        
-        openAddModal() {
-            this.editMode = false;
-            this.assignmentId = null;
-            this.errors = {};
-            this.resetForm();
-            this.$dispatch('open-modal', 'assignment-modal');
-        },
-        
-        async openEditModal(assignment) {
-            this.editMode = true;
-            this.assignmentId = assignment.id;
-            this.errors = {};
-            this.formData = {
-                student_id: assignment.student_id,
-                student_name: assignment.student_name,
-                class_name: assignment.class_name,
-                hostel_id: String(assignment.hostel_id),
-                hostel_floor_id: String(assignment.hostel_floor_id),
-                hostel_room_id: String(assignment.hostel_room_id),
-                bed_no: assignment.bed_no || '',
-                rent: assignment.rent || '',
-                hostel_assign_date: assignment.hostel_assign_date || '',
-                starting_month: String(assignment.starting_month),
-            };
-            this.admissionSearch = assignment.admission_no;
-            
-            // Re-chain dropdowns
-            await this.loadFloors(assignment.hostel_floor_id);
-            await this.loadRooms(assignment.hostel_room_id);
-            
-            this.$dispatch('open-modal', 'assignment-modal');
-        },
-        
-        resetForm() {
-            this.formData = {
-                student_id: '',
-                student_name: '',
-                class_name: '',
-                hostel_id: '',
-                hostel_floor_id: '',
-                hostel_room_id: '',
-                bed_no: '',
-                rent: '',
-                hostel_assign_date: '{{ date('Y-m-d') }}',
-                starting_month: '',
-            };
-            this.admissionSearch = '';
-            this.floors = [];
-            this.rooms = [];
-            this.errors = {};
-        },
-
-        closeModal() {
-            this.$dispatch('close-modal', 'assignment-modal');
-            this.errors = {};
-        }
-    }));
-});
-
-// Global helpers
-function openEditModal(assignment) {
-    const el = document.querySelector('[x-data*="hostelBedAssignmentManagement"]');
-    if (el) Alpine.$data(el).openEditModal(assignment);
-}
-
-function confirmDelete(url, studentName) {
-    window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-        detail: {
-            message: `Strike residential mapping for student: "${studentName}"?`,
-            onConfirm: () => {
+            // Global helpers
+            function openEditModal(assignment) {
                 const el = document.querySelector('[x-data*="hostelBedAssignmentManagement"]');
-                if (el) Alpine.$data(el).deleteAssignment(url);
+                if (el) Alpine.$data(el).openEditModal(assignment);
             }
-        }
-    }));
-}
-</script>
-@endpush
+
+            function confirmDelete(url, studentName) {
+                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                    detail: {
+                        message: `Strike residential mapping for student: "${studentName}"?`,
+                        onConfirm: () => {
+                            const el = document.querySelector('[x-data*="hostelBedAssignmentManagement"]');
+                            if (el) Alpine.$data(el).deleteAssignment(url);
+                        }
+                    }
+                }));
+            }
+        </script>
+    @endpush
 @endsection

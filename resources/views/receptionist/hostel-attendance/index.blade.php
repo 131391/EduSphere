@@ -66,7 +66,7 @@
             <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                 <div class="w-full sm:w-64">
                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic px-1">Hostel Block</label>
-                    <select x-model="formData.hostel_id" @change="loadStudents(); delete errors.hostel_id"
+                    <select x-model="formData.hostel_id" @change="loadStudents(); clearError('hostel_id')"
                             class="w-full px-5 py-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 shadow-sm text-sm font-bold"
                             :class="errors.hostel_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
                         <option value="">Select Block</option>
@@ -78,7 +78,7 @@
 
                 <div class="w-full sm:w-48">
                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic px-1">Registry Date</label>
-                    <input type="date" x-model="formData.attendance_date" @change="loadStudents(); delete errors.attendance_date"
+                    <input type="date" x-model="formData.attendance_date" @change="loadStudents(); clearError('attendance_date')"
                            max="{{ date('Y-m-d') }}"
                            class="w-full px-5 py-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 shadow-sm text-sm font-bold"
                            :class="errors.attendance_date ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
@@ -220,6 +220,12 @@ document.addEventListener('alpine:init', () => {
         checkedStudents: [],
 
         init() {
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
         },
 
         get canSubmit() {

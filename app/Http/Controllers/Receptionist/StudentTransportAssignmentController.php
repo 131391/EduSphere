@@ -152,6 +152,13 @@ class StudentTransportAssignmentController extends TenantController
             ->orderBy('name')
             ->get();
 
+        $stats = [
+            'total_assigned' => $totalAssigned,
+            'active_routes' => $activeRoutes,
+            'total_fees' => $totalFees,
+            'available_vehicles' => $vehicles->count(),
+        ];
+
         return view('receptionist.transport-assignments.index', compact(
             'assignments',
             'students',
@@ -159,9 +166,7 @@ class StudentTransportAssignmentController extends TenantController
             'vehicles',
             'busStops',
             'classes',
-            'totalAssigned',
-            'activeRoutes',
-            'totalFees',
+            'stats',
             'currentAcademicYear'
         ));
     }
