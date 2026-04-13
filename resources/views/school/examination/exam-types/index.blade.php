@@ -90,62 +90,53 @@
     </div>
 
     <!-- Add/Edit Exam Type Modal -->
-    <x-modal name="exam-type-modal" alpineTitle="editMode ? 'Edit Exam Category' : 'Define Exam Category'" maxWidth="md">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+    <x-modal name="exam-type-modal" alpineTitle="editMode ? 'Edit Exam Category' : 'Define Exam Category'" maxWidth="2xl">
+        <form id="exam-type-form" @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-8 py-8 space-y-6">
-                <!-- Name -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Type Name <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
-                            <i class="fas fa-tag text-sm"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            x-model="formData.name"
-                            @input="if(errors.name) delete errors.name"
-                            placeholder="e.g., Mid-Term Assessment"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400 font-medium"
-                            :class="{'border-red-500 ring-red-500/10': errors.name}"
-                        >
+            <!-- Form Body - Using the exact structure from Academic Years -->
+            <div class="space-y-2 mb-6">
+                <label class="modal-label-premium">Type Name <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input type="text" x-model="formData.name" @input="clearError('name')" placeholder="e.g., Mid-Term Assessment"
+                        class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.name}">
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:scale-110 transition-transform">
+                        <i class="fas fa-tag text-[10px]"></i>
                     </div>
-                    <div class="min-h-[24px] mt-1 ml-1">
-                        <template x-if="errors.name">
-                            <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span x-text="errors.name[0]"></span>
-                            </p>
-                        </template>
-                    </div>
+                </div>
+                <template x-if="errors.name">
+                    <p class="modal-error-message" x-text="errors.name[0]"></p>
+                </template>
+            </div>
+
+            <!-- Notification Card앉 sits like Academic Year standard -->
+            <div class="mb-8 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                    <i class="fas fa-layer-group text-indigo-600 text-sm"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[13px] font-bold text-slate-900 leading-tight">Classification Notice</span>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                        Categories help group <span class="text-indigo-600 italic">assessment subjects</span> into logical grading sessions like Mid-Term or Final Exams.
+                    </p>
                 </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
+            <!-- Modal Footer - Exact Match -->
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all duration-200 shadow-lg shadow-indigo-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="submit" form="exam-type-form" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
                     <span x-text="editMode ? (submitting ? 'Updating...' : 'Save Changes') : (submitting ? 'Creating...' : 'Establish Type')"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -259,6 +250,12 @@ document.addEventListener('alpine:init', () => {
 
         closeModal() {
             this.$dispatch('close-modal', 'exam-type-modal');
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
         }
     }));
 });

@@ -103,64 +103,136 @@
     </div>
 
     <!-- Schedule Exam Modal -->
-    <x-modal name="exam-modal" alpineTitle="'Schedule New Examination'" maxWidth="2xl">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+    <x-modal name="exam-modal" maxWidth="2xl">
+        <x-slot name="title">
+            <div class="flex items-center gap-3 py-1">
+                <i class="fas fa-calendar-check text-white/80 text-sm"></i>
+                <span class="text-white font-bold tracking-tight">Schedule New Examination</span>
+            </div>
+        </x-slot>
+
+        <form id="exam-form" @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
-            <div class="px-8 py-8 space-y-6">
-                <!-- Group 1: Exam & Class -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Exam Category <span class="text-red-500">*</span></label>
-                        <select name="exam_type_id" x-model="formData.exam_type_id" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-indigo-500 focus:bg-white transition-all font-medium text-gray-700 appearance-none shadow-sm">
+            <!-- Form Body - Academic Year Standard -->
+            <div class="space-y-6">
+                <!-- Name Block -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Type Name <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input type="text" x-model="formData.name" @input="clearError('name')" placeholder="e.g., Mid-Term Assessment"
+                            class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.name}">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:scale-110 transition-transform">
+                            <i class="fas fa-tag text-[10px]"></i>
+                        </div>
+                    </div>
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Guidance Notification Card -->
+                <div class="mb-8 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-layer-group text-indigo-600 text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Classification Notice</span>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            Categories help group <span class="text-indigo-600 italic">assessment subjects</span> into logical sessions like Mid-Term or Final Exams.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <!-- Exam Category -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Exam Category <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <select x-model="formData.exam_type_id" @change="clearError('exam_type_id')" 
+                            class="modal-input-premium appearance-none pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.exam_type_id}">
                             <option value="">-- Select Type --</option>
                             @foreach($examTypes as $type)
                                 <option value="{{ $type->id }}">{{ $type->name }}</option>
                             @endforeach
                         </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:rotate-180 transition-transform duration-300">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Target Class <span class="text-red-500">*</span></label>
-                        <select name="class_id" x-model="formData.class_id" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-indigo-500 focus:bg-white transition-all font-medium text-gray-700 appearance-none shadow-sm">
+                    <template x-if="errors.exam_type_id">
+                        <p class="modal-error-message" x-text="errors.exam_type_id[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Target Class -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Target Class <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <select x-model="formData.class_id" @change="clearError('class_id')" 
+                            class="modal-input-premium appearance-none pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.class_id}">
                             <option value="">-- Select Class --</option>
                             @foreach($classes as $class)
                                 <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:rotate-180 transition-transform duration-300">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.class_id">
+                        <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                    </template>
                 </div>
+            </div>
 
-                <!-- Group 2: Period/Month -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Assessment Window (Month) <span class="text-red-500">*</span></label>
-                    <select name="month" x-model="formData.month" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-indigo-500 focus:bg-white transition-all font-medium text-gray-700 appearance-none shadow-sm">
+            <!-- Month Selection -->
+            <div class="space-y-2 mb-8">
+                <label class="modal-label-premium">Assessment Window (Month) <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <select x-model="formData.month" @change="clearError('month')" 
+                        class="modal-input-premium appearance-none pr-10 shadow-sm"
+                        :class="{'border-red-500 ring-red-500/10': errors.month}">
                         <option value="">-- Select Month --</option>
                         @foreach($months as $month)
                             <option value="{{ $month }}">{{ $month }}</option>
                         @endforeach
                     </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <i class="fas fa-calendar-alt text-sm"></i>
+                    </div>
                 </div>
-            </div>
 
+                <!-- Timeline Notification Card -->
+                <div class="mt-6 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-clock text-indigo-600 text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Timeline Locking Notification</span>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            Scheduling create a <span class="text-indigo-600 italic underline decoration-indigo-100">centralized session</span>. Individual subject dates can be finalised in the assessment grid.
+                        </p>
+                    </div>
+                </div>
+                <template x-if="errors.month">
+                    <p class="modal-error-message" x-text="errors.month[0]"></p>
+                </template>
+            </div>
             <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'exam-modal')" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all duration-200 shadow-lg shadow-indigo-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="submit" form="exam-form" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="submitting ? 'Finalizing...' : 'Lock Schedule'"></span>
+                    <span x-text="submitting ? 'Allocating...' : 'Lock Schedule'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -248,6 +320,12 @@ document.addEventListener('alpine:init', () => {
 
         closeModal() {
             this.$dispatch('close-modal', 'exam-modal');
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
         }
     }));
 });

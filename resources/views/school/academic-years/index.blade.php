@@ -2,7 +2,7 @@
 @section('title', 'Academic Years')
 
 @section('content')
-    <div x-data="academicYearManagement()">
+    <div x-data="academicYearManagement">
         <!-- Header Section -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -10,7 +10,7 @@
                     <h2 class="text-xl font-bold text-gray-800 dark:text-white">Academic Years</h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Manage academic years for your school</p>
                 </div>
-                <button @click="openAddModal()"
+                <button @click="openAddModal"
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                     <i class="fas fa-plus mr-2"></i>
                     Add Academic Year
@@ -83,125 +83,88 @@
             Academic Years List
         </x-data-table>
 
-        <!-- Unified Modal Implementation (Direct HTML to ensure Scope Integrity) -->
-        <div x-show="modalOpen" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;" x-cloak
-            @keydown.escape.window="modalOpen = false">
-            <!-- Backdrop -->
-            <div x-show="modalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
-                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                class="fixed inset-0 transform transition-all" @click="modalOpen = false">
-                <div class="absolute inset-0 modal-backdrop-premium"></div>
-            </div>
+        <x-modal name="academic-year-modal" alpineTitle="editMode ? 'Edit Academic Year' : 'Create New Academic Year'" maxWidth="2xl">
+            <form @submit.prevent="submitForm()" method="POST" novalidate>
+                @csrf
+                <template x-if="editMode">
+                    <input type="hidden" name="_method" value="PUT">
+                </template>
 
-            <!-- Modal Content Container -->
-            <div x-show="modalOpen" x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200"
-                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="mb-6 bg-white rounded-xl overflow-hidden editorial-shadow transform transition-all sm:w-full sm:mx-auto sm:max-w-lg mt-20 flex flex-col">
-
-                <form @submit.prevent="submitForm()" method="POST" novalidate>
-                    @csrf
-                    <template x-if="editMode">
-                        <input type="hidden" name="_method" value="PUT">
+                <!-- Name -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Academic Year Name <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input type="text" name="name" x-model="formData.name"
+                            @input="clearError('name')" placeholder="e.g., 2025-2026"
+                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.name}">
+                    </div>
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
                     </template>
+                </div>
 
-                    <!-- Modal Header -->
-                    <div class="modal-header-premium">
-                        <h3 class="modal-title-premium"
-                            x-text="editMode ? 'Edit Academic Year' : 'Create New Academic Year'"></h3>
-                        <button type="button" @click="modalOpen = false"
-                            class="text-white/80 hover:text-white transition-opacity focus:outline-none">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- Modal Body -->
-                    <div class="p-8 space-y-6">
-                        <!-- Name -->
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Academic Year Name <span
-                                    class="text-red-600 ml-1 font-bold text-base leading-none">*</span></label>
-                            <input type="text" name="name" x-model="formData.name"
-                                @input="if(errors.name) delete errors.name" placeholder="e.g., 2025-2026"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.name}">
-                            <div x-show="errors.name" class="mt-1">
-                                <p class="modal-error-message" x-text="errors.name ? errors.name[0] : ''"></p>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Start Date -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Start Date <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="date" name="start_date" x-model="formData.start_date"
+                                @input="clearError('start_date')"
+                                class="modal-input-premium !pr-10"
+                                :class="{'border-red-500 ring-red-500/10': errors.start_date}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <i class="fas fa-calendar-alt text-sm"></i>
                             </div>
                         </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <!-- Start Date -->
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Start Date <span
-                                        class="text-red-600 ml-1 font-bold text-base leading-none">*</span></label>
-                                <div class="relative">
-                                    <input type="date" name="start_date" x-model="formData.start_date"
-                                        @input="if(errors.start_date) delete errors.start_date"
-                                        class="modal-input-premium pr-10"
-                                        :class="{'border-red-500 ring-red-500/10': errors.start_date}">
-                                </div>
-                                <div x-show="errors.start_date" class="mt-1">
-                                    <p class="modal-error-message" x-text="errors.start_date ? errors.start_date[0] : ''">
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- End Date -->
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">End Date <span
-                                        class="text-red-600 ml-1 font-bold text-base leading-none">*</span></label>
-                                <div class="relative">
-                                    <input type="date" name="end_date" x-model="formData.end_date"
-                                        @input="if(errors.end_date) delete errors.end_date"
-                                        class="modal-input-premium pr-10"
-                                        :class="{'border-red-500 ring-red-500/10': errors.end_date}">
-                                </div>
-                                <div x-show="errors.end_date" class="mt-1">
-                                    <p class="modal-error-message" x-text="errors.end_date ? errors.end_date[0] : ''"></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Is Current (Toggle Section) -->
-                        <div class="modal-toggle-section">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-slate-900 tracking-tight">Set as current academic
-                                    year</span>
-                                <span class="text-[10px] text-slate-500 font-bold uppercase mt-0.5 tracking-wide">Active
-                                    sessions will transition to this timeline.</span>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_current" x-model="formData.is_current" class="sr-only peer">
-                                <div
-                                    class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all toggle-bg-premium shadow-sm transition-all">
-                                </div>
-                            </label>
-                        </div>
+                        <template x-if="errors.start_date">
+                            <p class="modal-error-message" x-text="errors.start_date[0]"></p>
+                        </template>
                     </div>
 
-                    <!-- Modal Footer -->
-                    <div class="modal-footer-premium text-right">
-                        <button type="button" @click="modalOpen = false" class="btn-premium-cancel mr-3">
-                            Cancel
-                        </button>
-                        <button type="submit" :disabled="submitting" class="btn-premium-primary">
-                            <template x-if="submitting">
-                                <span
-                                    class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"></span>
-                            </template>
-                            <span
-                                x-text="editMode ? (submitting ? 'Updating...' : 'Save Changes') : (submitting ? 'Creating...' : 'Create Year')"></span>
-                        </button>
+                    <!-- End Date -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">End Date <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="date" name="end_date" x-model="formData.end_date"
+                                @input="clearError('end_date')"
+                                class="modal-input-premium !pr-10"
+                                :class="{'border-red-500 ring-red-500/10': errors.end_date}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <i class="fas fa-calendar-alt text-sm"></i>
+                            </div>
+                        </div>
+                        <template x-if="errors.end_date">
+                            <p class="modal-error-message" x-text="errors.end_date[0]"></p>
+                        </template>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+
+                <!-- Is Current (Toggle Section) -->
+                <div class="mb-8 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-900 leading-tight">Set as current academic year</span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">Active sessions will transition to this timeline.</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_current" x-model="formData.is_current" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 transition-all"></div>
+                    </label>
+                </div>
+
+                <!-- Footer -->
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'academic-year-modal')" class="btn-premium-cancel px-10">
+                        Cancel
+                    </button>
+                    <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
+                        <template x-if="submitting">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                        </template>
+                        <span x-text="editMode ? 'Update Changes' : 'Create Year'"></span>
+                    </button>
+                </x-slot>
+            </form>
+        </x-modal>
     </div>
 
     <!-- Confirmation Modal (assuming it exists as a component) -->
@@ -209,9 +172,8 @@
 
     @push('scripts')
         <script>
-            function academicYearManagement() {
-                return {
-                    modalOpen: false,
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('academicYearManagement', () => ({
                     editMode: false,
                     yearId: null,
                     submitting: false,
@@ -226,28 +188,6 @@
                     init() {
                         window.addEventListener('open-edit-year', (e) => this.openEditModal(e.detail));
                         window.addEventListener('open-delete-year', (e) => this.confirmDelete(e.detail));
-                    },
-
-                    openAddModal() {
-                        this.editMode = false;
-                        this.yearId = null;
-                        this.errors = {};
-                        this.formData = { name: '', start_date: '', end_date: '', is_current: false };
-                        this.modalOpen = true;
-                    },
-
-                    openEditModal(year) {
-                        console.log('Editing year:', year);
-                        this.editMode = true;
-                        this.yearId = year.id;
-                        this.errors = {};
-                        this.formData = {
-                            name: year.name,
-                            start_date: year.start_date,
-                            end_date: year.end_date,
-                            is_current: !!year.is_current
-                        };
-                        this.modalOpen = true;
                     },
 
                     async submitForm() {
@@ -276,14 +216,19 @@
                             const result = await response.json();
 
                             if (response.ok) {
-                                setTimeout(() => window.location.reload(), 500);
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'success',
+                                        title: result.message
+                                    });
+                                }
+                                setTimeout(() => window.location.reload(), 800);
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
                             } else {
                                 throw new Error(result.message || 'Something went wrong');
                             }
                         } catch (error) {
-                            console.error('Submission Error:', error);
                             if (window.Toast) {
                                 window.Toast.fire({
                                     icon: 'error',
@@ -293,6 +238,33 @@
                         } finally {
                             this.submitting = false;
                         }
+                    },
+
+                    clearError(field) {
+                        if (this.errors[field]) {
+                            delete this.errors[field];
+                        }
+                    },
+
+                    openAddModal() {
+                        this.editMode = false;
+                        this.yearId = null;
+                        this.errors = {};
+                        this.formData = { name: '', start_date: '', end_date: '', is_current: false };
+                        this.$dispatch('open-modal', 'academic-year-modal');
+                    },
+
+                    openEditModal(year) {
+                        this.editMode = true;
+                        this.yearId = year.id;
+                        this.errors = {};
+                        this.formData = {
+                            name: year.name,
+                            start_date: year.start_date,
+                            end_date: year.end_date,
+                            is_current: !!year.is_current
+                        };
+                        this.$dispatch('open-modal', 'academic-year-modal');
                     },
 
                     async confirmDelete(year) {
@@ -330,8 +302,8 @@
                             }
                         }));
                     }
-                }
-            }
+                }));
+            });
         </script>
     @endpush
 @endsection

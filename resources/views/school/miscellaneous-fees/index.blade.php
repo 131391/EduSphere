@@ -3,21 +3,21 @@
 @section('title', 'Miscellaneous Fees')
 
 @section('content')
-<div x-data="miscFeeManagement()">
+<div x-data="miscFeeManagement">
     <!-- Header Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-emerald-100/50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
                         <i class="fas fa-coins text-xs"></i>
                     </div>
                     Miscellaneous Fees
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage ad-hoc and one-time fees for various services</p>
             </div>
-            <button @click="openAddModal()" 
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+            <button @click="openAddModal" 
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2"></i>
                 Add Fee
             </button>
@@ -37,8 +37,8 @@
                             <i class="fas fa-file-invoice-dollar text-[10px]"></i>
                         </div>
                         <div>
-                            <span class="font-bold text-gray-700 block">' . e($row->name) . '</span>
-                            <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">' . ($row->description ?: 'No Description') . '</span>
+                            <span class="font-bold text-gray-700 block uppercase tracking-tight">' . e($row->name) . '</span>
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">' . ($row->description ?: 'No Description') . '</span>
                         </div>
                     </div>';
                 }
@@ -49,7 +49,7 @@
                 'sortable' => true,
                 'render' => function($row) {
                     return '<div class="text-emerald-700 font-bold bg-emerald-50 px-3 py-1.5 rounded-xl inline-flex items-center gap-1 border border-emerald-100 shadow-sm">
-                                <span class="text-xs font-medium text-emerald-500">₹</span>
+                                <span class="text-xs font-bold text-emerald-500">₹</span>
                                 <span class="tracking-tight">' . number_format($row->amount, 2) . '</span>
                             </div>';
                 }
@@ -59,7 +59,7 @@
                 'label' => 'LAST UPDATED',
                 'sortable' => true,
                 'render' => function($row) {
-                    return '<div class="text-gray-500 text-[12px] font-medium">' . $row->updated_at->format('M d, Y') . '</div>';
+                    return '<div class="text-gray-500 text-[12px] font-bold uppercase tracking-wider">' . $row->updated_at->format('M d, Y') . '</div>';
                 }
             ],
         ];
@@ -68,15 +68,15 @@
             [
                 'type' => 'button',
                 'icon' => 'fas fa-edit',
-                'class' => 'text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors',
+                'class' => 'text-teal-600 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $encoded = json_encode([
                         'id' => $row->id,
                         'name' => $row->name,
                         'amount' => $row->amount,
                         'description' => $row->description,
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-misc-fee', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-misc-fee', { detail: $encoded }))";
                 },
                 'title' => 'Edit',
             ],
@@ -85,7 +85,8 @@
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    return "window.dispatchEvent(new CustomEvent('open-delete-misc-fee', { detail: { id: " . $row->id . ", name: '" . addslashes($row->name) . "' } }))";
+                    $name = addslashes($row->name);
+                    return "window.dispatchEvent(new CustomEvent('open-delete-misc-fee', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
                 },
                 'title' => 'Delete',
             ],
@@ -106,104 +107,82 @@
     </div>
 
     <!-- Add/Edit Fee Modal -->
-    <x-modal name="misc-fee-modal" alpineTitle="editMode ? 'Edit Fee Details' : 'Add New Miscellaneous Fee'" maxWidth="md">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+    <x-modal name="misc-fee-modal" alpineTitle="editMode ? 'Edit Fee Details' : 'Add New Miscellaneous Fee'" maxWidth="2xl">
+        <form @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-8 py-8 space-y-6">
-                <!-- Fee Name -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Fee Particulars <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-emerald-600 text-gray-400">
-                            <i class="fas fa-signature text-sm"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            x-model="formData.name"
-                            @input="if(errors.name) delete errors.name"
-                            placeholder="e.g., ID Card Processing"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400 font-medium"
-                            :class="{'border-red-500 ring-red-500/10': errors.name}"
-                        >
-                    </div>
-                    <div class="min-h-[24px] mt-1 ml-1">
-                        <template x-if="errors.name">
-                            <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span x-text="errors.name[0]"></span>
-                            </p>
-                        </template>
+            <!-- Fee Name -->
+            <div class="space-y-2 mb-6">
+                <label class="modal-label-premium">Fee Particulars <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input 
+                        type="text" 
+                        name="name" 
+                        x-model="formData.name"
+                        @input="clearError('name')"
+                        placeholder="e.g., ID Card Processing"
+                        class="modal-input-premium pl-4"
+                        :class="{'border-red-500 ring-red-500/10': errors.name}"
+                    >
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-teal-500">
+                        <i class="fas fa-signature text-sm"></i>
                     </div>
                 </div>
+                <template x-if="errors.name">
+                    <p class="modal-error-message" x-text="errors.name[0]"></p>
+                </template>
+            </div>
 
-                <!-- Amount -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Fee Amount <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-emerald-600 text-gray-400">
-                            <span class="text-sm font-bold">₹</span>
-                        </div>
-                        <input 
-                            type="number" 
-                            name="amount" 
-                            step="0.01"
-                            x-model="formData.amount"
-                            @input="if(errors.amount) delete errors.amount"
-                            placeholder="0.00"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400 font-medium"
-                            :class="{'border-red-500 ring-red-500/10': errors.amount}"
-                        >
-                    </div>
-                    <div class="min-h-[24px] mt-1 ml-1">
-                        <template x-if="errors.amount">
-                            <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span x-text="errors.amount[0]"></span>
-                            </p>
-                        </template>
+            <!-- Amount -->
+            <div class="space-y-2 mb-6">
+                <label class="modal-label-premium">Fee Amount <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input 
+                        type="number" 
+                        name="amount" 
+                        step="0.01"
+                        x-model="formData.amount"
+                        @input="clearError('amount')"
+                        placeholder="0.00"
+                        class="modal-input-premium pl-4"
+                        :class="{'border-red-500 ring-red-500/10': errors.amount}"
+                    >
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                        <span class="text-sm font-bold">₹</span>
                     </div>
                 </div>
+                <template x-if="errors.amount">
+                    <p class="modal-error-message" x-text="errors.amount[0]"></p>
+                </template>
+            </div>
 
-                <!-- Description -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Additional Notes</label>
-                    <div class="relative group">
-                        <textarea 
-                            name="description" 
-                            x-model="formData.description"
-                            rows="3"
-                            placeholder="Optional explanation of what this fee covers..."
-                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400 resize-none font-medium"
-                        ></textarea>
-                    </div>
-                </div>
+            <!-- Description -->
+            <div class="space-y-2 mb-8">
+                <label class="modal-label-premium">Additional Notes</label>
+                <textarea 
+                    name="description" 
+                    x-model="formData.description"
+                    rows="3"
+                    placeholder="Optional explanation of what this fee covers..."
+                    class="modal-input-premium pl-4 resize-none !h-auto font-medium"
+                ></textarea>
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-lg shadow-emerald-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[160px] bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-teal-100">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="editMode ? (submitting ? 'Saving...' : 'Update Fee') : (submitting ? 'Adding...' : 'Add Fee')"></span>
+                    <span x-text="editMode ? 'Update Fee' : 'Save Fee'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -226,6 +205,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async submitForm() {
+            if (this.submitting) return;
             this.submitting = true;
             this.errors = {};
             
@@ -256,7 +236,7 @@ document.addEventListener('alpine:init', () => {
                             title: result.message
                         });
                     }
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => window.location.reload(), 800);
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
@@ -271,6 +251,12 @@ document.addEventListener('alpine:init', () => {
                 }
             } finally {
                 this.submitting = false;
+            }
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
             }
         },
 
@@ -295,28 +281,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmDelete(fee) {
-            if (window.confirm(`Are you sure you want to delete the miscellaneous fee "${fee.name}"?`)) {
-                try {
-                    const response = await fetch(`/school/miscellaneous-fees/${fee.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ _method: 'DELETE' })
-                    });
-                    
-                    const result = await response.json();
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert(result.message || 'Delete failed');
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Miscellaneous Fee',
+                    message: `Are you sure you want to delete the miscellaneous fee "${fee.name}"? This action cannot be undone.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/miscellaneous-fees/${fee.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Delete failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Delete Error:', error);
+                        }
                     }
-                } catch (error) {
-                    alert('An error occurred while deleting');
                 }
-            }
+            }));
         },
 
         closeModal() {

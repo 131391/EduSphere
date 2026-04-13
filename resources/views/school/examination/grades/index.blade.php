@@ -106,98 +106,86 @@
     </div>
 
     <!-- Add/Edit Grade Modal -->
-    <x-modal name="grade-modal" alpineTitle="editMode ? 'Modify Grade Scale' : 'Establish New Grade'" maxWidth="md">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+    <x-modal name="grade-modal" alpineTitle="editMode ? 'Modify Grade Scale' : 'Establish New Grade'" maxWidth="xl">
+        <form id="grade-form" @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-8 py-8 space-y-6">
-                <!-- Grade Symbol -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Grade Symbol <span class="text-red-500">*</span></label>
+            <!-- Form Body - Academic Year Standard -->
+            <div class="space-y-6">
+                <!-- Grade Symbol Block -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Grade Symbol <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
+                        <input type="text" x-model="formData.grade" @input="clearError('grade')" placeholder="e.g., A+"
+                            class="modal-input-premium font-black uppercase pr-10" :class="{'border-red-500 ring-red-500/10': errors.grade}">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:scale-110 transition-transform">
                             <i class="fas fa-font text-sm"></i>
                         </div>
-                        <input 
-                            type="text" 
-                            name="grade" 
-                            x-model="formData.grade"
-                            @input="if(errors.grade) delete errors.grade"
-                            placeholder="e.g., A+"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400 font-black uppercase"
-                            :class="{'border-red-500 ring-red-500/10': errors.grade}"
-                        >
                     </div>
-                    <div class="min-h-[24px] mt-1 ml-1">
-                        <template x-if="errors.grade">
-                            <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span x-text="errors.grade[0]"></span>
-                            </p>
+                    <template x-if="errors.grade">
+                        <p class="modal-error-message" x-text="errors.grade[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Range Grid -->
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Min Percentage <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="number" x-model="formData.range_start" @input="clearError('range_start')" placeholder="0"
+                                class="modal-input-premium pr-10 font-bold" :class="{'border-red-500 ring-red-500/10': errors.range_start}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <i class="fas fa-percentage text-xs"></i>
+                            </div>
+                        </div>
+                        <template x-if="errors.range_start">
+                            <p class="modal-error-message" x-text="errors.range_start[0]"></p>
+                        </template>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Max Percentage <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="number" x-model="formData.range_end" @input="clearError('range_end')" placeholder="100"
+                                class="modal-input-premium pr-10 font-bold" :class="{'border-red-500 ring-red-500/10': errors.range_end}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <i class="fas fa-percentage text-xs"></i>
+                            </div>
+                        </div>
+                        <template x-if="errors.range_end">
+                            <p class="modal-error-message" x-text="errors.range_end[0]"></p>
                         </template>
                     </div>
                 </div>
 
-                <!-- Range Start & End -->
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Min % <span class="text-red-500">*</span></label>
-                        <input 
-                            type="number" 
-                            name="range_start" 
-                            x-model="formData.range_start"
-                            @input="if(errors.range_start) delete errors.range_start"
-                            placeholder="0"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-indigo-500 transition-all font-bold text-gray-700"
-                            :class="{'border-red-500': errors.range_start}"
-                        >
+                <!-- Guidance Notification Card -->
+                <div class="mb-8 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-graduation-cap text-indigo-600 text-sm"></i>
                     </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Max % <span class="text-red-500">*</span></label>
-                        <input 
-                            type="number" 
-                            name="range_end" 
-                            x-model="formData.range_end"
-                            @input="if(errors.range_end) delete errors.range_end"
-                            placeholder="100"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-indigo-500 transition-all font-bold text-gray-700"
-                            :class="{'border-red-500': errors.range_end}"
-                        >
-                    </div>
-                </div>
-                <div class="min-h-[24px] -mt-4 ml-1">
-                    <template x-if="errors.range_start || errors.range_end">
-                        <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span x-text="errors.range_start ? errors.range_start[0] : errors.range_end[0]"></span>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Grading Policy Notice</span>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            Ensure percentage ranges do not <span class="text-indigo-600 italic underline decoration-indigo-100">overlap</span> with existing grades to maintain calculation integrity.
                         </p>
-                    </template>
+                    </div>
                 </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
+            <!-- Modal Footer - Academic Year Standard -->
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all duration-200 shadow-lg shadow-indigo-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="submit" form="grade-form" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="editMode ? (submitting ? 'Updating...' : 'Save Scale') : (submitting ? 'Establishing...' : 'Confirm Grade')"></span>
+                    <span x-text="editMode ? 'Update Changes' : 'Create Grade'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -315,6 +303,12 @@ document.addEventListener('alpine:init', () => {
 
         closeModal() {
             this.$dispatch('close-modal', 'grade-modal');
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
         }
     }));
 });

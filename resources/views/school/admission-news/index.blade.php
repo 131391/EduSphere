@@ -3,7 +3,7 @@
 @section('title', 'Admission Press Center')
 
 @section('content')
-<div x-data="admissionNewsManager()">
+<div x-data="admissionNewsManager">
     <!-- Header Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-indigo-100/50">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -16,7 +16,7 @@
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Broadcast official announcements and updates for potential applicants</p>
             </div>
-            <button @click="openAddModal()" 
+            <button @click="openAddModal" 
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2"></i>
                 Compose News
@@ -70,13 +70,13 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-800 bg-indigo-50 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $encoded = json_encode([
                         'id' => $row->id,
                         'title' => $row->title,
                         'content' => $row->content,
                         'publish_date' => $row->publish_date->format('Y-m-d'),
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-news', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-news', { detail: $encoded }))";
                 },
                 'title' => 'Edit Announcement',
             ],
@@ -85,7 +85,8 @@
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    return "window.dispatchEvent(new CustomEvent('open-delete-news', { detail: { id: " . $row->id . ", name: '" . addslashes($row->title) . "' } }))";
+                    $name = addslashes($row->title);
+                    return "window.dispatchEvent(new CustomEvent('open-delete-news', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
                 },
                 'title' => 'Retract News',
             ],
@@ -107,85 +108,84 @@
 
     <!-- News Modal -->
     <x-modal name="admission-news-modal" alpineTitle="editMode ? 'Edit Announcement' : 'Compose Broadcasting News'" maxWidth="2xl">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+        <form @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-8 py-8 space-y-6">
-                <!-- Title -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Headline <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
-                            <i class="fas fa-heading text-sm"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            name="title" 
-                            x-model="formData.title"
-                            @input="if(errors.title) delete errors.title"
-                            placeholder="e.g., Admissions Open for 2024-25 Session"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all font-medium text-gray-700"
-                            :class="{'border-red-500 ring-red-500/10': errors.title}"
-                        >
+            <!-- Title -->
+            <div class="space-y-2 mb-6">
+                <label class="modal-label-premium">Headline <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input 
+                        type="text" 
+                        name="title" 
+                        x-model="formData.title"
+                        @input="clearError('title')"
+                        placeholder="e.g., Admissions Open for 2024-25 Session"
+                        class="modal-input-premium pl-4"
+                        :class="{'border-red-500 ring-red-500/10': errors.title}"
+                    >
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
+                        <i class="fas fa-heading text-sm"></i>
                     </div>
                 </div>
+                <template x-if="errors.title">
+                    <p class="modal-error-message" x-text="errors.title[0]"></p>
+                </template>
+            </div>
 
-                <!-- Date -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Distribution Date <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
-                            <i class="fas fa-calendar-alt text-sm"></i>
-                        </div>
-                        <input 
-                            type="date" 
-                            name="publish_date" 
-                            x-model="formData.publish_date"
-                            @input="if(errors.publish_date) delete errors.publish_date"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all font-bold text-gray-700"
-                            :class="{'border-red-500 ring-red-500/10': errors.publish_date}"
-                        >
+            <!-- Date -->
+            <div class="space-y-2 mb-6">
+                <label class="modal-label-premium">Distribution Date <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input 
+                        type="date" 
+                        name="publish_date" 
+                        x-model="formData.publish_date"
+                        @input="clearError('publish_date')"
+                        class="modal-input-premium pl-4 font-bold"
+                        :class="{'border-red-500 ring-red-500/10': errors.publish_date}"
+                    >
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
+                        <i class="fas fa-calendar-alt text-sm"></i>
                     </div>
                 </div>
+                <template x-if="errors.publish_date">
+                    <p class="modal-error-message" x-text="errors.publish_date[0]"></p>
+                </template>
+            </div>
 
-                <!-- Content -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Full Announcement Body <span class="text-red-500">*</span></label>
-                    <textarea 
-                        name="content" 
-                        x-model="formData.content"
-                        @input="if(errors.content) delete errors.content"
-                        rows="5"
-                        placeholder="Detailed message regarding the update..."
-                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all font-medium text-gray-700 resize-none"
-                        :class="{'border-red-500 ring-red-500/10': errors.content}"
-                    ></textarea>
-                </div>
+            <!-- Content -->
+            <div class="space-y-2 mb-8">
+                <label class="modal-label-premium">Full Announcement Body <span class="text-red-600 font-bold">*</span></label>
+                <textarea 
+                    name="content" 
+                    x-model="formData.content"
+                    @input="clearError('content')"
+                    rows="5"
+                    placeholder="Detailed message regarding the update..."
+                    class="modal-input-premium px-4 py-3 resize-none h-40"
+                    :class="{'border-red-500 ring-red-500/10': errors.content}"
+                ></textarea>
+                <template x-if="errors.content">
+                    <p class="modal-error-message" x-text="errors.content[0]"></p>
+                </template>
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all duration-200 shadow-lg shadow-indigo-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="editMode ? (submitting ? 'Updating...' : 'Save Draft') : (submitting ? 'Broadcasting...' : 'Broadcast Now')"></span>
+                    <span x-text="editMode ? 'Update Changes' : 'Broadcast Now'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -208,6 +208,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async submitForm() {
+            if (this.submitting) return;
             this.submitting = true;
             this.errors = {};
             
@@ -235,7 +236,7 @@ document.addEventListener('alpine:init', () => {
                     if (window.Toast) {
                         window.Toast.fire({ icon: 'success', title: result.message });
                     }
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => window.location.reload(), 800);
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
@@ -247,6 +248,12 @@ document.addEventListener('alpine:init', () => {
                 }
             } finally {
                 this.submitting = false;
+            }
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
             }
         },
 
@@ -271,28 +278,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmDelete(item) {
-            if (window.confirm(`Are you sure you want to retract the announcement "${item.name}"?`)) {
-                try {
-                    const response = await fetch(`/school/admission-news/${item.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ _method: 'DELETE' })
-                    });
-                    
-                    const result = await response.json();
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert(result.message || 'Retraction failed');
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Retract Announcement',
+                    message: `Are you sure you want to retract the announcement "${item.name}"? This will remove it from public view immediately.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/admission-news/${item.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Retraction failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Retraction Error:', error);
+                        }
                     }
-                } catch (error) {
-                    alert('An error occurred during retraction');
                 }
-            }
+            }));
         },
 
         closeModal() {

@@ -3,15 +3,20 @@
 @section('title', 'Fee Type Management')
 
 @section('content')
-<div x-data="feeTypeManagement()">
+<div x-data="feeTypeManagement">
     <!-- Header Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-emerald-100/50">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Fee Type Management</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Define and manage fee categories (e.g., Monthly, Term, Admission)</p>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <i class="fas fa-receipt text-xs"></i>
+                    </div>
+                    Fee Type Management
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Define and manage fee categories (e.g., Monthly, Term, Admission)</p>
             </div>
-            <button @click="openAddModal()" 
+            <button @click="openAddModal" 
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2"></i>
                 Create Fee Type
@@ -51,11 +56,11 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $encoded = json_encode([
                         'id' => $row->id,
                         'name' => $row->name,
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-fee-type', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-fee-type', { detail: $encoded }))";
                 },
                 'title' => 'Edit',
             ],
@@ -64,7 +69,8 @@
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    return "window.dispatchEvent(new CustomEvent('open-delete-fee-type', { detail: { id: " . $row->id . ", name: '" . addslashes($row->name) . "' } }))";
+                    $name = addslashes($row->name);
+                    return "window.dispatchEvent(new CustomEvent('open-delete-fee-type', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
                 },
                 'title' => 'Delete',
             ],
@@ -85,61 +91,46 @@
     </div>
 
     <!-- Add/Edit Fee Type Modal -->
-    <x-modal name="fee-type-modal" alpineTitle="editMode ? 'Edit Fee Type' : 'Create Fee Type'" maxWidth="md">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+    <x-modal name="fee-type-modal" alpineTitle="editMode ? 'Edit Fee Type' : 'Create Fee Type'" maxWidth="2xl">
+        <form @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-8 py-8">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Fee Type Name <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-emerald-600 text-gray-400">
-                            <i class="fas fa-folder-open text-sm"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            name="name" 
-                            x-model="formData.name"
-                            @input="if(errors.name) delete errors.name"
-                            placeholder="e.g., Annual Fees"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400 font-medium"
-                            :class="{'border-red-500 ring-red-500/10': errors.name}"
-                        >
-                    </div>
-                    <div class="min-h-[24px] mt-1 ml-1">
-                        <template x-if="errors.name">
-                            <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <span x-text="errors.name[0]"></span>
-                            </p>
-                        </template>
+            <div class="space-y-2 mb-8">
+                <label class="modal-label-premium">Fee Type Name <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input 
+                        type="text" 
+                        name="name" 
+                        x-model="formData.name"
+                        @input="clearError('name')"
+                        placeholder="e.g., Annual Fees"
+                        class="modal-input-premium pl-4"
+                        :class="{'border-red-500 ring-red-500/10': errors.name}"
+                    >
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                        <i class="fas fa-folder-open text-sm"></i>
                     </div>
                 </div>
+                <template x-if="errors.name">
+                    <p class="modal-error-message" x-text="errors.name[0]"></p>
+                </template>
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-lg shadow-emerald-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[160px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-100">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="editMode ? (submitting ? 'Updating' : 'Save Changes') : (submitting ? 'Creating' : 'Create Type')"></span>
+                    <span x-text="editMode ? 'Update Changes' : 'Create Type'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -160,6 +151,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async submitForm() {
+            if (this.submitting) return;
             this.submitting = true;
             this.errors = {};
             
@@ -190,7 +182,7 @@ document.addEventListener('alpine:init', () => {
                             title: result.message
                         });
                     }
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => window.location.reload(), 800);
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
@@ -205,6 +197,12 @@ document.addEventListener('alpine:init', () => {
                 }
             } finally {
                 this.submitting = false;
+            }
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
             }
         },
 
@@ -227,28 +225,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmDelete(type) {
-            if (window.confirm(`Are you sure you want to delete the fee type "${type.name}"?`)) {
-                try {
-                    const response = await fetch(`/school/fee-types/${type.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ _method: 'DELETE' })
-                    });
-                    
-                    const result = await response.json();
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert(result.message || 'Delete failed');
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Fee Type',
+                    message: `Are you sure you want to delete the fee type "${type.name}"? This action cannot be undone.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/fee-types/${type.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Delete failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Delete Error:', error);
+                        }
                     }
-                } catch (error) {
-                    alert('An error occurred while deleting');
                 }
-            }
+            }));
         },
 
         closeModal() {
@@ -259,3 +268,4 @@ document.addEventListener('alpine:init', () => {
 </script>
 @endpush
 @endsection
+

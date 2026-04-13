@@ -3,7 +3,7 @@
 @section('title', 'School Bank Accounts')
 
 @section('content')
-<div x-data="schoolBankManagement()">
+<div x-data="schoolBankManagement">
     <!-- Header Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-emerald-100/50">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -16,7 +16,7 @@
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage official bank accounts for fee collection and payouts</p>
             </div>
-            <button @click="openAddModal()" 
+            <button @click="openAddModal" 
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2"></i>
                 Add Bank Account
@@ -69,14 +69,14 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $encoded = json_encode([
                         'id' => $row->id,
                         'bank_name' => $row->bank_name,
                         'account_number' => $row->account_number,
                         'branch_name' => $row->branch_name,
                         'ifsc_code' => $row->ifsc_code,
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-school-bank', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-school-bank', { detail: $encoded }))";
                 },
                 'title' => 'Edit',
             ],
@@ -85,7 +85,8 @@
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    return "window.dispatchEvent(new CustomEvent('open-delete-school-bank', { detail: { id: " . $row->id . ", name: '" . addslashes($row->bank_name) . "' } }))";
+                    $name = addslashes($row->bank_name);
+                    return "window.dispatchEvent(new CustomEvent('open-delete-school-bank', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
                 },
                 'title' => 'Delete',
             ],
@@ -106,97 +107,93 @@
     </div>
 
     <!-- Add/Edit Bank Modal -->
-    <x-modal name="school-bank-modal" alpineTitle="editMode ? 'Edit Account Details' : 'Register New Account'" maxWidth="md">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+    <x-modal name="school-bank-modal" alpineTitle="editMode ? 'Edit Account Details' : 'Register New Account'" maxWidth="2xl">
+        <form @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-8 py-8 space-y-5">
-                <!-- Bank Name -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Bank Name <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-emerald-600 text-gray-400">
-                            <i class="fas fa-university text-sm"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            name="bank_name" 
-                            x-model="formData.bank_name"
-                            @input="if(errors.bank_name) delete errors.bank_name"
-                            placeholder="e.g., State Bank of India"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 font-medium"
-                            :class="{'border-red-500 ring-red-500/10': errors.bank_name}"
-                        >
+            <!-- Bank Name -->
+            <div class="space-y-2 mb-6">
+                <label class="modal-label-premium">Bank Name <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input 
+                        type="text" 
+                        name="bank_name" 
+                        x-model="formData.bank_name"
+                        @input="clearError('bank_name')"
+                        placeholder="e.g., State Bank of India"
+                        class="modal-input-premium"
+                        :class="{'border-red-500 ring-red-500/10': errors.bank_name}"
+                    >
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                        <i class="fas fa-university text-sm"></i>
                     </div>
                 </div>
+                <template x-if="errors.bank_name">
+                    <p class="modal-error-message" x-text="errors.bank_name[0]"></p>
+                </template>
+            </div>
 
-                <!-- Account Number -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Account Number <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-emerald-600 text-gray-400">
-                            <i class="fas fa-hashtag text-sm"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            name="account_number" 
-                            x-model="formData.account_number"
-                            @input="if(errors.account_number) delete errors.account_number"
-                            placeholder="Enter full account number"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 font-bold tracking-wider"
-                            :class="{'border-red-500 ring-red-500/10': errors.account_number}"
-                        >
+            <!-- Account Number -->
+            <div class="space-y-2 mb-6">
+                <label class="modal-label-premium">Account Number <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input 
+                        type="text" 
+                        name="account_number" 
+                        x-model="formData.account_number"
+                        @input="clearError('account_number')"
+                        placeholder="Enter full account number"
+                        class="modal-input-premium font-bold tracking-wider"
+                        :class="{'border-red-500 ring-red-500/10': errors.account_number}"
+                    >
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                        <i class="fas fa-hashtag text-sm"></i>
                     </div>
                 </div>
+                <template x-if="errors.account_number">
+                    <p class="modal-error-message" x-text="errors.account_number[0]"></p>
+                </template>
+            </div>
 
-                <!-- Branch & IFSC -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Branch Name</label>
-                        <input 
-                            type="text" 
-                            name="branch_name" 
-                            x-model="formData.branch_name"
-                            placeholder="Branch"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 transition-all text-sm font-medium text-gray-700"
-                        >
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">IFSC Code</label>
-                        <input 
-                            type="text" 
-                            name="ifsc_code" 
-                            x-model="formData.ifsc_code"
-                            placeholder="IFSC"
-                            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 transition-all text-sm font-bold text-gray-700 uppercase"
-                        >
-                    </div>
+            <!-- Branch & IFSC -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Branch Name</label>
+                    <input 
+                        type="text" 
+                        name="branch_name" 
+                        x-model="formData.branch_name"
+                        placeholder="Branch"
+                        class="modal-input-premium text-sm font-medium"
+                    >
+                </div>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">IFSC Code</label>
+                    <input 
+                        type="text" 
+                        name="ifsc_code" 
+                        x-model="formData.ifsc_code"
+                        placeholder="IFSC"
+                        class="modal-input-premium text-sm font-bold uppercase"
+                    >
                 </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 shadow-lg shadow-emerald-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-100 min-w-[160px]">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="editMode ? (submitting ? 'Updating...' : 'Save Changes') : (submitting ? 'Registering...' : 'Register Account')"></span>
+                    <span x-text="editMode ? 'Update Changes' : 'Register Account'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -220,6 +217,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async submitForm() {
+            if (this.submitting) return;
             this.submitting = true;
             this.errors = {};
             
@@ -250,7 +248,7 @@ document.addEventListener('alpine:init', () => {
                             title: result.message
                         });
                     }
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => window.location.reload(), 800);
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
@@ -265,6 +263,12 @@ document.addEventListener('alpine:init', () => {
                 }
             } finally {
                 this.submitting = false;
+            }
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
             }
         },
 
@@ -290,28 +294,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmDelete(bank) {
-            if (window.confirm(`Are you sure you want to delete the bank account "${bank.name}"?`)) {
-                try {
-                    const response = await fetch(`/school/school-banks/${bank.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ _method: 'DELETE' })
-                    });
-                    
-                    const result = await response.json();
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert(result.message || 'Delete failed');
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Bank Account',
+                    message: `Are you sure you want to delete the bank account "${bank.bank_name}"? This action cannot be undone and may affect pending fee transactions.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/school-banks/${bank.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Delete failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Delete Error:', error);
+                        }
                     }
-                } catch (error) {
-                    alert('An error occurred while deleting');
                 }
-            }
+            }));
         },
 
         closeModal() {

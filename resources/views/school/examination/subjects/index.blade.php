@@ -30,38 +30,44 @@
         $tableColumns = [
             [
                 'key' => 'id',
-                'label' => 'Sr No',
+                'label' => 'SR NO',
                 'render' => function($row) use ($classSubjects) {
                     static $index = 0;
-                    return $classSubjects->firstItem() + $index++;
+                    $srNo = $classSubjects->firstItem() + $index++;
+                    return '<div class="flex items-center gap-3">' .
+                           '<div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-[10px]">' . $srNo . '</div>' .
+                           '</div>';
                 }
             ],
             [
                 'key' => 'class_name',
-                'label' => 'Class',
+                'label' => 'TARGET CLASS',
                 'sortable' => true,
+                'render' => fn($row) => '<div class="flex items-center gap-3"><div class="w-7 h-7 rounded-md bg-slate-50 flex items-center justify-center text-slate-400"><i class="fas fa-chalkboard text-[10px]"></i></div><span class="font-bold text-gray-700">' . e($row->class_name) . '</span></div>'
             ],
             [
                 'key' => 'subject_name',
-                'label' => 'Subject',
+                'label' => 'ASSIGNED SUBJECT',
                 'sortable' => true,
+                'render' => fn($row) => '<div class="flex items-center gap-3"><div class="w-7 h-7 rounded-md bg-indigo-50 flex items-center justify-center text-indigo-400"><i class="fas fa-book text-[10px]"></i></div><span class="font-bold text-indigo-600">' . e($row->subject_name) . '</span></div>'
             ],
             [
                 'key' => 'full_marks',
-                'label' => 'Full Marks',
+                'label' => 'FULL MARKS',
                 'sortable' => true,
+                'render' => fn($row) => '<span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-lg text-[11px] font-black border border-emerald-100 shadow-sm">' . e($row->full_marks) . '</span>'
             ],
         ];
 
         $tableActions = [
             [
                 'type' => 'button',
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
+                'icon' => 'fas fa-trash-alt',
+                'class' => 'text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
                     return "window.dispatchEvent(new CustomEvent('delete-subject', { detail: " . $row->id . " }))";
                 },
-                'title' => 'Delete',
+                'title' => 'Remove Assignment',
             ],
         ];
     @endphp
@@ -77,92 +83,105 @@
     </x-data-table>
 
     <!-- Add Subject Modal -->
-    <x-modal name="exam-subject-modal" title="Assign Subject" maxWidth="md">
-        <form @submit.prevent="submitForm()" method="POST" class="p-0">
+    <x-modal name="exam-subject-modal" alpineTitle="'Assign New Subject Configuration'" maxWidth="2xl">
+        <form id="subject-form" @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
-            <div class="px-8 py-8 space-y-6">
-                <!-- Select Class -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Select Class <span class="text-red-500">*</span></label>
+            <!-- Form Body - Using the exact structure from Academic Years -->
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <!-- Target Class -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Target Class <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-600 transition-colors">
-                            <i class="fas fa-chalkboard text-sm"></i>
-                        </div>
-                        <select 
-                            name="class_id" 
-                            x-model="formData.class_id"
-                            required
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 font-medium"
-                        >
+                        <select x-model="formData.class_id" @change="clearError('class_id')" 
+                            class="modal-input-premium appearance-none pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.class_id}">
                             <option value="">Choose Class</option>
                             @foreach($classes as $class)
                             <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:rotate-180 transition-transform duration-300">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.class_id">
+                        <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                    </template>
                 </div>
 
                 <!-- Subject Name -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Subject Name <span class="text-red-500">*</span></label>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Subject Name <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-600 transition-colors">
-                            <i class="fas fa-book text-sm"></i>
-                        </div>
-                        <select 
-                            name="subject_id" 
-                            x-model="formData.subject_id"
-                            required
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 font-medium"
-                        >
-                            <option value="">Choose Subject</option>
-                            @foreach($subjects as $subject)
-                            <option value="{{ $subject->id }}">{{ $subject->name }}</option>
-                            @endforeach
+                        <select x-model="formData.subject_id" @change="clearError('subject_id')" 
+                            class="modal-input-premium appearance-none pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.subject_id}">
+                            @if(count($subjects) > 0)
+                                <option value="">Choose Subject</option>
+                                @foreach($subjects as $subject)
+                                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                                @endforeach
+                            @else
+                                <option value="">No subjects defined in Master</option>
+                            @endif
                         </select>
-                    </div>
-                </div>
-
-                <!-- Full Marks -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Full Marks <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-600 transition-colors">
-                            <i class="fas fa-star text-sm"></i>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:rotate-180 transition-transform duration-300">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
                         </div>
-                        <input 
-                            type="number" 
-                            name="full_marks" 
-                            x-model="formData.full_marks"
-                            placeholder="e.g., 100"
-                            required
-                            min="1"
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 font-medium placeholder:text-gray-400"
-                        >
                     </div>
+                    @if(count($subjects) == 0)
+                        <div class="flex items-center gap-1.5 mt-2 px-0.5">
+                            <i class="fas fa-exclamation-triangle text-[9px] text-amber-500"></i>
+                            <span class="text-[9px] font-bold text-amber-600 uppercase tracking-widest opacity-80">Action Required: Define subjects first.</span>
+                        </div>
+                    @endif
+                    <template x-if="errors.subject_id">
+                        <p class="modal-error-message" x-text="errors.subject_id[0]"></p>
+                    </template>
                 </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeAddModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all"
-                >
+            <!-- Full Marks -->
+            <div class="space-y-2 mb-8">
+                <label class="modal-label-premium">Assessment Full Marks <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
+                    <input type="number" x-model="formData.full_marks" @input="clearError('full_marks')" placeholder="e.g., 100"
+                        class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.full_marks}">
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none">
+                        <i class="fas fa-star text-sm"></i>
+                    </div>
+                </div>
+                <!-- Infographic Block sitting exactly like Academic Year toggle -->
+                <div class="mt-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
+                    <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-lightbulb text-indigo-600 text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Configuration Scope Notification</span>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            This setting applies to the <span class="text-indigo-600 italic">current active session</span>. Parameters can be adjusted in the assessments portal later.
+                        </p>
+                    </div>
+                </div>
+                <template x-if="errors.full_marks">
+                    <p class="modal-error-message" x-text="errors.full_marks[0]"></p>
+                </template>
+            </div>
+
+            <!-- Modal Footer - Exact Match -->
+            <x-slot name="footer">
+                <button type="button" @click="closeAddModal()" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="submit" form="subject-form" 
+                    :disabled="submitting || {{ count($subjects) == 0 ? 'true' : 'false' }}" 
+                    class="btn-premium-primary min-w-[160px]">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="submitting ? 'Processing...' : 'Assign Subject'"></span>
+                    <span x-text="submitting ? 'Allocating...' : 'Assign Subject'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 
@@ -175,6 +194,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('subjectManagement', () => ({
         submitting: false,
+        errors: {},
         formData: {
             class_id: '',
             subject_id: '',
@@ -189,7 +209,7 @@ document.addEventListener('alpine:init', () => {
 
         async submitForm() {
             this.submitting = true;
-            this.clearErrors();
+            this.errors = {};
             try {
                 const response = await fetch('{{ route('school.examination.subjects.store') }}', {
                     method: 'POST',
@@ -203,7 +223,7 @@ document.addEventListener('alpine:init', () => {
                 const result = await response.json();
                 
                 if (response.status === 422) {
-                    this.displayErrors(result.errors);
+                    this.errors = result.errors || {};
                 } else if (response.ok) {
                     if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                     setTimeout(() => window.location.reload(), 800);
@@ -217,30 +237,10 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        displayErrors(errors) {
-            Object.keys(errors).forEach(field => {
-                const input = document.querySelector(`[name="${field}"]`);
-                if (input) {
-                    input.classList.add('!border-red-500');
-                    input.classList.add('!ring-red-500/10');
-                    
-                    let errorMsg = input.closest('div').querySelector('.error-message');
-                    if (!errorMsg) {
-                        errorMsg = document.createElement('p');
-                        errorMsg.className = 'error-message text-red-500 text-[10px] mt-1 font-bold italic';
-                        input.closest('div').appendChild(errorMsg);
-                    }
-                    errorMsg.innerText = errors[field][0];
-                }
-            });
-        },
-
-        clearErrors() {
-            document.querySelectorAll('.\\!border-red-500').forEach(el => {
-                el.classList.remove('!border-red-500');
-                el.classList.remove('!ring-red-500/10');
-            });
-            document.querySelectorAll('.error-message').forEach(el => el.remove());
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
         },
 
         async confirmDelete(id) {
@@ -267,7 +267,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         openAddModal() {
-            this.clearErrors();
+            this.errors = {};
+            this.formData = { class_id: '', subject_id: '', full_marks: 100 };
             this.$dispatch('open-modal', 'exam-subject-modal');
         },
         

@@ -36,11 +36,11 @@ $maxWidthClass = [
             {{ $focusable ? 'setTimeout(() => firstFocusable().focus(), 100)' : '' }}
         } else {
             document.body.classList.remove('overflow-y-hidden');
-            // Clear validation errors when modal is closed
-            // Only hide P tags (error messages), not SPAN tags (mandatory field asterisks)
             $el.querySelectorAll('.text-red-500, .text-red-600').forEach(el => {
                 if (el.tagName === 'P') {
-                    el.style.display = 'none';
+                    // Remove the element if it's an error message to ensure fresh state on re-open
+                    // In Alpine, the template will re-create it if needed
+                    el.remove();
                 }
             });
             $el.querySelectorAll('.border-red-500, .border-red-600').forEach(el => {
@@ -77,7 +77,7 @@ $maxWidthClass = [
     </div>
 
     <!-- Modal -->
-    <div x-show="show" class="mb-6 bg-white rounded-xl overflow-hidden editorial-shadow transform transition-all sm:w-full sm:mx-auto {{ $maxWidthClass }} mt-20 flex flex-col"
+    <div x-show="show" class="mb-6 bg-white rounded-3xl shadow-2xl editorial-shadow transform transition-all sm:w-full sm:mx-auto {{ $maxWidthClass }} mt-12 flex flex-col"
                     x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -86,28 +86,26 @@ $maxWidthClass = [
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
         
         @if(isset($alpineTitle) || (isset($title) && !empty($title)))
-        <div class="modal-header-premium">
-            <h3 class="modal-title-premium">
+        <div class="modal-header-premium !rounded-t-3xl px-10 py-6">
+            <h3 class="modal-title-premium text-xl">
                 @if(isset($title) && !empty($title))
                     {{ $title }}
                 @elseif(isset($alpineTitle))
                     <span x-text="{{ $alpineTitle }}"></span>
                 @endif
             </h3>
-            <button x-on:click="show = false" class="text-white/80 hover:text-white transition-opacity focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+            <button x-on:click="show = false" class="w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-all focus:outline-none">
+                <i class="fas fa-times"></i>
             </button>
         </div>
         @endif
 
-        <div class="p-8">
+        <div class="px-10 py-8 modal-premium-content">
             {{ $slot }}
         </div>
 
         @if(isset($footer))
-            <div class="modal-footer-premium">
+            <div class="modal-footer-premium px-10 py-6 !rounded-b-3xl">
                 {{ $footer }}
             </div>
         @endif

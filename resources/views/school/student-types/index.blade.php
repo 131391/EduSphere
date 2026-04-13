@@ -3,48 +3,44 @@
 @section('title', 'Student Types')
 
 @section('content')
-<div class="space-y-6" x-data="studentTypeManagement">
-
-
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Student Type</h1>
-            <p class="text-gray-600 mt-1">Manage student types</p>
+<div x-data="studentTypeManagement">
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Student Types</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Manage student classification types</p>
+            </div>
+            <button @click="openAddModal" 
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2"></i>
+                Add Student Type
+            </button>
         </div>
-        <button 
-            @click="openAddModal()" 
-            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-        >
-            <i class="fas fa-plus mr-2"></i>
-            ADD
-        </button>
     </div>
 
     @php
         $tableColumns = [
             [
-                'key' => 'id',
-                'label' => 'SR NO',
-                'sortable' => true,
-                'render' => function($row) use ($types) {
-                    static $index = 0;
-                    return $types->firstItem() + $index++;
-                }
-            ],
-            [
                 'key' => 'name',
                 'label' => 'STUDENT TYPE',
                 'sortable' => true,
                 'render' => function($row) {
-                    return '<span class="font-medium text-gray-900">' . e($row->name) . '</span>';
+                    return '
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                            <i class="fas fa-user-tag text-xs"></i>
+                        </div>
+                        <span class="font-bold text-gray-700">' . e($row->name) . '</span>
+                    </div>';
                 }
             ],
             [
                 'key' => 'created_at',
-                'label' => 'DATE',
+                'label' => 'ADDED ON',
                 'sortable' => true,
                 'render' => function($row) {
-                    return $row->created_at->format('F j, Y, g:i a');
+                    return '<div class="text-gray-500 text-sm">' . $row->created_at->format('M d, Y') . '</div>';
                 }
             ],
         ];
@@ -53,85 +49,83 @@
             [
                 'type' => 'button',
                 'icon' => 'fas fa-edit',
-                'class' => 'text-blue-600 hover:text-blue-900',
-                'title' => 'Edit',
+                'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-type'))))";
-                },
-                'data-type' => function($row) {
-                    return base64_encode(json_encode([
+                    $encoded = json_encode([
                         'id' => $row->id,
                         'name' => $row->name,
-                    ]));
-                }
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-student-type', { detail: $encoded }))";
+                },
+                'title' => 'Edit',
             ],
             [
-                'type' => 'form',
-                'url' => fn($row) => route('school.student-types.destroy', $row->id),
-                'method' => 'DELETE',
+                'type' => 'button',
                 'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900',
+                'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
+                'onclick' => function($row) {
+                    $name = addslashes($row->name);
+                    return "window.dispatchEvent(new CustomEvent('open-delete-student-type', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
+                },
                 'title' => 'Delete',
-                'dispatch' => [
-                    'event' => 'open-confirm-modal',
-                    'title' => 'Delete Student Type',
-                    'message' => 'Are you sure you want to delete this student type?'
-                ]
             ],
         ];
     @endphp
 
-    <x-data-table 
-        :columns="$tableColumns"
-        :data="$types"
-        :actions="$tableActions"
-        empty-message="No student types found"
-        empty-icon="fas fa-user-tag"
-    >
-        Student Types List
-    </x-data-table>
+    <div x-on:open-edit-student-type.window="openEditModal($event.detail)" 
+         x-on:open-delete-student-type.window="confirmDelete($event.detail)">
+        <x-data-table 
+            :columns="$tableColumns"
+            :data="$types"
+            :actions="$tableActions"
+            empty-message="No student types found"
+            empty-icon="fas fa-user-tag"
+        >
+            Student Types List
+        </x-data-table>
+    </div>
 
     <!-- Add/Edit Student Type Modal -->
-    <x-modal name="student-type-modal" alpineTitle="editMode ? 'Edit Student Type' : 'Add Student Type'" maxWidth="md">
-        <form :action="editMode ? `/school/student-types/${typeId}` : '{{ route('school.student-types.store') }}'" 
-              method="POST" class="p-6" novalidate>
+    <x-modal name="student-type-modal" alpineTitle="editMode ? 'Edit Student Type' : 'Create New Student Type'" maxWidth="2xl">
+        <form @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
-                @method('PUT')
+                <input type="hidden" name="_method" value="PUT">
             </template>
-            <input type="hidden" name="type_id" x-model="typeId">
 
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Student Type <span class="text-red-500">*</span></label>
+            <div class="space-y-2 mb-8">
+                <label class="modal-label-premium">Student Type Name <span class="text-red-600 font-bold">*</span></label>
+                <div class="relative group">
                     <input 
                         type="text" 
                         name="name" 
                         x-model="formData.name"
-                        placeholder="Enter Student Type"
-                        class="w-full px-4 py-2 border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                        @input="clearError('name')"
+                        placeholder="e.g., General, Staff Ward"
+                        class="modal-input-premium"
+                        :class="{'border-red-500 ring-red-500/10': errors.name}"
                     >
-                    @error('name')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
+                        <i class="fas fa-user-tag text-sm"></i>
+                    </div>
                 </div>
+                <template x-if="errors.name">
+                    <p class="modal-error-message" x-text="errors.name[0]"></p>
+                </template>
             </div>
 
-            <div class="flex items-center justify-center gap-4 mt-8">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-8 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
-                >
-                    Close
+            <!-- Modal Footer -->
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
+                    Cancel
                 </button>
-                <button 
-                    type="submit"
-                    class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
-                >
-                    Submit
+                <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                    </template>
+                    <span x-text="editMode ? 'Update Changes' : 'Create Type'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -145,26 +139,72 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('studentTypeManagement', () => ({
         editMode: false,
         typeId: null,
+        submitting: false,
+        errors: {},
         formData: {
             name: ''
         },
 
-        init() {
-            @if($errors->any())
-                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
-                this.typeId = '{{ old('type_id') }}';
-                this.formData = {
-                    name: '{{ old('name') }}'
-                };
-                this.$nextTick(() => {
-                    this.$dispatch('open-modal', 'student-type-modal');
+        async submitForm() {
+            if (this.submitting) return;
+            this.submitting = true;
+            this.errors = {};
+            
+            const url = this.editMode 
+                ? `/school/student-types/${this.typeId}` 
+                : '{{ route('school.student-types.store') }}';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ...this.formData,
+                        _method: this.editMode ? 'PUT' : 'POST'
+                    })
                 });
-            @endif
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 800);
+                } else if (response.status === 422) {
+                    this.errors = result.errors || {};
+                } else {
+                    throw new Error(result.message || 'Something went wrong');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({
+                        icon: 'error',
+                        title: error.message
+                    });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
         },
 
         openAddModal() {
             this.editMode = false;
             this.typeId = null;
+            this.errors = {};
             this.formData = { name: '' };
             this.$dispatch('open-modal', 'student-type-modal');
         },
@@ -172,10 +212,47 @@ document.addEventListener('alpine:init', () => {
         openEditModal(type) {
             this.editMode = true;
             this.typeId = type.id;
+            this.errors = {};
             this.formData = {
                 name: type.name
             };
             this.$dispatch('open-modal', 'student-type-modal');
+        },
+
+        async confirmDelete(type) {
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Student Type',
+                    message: `Are you sure you want to delete the student type "${type.name}"? This action cannot be undone.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/student-types/${type.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Delete failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Delete Error:', error);
+                        }
+                    }
+                }
+            }));
         },
 
         closeModal() {
@@ -183,14 +260,6 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
-
-// Global function for table actions
-function openEditModal(type) {
-    const component = Alpine.$data(document.querySelector('[x-data*="studentTypeManagement"]'));
-    if (component) {
-        component.openEditModal(type);
-    }
-}
 </script>
 @endpush
 @endsection

@@ -3,7 +3,7 @@
 @section('title', 'Subject Master')
 
 @section('content')
-<div x-data="subjectMaster()">
+<div x-data="subjectMaster">
     <!-- Header Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -11,7 +11,7 @@
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white">Subject Master</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Manage all academic subjects available in your school</p>
             </div>
-            <button @click="openAddModal()" 
+            <button @click="openAddModal" 
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2"></i>
                 Add Subject
@@ -70,8 +70,8 @@
             ],
             [
                 'type' => 'button',
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
+                'icon' => 'fas fa-trash-alt',
+                'class' => 'text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
                     return "window.dispatchEvent(new CustomEvent('open-delete-subject', { detail: { id: " . $row->id . ", name: '" . addslashes($row->name) . "' } }))";
                 },
@@ -86,103 +86,67 @@
             :columns="$tableColumns"
             :data="$subjects"
             :actions="$tableActions"
-            empty-message="No subjects found"
+            empty-message="No subjects found in the master list"
             empty-icon="fas fa-book"
         >
-            Subjects List
+            Academic Subject Inventory
         </x-data-table>
     </div>
 
     <!-- Add/Edit Subject Modal -->
-    <x-modal name="subject-modal" alpineTitle="editMode ? 'Edit Subject' : 'Create New Subject'" maxWidth="lg">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+    <x-modal name="subject-modal" alpineTitle="editMode ? 'Edit Subject Details' : 'Register New Subject'" maxWidth="2xl">
+        <form id="subject-form" @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-8 py-8">
-                <div class="space-y-5">
-                    <!-- Subject Name -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Subject Name <span class="text-red-500">*</span></label>
+            <div class="px-10 py-10 space-y-8">
+                <!-- Name & Code Inline -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="modal-label-premium">Subject Name <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
-                                <i class="fas fa-book text-sm"></i>
+                            <input type="text" x-model="formData.name" @input="clearError('name')" placeholder="e.g., Mathematics"
+                                class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.name}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                                <i class="fas fa-book text-[10px]"></i>
                             </div>
-                            <input 
-                                type="text" 
-                                name="name" 
-                                x-model="formData.name"
-                                @input="if(errors.name) delete errors.name"
-                                placeholder="e.g., Higher Mathematics"
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400"
-                                :class="{'border-red-500 ring-red-500/10': errors.name}"
-                            >
                         </div>
-                        <div class="min-h-[24px] mt-1 ml-1">
-                            <template x-if="errors.name">
-                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <span x-text="errors.name[0]"></span>
-                                </p>
-                            </template>
+                        <template x-if="errors.name">
+                            <p class="modal-error-message" x-text="errors.name[0]"></p>
+                        </template>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Subject Code</label>
+                        <div class="relative group">
+                            <input type="text" x-model="formData.code" @input="clearError('code')" placeholder="MATH-101"
+                                class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.code}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                                <i class="fas fa-hashtag text-[10px]"></i>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Subject Code -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Subject Code</label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
-                                <i class="fas fa-hashtag text-sm"></i>
-                            </div>
-                            <input 
-                                type="text" 
-                                name="code" 
-                                x-model="formData.code"
-                                placeholder="e.g., MAT-001"
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400"
-                            >
-                        </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Description</label>
-                        <div class="relative group">
-                            <textarea 
-                                name="description" 
-                                x-model="formData.description"
-                                rows="3"
-                                placeholder="Enter a brief description of the subject..."
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 placeholder:text-gray-400 resize-none"
-                            ></textarea>
-                        </div>
+                <!-- Description -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Detailed Description</label>
+                    <div class="relative group">
+                        <textarea x-model="formData.description" rows="3" placeholder="Brief details about the subject objectives..."
+                            class="modal-input-premium !py-4 resize-none h-32"></textarea>
                     </div>
                 </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
-                    Cancel
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">Cancel</button>
+                <button type="submit" form="subject-form" :disabled="submitting" class="btn-premium-primary min-w-[180px] bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200">
+                    <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
+                    <span x-text="editMode ? (submitting ? 'Updating...' : 'Save Changes') : (submitting ? 'Creating...' : 'Register Subject')"></span>
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all duration-200 shadow-lg shadow-indigo-200 flex items-center justify-center min-w-[170px] gap-2 active:scale-95 disabled:opacity-50"
-                >
-                    <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    </template>
-                    <span x-text="editMode ? (submitting ? 'Saving...' : 'Update Subject') : (submitting ? 'Creating...' : 'Create Subject')"></span>
-                </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -205,6 +169,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async submitForm() {
+            if (this.submitting) return;
             this.submitting = true;
             this.errors = {};
             
@@ -235,11 +200,11 @@ document.addEventListener('alpine:init', () => {
                             title: result.message
                         });
                     }
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => window.location.reload(), 800);
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(result.message || 'Server encountered an issue while processing your request.');
                 }
             } catch (error) {
                 if (window.Toast) {
@@ -250,6 +215,12 @@ document.addEventListener('alpine:init', () => {
                 }
             } finally {
                 this.submitting = false;
+            }
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
             }
         },
 
@@ -274,35 +245,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmDelete(subject) {
-            if (window.confirm(`Are you sure you want to delete the subject "${subject.name}"?`)) {
-                try {
-                    const response = await fetch(`/school/subjects/${subject.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ _method: 'DELETE' })
-                    });
-                    
-                    const result = await response.json();
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        if (window.Toast) {
-                            window.Toast.fire({
-                                icon: 'error',
-                                title: result.message
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Subject',
+                    message: `Are you sure you want to delete the subject "${subject.name}"? This action cannot be undone and may affect academic records.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/subjects/${subject.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
                             });
-                        } else {
-                            alert(result.message || 'Delete failed');
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Delete failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Delete Error:', error);
                         }
                     }
-                } catch (error) {
-                    alert('An error occurred while deleting');
                 }
-            }
+            }));
         },
 
         closeModal() {

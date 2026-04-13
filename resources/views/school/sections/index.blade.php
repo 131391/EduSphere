@@ -3,7 +3,7 @@
 @section('title', 'Section Management')
 
 @section('content')
-<div x-data="sectionManagement()">
+<div x-data="sectionManagement">
     <!-- Header Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -11,7 +11,7 @@
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white">Section Management</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Manage all sections for your school classes</p>
             </div>
-            <button @click="openAddModal()" 
+            <button @click="openAddModal" 
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2"></i>
                 Add Section
@@ -92,13 +92,13 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $data = json_encode([
                         'id' => $row->id,
-                        'class_id' => (string) $row->class_id,
+                        'class_id' => $row->class_id,
                         'name' => $row->name,
                         'capacity' => $row->capacity,
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-section', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-section', { detail: $data }))";
                 },
                 'title' => 'Edit',
             ],
@@ -107,7 +107,8 @@
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    return "window.dispatchEvent(new CustomEvent('open-delete-section', { detail: { id: " . $row->id . ", name: '" . addslashes($row->name) . "' } }))";
+                    $name = addslashes($row->name);
+                    return "window.dispatchEvent(new CustomEvent('open-delete-section', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
                 },
                 'title' => 'Delete',
             ],
@@ -128,118 +129,96 @@
     </div>
 
     <!-- Add/Edit Section Modal -->
-    <x-modal name="section-modal" alpineTitle="editMode ? 'Edit Section' : 'Create New Section'" maxWidth="md">
-        <form @submit.prevent="submitForm" method="POST" class="p-0" novalidate>
+    <x-modal name="section-modal" alpineTitle="editMode ? 'Edit Section' : 'Create New Section'" maxWidth="2xl">
+        <form @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-8 py-8">
-                <div class="space-y-4">
-                    <!-- Class Selection -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Assign to Class <span class="text-red-500">*</span></label>
-                        <div class="relative group">
-                            <select 
-                                name="class_id" 
-                                x-model="formData.class_id"
-                                @change="if(errors.class_id) delete errors.class_id"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm text-gray-700 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
-                                :class="{'border-red-500 ring-red-500/10': errors.class_id}"
-                            >
-                                <option value="">Choose a class</option>
-                                @foreach($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="min-h-[24px] mt-1 ml-1">
-                            <template x-if="errors.class_id">
-                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <span x-text="errors.class_id[0]"></span>
-                                </p>
-                            </template>
+            <div class="space-y-6">
+                <!-- Class Selection -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Assign to Class <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <select 
+                            name="class_id" 
+                            x-model="formData.class_id"
+                            @change="clearError('class_id')"
+                            class="modal-input-premium appearance-none !pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.class_id}"
+                        >
+                            <option value="">Choose a class</option>
+                            @foreach($classes as $class)
+                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                            <i class="fas fa-chevron-down text-sm"></i>
                         </div>
                     </div>
+                    <template x-if="errors.class_id">
+                        <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                    </template>
+                </div>
 
-                    <!-- Section Name -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Section Name <span class="text-red-500">*</span></label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
-                                <i class="fas fa-tag text-sm"></i>
-                            </div>
-                            <input 
-                                type="text" 
-                                name="name" 
-                                x-model="formData.name"
-                                @input="if(errors.name) delete errors.name"
-                                placeholder="e.g., Section A"
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm placeholder:text-gray-400 text-gray-700"
-                                :class="{'border-red-500 ring-red-500/10': errors.name}"
-                            >
-                        </div>
-                        <div class="min-h-[24px] mt-1 ml-1">
-                            <template x-if="errors.name">
-                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <span x-text="errors.name[0]"></span>
-                                </p>
-                            </template>
+                <!-- Section Name -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Section Name <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="text" 
+                            name="name" 
+                            x-model="formData.name"
+                            @input="clearError('name')"
+                            placeholder="e.g., Section A"
+                            class="modal-input-premium"
+                            :class="{'border-red-500 ring-red-500/10': errors.name}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <i class="fas fa-tag text-sm"></i>
                         </div>
                     </div>
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
+                    </template>
+                </div>
 
-                    <!-- Capacity -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-800 mb-1.5 ml-1">Student Capacity <span class="text-red-500">*</span></label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-200 group-focus-within:text-indigo-600 text-gray-400">
-                                <i class="fas fa-user-plus text-sm"></i>
-                            </div>
-                            <input 
-                                type="number" 
-                                name="capacity" 
-                                x-model="formData.capacity"
-                                @input="if(errors.capacity) delete errors.capacity"
-                                placeholder="Max students in this section"
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all duration-200 shadow-sm placeholder:text-gray-400 text-gray-700"
-                                :class="{'border-red-500 ring-red-500/10': errors.capacity}"
-                            >
-                        </div>
-                        <div class="min-h-[24px] mt-1 ml-1">
-                            <template x-if="errors.capacity">
-                                <p class="text-[12px] font-medium text-red-500 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <span x-text="errors.capacity[0]"></span>
-                                </p>
-                            </template>
+                <!-- Capacity -->
+                <div class="space-y-2 mb-8">
+                    <label class="modal-label-premium">Student Capacity <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="number" 
+                            name="capacity" 
+                            x-model="formData.capacity"
+                            @input="clearError('capacity')"
+                            placeholder="Max students in this section"
+                            class="modal-input-premium"
+                            :class="{'border-red-500 ring-red-500/10': errors.capacity}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <i class="fas fa-user-friends text-sm"></i>
                         </div>
                     </div>
+                    <template x-if="errors.capacity">
+                        <p class="modal-error-message" x-text="errors.capacity[0]"></p>
+                    </template>
                 </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-8 py-6 bg-gray-50/50 flex items-center justify-end gap-3 rounded-b-lg border-t border-gray-100">
-                <button 
-                    type="button" 
-                    @click="closeModal()"
-                    class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 rounded-xl transition-all duration-200"
-                >
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button 
-                    type="submit"
-                    :disabled="submitting"
-                    class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-violet-700 transition-all duration-200 shadow-lg shadow-indigo-200 flex items-center justify-center min-w-[160px] gap-2 active:scale-95 disabled:opacity-50"
-                >
+                <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
                     <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="editMode ? (submitting ? 'Updating' : 'Save Changes') : (submitting ? 'Creating' : 'Create Section')"></span>
+                    <span x-text="editMode ? 'Update Changes' : 'Create Section'"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 </div>
@@ -262,6 +241,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async submitForm() {
+            if (this.submitting) return;
             this.submitting = true;
             this.errors = {};
             
@@ -292,7 +272,7 @@ document.addEventListener('alpine:init', () => {
                             title: result.message
                         });
                     }
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => window.location.reload(), 800);
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
@@ -310,6 +290,12 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
+        },
+
         openAddModal() {
             this.editMode = false;
             this.sectionId = null;
@@ -322,8 +308,9 @@ document.addEventListener('alpine:init', () => {
             this.editMode = true;
             this.sectionId = section.id;
             this.errors = {};
+            // Strict type ensuring for select components
             this.formData = {
-                class_id: String(section.class_id),
+                class_id: section.class_id,
                 name: section.name,
                 capacity: section.capacity
             };
@@ -331,28 +318,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmDelete(section) {
-            if (window.confirm(`Are you sure you want to delete the section "${section.name}"?`)) {
-                try {
-                    const response = await fetch(`/school/sections/${section.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ _method: 'DELETE' })
-                    });
-                    
-                    const result = await response.json();
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert(result.message || 'Delete failed');
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Section',
+                    message: `Are you sure you want to delete the section "${section.name}"? This action cannot be undone and will affect all assigned students.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/sections/${section.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Delete failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Delete Error:', error);
+                        }
                     }
-                } catch (error) {
-                    alert('An error occurred while deleting');
                 }
-            }
+            }));
         },
 
         closeModal() {

@@ -42,7 +42,7 @@
     </div>
 
     <!-- The Grid -->
-    <div class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-3xl shadow-sm border border-indigo-50 overflow-hidden">
         <form @submit.prevent="saveAllMarks" method="POST" id="marksForm" class="p-0">
             @csrf
             <div class="overflow-x-auto">
@@ -51,56 +51,59 @@
                         <tr class="bg-gray-50/50">
                             <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-20">Rank</th>
                             <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Student Identity</th>
-                            <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-48">Score Obtained</th>
+                            <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-48 text-center">Score Obtained</th>
                             <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Observational Remarks</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-100 bg-white">
                         @foreach($students as $index => $student)
                         @php $result = $results->get($student->id); @endphp
-                        <tr class="group hover:bg-indigo-50/20 transition-colors duration-150">
+                        <tr class="group hover:bg-indigo-50/30 transition-all duration-200">
                             <td class="px-8 py-5 whitespace-nowrap">
-                                <span class="text-xs font-black text-gray-300 group-hover:text-indigo-300 transition-colors">#{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>
+                                <span class="text-xs font-black text-slate-300 group-hover:text-indigo-400 transition-colors">#{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>
                             </td>
                             <td class="px-8 py-5 whitespace-nowrap">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-xs ring-2 ring-transparent group-hover:ring-indigo-100 group-hover:bg-white group-hover:text-indigo-600 transition-all">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 font-bold text-xs group-hover:bg-white group-hover:border-indigo-100 group-hover:text-indigo-600 group-hover:shadow-sm transition-all duration-300">
                                         {{ substr($student->full_name, 0, 1) }}
                                     </div>
                                     <div>
-                                        <div class="text-sm font-bold text-gray-800">{{ $student->full_name }}</div>
+                                        <div class="text-sm font-bold text-gray-800 group-hover:text-indigo-900 transition-colors">{{ $student->full_name }}</div>
                                         <div class="flex items-center gap-2 mt-0.5">
-                                            <div class="text-[10px] text-gray-400 font-medium uppercase tracking-tighter">{{ $student->admission_no }}</div>
+                                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight group-hover:text-slate-500 transition-colors">{{ $student->admission_no }}</div>
                                             <template x-if="scores['{{ $student->id }}'].isModified">
-                                                <span class="text-[8px] font-black bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">Modified</span>
+                                                <span class="text-[8px] font-black bg-indigo-50 text-indigo-500 px-2 py-0.5 rounded-lg border border-indigo-100 uppercase tracking-tighter">Modified</span>
                                             </template>
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-8 py-5 whitespace-nowrap">
-                                <div class="relative w-32">
+                                <div class="relative w-36 mx-auto">
                                     <input 
                                         type="number" 
                                         step="0.01" 
                                         min="0"
                                         x-model="scores['{{ $student->id }}'].marks_obtained"
                                         @input="validateRow('{{ $student->id }}')"
-                                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-4 transition-all font-black text-gray-700 text-center"
-                                        :class="scores['{{ $student->id }}'].invalid ? 'bg-red-50 border-red-200 text-red-600 ring-red-500/10' : 'group-hover:bg-white focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white'"
+                                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 transition-all font-black text-gray-700 text-center text-base"
+                                        :class="scores['{{ $student->id }}'].invalid ? 'bg-rose-50 border-rose-200 text-rose-600 ring-rose-500/10' : 'group-hover:bg-white group-hover:border-indigo-200 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white focus:shadow-sm'"
                                     >
                                     <template x-if="scores['{{ $student->id }}'].invalid">
-                                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
+                                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse shadow-sm shadow-rose-200"></div>
                                     </template>
                                 </div>
                             </td>
                             <td class="px-8 py-5 whitespace-nowrap">
-                                <input 
-                                    type="text" 
-                                    x-model="scores['{{ $student->id }}'].remarks"
-                                    placeholder="Absent, Disqualified, etc."
-                                    class="w-full px-4 py-2.5 bg-transparent border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-gray-100 transition-all font-medium text-gray-500 placeholder:text-gray-300"
-                                >
+                                <div class="relative group/input">
+                                    <input 
+                                        type="text" 
+                                        x-model="scores['{{ $student->id }}'].remarks"
+                                        placeholder="Add performance remarks..."
+                                        class="w-full px-4 py-2.5 bg-transparent border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-slate-100 transition-all font-medium text-gray-500 placeholder:text-slate-300 group-hover:placeholder:text-slate-400"
+                                    >
+                                    <div class="absolute left-0 bottom-0 w-0 h-0.5 bg-indigo-500 group-focus-within/input:w-full transition-all duration-300 rounded-full opacity-0 group-focus-within/input:opacity-100"></div>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -109,26 +112,28 @@
             </div>
 
             <!-- Footer Toolbar -->
-            <div class="px-10 py-8 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div class="flex items-center gap-6">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Validated Grid</span>
+            <div class="px-10 py-8 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-8">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></div>
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Integrity Validated</span>
                     </div>
                 </div>
                 
                 <button 
                     type="submit" 
                     :disabled="submitting || hasInvalid"
-                    class="px-12 py-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 hover:from-indigo-700 hover:to-violet-800 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-3 min-w-[240px] justify-center text-sm uppercase tracking-widest"
+                    class="btn-premium-primary min-w-[280px] bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200/50 py-4 uppercase tracking-[0.2em] text-xs font-black disabled:opacity-40 disabled:grayscale"
                 >
                     <template x-if="submitting">
-                        <span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></span>
                     </template>
-                    <i x-show="!submitting" class="fas fa-cloud-upload-alt"></i>
-                    <span x-text="submitting ? 'Transmitting Data...' : 'Finalize Marks Registry'"></span>
+                    <i x-show="!submitting" class="fas fa-cloud-upload-alt mr-3 text-sm"></i>
+                    <span x-text="submitting ? 'Transmitting...' : 'Finalize Marks Registry'"></span>
                 </button>
             </div>
+        </form>
+    </div>
         </form>
     </div>
 </div>

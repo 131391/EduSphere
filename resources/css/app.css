@@ -315,13 +315,13 @@ input[type=number] {
 }
 
 /* Red border for select2 when underlying select has border-red-500 */
-select.border-red-500 + .select2-container--default .select2-selection--single {
+select.border-red-500+.select2-container--default .select2-selection--single {
     border-color: #ef4444 !important;
     border-width: 1px !important;
 }
 
 /* Red border for academic year and class dropdowns specifically if needed */
-select.border-red-500 + .select2-container .select2-selection {
+select.border-red-500+.select2-container .select2-selection {
     border-color: #ef4444 !important;
 }
 
@@ -546,6 +546,7 @@ input[type="date"]:not(:focus) {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -562,6 +563,7 @@ input[type="date"]:not(:focus) {
         opacity: 1;
         transform: translateY(0);
     }
+
     to {
         opacity: 0;
         transform: translateY(10px);
@@ -579,6 +581,7 @@ input[type="date"]:not(:focus) {
     0% {
         background-position: 200% 0;
     }
+
     100% {
         background-position: -200% 0;
     }
@@ -607,26 +610,24 @@ select:focus {
         transform: translateX(100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
     }
 }
-/* Premium Modal Design System - REFINED */
+
+/* Premium Modal Design System - REFINED 4.0 - Professional Density */
 :root {
-    --primary: #4648d4;
-    --primary-container: #6063ee;
+    --primary: #4f46e5; /* Indigo 600 */
     --secondary: #006b5f;
-    --on-secondary: #ffffff;
-    --surface-container-low: #eff4ff;
-    --on-surface-variant: #464554;
-    --background: #f8f9ff;
-    --outline-variant: #c7c4d7;
+    --surface-container-low: #f8fafc;
+    --on-surface-variant: #64748b;
+    --background: #ffffff;
 }
 
 .modal-header-premium {
     background-color: var(--secondary);
-    padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -634,40 +635,39 @@ select:focus {
 
 .modal-title-premium {
     color: #ffffff;
-    font-size: 1.25rem;
     font-weight: 700;
 }
 
 .modal-label-premium {
     display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--on-surface-variant);
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #475569; /* Slate 600 */
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.075em;
     margin-bottom: 0.5rem;
 }
 
 .modal-input-premium {
     width: 100%;
     background-color: #ffffff !important;
-    border: 1px solid rgba(199, 196, 215, 0.3) !important;
-    border-radius: 0.5rem !important;
-    padding: 0.75rem 1rem !important;
-    color: #0b1c30 !important;
-    transition: all 0.2s;
-    font-size: 0.875rem !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    padding: 0.875rem 1rem !important;
+    color: #1e293b !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
 }
 
 .modal-input-premium:focus {
     outline: none !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 2px rgba(70, 72, 212, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08) !important;
 }
 
 .modal-footer-premium {
-    background-color: var(--surface-container-low);
-    padding: 1.5rem;
+    background-color: #f1f5f9; /* Soft Slate 100 for subtle contrast */
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -678,31 +678,51 @@ select:focus {
     background-color: var(--primary) !important;
     color: #ffffff !important;
     font-weight: 700 !important;
-    padding: 0.625rem 2rem !important;
-    border-radius: 1rem !important;
+    padding: 0.75rem 2rem !important;
+    border-radius: 0.75rem !important;
     transition: all 0.2s !important;
     border: none !important;
-    box-shadow: 0 4px 12px rgba(70, 72, 212, 0.2) !important;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25) !important;
+    font-size: 0.9rem !important;
 }
 
 .btn-premium-primary:hover {
-    background-color: var(--primary-container) !important;
+    background-color: #4338ca !important; /* Indigo 700 */
     transform: translateY(-1px) !important;
-    box-shadow: 0 6px 16px rgba(70, 72, 212, 0.3) !important;
+    box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3) !important;
 }
 
 .btn-premium-cancel {
-    background-color: #ffffff !important;
-    border: 2px solid #000000 !important;
-    color: var(--primary) !important;
+    background-color: transparent !important;
+    color: #6366f1 !important; /* Indigo 500 like the desired screenshot */
     font-weight: 700 !important;
-    padding: 0.5rem 2rem !important;
-    border-radius: 0.75rem !important;
+    padding: 0.75rem 1.5rem !important;
     transition: all 0.2s !important;
+    font-size: 0.9rem !important;
+    border: none !important;
 }
 
 .btn-premium-cancel:hover {
-    background-color: #f1f5f9 !important;
+    color: #4f46e5 !important;
+    background-color: #f8fafc !important;
+}
+
+.modal-error-message {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    color: #ef4444 !important; /* Red 500 */
+    margin-top: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.375rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.modal-error-message::before {
+    content: "\f06a";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
 }
 
 .modal-backdrop-premium {
@@ -728,22 +748,13 @@ select:focus {
 .sidebar-scroll::-webkit-scrollbar {
     display: none !important;
 }
+
 .sidebar-scroll {
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
 }
 
 /* Toggle Active State */
-.peer:checked ~ .toggle-bg-premium {
+.peer:checked~.toggle-bg-premium {
     background-color: var(--primary) !important;
-}
-
-/* Error Message Styling */
-.modal-error-message {
-    font-size: 11px;
-    font-weight: 800;
-    color: #ef4444; /* Vibrant Red */
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    margin-top: 4px;
 }
