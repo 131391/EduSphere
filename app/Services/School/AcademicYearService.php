@@ -39,11 +39,10 @@ class AcademicYearService
 
         try {
             // If setting as current, unset other current years
-            if (isset($data['is_current']) && $data['is_current']) {
+            if (isset($data['is_current']) && ($data['is_current'] === true || $data['is_current'] == 1)) {
                 AcademicYear::where('school_id', $school->id)
-                    ->where('is_current', true)
-                    ->get()
-                    ->each(fn($year) => $year->update(['is_current' => false]));
+                    ->where('is_current', \App\Enums\YesNo::Yes)
+                    ->update(['is_current' => \App\Enums\YesNo::No]);
             }
 
             $academicYear = AcademicYear::create([
@@ -51,7 +50,7 @@ class AcademicYearService
                 'name' => $data['name'],
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'],
-                'is_current' => $data['is_current'] ?? false,
+                'is_current' => ($data['is_current'] ?? false) ? \App\Enums\YesNo::Yes : \App\Enums\YesNo::No,
             ]);
 
             // Clear statistics cache
@@ -82,12 +81,15 @@ class AcademicYearService
 
         try {
             // If setting as current, unset other current years
-            if (isset($data['is_current']) && $data['is_current']) {
+            if (isset($data['is_current']) && ($data['is_current'] === true || $data['is_current'] == 1)) {
                 AcademicYear::where('school_id', $academicYear->school_id)
                     ->where('id', '!=', $academicYear->id)
-                    ->where('is_current', true)
-                    ->get()
-                    ->each(fn($year) => $year->update(['is_current' => false]));
+                    ->where('is_current', \App\Enums\YesNo::Yes)
+                    ->update(['is_current' => \App\Enums\YesNo::No]);
+                
+                $data['is_current'] = \App\Enums\YesNo::Yes;
+            } else if (isset($data['is_current'])) {
+                $data['is_current'] = \App\Enums\YesNo::No;
             }
 
             $academicYear->update($data);
@@ -137,7 +139,7 @@ class AcademicYearService
         return [
             'total_years' => AcademicYear::where('school_id', $school->id)->count(),
             'current_year' => AcademicYear::where('school_id', $school->id)
-                ->where('is_current', true)
+                ->where('is_current', \App\Enums\YesNo::Yes)
                 ->first(),
         ];
     }

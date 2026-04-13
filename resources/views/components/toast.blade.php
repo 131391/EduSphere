@@ -9,43 +9,43 @@
 
     $config = [
         'success' => [
-            'icon' => 'fas fa-check-circle',
-            'bg' => 'bg-emerald-50',
-            'border' => 'border-emerald-100',
-            'gradient' => 'from-emerald-500 to-green-600',
-            'text' => 'text-emerald-900',
-            'subtext' => 'text-emerald-600',
-            'iconBg' => 'bg-emerald-50',
-            'title' => 'Success'
+            'icon' => 'fas fa-check',
+            'bg' => 'bg-[#6ee7b7]',
+            'edge' => 'border-[#059669]',
+            'iconContainer' => 'bg-[#064e3b]',
+            'iconColor' => 'text-white',
+            'titleColor' => 'text-[#064e3b]',
+            'textColor' => 'text-[#065f46]',
+            'title' => 'Action Successful'
         ],
         'error' => [
-            'icon' => 'fas fa-exclamation-circle',
-            'bg' => 'bg-rose-50',
-            'border' => 'border-rose-100',
-            'gradient' => 'from-rose-500 to-red-600',
-            'text' => 'text-rose-900',
-            'subtext' => 'text-rose-600',
-            'iconBg' => 'bg-rose-50',
-            'title' => 'Error'
+            'icon' => 'fas fa-exclamation',
+            'bg' => 'bg-[#fecaca]',
+            'edge' => 'border-[#dc2626]',
+            'iconContainer' => 'bg-[#b91c1c]',
+            'iconColor' => 'text-white',
+            'titleColor' => 'text-[#7f1d1d]',
+            'textColor' => 'text-[#991b1b]',
+            'title' => 'System Error'
         ],
         'info' => [
-            'icon' => 'fas fa-info-circle',
-            'bg' => 'bg-blue-50',
-            'border' => 'border-blue-100',
-            'gradient' => 'from-blue-500 to-indigo-600',
-            'text' => 'text-blue-900',
-            'subtext' => 'text-blue-600',
-            'iconBg' => 'bg-blue-50',
+            'icon' => 'fas fa-info',
+            'bg' => 'bg-[#93c5fd]',
+            'edge' => 'border-[#2563eb]',
+            'iconContainer' => 'bg-[#1e3a8a]',
+            'iconColor' => 'text-white',
+            'titleColor' => 'text-[#1e3a8a]',
+            'textColor' => 'text-[#1e40af]',
             'title' => 'Information'
         ],
         'warning' => [
             'icon' => 'fas fa-exclamation-triangle',
-            'bg' => 'bg-amber-50',
-            'border' => 'border-amber-100',
-            'gradient' => 'from-amber-500 to-yellow-600',
-            'text' => 'text-amber-900',
-            'subtext' => 'text-amber-600',
-            'iconBg' => 'bg-amber-50',
+            'bg' => 'bg-[#fcd34d]',
+            'edge' => 'border-[#d97706]',
+            'iconContainer' => 'bg-[#78350f]',
+            'iconColor' => 'text-white',
+            'titleColor' => 'text-[#78350f]',
+            'textColor' => 'text-[#92400e]',
             'title' => 'Warning'
         ],
     ];
@@ -65,16 +65,21 @@
      x-transition:leave-end="opacity-0 transform translate-x-12 scale-95"
      class="fixed top-8 right-8 z-[9999] w-full max-w-sm"
      x-cloak>
-    <div class="absolute -inset-2 bg-gradient-to-r {{ $c['gradient'] }} rounded-3xl blur-2xl opacity-15"></div>
-    <div class="relative {{ $c['bg'] }} border {{ $c['border'] }} p-5 rounded-3xl flex items-center shadow-2xl backdrop-blur-sm">
-        <div class="w-12 h-12 {{ $c['iconBg'] }} rounded-2xl flex items-center justify-center mr-5 shadow-inner">
-            <i class="{{ $c['icon'] }} {{ str_replace('bg-', 'text-', $c['iconBg']) }} text-xl"></i>
+    
+    <div class="relative {{ $c['bg'] }} {{ $c['edge'] }} border-l-[10px] border-b-[3px] p-5 rounded-2xl flex items-center shadow-xl">
+        {{-- Icon Section --}}
+        <div class="w-12 h-12 {{ $c['iconContainer'] }} rounded-full flex items-center justify-center mr-4 shrink-0 shadow-sm">
+            <i class="{{ $c['icon'] }} {{ $c['iconColor'] }} text-lg"></i>
         </div>
-        <div class="flex-1">
-            <h4 class="{{ $c['text'] }} text-base font-black tracking-tight leading-none">{{ $c['title'] }}</h4>
-            <p class="{{ $c['subtext'] }} text-xs font-bold mt-1.5 opacity-80 leading-snug">{{ $activeMessage }}</p>
+
+        {{-- Content --}}
+        <div class="flex-1 pr-6">
+            <h4 class="{{ $c['titleColor'] }} text-base font-extrabold tracking-tight leading-none mb-1.5">{{ $c['title'] }}</h4>
+            <p class="{{ $c['textColor'] }} text-xs font-bold leading-snug opacity-90">{{ $activeMessage }}</p>
         </div>
-        <button @click="show = false" class="ml-4 w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors text-gray-400 hover:text-gray-600">
+
+        {{-- Close Button --}}
+        <button @click="show = false" class="absolute top-4 right-4 text-black/20 hover:text-black/40 transition-colors">
             <i class="fas fa-times text-xs"></i>
         </button>
     </div>

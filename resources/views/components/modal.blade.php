@@ -73,11 +73,11 @@ $maxWidthClass = [
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0">
-        <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        <div class="absolute inset-0 modal-backdrop-premium"></div>
     </div>
 
     <!-- Modal -->
-    <div x-show="show" class="mb-6 bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:mx-auto {{ $maxWidthClass }} mt-20"
+    <div x-show="show" class="mb-6 bg-white rounded-xl overflow-hidden editorial-shadow transform transition-all sm:w-full sm:mx-auto {{ $maxWidthClass }} mt-20 flex flex-col"
                     x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -86,22 +86,30 @@ $maxWidthClass = [
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
         
         @if(isset($alpineTitle) || (isset($title) && !empty($title)))
-        <div class="bg-teal-500 px-4 py-3 flex justify-between items-center">
-            <h3 class="text-lg font-medium text-white">
+        <div class="modal-header-premium">
+            <h3 class="modal-title-premium">
                 @if(isset($title) && !empty($title))
                     {{ $title }}
                 @elseif(isset($alpineTitle))
                     <span x-text="{{ $alpineTitle }}"></span>
                 @endif
             </h3>
-            <button x-on:click="show = false" class="text-white hover:text-gray-200 focus:outline-none">
-                <i class="fas fa-times"></i>
+            <button x-on:click="show = false" class="text-white/80 hover:text-white transition-opacity focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
             </button>
         </div>
         @endif
 
-        <div class="px-4 py-5 sm:p-6">
+        <div class="p-8">
             {{ $slot }}
         </div>
+
+        @if(isset($footer))
+            <div class="modal-footer-premium">
+                {{ $footer }}
+            </div>
+        @endif
     </div>
 </div>

@@ -192,79 +192,79 @@
                 </div>
             </template>
 
-            <div class="p-8 space-y-6">
-                <div class="grid grid-cols-2 gap-4">
+            <div class="p-0 space-y-6">
+                <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Hostel Block <span class="text-red-500">*</span></label>
+                        <label class="modal-label-premium">Hostel Block <span class="text-red-500">*</span></label>
                         <select name="hostel_id" x-model="formData.hostel_id" 
                                 @change="loadFloors(); delete errors.hostel_id"
-                                class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white"
-                                :class="errors.hostel_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                                class="modal-input-premium"
+                                :class="errors.hostel_id ? 'border-red-500' : ''">
                             <option value="">Choose Hostel Block</option>
                             @foreach($hostels as $hostel)
                                 <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
                             @endforeach
                         </select>
                         <template x-if="errors.hostel_id">
-                            <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_id[0]"></p>
+                            <p class="text-red-500 text-[10px] font-black mt-1 uppercase" x-text="errors.hostel_id[0]"></p>
                         </template>
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Floor Level <span class="text-red-500">*</span></label>
+                        <label class="modal-label-premium">Floor Level <span class="text-red-500">*</span></label>
                         <select name="hostel_floor_id" x-model="formData.hostel_floor_id" :disabled="!formData.hostel_id" id="hostel_floor_id"
                                 @change="delete errors.hostel_floor_id"
-                                class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white disabled:opacity-50"
-                                :class="errors.hostel_floor_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                                class="modal-input-premium"
+                                :class="errors.hostel_floor_id ? 'border-red-500' : ''">
                             <option value="">Select Floor</option>
                             <template x-for="floor in floors" :key="floor.id">
                                 <option :value="floor.id" x-text="floor.floor_name"></option>
                             </template>
                         </select>
                         <template x-if="errors.hostel_floor_id">
-                            <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.hostel_floor_id[0]"></p>
+                            <p class="text-red-500 text-[10px] font-black mt-1 uppercase" x-text="errors.hostel_floor_id[0]"></p>
                         </template>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Room Identifier <span class="text-red-500">*</span></label>
+                    <label class="modal-label-premium">Room Identifier <span class="text-red-500">*</span></label>
                     <input type="text" name="room_name" x-model="formData.room_name"
                            placeholder="e.g., Room 101, Deluxe Suite"
                            @input="delete errors.room_name"
-                           class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white"
-                           :class="errors.room_name ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                           class="modal-input-premium"
+                           :class="errors.room_name ? 'border-red-500' : ''">
                     <template x-if="errors.room_name">
-                        <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.room_name[0]"></p>
+                        <p class="text-red-500 text-[10px] font-black mt-1 uppercase" x-text="errors.room_name[0]"></p>
                     </template>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Air Cond.</label>
+                        <label class="modal-label-premium">Air Cond.</label>
                         <select name="ac" x-model="formData.ac"
                                 @change="delete errors.ac"
-                                class="w-full px-4 py-3 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
+                                class="modal-input-premium">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Cooling Unit</label>
+                        <label class="modal-label-premium">Cooling Unit</label>
                         <select name="cooler" x-model="formData.cooler"
                                 @change="delete errors.cooler"
-                                class="w-full px-4 py-3 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
+                                class="modal-input-premium">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Fan Node</label>
+                        <label class="modal-label-premium">Fan Node</label>
                         <select name="fan" x-model="formData.fan"
                                 @change="delete errors.fan"
-                                class="w-full px-4 py-3 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
+                                class="modal-input-premium">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -273,30 +273,30 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Configuration Date</label>
+                    <label class="modal-label-premium">Configuration Date</label>
                     <input type="date" name="room_create_date" x-model="formData.room_create_date"
                            @input="delete errors.room_create_date"
-                           class="w-full px-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 focus:bg-white">
+                           class="modal-input-premium">
                     <template x-if="errors.room_create_date">
-                        <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight" x-text="errors.room_create_date[0]"></p>
+                        <p class="text-red-500 text-[10px] font-black mt-1 uppercase" x-text="errors.room_create_date[0]"></p>
                     </template>
                 </div>
             </div>
 
-            {{-- Modal Footer --}}
-            <div class="px-8 py-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-3xl">
+            {{-- Modal Footer Slot --}}
+            <x-slot name="footer">
                 <button type="button" @click="closeModal()" :disabled="submitting"
-                        class="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm disabled:opacity-50">
+                        class="btn-premium-cancel">
                     Discard
                 </button>
                 <button type="submit" :disabled="submitting"
-                        class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all font-black text-sm shadow-xl shadow-indigo-100 flex items-center gap-2">
+                        class="btn-premium-primary flex items-center gap-2">
                     <template x-if="submitting">
                         <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                     </template>
                     <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Unit' : 'Confirm Room')"></span>
                 </button>
-            </div>
+            </x-slot>
         </form>
     </x-modal>
 

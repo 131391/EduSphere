@@ -56,6 +56,7 @@ class AcademicYearController extends TenantController
             );
 
             if ($request->wantsJson()) {
+                session()->flash('success', 'Academic year created successfully!');
                 return response()->json([
                     'success' => true,
                     'message' => 'Academic year created successfully!',
@@ -116,6 +117,7 @@ class AcademicYearController extends TenantController
             );
 
             if ($request->wantsJson()) {
+                session()->flash('success', 'Academic year updated successfully!');
                 return response()->json([
                     'success' => true,
                     'message' => 'Academic year updated successfully!',
@@ -147,6 +149,7 @@ class AcademicYearController extends TenantController
             $this->academicYearService->deleteAcademicYear($academicYear);
 
             if (request()->wantsJson()) {
+                session()->flash('success', 'Academic year deleted successfully!');
                 return response()->json([
                     'success' => true,
                     'message' => 'Academic year deleted successfully!'
