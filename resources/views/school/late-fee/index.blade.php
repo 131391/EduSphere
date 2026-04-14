@@ -189,6 +189,17 @@ document.addEventListener('alpine:init', () => {
             fine_date: ''
         },
 
+        init() {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('select[name="fine_date"]').on('change', (e) => {
+                        this.formData.fine_date = e.target.value;
+                        this.clearError('fine_date');
+                    });
+                }
+            });
+        },
+
         async submitForm() {
             if (this.submitting) return;
             this.submitting = true;
@@ -259,9 +270,16 @@ document.addEventListener('alpine:init', () => {
             this.errors = {};
             this.formData = {
                 late_fee_amount: fee.late_fee_amount,
-                fine_date: fee.fine_date
+                fine_date: String(fee.fine_date)
             };
             this.$dispatch('open-modal', 'late-fee-modal');
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined') {
+                        $('select[name="fine_date"]').val(this.formData.fine_date).trigger('change');
+                    }
+                }, 150);
+            });
         },
 
         async confirmDelete(fee) {

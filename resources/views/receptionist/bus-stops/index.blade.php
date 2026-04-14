@@ -351,13 +351,12 @@
                     async init() {
                         this.$nextTick(() => {
                             if (typeof $ !== 'undefined') {
-                                $(document).on('change', '#route_id', (e) => {
-                                    this.formData.route_id = e.target.value;
-                                    this.clearError('route_id');
-                                });
-                                $(document).on('change', '#vehicle_id', (e) => {
-                                    this.formData.vehicle_id = e.target.value;
-                                    this.clearError('vehicle_id');
+                                $('select[name="route_id"], select[name="vehicle_id"]').on('change', (e) => {
+                                    const field = e.target.getAttribute('name');
+                                    if (field && this.formData.hasOwnProperty(field)) {
+                                        this.formData[field] = e.target.value;
+                                        this.clearError(field);
+                                    }
                                 });
                             }
                         });
@@ -387,7 +386,7 @@
                         this.$dispatch('open-modal', 'bus-stop-modal');
                         this.$nextTick(() => {
                             if (typeof $ !== 'undefined') {
-                                $('#route_id, #vehicle_id').val('').trigger('change.select2');
+                                $('select[name="route_id"], select[name="vehicle_id"]').val('').trigger('change');
                             }
                         });
                     },
@@ -410,10 +409,12 @@
                         this.$dispatch('open-modal', 'bus-stop-modal');
 
                         this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('#route_id').val(this.formData.route_id).trigger('change.select2');
-                                $('#vehicle_id').val(this.formData.vehicle_id).trigger('change.select2');
-                            }
+                            setTimeout(() => {
+                                if (typeof $ !== 'undefined') {
+                                    $('select[name="route_id"]').val(this.formData.route_id).trigger('change');
+                                    $('select[name="vehicle_id"]').val(this.formData.vehicle_id).trigger('change');
+                                }
+                            }, 150);
                         });
                     },
 

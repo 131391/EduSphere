@@ -297,22 +297,21 @@ document.addEventListener('alpine:init', () => {
         
         init() {
             // Sync Select2 with Alpine state
-            if (typeof $ !== 'undefined') {
-                this.$nextTick(() => {
-                    const $role = $('select[name="role"]');
-                    const $status = $('select[name="status"]');
-
-                    $role.on('change', (e) => {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    // Role select
+                    $('select[name="role"]').on('change', (e) => {
                         this.formData.role = e.target.value;
                         if (this.errors.role) delete this.errors.role;
                     });
 
-                    $status.on('change', (e) => {
+                    // Status select
+                    $('select[name="status"]').on('change', (e) => {
                         this.formData.status = e.target.value;
                         if (this.errors.status) delete this.errors.status;
                     });
-                });
-            }
+                }
+            });
         },
         
         async submitForm() {

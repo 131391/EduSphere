@@ -336,6 +336,36 @@ document.addEventListener('alpine:init', () => {
         miscData: { class_id: '', fee_type_id: '', fee_name_id: '', amount: '' },
         editData: { id: '', class_name: '', fee_name: '', fee_type: '', amount: '' },
 
+        init() {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    // Sync Bulk Modal Selects
+                    $('select[x-model="bulkData.class_id"]').on('change', (e) => {
+                        this.bulkData.class_id = e.target.value;
+                        this.clearError('class_id');
+                    });
+                    $('select[x-model="bulkData.fee_type_id"]').on('change', (e) => {
+                        this.bulkData.fee_type_id = e.target.value;
+                        this.clearError('fee_type_id');
+                    });
+
+                    // Sync Misc Modal Selects
+                    $('select[x-model="miscData.class_id"]').on('change', (e) => {
+                        this.miscData.class_id = e.target.value;
+                        this.clearError('class_id');
+                    });
+                    $('select[x-model="miscData.fee_name_id"]').on('change', (e) => {
+                        this.miscData.fee_name_id = e.target.value;
+                        this.errors = {};
+                    });
+                    $('select[x-model="miscData.fee_type_id"]').on('change', (e) => {
+                        this.miscData.fee_type_id = e.target.value;
+                        this.clearError('fee_type_id');
+                    });
+                }
+            });
+        },
+
         async submitBulkForm() {
             if (this.submitting) return;
             this.submitting = true;

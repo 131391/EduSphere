@@ -485,6 +485,21 @@
 
                     async init() {
                         await this.loadMonths();
+
+                        // Sync Select2 with Alpine state
+                        this.$nextTick(() => {
+                            if (typeof $ !== 'undefined') {
+                                $('select[x-model^="formData."]').on('change', (e) => {
+                                    const field = e.target.getAttribute('x-model').replace('formData.', '');
+                                    if (field && this.formData.hasOwnProperty(field)) {
+                                        this.formData[field] = e.target.value;
+                                        if (field === 'hostel_id') this.loadFloors();
+                                        if (field === 'hostel_floor_id') this.loadRooms();
+                                        this.clearError(field);
+                                    }
+                                });
+                            }
+                        });
                     },
 
                     async loadMonths() {
@@ -557,7 +572,12 @@
                             if (data.success) {
                                 this.floors = data.floors;
                                 if (targetId) {
-                                    this.formData.hostel_floor_id = targetId;
+                                    this.formData.hostel_floor_id = String(targetId);
+                                    this.$nextTick(() => {
+                                        if (typeof $ !== 'undefined') {
+                                            $('select[x-model="formData.hostel_floor_id"]').val(this.formData.hostel_floor_id).trigger('change');
+                                        }
+                                    });
                                 } else if (!this.editMode) {
                                     this.formData.hostel_floor_id = '';
                                     this.rooms = [];
@@ -590,7 +610,12 @@
                             if (data.success) {
                                 this.rooms = data.rooms;
                                 if (targetId) {
-                                    this.formData.hostel_room_id = targetId;
+                                    this.formData.hostel_room_id = String(targetId);
+                                    this.$nextTick(() => {
+                                        if (typeof $ !== 'undefined') {
+                                            $('select[x-model="formData.hostel_room_id"]').val(this.formData.hostel_room_id).trigger('change');
+                                        }
+                                    });
                                 } else if (!this.editMode) {
                                     this.formData.hostel_room_id = '';
                                 }
@@ -700,6 +725,18 @@
                         await this.loadRooms(assignment.hostel_room_id);
 
                         this.$dispatch('open-modal', 'assignment-modal');
+
+                        // Sync other Select2 fields
+                        this.$nextTick(() => {
+                            setTimeout(() => {
+                                if (typeof $ !== 'undefined') {
+                                    const fields = ['hostel_id', 'starting_month'];
+                                    fields.forEach(field => {
+                                        $(`select[x-model="formData.${field}"]`).val(this.formData[field]).trigger('change');
+                                    });
+                                }
+                            }, 150);
+                        });
                     },
 
                     resetForm() {

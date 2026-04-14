@@ -330,7 +330,18 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         
         init() {
-            // Initializing logic
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('select[name="hostel_id"], select[name="hostel_floor_id"], select[name="ac"], select[name="cooler"], select[name="fan"]').on('change', (e) => {
+                        const field = e.target.getAttribute('name');
+                        if (field && this.formData.hasOwnProperty(field)) {
+                            this.formData[field] = e.target.value;
+                            if (field === 'hostel_id') this.loadFloors();
+                            this.clearError(field);
+                        }
+                    });
+                }
+            });
         },
 
         clearError(field) {
@@ -364,6 +375,11 @@ document.addEventListener('alpine:init', () => {
                     this.floors = data.floors;
                     if (targetFloorId) {
                         this.formData.hostel_floor_id = String(targetFloorId);
+                        this.$nextTick(() => {
+                            if (typeof $ !== 'undefined') {
+                                $('select[name="hostel_floor_id"]').val(this.formData.hostel_floor_id).trigger('change');
+                            }
+                        });
                     } else if (!this.editMode) {
                         this.formData.hostel_floor_id = '';
                     }
@@ -484,6 +500,18 @@ document.addEventListener('alpine:init', () => {
             // Wait for floors to load before showing modal to ensure correct floor is selected
             await this.loadFloors(String(room.hostel_floor_id));
             this.$dispatch('open-modal', 'hostel-room-modal');
+
+            // Sync other Select2 fields
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined') {
+                        const fields = ['hostel_id', 'ac', 'cooler', 'fan'];
+                        fields.forEach(field => {
+                            $(`select[name="${field}"]`).val(this.formData[field]).trigger('change');
+                        });
+                    }
+                }, 150);
+            });
         },
         
         closeModal() {

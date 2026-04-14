@@ -240,6 +240,18 @@ document.addEventListener('alpine:init', () => {
             capacity: ''
         },
 
+        init() {
+            // Sync Select2 → Alpine when user picks a new value
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('select[name="class_id"]').on('change', (e) => {
+                        this.formData.class_id = e.target.value;
+                        this.clearError('class_id');
+                    });
+                }
+            });
+        },
+
         async submitForm() {
             if (this.submitting) return;
             this.submitting = true;
@@ -308,13 +320,20 @@ document.addEventListener('alpine:init', () => {
             this.editMode = true;
             this.sectionId = section.id;
             this.errors = {};
-            // Strict type ensuring for select components
             this.formData = {
-                class_id: section.class_id,
+                class_id: String(section.class_id),
                 name: section.name,
                 capacity: section.capacity
             };
             this.$dispatch('open-modal', 'section-modal');
+            // Sync Select2 display after modal opens (Select2 auto-inits from layout)
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined') {
+                        $('select[name="class_id"]').val(this.formData.class_id).trigger('change');
+                    }
+                }, 150);
+            });
         },
 
         async confirmDelete(section) {

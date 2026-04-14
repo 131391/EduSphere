@@ -211,6 +211,17 @@ document.addEventListener('alpine:init', () => {
             amount: ''
         },
 
+        init() {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('select[name="class_id"]').on('change', (e) => {
+                        this.formData.class_id = e.target.value;
+                        if (this.errors.class_id) delete this.errors.class_id;
+                    });
+                }
+            });
+        },
+
         async submitForm() {
             this.submitting = true;
             this.errors = {};
@@ -273,10 +284,17 @@ document.addEventListener('alpine:init', () => {
             this.feeId = fee.id;
             this.errors = {};
             this.formData = {
-                class_id: fee.class_id,
+                class_id: String(fee.class_id),
                 amount: fee.amount
             };
             this.$dispatch('open-modal', 'admission-fee-modal');
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined') {
+                        $('select[name="class_id"]').val(this.formData.class_id).trigger('change');
+                    }
+                }, 150);
+            });
         },
 
         async confirmDelete(fee) {

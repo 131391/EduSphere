@@ -271,7 +271,14 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         
         init() {
-            // Initializing logic
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('select[name="hostel_id"]').on('change', (e) => {
+                        this.formData.hostel_id = e.target.value;
+                        this.clearError('hostel_id');
+                    });
+                }
+            });
         },
 
         clearError(field) {
@@ -381,6 +388,14 @@ document.addEventListener('alpine:init', () => {
                 floor_create_date: floor.floor_create_date || '',
             };
             this.$dispatch('open-modal', 'hostel-floor-modal');
+
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined') {
+                        $('select[name="hostel_id"]').val(this.formData.hostel_id).trigger('change');
+                    }
+                }, 150);
+            });
         },
         
         closeModal() {

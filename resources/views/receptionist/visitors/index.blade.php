@@ -512,14 +512,17 @@ document.addEventListener('alpine:init', () => {
                 }
             });
 
-            // Robust error clearing for selects (including Select2)
+            // Robust sync for all selects (including Select2)
             this.$nextTick(() => {
-                $(this.$el).find('select').on('change', (e) => {
-                    const fieldName = e.target.getAttribute('name');
-                    if (fieldName) {
-                        this.clearError(fieldName);
-                    }
-                });
+                if (typeof $ !== 'undefined') {
+                    $('select[name="visit_purpose"], select[name="visitor_type"], select[name="meeting_with"], select[name="priority"], select[name="meeting_type"]').on('change', (e) => {
+                        const field = e.target.getAttribute('name');
+                        if (field && this.formData.hasOwnProperty(field)) {
+                            this.formData[field] = e.target.value;
+                            this.clearError(field);
+                        }
+                    });
+                }
             });
             
             // Hide error banner when modal opens
@@ -766,16 +769,15 @@ document.addEventListener('alpine:init', () => {
             // Set select values after modal opens
             this.$nextTick(() => {
                 setTimeout(() => {
-                    const selects = ['priority', 'visit_purpose', 'visitor_type', 'meeting_with', 'meeting_type'];
-                    selects.forEach(selectName => {
-                        const select = document.querySelector(`[name="${selectName}"]`);
-                        if (select && this.formData[selectName]) {
-                            select.value = this.formData[selectName];
-                            // Trigger change event to update Alpine.js
-                            select.dispatchEvent(new Event('change', { bubbles: true }));
-                        }
-                    });
-                }, 100);
+                    if (typeof $ !== 'undefined') {
+                        const selects = ['priority', 'visit_purpose', 'visitor_type', 'meeting_with', 'meeting_type'];
+                        selects.forEach(selectName => {
+                            if (this.formData[selectName]) {
+                                $(`select[name="${selectName}"]`).val(this.formData[selectName]).trigger('change');
+                            }
+                        });
+                    }
+                }, 150);
             });
             
             // Display existing photos after modal is shown

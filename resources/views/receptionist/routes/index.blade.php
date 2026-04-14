@@ -263,16 +263,15 @@
                             async init() {
                                 await this.fetchVehicles();
 
-                                // Sync Select2 if present
+                                // Sync Select2 with Alpine state
                                 this.$nextTick(() => {
                                     if (typeof $ !== 'undefined') {
-                                        $(document).on('change', '#vehicle_id', (e) => {
-                                            this.formData.vehicle_id = e.target.value;
-                                            this.clearError('vehicle_id');
-                                        });
-                                        $(document).on('change', '#route_status', (e) => {
-                                            this.formData.status = e.target.value;
-                                            this.clearError('status');
+                                        $('select[name="vehicle_id"], select[name="status"]').on('change', (e) => {
+                                            const field = e.target.getAttribute('name');
+                                            if (field && this.formData.hasOwnProperty(field)) {
+                                                this.formData[field] = e.target.value;
+                                                this.clearError(field);
+                                            }
                                         });
                                     }
                                 });
@@ -402,10 +401,12 @@
                                 this.$dispatch('open-modal', 'route-modal');
 
                                 this.$nextTick(() => {
-                                    if (typeof $ !== 'undefined') {
-                                        $('#vehicle_id').val(this.formData.vehicle_id).trigger('change.select2');
-                                        $('#route_status').val(this.formData.status).trigger('change.select2');
-                                    }
+                                    setTimeout(() => {
+                                        if (typeof $ !== 'undefined') {
+                                            $('select[name="vehicle_id"]').val(this.formData.vehicle_id).trigger('change');
+                                            $('select[name="status"]').val(this.formData.status).trigger('change');
+                                        }
+                                    }, 150);
                                 });
                             },
 

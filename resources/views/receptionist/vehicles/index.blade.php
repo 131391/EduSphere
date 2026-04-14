@@ -442,16 +442,15 @@
                             submitting: false,
 
                             async init() {
-                                // Sync Select2 if present
+                                // Sync Select2 with Alpine state
                                 this.$nextTick(() => {
                                     if (typeof $ !== 'undefined') {
-                                        $(document).on('change', '#fuel_type', (e) => {
-                                            this.formData.fuel_type = e.target.value;
-                                            this.clearError('fuel_type');
-                                        });
-                                        $(document).on('change', '#vehicle_type', (e) => {
-                                            this.formData.vehicle_type = e.target.value;
-                                            this.clearError('vehicle_type');
+                                        $('select[name="fuel_type"], select[name="vehicle_type"]').on('change', (e) => {
+                                            const field = e.target.getAttribute('name');
+                                            if (field && this.formData.hasOwnProperty(field)) {
+                                                this.formData[field] = e.target.value;
+                                                this.clearError(field);
+                                            }
                                         });
                                     }
                                 });
@@ -598,10 +597,12 @@
                                 this.$dispatch('open-modal', 'vehicle-modal');
 
                                 this.$nextTick(() => {
-                                    if (typeof $ !== 'undefined') {
-                                        $('#fuel_type').val(this.formData.fuel_type).trigger('change.select2');
-                                        $('#vehicle_type').val(this.formData.vehicle_type).trigger('change.select2');
-                                    }
+                                    setTimeout(() => {
+                                        if (typeof $ !== 'undefined') {
+                                            $('select[name="fuel_type"]').val(this.formData.fuel_type).trigger('change');
+                                            $('select[name="vehicle_type"]').val(this.formData.vehicle_type).trigger('change');
+                                        }
+                                    }, 150);
                                 });
                             },
 

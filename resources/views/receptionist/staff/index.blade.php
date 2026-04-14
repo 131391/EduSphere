@@ -697,30 +697,17 @@ document.addEventListener('alpine:init', () => {
             // Sync Select2 with Alpine.js formData
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {
-                    // Post select
-                    $('#post').on('change', (e) => {
-                        this.formData.post = e.target.value;
-                    });
-                    
-                    // Class select
-                    $('#class_id').on('change', (e) => {
-                        this.formData.class_id = e.target.value;
-                        this.loadSections(); // Load sections when class changes
-                    });
-                    
-                    // Gender select
-                    $('select[name="gender"]').on('change', (e) => {
-                        this.formData.gender = e.target.value;
-                    });
-                    
-                    // Country select
-                    $('select[name="country_id"]').on('change', (e) => {
-                        this.formData.country_id = e.target.value;
-                    });
-                    
-                    // Higher Qualification select
-                    $('select[name="higher_qualification_id"]').on('change', (e) => {
-                        this.formData.higher_qualification_id = e.target.value;
+                    // All select elements in the form
+                    $('select[name="post"], select[name="class_id"], select[name="section_id"], select[name="gender"], select[name="country_id"], select[name="state_id"], select[name="city_id"], select[name="higher_qualification_id"]').on('change', (e) => {
+                        const field = e.target.getAttribute('name');
+                        if (field && this.formData.hasOwnProperty(field)) {
+                            this.formData[field] = e.target.value;
+                            
+                            // Specific logic for class_id to load sections
+                            if (field === 'class_id') {
+                                this.loadSections();
+                            }
+                        }
                     });
                 }
             });
@@ -791,6 +778,21 @@ document.addEventListener('alpine:init', () => {
             if (this.formData.class_id && this.isTeacher) {
                 this.loadSections();
             }
+
+            // Sync Select2 display
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    if (typeof $ !== 'undefined') {
+                        const fields = ['post', 'class_id', 'section_id', 'gender', 'country_id', 'state_id', 'city_id', 'higher_qualification_id'];
+                        fields.forEach(field => {
+                            if (this.formData[field]) {
+                                $(`select[name="${field}"]`).val(this.formData[field]).trigger('change');
+                            }
+                        });
+                        this.updateSelect2DisabledState();
+                    }
+                }, 150);
+            });
             
             // Set preview images if they exist
             if (staff.aadhar_card) {

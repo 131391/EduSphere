@@ -315,14 +315,16 @@ document.addEventListener('alpine:init', () => {
                     const input = form.querySelector(`[name="${key}"]`);
                     if (input) {
                         if (input.type === 'file') return;
+                        // Cast to string for select elements to ensure type-safe matching
+                        const safeValue = (input.tagName === 'SELECT') ? String(value) : value;
                         if ($(input).hasClass('select2-hidden-accessible')) {
-                            $(input).val(value).trigger('change');
+                            $(input).val(safeValue).trigger('change');
                         } else if (input.type === 'date' && value) {
                             input.value = value.substring(0, 10);
                         } else if (input.type === 'checkbox') {
                             input.checked = !!value;
                         } else {
-                            input.value = value;
+                            input.value = safeValue;
                         }
                     }
                 });

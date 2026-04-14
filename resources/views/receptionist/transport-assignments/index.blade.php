@@ -398,23 +398,14 @@
                         this.$nextTick(() => {
                             if (typeof $ !== 'undefined') {
                                 // Initialize Select2 Sync
-                                $(document).on('change', '#student_id', (e) => {
-                                    this.formData.student_id = e.target.value;
-                                    this.clearError('student_id');
-                                });
-                                $(document).on('change', '#route_id', (e) => {
-                                    this.formData.route_id = e.target.value;
-                                    this.clearError('route_id');
-                                    this.loadBusStops();
-                                });
-                                $(document).on('change', '#bus_stop_id', (e) => {
-                                    this.formData.bus_stop_id = e.target.value;
-                                    this.clearError('bus_stop_id');
-                                    this.updateFee();
-                                });
-                                $(document).on('change', '#vehicle_id', (e) => {
-                                    this.formData.vehicle_id = e.target.value;
-                                    this.clearError('vehicle_id');
+                                $('select[name="student_id"], select[name="route_id"], select[name="bus_stop_id"], select[name="vehicle_id"]').on('change', (e) => {
+                                    const field = e.target.getAttribute('name');
+                                    if (field && this.formData.hasOwnProperty(field)) {
+                                        this.formData[field] = e.target.value;
+                                        if (field === 'route_id') this.loadBusStops();
+                                        if (field === 'bus_stop_id') this.updateFee();
+                                        this.clearError(field);
+                                    }
                                 });
                             }
                         });
@@ -512,7 +503,7 @@
                         this.$dispatch('open-modal', 'assignment-modal');
                         this.$nextTick(() => {
                             if (typeof $ !== 'undefined') {
-                                $('#student_id, #route_id, #bus_stop_id, #vehicle_id').val('').trigger('change.select2');
+                                $('select[name="student_id"], select[name="route_id"], select[name="bus_stop_id"], select[name="vehicle_id"]').val('').trigger('change');
                             }
                         });
                     },
@@ -535,18 +526,19 @@
                         }
 
                         this.$dispatch('open-modal', 'assignment-modal');
-
                         this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('#student_id').val(this.formData.student_id).trigger('change.select2');
-                                $('#route_id').val(this.formData.route_id).trigger('change.select2');
-                                $('#vehicle_id').val(this.formData.vehicle_id).trigger('change.select2');
+                            setTimeout(() => {
+                                if (typeof $ !== 'undefined') {
+                                    $('select[name="student_id"]').val(this.formData.student_id).trigger('change');
+                                    $('select[name="route_id"]').val(this.formData.route_id).trigger('change');
+                                    $('select[name="vehicle_id"]').val(this.formData.vehicle_id).trigger('change');
 
-                                // Specific timing for bus stop because it's dynamic
-                                setTimeout(() => {
-                                    $('#bus_stop_id').val(this.formData.bus_stop_id).trigger('change.select2');
-                                }, 300);
-                            }
+                                    // Specific timing for bus stop because it's dynamic
+                                    setTimeout(() => {
+                                        $('select[name="bus_stop_id"]').val(this.formData.bus_stop_id).trigger('change');
+                                    }, 200);
+                                }
+                            }, 150);
                         });
                     },
 
@@ -571,7 +563,7 @@
                             const route = this.allRoutes.find(r => Number(r.id) === routeId);
                             if (route && route.vehicle_id) {
                                 this.formData.vehicle_id = route.vehicle_id;
-                                if (typeof $ !== 'undefined') $('#vehicle_id').val(route.vehicle_id).trigger('change.select2');
+                                if (typeof $ !== 'undefined') $('select[name="vehicle_id"]').val(route.vehicle_id).trigger('change');
                             }
                         }
                     },
@@ -592,7 +584,7 @@
                                 select.appendChild(option);
                             });
 
-                            if (typeof $ !== 'undefined') $(select).trigger('change.select2');
+                            if (typeof $ !== 'undefined') $(select).trigger('change');
                         });
                     },
 
@@ -609,7 +601,7 @@
                             // If stop has a specific vehicle, we could pre-select it, but usually route-level vehicle is primary.
                             if (selectedStop.vehicle_id) {
                                 this.formData.vehicle_id = selectedStop.vehicle_id;
-                                if (typeof $ !== 'undefined') $('#vehicle_id').val(selectedStop.vehicle_id).trigger('change.select2');
+                                if (typeof $ !== 'undefined') $('select[name="vehicle_id"]').val(selectedStop.vehicle_id).trigger('change');
                             }
                         }
                     },
