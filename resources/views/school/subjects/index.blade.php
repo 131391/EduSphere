@@ -58,13 +58,13 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $data = json_encode([
                         'id' => $row->id,
                         'name' => $row->name,
                         'code' => $row->code,
                         'description' => $row->description,
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-subject', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-subject', { detail: $data }))";
                 },
                 'title' => 'Edit',
             ],
@@ -80,8 +80,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-subject.window="openEditModal($event.detail)" 
-         x-on:open-delete-subject.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$subjects"
@@ -101,15 +100,15 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="px-10 py-10 space-y-8">
+            <div class="space-y-6">
                 <!-- Name & Code Inline -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="md:col-span-2 space-y-2">
                         <label class="modal-label-premium">Subject Name <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <input type="text" x-model="formData.name" @input="clearError('name')" placeholder="e.g., Mathematics"
                                 class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.name}">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
                                 <i class="fas fa-book text-[10px]"></i>
                             </div>
                         </div>
@@ -122,7 +121,7 @@
                         <div class="relative group">
                             <input type="text" x-model="formData.code" @input="clearError('code')" placeholder="MATH-101"
                                 class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.code}">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
                                 <i class="fas fa-hashtag text-[10px]"></i>
                             </div>
                         </div>
@@ -166,6 +165,11 @@ document.addEventListener('alpine:init', () => {
             name: '',
             code: '',
             description: ''
+        },
+
+        init() {
+            window.addEventListener('open-edit-subject', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-subject', (e) => this.confirmDelete(e.detail));
         },
 
         async submitForm() {

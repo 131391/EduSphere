@@ -93,8 +93,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-misc-fee.window="openEditModal($event.detail)" 
-         x-on:open-delete-misc-fee.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$fees"
@@ -114,61 +113,61 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <!-- Fee Name -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Fee Particulars <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="text" 
-                        name="name" 
-                        x-model="formData.name"
-                        @input="clearError('name')"
-                        placeholder="e.g., ID Card Processing"
-                        class="modal-input-premium pl-4"
-                        :class="{'border-red-500 ring-red-500/10': errors.name}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-teal-500">
-                        <i class="fas fa-signature text-sm"></i>
+            <div class="space-y-6">
+                <!-- Fee Name -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Fee Particulars <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="text" 
+                            name="name" 
+                            x-model="formData.name"
+                            @input="clearError('name')"
+                            placeholder="e.g., ID Card Processing"
+                            class="modal-input-premium pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.name}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-teal-500">
+                            <i class="fas fa-signature text-sm"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.name">
-                    <p class="modal-error-message" x-text="errors.name[0]"></p>
-                </template>
-            </div>
 
-            <!-- Amount -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Fee Amount <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="number" 
-                        name="amount" 
-                        step="0.01"
-                        x-model="formData.amount"
-                        @input="clearError('amount')"
-                        placeholder="0.00"
-                        class="modal-input-premium pl-4"
-                        :class="{'border-red-500 ring-red-500/10': errors.amount}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                        <span class="text-sm font-bold">₹</span>
+                <!-- Amount -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Fee Amount <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="number" 
+                            name="amount" 
+                            step="0.01"
+                            x-model="formData.amount"
+                            @input="clearError('amount')"
+                            placeholder="0.00"
+                            class="modal-input-premium pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.amount}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm transition-colors group-focus-within:text-emerald-500">₹</div>
                     </div>
+                    <template x-if="errors.amount">
+                        <p class="modal-error-message" x-text="errors.amount[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.amount">
-                    <p class="modal-error-message" x-text="errors.amount[0]"></p>
-                </template>
-            </div>
 
-            <!-- Description -->
-            <div class="space-y-2 mb-8">
-                <label class="modal-label-premium">Additional Notes</label>
-                <textarea 
-                    name="description" 
-                    x-model="formData.description"
-                    rows="3"
-                    placeholder="Optional explanation of what this fee covers..."
-                    class="modal-input-premium pl-4 resize-none !h-auto font-medium"
-                ></textarea>
+                <!-- Description -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Additional Notes</label>
+                    <textarea 
+                        name="description" 
+                        x-model="formData.description"
+                        rows="3"
+                        placeholder="Optional explanation of what this fee covers..."
+                        class="modal-input-premium resize-none !h-auto font-medium"
+                    ></textarea>
+                </div>
             </div>
 
             <!-- Modal Footer -->
@@ -202,6 +201,11 @@ document.addEventListener('alpine:init', () => {
             name: '',
             amount: '',
             description: ''
+        },
+
+        init() {
+            window.addEventListener('open-edit-misc-fee', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-misc-fee', (e) => this.confirmDelete(e.detail));
         },
 
         async submitForm() {

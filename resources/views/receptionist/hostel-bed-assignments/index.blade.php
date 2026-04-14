@@ -74,7 +74,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button @click="openAddModal()"
+                    <button @click="$dispatch('open-add-hostel-assignment')"
                         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
                         <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
                         Initialize Mapping
@@ -174,7 +174,7 @@
         'hostel_assign_date' => $row->hostel_assign_date ? $row->hostel_assign_date->format('Y-m-d') : '',
         'starting_month' => $row->starting_month,
         ];
-        return "openEditModal(".json_encode($assignmentData).")";
+        return "window.dispatchEvent(new CustomEvent('open-edit-hostel-assignment', { detail: ".json_encode($assignmentData)." }))";
         },
         'icon' => 'fas fa-edit',
         'class' => 'text-indigo-600 hover:text-indigo-900',
@@ -185,7 +185,11 @@
         'onclick' => function($row) {
         $student = $row->student;
         $name = $student ? trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name) : 'N/A';
-        return "confirmDelete('".route('receptionist.hostel-bed-assignments.destroy', $row->id)."', '{$name}')";
+        $deleteData = [
+            'url' => route('receptionist.hostel-bed-assignments.destroy', $row->id),
+            'name' => $name
+        ];
+        return "window.dispatchEvent(new CustomEvent('open-delete-hostel-assignment', { detail: ".json_encode($deleteData)." }))";
         },
         'icon' => 'fas fa-trash',
         'class' => 'text-red-600 hover:text-red-900',
@@ -367,18 +371,19 @@
                                 </div>
                                 <div>
                                     <label
-                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Fee
+                                        class="modal-label-premium mb-2 italic">Fee
                                         Structure</label>
-                                    <div class="relative">
-                                        <input type="number" x-model="formData.rent" @input="clearError('rent')"
+                                    <div class="relative group">
+                                        <input type="number" step="0.01" x-model="formData.rent" @input="clearError('rent')"
                                             placeholder="0.00"
-                                            class="w-full pl-8 pr-5 py-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500"
+                                            class="modal-input-premium pr-10"
                                             :class="errors.rent ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                                        <span
-                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+                                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
+                                            <i class="fas fa-rupee-sign text-[10px]"></i>
+                                        </div>
                                     </div>
                                     <template x-if="errors.rent">
-                                        <p class="text-red-500 text-[10px] font-black mt-2 uppercase tracking-tight"
+                                        <p class="modal-error-message"
                                             x-text="errors.rent[0]"></p>
                                     </template>
                                 </div>
@@ -484,6 +489,10 @@
                     },
 
                     async init() {
+                        window.addEventListener('open-add-hostel-assignment', () => this.openAddModal());
+                        window.addEventListener('open-edit-hostel-assignment', (e) => this.openEditModal(e.detail));
+                        window.addEventListener('open-delete-hostel-assignment', (e) => this.confirmDelete(e.detail));
+
                         await this.loadMonths();
 
                         // Sync Select2 with Alpine state
@@ -502,175 +511,13 @@
                         });
                     },
 
-                    async loadMonths() {
-                        try {
-                            const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-months') }}');
-                            const data = await response.json();
-                            if (data.success) this.months = data.months;
-                        } catch (error) {
-                            console.error('Fee Cycle Refresh Failure:', error);
-                        }
-                    },
-
-                    async searchStudents() {
-                        if (this.searchTimeout) clearTimeout(this.searchTimeout);
-                        if (this.admissionSearch.length < 2) {
-                            this.studentResults = [];
-                            this.showStudentDropdown = false;
-                            return;
-                        }
-
-                        this.searchTimeout = setTimeout(async () => {
-                            try {
-                                const response = await fetch('{{ route('receptionist.hostel-bed-assignments.search-students') }}', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                        'Accept': 'application/json'
-                                    },
-                                    body: JSON.stringify({ search: this.admissionSearch })
-                                });
-                                const data = await response.json();
-                                if (data.success) {
-                                    this.studentResults = data.students;
-                                    this.showStudentDropdown = true;
-                                }
-                            } catch (error) {
-                                console.error('Student Index Probe Failed:', error);
+                    confirmDelete(detail) {
+                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                            detail: {
+                                message: `Strike residential mapping for student: "${detail.name}"?`,
+                                onConfirm: () => this.deleteAssignment(detail.url)
                             }
-                        }, 300);
-                    },
-
-                    selectStudent(student) {
-                        this.formData.student_id = student.id;
-                        this.formData.student_name = student.name;
-                        this.formData.class_name = student.class_name;
-                        this.admissionSearch = student.admission_no;
-                        this.showStudentDropdown = false;
-                        if (this.errors.student_id) delete this.errors.student_id;
-                    },
-
-                    async loadFloors(targetId = null) {
-                        if (!this.formData.hostel_id) {
-                            this.floors = [];
-                            this.formData.hostel_floor_id = '';
-                            return;
-                        }
-
-                        try {
-                            const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-floors') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
-                                },
-                                body: JSON.stringify({ hostel_id: this.formData.hostel_id })
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                this.floors = data.floors;
-                                if (targetId) {
-                                    this.formData.hostel_floor_id = String(targetId);
-                                    this.$nextTick(() => {
-                                        if (typeof $ !== 'undefined') {
-                                            $('select[x-model="formData.hostel_floor_id"]').val(this.formData.hostel_floor_id).trigger('change');
-                                        }
-                                    });
-                                } else if (!this.editMode) {
-                                    this.formData.hostel_floor_id = '';
-                                    this.rooms = [];
-                                    this.formData.hostel_room_id = '';
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Floor Chain Interrupted:', error);
-                        }
-                    },
-
-                    async loadRooms(targetId = null) {
-                        if (!this.formData.hostel_floor_id) {
-                            this.rooms = [];
-                            this.formData.hostel_room_id = '';
-                            return;
-                        }
-
-                        try {
-                            const response = await fetch('{{ route('receptionist.hostel-bed-assignments.get-rooms') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
-                                },
-                                body: JSON.stringify({ hostel_floor_id: this.formData.hostel_floor_id })
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                this.rooms = data.rooms;
-                                if (targetId) {
-                                    this.formData.hostel_room_id = String(targetId);
-                                    this.$nextTick(() => {
-                                        if (typeof $ !== 'undefined') {
-                                            $('select[x-model="formData.hostel_room_id"]').val(this.formData.hostel_room_id).trigger('change');
-                                        }
-                                    });
-                                } else if (!this.editMode) {
-                                    this.formData.hostel_room_id = '';
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Room Chain Interrupted:', error);
-                        }
-                    },
-
-                    async save() {
-                        this.submitting = true;
-                        this.errors = {};
-
-                        const url = this.editMode
-                            ? `/receptionist/hostel-bed-assignments/${this.assignmentId}`
-                            : '{{ route('receptionist.hostel-bed-assignments.store') }}';
-
-                        const method = this.editMode ? 'PUT' : 'POST';
-
-                        try {
-                            const response = await fetch(url, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    ...this.formData,
-                                    _method: method
-                                })
-                            });
-
-                            const result = await response.json();
-
-                            if (response.ok) {
-                                if (window.Toast) {
-                                    window.Toast.fire({
-                                        icon: 'success',
-                                        title: result.message || 'Mapping synchronized successfully'
-                                    });
-                                }
-                                setTimeout(() => window.location.reload(), 1000);
-                            } else if (response.status === 422) {
-                                this.errors = result.errors || {};
-                            } else {
-                                throw new Error(result.message || 'System sync failure');
-                            }
-                        } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: 'error', title: error.message });
-                            }
-                        } finally {
-                            this.submitting = false;
-                        }
+                        }));
                     },
 
                     async deleteAssignment(url) {
@@ -764,24 +611,6 @@
                     }
                 }));
             });
-
-            // Global helpers
-            function openEditModal(assignment) {
-                const el = document.querySelector('[x-data*="hostelBedAssignmentManagement"]');
-                if (el) Alpine.$data(el).openEditModal(assignment);
-            }
-
-            function confirmDelete(url, studentName) {
-                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                    detail: {
-                        message: `Strike residential mapping for student: "${studentName}"?`,
-                        onConfirm: () => {
-                            const el = document.querySelector('[x-data*="hostelBedAssignmentManagement"]');
-                            if (el) Alpine.$data(el).deleteAssignment(url);
-                        }
-                    }
-                }));
-            }
         </script>
     @endpush
 @endsection

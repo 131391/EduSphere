@@ -117,7 +117,7 @@
         ];
     @endphp
 
-    <div x-on:open-delete-waiver.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$waivers"
@@ -134,7 +134,7 @@
         <form @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             
-            <div class="space-y-6 pt-2">
+            <div class="space-y-6">
                 <!-- Target Selection -->
                 <div class="space-y-2">
                     <label class="modal-label-premium">Target Student <span class="text-red-600 font-bold">*</span></label>
@@ -145,7 +145,7 @@
                                 <option value="{{ $student->id }}">{{ $student->full_name }} ({{ $student->admission_no }})</option>
                             @endforeach
                         </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                             <i class="fas fa-user-graduate text-sm"></i>
                         </div>
                     </div>
@@ -164,7 +164,7 @@
                                     <option value="{{ $year->id }}">{{ $year->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-calendar-check text-sm"></i>
                             </div>
                         </div>
@@ -175,7 +175,7 @@
                         <label class="modal-label-premium">Billing Period</label>
                         <div class="relative group">
                             <input type="text" x-model="formData.fee_period" placeholder="e.g., Monthly" class="modal-input-premium pr-10">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-clock text-sm"></i>
                             </div>
                         </div>
@@ -187,16 +187,16 @@
                     <div class="grid grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Standard Fee Amount</label>
-                            <div class="relative">
-                                <input type="number" step="0.01" x-model.number="formData.actual_fee" @input="recalculate('actual')" class="modal-input-premium !bg-white !shadow-none font-bold text-slate-800">
-                                <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs">₹</div>
+                            <div class="relative group">
+                                <input type="number" step="0.01" x-model.number="formData.actual_fee" @input="recalculate('actual')" class="modal-input-premium !bg-white !shadow-none pr-10 font-bold text-slate-800">
+                                <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs">₹</div>
                             </div>
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Tenure (Months)</label>
-                            <div class="relative">
+                            <div class="relative group">
                                 <input type="number" x-model="formData.upto_months" class="modal-input-premium !bg-white !shadow-none font-bold text-slate-800">
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 transition-colors group-focus-within:text-emerald-500">
                                     <i class="fas fa-info-circle text-xs"></i>
                                 </div>
                             </div>
@@ -207,7 +207,7 @@
                         <div class="flex items-center gap-6">
                             <div class="flex-1 space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Reduction (Percentage)</label>
-                                <div class="relative">
+                                <div class="relative group">
                                     <input type="number" step="0.01" x-model.number="formData.waiver_percentage" @input="recalculate('percent')" class="modal-input-premium !bg-white !shadow-none font-black text-indigo-600">
                                     <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs">%</div>
                                 </div>
@@ -215,9 +215,9 @@
                             <div class="pt-6 font-black text-slate-300 italic text-xs uppercase tracking-tighter">OR</div>
                             <div class="flex-1 space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Reduction (Fixed Amount)</label>
-                                <div class="relative">
-                                    <input type="number" step="0.01" x-model.number="formData.waiver_amount" @input="recalculate('amount')" class="modal-input-premium !bg-white !shadow-none font-black text-emerald-600">
-                                    <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-300 font-bold text-xs">₹</div>
+                                <div class="relative group">
+                                    <input type="number" step="0.01" x-model.number="formData.waiver_amount" @input="recalculate('amount')" class="modal-input-premium !bg-white !shadow-none pr-10 font-black text-emerald-600">
+                                    <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-300 font-bold text-xs">₹</div>
                                 </div>
                             </div>
                         </div>
@@ -225,7 +225,7 @@
                 </div>
 
                 <!-- Justification -->
-                <div class="space-y-2 pb-2">
+                <div class="space-y-2">
                     <label class="modal-label-premium">Concession Justification <span class="text-red-600 font-bold">*</span></label>
                     <textarea x-model="formData.reason" @input="clearError('reason')" rows="3" placeholder="Define the eligibility criteria or scholarship details..." class="modal-input-premium resize-none !h-auto" :class="{'border-red-500 ring-red-500/10': errors.reason}"></textarea>
                     <template x-if="errors.reason">
@@ -269,6 +269,14 @@ document.addEventListener('alpine:init', () => {
             reason: ''
         },
 
+        init() {
+            window.addEventListener('open-delete-waiver', (e) => this.confirmDelete(e.detail));
+            
+            // Auto-clear errors on value change
+            this.$watch('formData.student_id', () => this.clearError('student_id'));
+            this.$watch('formData.reason', () => this.clearError('reason'));
+        },
+
         async submitForm() {
             if (this.submitting) return;
             this.submitting = true;
@@ -303,8 +311,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         clearError(field) {
-            if (this.errors[field]) {
+            if (this.errors && this.errors[field]) {
                 delete this.errors[field];
+                this.errors = { ...this.errors };
             }
         },
 

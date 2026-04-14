@@ -85,8 +85,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-fee-name.window="openEditModal($event.detail)" 
-         x-on:open-delete-fee-name.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$feeNames"
@@ -106,38 +105,40 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <!-- Fee Name -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Fee Label <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="text" 
-                        name="name" 
-                        x-model="formData.name"
-                        @input="clearError('name')"
-                        placeholder="e.g., Monthly Tuition Fee"
-                        class="modal-input-premium pl-4"
-                        :class="{'border-red-500 ring-red-500/10': errors.name}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                        <i class="fas fa-signature text-sm"></i>
+            <div class="space-y-6">
+                <!-- Fee Name -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Fee Label <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="text" 
+                            name="name" 
+                            x-model="formData.name"
+                            @input="clearError('name')"
+                            placeholder="e.g., Monthly Tuition Fee"
+                            class="modal-input-premium pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.name}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                            <i class="fas fa-signature text-sm"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.name">
-                    <p class="modal-error-message" x-text="errors.name[0]"></p>
-                </template>
-            </div>
 
-            <!-- Description -->
-            <div class="space-y-2 mb-8">
-                <label class="modal-label-premium">Fee Description</label>
-                <textarea 
-                    name="description" 
-                    x-model="formData.description"
-                    rows="3"
-                    placeholder="Optional details about this fee item..."
-                    class="modal-input-premium px-4 py-3 resize-none h-32"
-                ></textarea>
+                <!-- Description -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Fee Description</label>
+                    <textarea 
+                        name="description" 
+                        x-model="formData.description"
+                        rows="3"
+                        placeholder="Optional details about this fee item..."
+                        class="modal-input-premium px-4 py-3 resize-none h-32"
+                    ></textarea>
+                </div>
             </div>
 
             <!-- Modal Footer -->
@@ -170,6 +171,11 @@ document.addEventListener('alpine:init', () => {
         formData: {
             name: '',
             description: ''
+        },
+
+        init() {
+            window.addEventListener('open-edit-fee-name', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-fee-name', (e) => this.confirmDelete(e.detail));
         },
 
         async submitForm() {

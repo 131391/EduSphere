@@ -43,7 +43,7 @@
                 </div>
             </div>
             <div class="flex flex-wrap gap-3">
-                <button @click="openAddModal()" 
+                <button @click="$dispatch('open-add-hostel-floor')" 
                         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
                     <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
                     Add Floor Level
@@ -120,7 +120,7 @@
                         'total_room' => $row->total_room,
                         'floor_create_date' => $row->floor_create_date ? $row->floor_create_date->format('Y-m-d') : '',
                     ];
-                    return "openEditModal(".json_encode($floorData).")";
+                    return "window.dispatchEvent(new CustomEvent('open-edit-hostel-floor', { detail: ".json_encode($floorData)." }))";
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-900',
@@ -129,7 +129,11 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "confirmDelete('".route('receptionist.hostel-floors.destroy', $row->id)."', '{$row->floor_name}')";
+                    $deleteData = [
+                        'url' => route('receptionist.hostel-floors.destroy', $row->id),
+                        'name' => $row->floor_name
+                    ];
+                    return "window.dispatchEvent(new CustomEvent('open-delete-hostel-floor', { detail: ".json_encode($deleteData)." }))";
                 },
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
@@ -271,6 +275,10 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         
         init() {
+            window.addEventListener('open-add-hostel-floor', () => this.openAddModal());
+            window.addEventListener('open-edit-hostel-floor', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-hostel-floor', (e) => this.confirmDelete(e.detail));
+
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {
                     $('select[name="hostel_id"]').on('change', (e) => {
@@ -337,6 +345,15 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        confirmDelete(detail) {
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    message: `Are you sure you want to decommission the floor node: "${detail.name}"?`,
+                    onConfirm: () => this.deleteFloor(detail.url)
+                }
+            }));
+        },
+
         async deleteFloor(url) {
             try {
                 const response = await fetch(url, {
@@ -372,9 +389,15 @@ document.addEventListener('alpine:init', () => {
                 hostel_id: '',
                 floor_name: '',
                 total_room: '',
-                floor_create_date: '',
+                floor_create_date: '{{ date('Y-m-d') }}',
             };
             this.$dispatch('open-modal', 'hostel-floor-modal');
+
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('select[name="hostel_id"]').val('').trigger('change');
+                }
+            });
         },
         
         openEditModal(floor) {
@@ -404,24 +427,6 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
-
-// Global helpers
-function openEditModal(floor) {
-    const el = document.querySelector('[x-data*="hostelFloorManagement"]');
-    if (el) Alpine.$data(el).openEditModal(floor);
-}
-
-function confirmDelete(url, floorName) {
-    window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-        detail: {
-            message: `Are you sure you want to decommission the floor node: "${floorName}"?`,
-            onConfirm: () => {
-                const el = document.querySelector('[x-data*="hostelFloorManagement"]');
-                if (el) Alpine.$data(el).deleteFloor(url);
-            }
-        }
-    }));
-}
 </script>
 @endpush
 @endsection

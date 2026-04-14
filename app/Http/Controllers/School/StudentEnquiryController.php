@@ -60,9 +60,7 @@ class StudentEnquiryController extends TenantController
     public function store(Request $request)
     {
         $validated = $this->validateEnquiry($request);
-
-        $school = auth()->user()->school;
-        $validated['school_id'] = $school->id;
+        $validated['school_id'] = $this->getSchoolId();
 
         // Handle file uploads
         $validated = $this->handleFileUploads($request, $validated);

@@ -70,13 +70,13 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $data = json_encode([
                         'id' => $row->id,
                         'grade' => $row->grade,
                         'range_start' => $row->range_start,
                         'range_end' => $row->range_end,
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-grade', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-grade', { detail: $data }))";
                 },
                 'title' => 'Edit',
             ],
@@ -92,8 +92,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-grade.window="openEditModal($event.detail)" 
-         x-on:open-delete-grade.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$grades"
@@ -116,12 +115,12 @@
             <!-- Form Body - Academic Year Standard -->
             <div class="space-y-6">
                 <!-- Grade Symbol Block -->
-                <div class="space-y-2 mb-6">
+                <div class="space-y-2">
                     <label class="modal-label-premium">Grade Symbol <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
                         <input type="text" x-model="formData.grade" @input="clearError('grade')" placeholder="e.g., A+"
                             class="modal-input-premium font-black uppercase pr-10" :class="{'border-red-500 ring-red-500/10': errors.grade}">
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:scale-110 transition-transform">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                             <i class="fas fa-font text-sm"></i>
                         </div>
                     </div>
@@ -131,13 +130,13 @@
                 </div>
 
                 <!-- Range Grid -->
-                <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Min Percentage <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <input type="number" x-model="formData.range_start" @input="clearError('range_start')" placeholder="0"
                                 class="modal-input-premium pr-10 font-bold" :class="{'border-red-500 ring-red-500/10': errors.range_start}">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-percentage text-xs"></i>
                             </div>
                         </div>
@@ -150,7 +149,7 @@
                         <div class="relative group">
                             <input type="number" x-model="formData.range_end" @input="clearError('range_end')" placeholder="100"
                                 class="modal-input-premium pr-10 font-bold" :class="{'border-red-500 ring-red-500/10': errors.range_end}">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-percentage text-xs"></i>
                             </div>
                         </div>
@@ -205,6 +204,11 @@ document.addEventListener('alpine:init', () => {
             grade: '',
             range_start: '',
             range_end: ''
+        },
+
+        init() {
+            window.addEventListener('open-edit-grade', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-grade', (e) => this.confirmDelete(e.detail));
         },
 
         async submitForm() {
@@ -277,28 +281,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmDelete(row) {
-            if (window.confirm(`Are you sure you want to delete "${row.name}"?`)) {
-                try {
-                    const response = await fetch(`/school/examination/grades/${row.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ _method: 'DELETE' })
-                    });
-                    
-                    const result = await response.json();
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert(result.message || 'Delete failed');
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Grading Metric',
+                    message: `Are you sure you want to delete the grading metric for "${row.name}"? This action cannot be undone.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/examination/grades/${row.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Delete failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Delete Error:', error);
+                        }
                     }
-                } catch (error) {
-                    alert('An error occurred while deleting');
                 }
-            }
+            }));
         },
 
         closeModal() {

@@ -72,8 +72,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-boarding-type.window="openEditModal($event.detail)" 
-         x-on:open-delete-boarding-type.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$types"
@@ -93,25 +92,27 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="space-y-2 mb-8">
-                <label class="modal-label-premium">Boarding Type Name <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="text" 
-                        name="name" 
-                        x-model="formData.name"
-                        @input="clearError('name')"
-                        placeholder="e.g., Full Boarding"
-                        class="modal-input-premium"
-                        :class="{'border-red-500 ring-red-500/10': errors.name}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
-                        <i class="fas fa-hotel text-sm"></i>
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Boarding Type Name <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="text" 
+                            name="name" 
+                            x-model="formData.name"
+                            @input="clearError('name')"
+                            placeholder="e.g., Full Boarding"
+                            class="modal-input-premium pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.name}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
+                            <i class="fas fa-hotel text-sm"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.name">
-                    <p class="modal-error-message" x-text="errors.name[0]"></p>
-                </template>
             </div>
 
             <!-- Modal Footer -->
@@ -143,6 +144,11 @@ document.addEventListener('alpine:init', () => {
         errors: {},
         formData: {
             name: ''
+        },
+
+        init() {
+            window.addEventListener('open-edit-boarding-type', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-boarding-type', (e) => this.confirmDelete(e.detail));
         },
 
         async submitForm() {

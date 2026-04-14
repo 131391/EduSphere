@@ -70,7 +70,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button @click="openAddModal()"
+                    <button @click="$dispatch('open-add-bus-stop')"
                         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-blue-100 group">
                         <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
                         Commission Node
@@ -151,7 +151,7 @@
                             'charge_per_month' => $row->charge_per_month,
                             'area_pin_code' => $row->area_pin_code,
                         ];
-                        return "openEditModal(" . json_encode($stopData) . ")";
+                        return "window.dispatchEvent(new CustomEvent('open-edit-bus-stop', { detail: ".json_encode($stopData)." }))";
                     },
                     'icon' => 'fas fa-edit',
                     'class' => 'text-blue-600 hover:text-blue-900',
@@ -160,7 +160,11 @@
                 [
                     'type' => 'button',
                     'onclick' => function ($row) {
-                        return "confirmDelete('" . url('receptionist/bus-stops/' . $row->id) . "', '{$row->bus_stop_name}')";
+                        $deleteData = [
+                            'url' => url('receptionist/bus-stops/' . $row->id),
+                            'name' => $row->bus_stop_name
+                        ];
+                        return "window.dispatchEvent(new CustomEvent('open-delete-bus-stop', { detail: ".json_encode($deleteData)." }))";
                     },
                     'icon' => 'fas fa-trash',
                     'class' => 'text-red-600 hover:text-red-900',
@@ -269,9 +273,11 @@
                             <div class="space-y-2">
                                 <label class="modal-label-premium">Monthly Tariff</label>
                                 <div class="relative group">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-blue-600 transition-colors">₹</span>
                                     <input type="number" step="0.01" name="charge_per_month" x-model="formData.charge_per_month"
-                                        class="modal-input-premium pl-8" placeholder="0.00">
+                                        class="modal-input-premium pr-10" placeholder="0.00">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-blue-600 transition-colors">
+                                        <i class="fas fa-rupee-sign text-[10px]"></i>
+                                    </div>
                                 </div>
                             </div>
                             <div class="space-y-2">
@@ -330,25 +336,11 @@
 
     @push('scripts')
         <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('busStopManagement', () => ({
-                    editMode: false,
-                    busStopId: null,
-                    submitting: false,
-                    errors: {},
-                    formData: {
-                        route_id: '',
-                        vehicle_id: '',
-                        bus_stop_no: '',
-                        bus_stop_name: '',
-                        latitude: '',
-                        longitude: '',
-                        distance_from_institute: '',
-                        charge_per_month: '',
-                        area_pin_code: '',
-                    },
-
                     async init() {
+                        window.addEventListener('open-add-bus-stop', () => this.openAddModal());
+                        window.addEventListener('open-edit-bus-stop', (e) => this.openEditModal(e.detail));
+                        window.addEventListener('open-delete-bus-stop', (e) => this.confirmDelete(e.detail));
+
                         this.$nextTick(() => {
                             if (typeof $ !== 'undefined') {
                                 $('select[name="route_id"], select[name="vehicle_id"]').on('change', (e) => {
@@ -468,6 +460,15 @@
                         }
                     },
 
+                    confirmDelete(detail) {
+                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                            detail: {
+                                message: `Are you sure you want to decommission the bus stop node "${detail.name}"?`,
+                                onConfirm: () => this.deleteBusStop(detail.url)
+                            }
+                        }));
+                    },
+
                     async deleteBusStop(url) {
                         try {
                             const response = await fetch(url, {
@@ -501,30 +502,6 @@
                     },
                 }));
             });
-
-            // Global helpers
-            window.openEditModal = function (busStop) {
-                const el = document.querySelector('[x-data*="busStopManagement"]');
-                if (el) {
-                    const component = Alpine.$data(el);
-                    if (component) component.openEditModal(busStop);
-                }
-            };
-
-            window.confirmDelete = function (url, name) {
-                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                    detail: {
-                        message: `Are you sure you want to decommission the bus stop node "${name}"?`,
-                        onConfirm: () => {
-                            const el = document.querySelector('[x-data*="busStopManagement"]');
-                            if (el) {
-                                const component = Alpine.$data(el);
-                                if (component) component.deleteBusStop(url);
-                            }
-                        }
-                    }
-                }));
-            };
         </script>
         </div>
     @endpush

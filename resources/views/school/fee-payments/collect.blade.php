@@ -98,7 +98,6 @@
                             </div>
 
                             <div class="w-36 relative">
-                                <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-300 font-bold text-xs">₹</div>
                                 <input 
                                     type="number" 
                                     step="0.01" 
@@ -106,8 +105,9 @@
                                     @input="recalculateTotal()"
                                     :disabled="!selections['{{ $fee->id }}']"
                                     max="{{ $fee->due_amount }}"
-                                    class="w-full pl-7 pr-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all text-sm font-bold text-gray-700 disabled:opacity-30 disabled:bg-gray-100/50"
+                                    class="w-full pr-7 pl-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all text-sm font-bold text-gray-700 disabled:opacity-30 disabled:bg-gray-100/50"
                                 >
+                                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-300 font-bold text-xs">₹</div>
                             </div>
                         </div>
                     </div>

@@ -66,14 +66,19 @@
             <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                 <div class="w-full sm:w-64">
                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic px-1">Hostel Block</label>
-                    <select x-model="formData.hostel_id" @change="loadStudents(); clearError('hostel_id')"
-                            class="w-full px-5 py-3 bg-white border border-gray-100 rounded-xl focus:outline-none focus:ring-4 transition-all focus:ring-indigo-500/5 focus:border-indigo-500 shadow-sm text-sm font-bold"
-                            :class="errors.hostel_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
-                        <option value="">Select Block</option>
-                        @foreach($hostels as $hostel)
-                            <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="relative group">
+                        <select name="hostel_id" x-model="formData.hostel_id" id="hostel_id"
+                                class="modal-input-premium pl-10"
+                                :class="errors.hostel_id ? 'border-red-300 ring-red-500/5 bg-red-50/20' : ''">
+                            <option value="">Select Block</option>
+                            @foreach($hostels as $hostel)
+                                <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
+                            <i class="fas fa-building text-[10px]"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="w-full sm:w-48">
@@ -220,6 +225,15 @@ document.addEventListener('alpine:init', () => {
         checkedStudents: [],
 
         init() {
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    $('#hostel_id').on('change', (e) => {
+                        this.formData.hostel_id = e.target.value;
+                        this.clearError('hostel_id');
+                        this.loadStudents();
+                    });
+                }
+            });
         },
 
         clearError(field) {
@@ -246,6 +260,7 @@ document.addEventListener('alpine:init', () => {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({ hostel_id: this.formData.hostel_id })

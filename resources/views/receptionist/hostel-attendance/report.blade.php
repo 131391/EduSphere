@@ -75,42 +75,47 @@
     </div>
 
     {{-- Universal Filtering Engine --}}
-    <div class="bg-white/80 backdrop-blur-md rounded-3xl p-8 border border-gray-100 shadow-sm mb-8 relative overflow-hidden group">
-        <div class="absolute top-0 right-0 p-8 text-gray-50 opacity-10 group-hover:opacity-20 transition-opacity">
+    <div class="bg-white/80 backdrop-blur-md rounded-3xl p-8 border border-gray-100 shadow-sm mb-8 relative overflow-hidden group transition-all hover:shadow-md">
+        <div class="absolute top-0 right-0 p-8 text-indigo-50/50 opacity-10 group-hover:opacity-20 transition-[opacity,transform] group-hover:scale-110">
             <i class="fas fa-filter text-9xl"></i>
         </div>
 
         <form method="GET" action="{{ route('receptionist.hostel-attendance.report') }}" class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
-            <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Segment Filter</label>
-                <select name="hostel_id" 
-                        class="w-full px-5 py-3.5 bg-gray-50/50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none font-bold text-sm">
-                    <option value="">All Segments</option>
-                    @foreach($hostels as $hostel)
-                        <option value="{{ $hostel->id }}" {{ request('hostel_id') == $hostel->id ? 'selected' : '' }}>
-                            {{ $hostel->hostel_name }}
-                        </option>
-                    @endforeach
-                </select>
+            <div class="space-y-2">
+                <label class="modal-label-premium px-1 italic">Segment Filter</label>
+                <div class="relative group/select">
+                    <select name="hostel_id" 
+                            class="modal-input-premium pl-10">
+                        <option value="">All Segments</option>
+                        @foreach($hostels as $hostel)
+                            <option value="{{ $hostel->id }}" {{ request('hostel_id') == $hostel->id ? 'selected' : '' }}>
+                                {{ $hostel->hostel_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within/select:text-indigo-500 transition-colors">
+                        <i class="fas fa-building text-[10px]"></i>
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Temporal Start</label>
+            <div class="space-y-2">
+                <label class="modal-label-premium px-1 italic">Temporal Start</label>
                 <input type="date" name="date_from" value="{{ request('date_from') }}"
-                       class="w-full px-5 py-3.5 bg-gray-50/50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none font-bold text-sm">
+                       class="modal-input-premium">
             </div>
 
-            <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 italic">Temporal End</label>
+            <div class="space-y-2">
+                <label class="modal-label-premium px-1 italic">Temporal End</label>
                 <input type="date" name="date_to" value="{{ request('date_to') }}"
-                       class="w-full px-5 py-3.5 bg-gray-50/50 border border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none font-bold text-sm">
+                       class="modal-input-premium">
             </div>
 
             <div class="flex items-end">
                 <button type="submit" 
-                        class="w-full px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-2">
-                    <i class="fas fa-bolt"></i>
-                    Synthesize Report
+                        class="w-full h-[54px] bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-xs rounded-2xl shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-3 uppercase tracking-widest group">
+                    <i class="fas fa-bolt group-hover:scale-110 transition-transform"></i>
+                    Synthesize Audit
                 </button>
             </div>
         </form>

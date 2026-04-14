@@ -81,14 +81,14 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $data = json_encode([
                         'id' => $row->id,
                         'class_name' => $row->class->name,
                         'fee_name' => $row->feeName->name,
                         'fee_type' => $row->feeType->name,
                         'amount' => $row->amount,
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-fee-master', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-fee-master', { detail: $data }))";
                 },
                 'title' => 'Edit',
             ],
@@ -104,8 +104,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-fee-master.window="openEditModal($event.detail)" 
-         x-on:open-delete-fee-master.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$fees"
@@ -121,7 +120,7 @@
     <x-modal name="bulk-fee-master-modal" alpineTitle="'Bulk Fee Master Assignment'" maxWidth="2xl">
         <form id="bulk-fee-form" @submit.prevent="submitBulkForm" method="POST">
             @csrf
-            <div class="space-y-6 pt-2">
+            <div class="space-y-6">
                 <div class="grid grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Target Class <span class="text-red-600 font-bold">*</span></label>
@@ -132,7 +131,7 @@
                                     <option value="{{ $class->id }}">{{ $class->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-school text-sm"></i>
                             </div>
                         </div>
@@ -149,7 +148,7 @@
                                     <option value="{{ $feeType->id }}">{{ $feeType->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-layer-group text-sm"></i>
                             </div>
                         </div>
@@ -179,7 +178,7 @@
                                         min="0" 
                                         placeholder="0.00" 
                                         class="modal-input-premium !py-2 !px-3 !bg-white font-bold text-right text-slate-800"
-                                    >
+                                    <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs transition-colors group-focus-within:text-emerald-500">₹</div>
                                 </div>
                             </div>
                         </div>
@@ -203,7 +202,7 @@
         <form id="edit-fee-form" @submit.prevent="submitEditForm" method="POST">
             @csrf
             <template x-if="editMode"><input type="hidden" name="_method" value="PUT"></template>
-            <div class="space-y-6 pt-2">
+            <div class="space-y-6">
                 <div class="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-1.5 shadow-sm">
                     <div class="flex justify-between text-[10px] font-black text-indigo-400 uppercase tracking-widest">
                         <span x-text="editData.class_name"></span>
@@ -220,9 +219,9 @@
                             x-model="editData.amount" 
                             step="0.01" 
                             min="0"
-                            class="modal-input-premium !pl-10 font-bold text-slate-800"
+                            class="modal-input-premium !pr-10 font-bold text-slate-800"
                         >
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm">₹</div>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm transition-colors group-focus-within:text-emerald-500">₹</div>
                     </div>
                 </div>
             </div>
@@ -241,7 +240,7 @@
     <x-modal name="misc-fee-master-modal" alpineTitle="'Add Single Configuration'" maxWidth="2xl">
         <form id="misc-fee-form" @submit.prevent="submitMiscForm" method="POST">
             @csrf
-            <div class="space-y-6 pt-2">
+            <div class="space-y-6">
                 <div class="space-y-2">
                     <label class="modal-label-premium">Select Class <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
@@ -251,7 +250,7 @@
                                 <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                             <i class="fas fa-school text-sm"></i>
                         </div>
                     </div>
@@ -270,7 +269,7 @@
                                     <option value="{{ $fn->id }}">{{ $fn->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-tag text-sm"></i>
                             </div>
                         </div>
@@ -287,7 +286,7 @@
                                     <option value="{{ $ft->id }}">{{ $ft->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-layer-group text-sm"></i>
                             </div>
                         </div>
@@ -300,10 +299,8 @@
                 <div class="space-y-2 pb-2">
                     <label class="modal-label-premium">Configuration Amount <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
-                        <input type="number" x-model="miscData.amount" @input="errors = {}" placeholder="0.00" class="modal-input-premium !pl-12 font-black text-slate-800" :class="{'border-red-500 ring-red-500/10': Object.keys(errors).some(k => k.startsWith('amounts.'))}">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold flex items-center justify-center pointer-events-none border-r border-slate-200 pr-2.5 h-5">
-                            <i class="fas fa-rupee-sign text-[10px]"></i>
-                        </div>
+                        <input type="number" x-model="miscData.amount" @input="errors = {}" placeholder="0.00" class="modal-input-premium pr-10 font-black text-slate-800" :class="{'border-red-500 ring-red-500/10': Object.keys(errors).some(k => k.startsWith('amounts.'))}">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm transition-colors group-focus-within:text-emerald-500">₹</div>
                     </div>
                     <template x-if="Object.keys(errors).some(k => k.startsWith('amounts.'))">
                         <p class="modal-error-message" x-text="errors[Object.keys(errors).find(k => k.startsWith('amounts.'))][0]"></p>
@@ -337,6 +334,9 @@ document.addEventListener('alpine:init', () => {
         editData: { id: '', class_name: '', fee_name: '', fee_type: '', amount: '' },
 
         init() {
+            window.addEventListener('open-edit-fee-master', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-fee-master', (e) => this.confirmDelete(e.detail));
+
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {
                     // Sync Bulk Modal Selects

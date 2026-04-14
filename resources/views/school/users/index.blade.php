@@ -57,8 +57,8 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode($row));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-user', { detail: JSON.parse(atob('$encoded')) }))";
+                    $data = json_encode($row);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-user', { detail: $data }))";
                 },
                 'title' => 'Edit',
             ],
@@ -75,9 +75,7 @@
         ];
     @endphp
     <!-- Header Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-indigo-100/50" 
-         x-on:open-edit-user.window="openEditModal($event.detail)"
-         x-on:open-delete-user.window="confirmDelete($event.detail)">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-indigo-100/50">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -124,7 +122,7 @@
                         <div class="relative group">
                             <input type="text" x-model="formData.name" @input="clearError('name')" placeholder="John Doe"
                                 class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.name}">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-user text-xs"></i>
                             </div>
                         </div>
@@ -139,7 +137,7 @@
                         <div class="relative group">
                             <input type="email" x-model="formData.email" @input="clearError('email')" placeholder="example@school.com"
                                 class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.email}">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-envelope text-xs"></i>
                             </div>
                         </div>
@@ -160,7 +158,7 @@
                                 <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-chevron-down text-sm"></i>
                             </div>
                         </div>
@@ -178,7 +176,7 @@
                             <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black text-[10px] pointer-events-none border-r border-slate-200 pr-3 h-4 flex items-center">
                                 +91
                             </div>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-phone-alt text-xs"></i>
                             </div>
                         </div>
@@ -219,7 +217,7 @@
                                 <option value="inactive">Inactive</option>
                                 <option value="suspended">Suspended</option>
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-toggle-on text-sm"></i>
                             </div>
                         </div>
@@ -256,46 +254,13 @@ document.addEventListener('alpine:init', () => {
             password: '',
             phone: '',
             role: '',
-            status: 'active'
+            status: 'active' 
         },
 
-        async confirmDelete(user) {
-            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                detail: {
-                    title: 'Delete User Account',
-                    message: `Are you sure you want to delete the user account for "${user.name}"? This action cannot be undone and will revoke all access immediately.`,
-                    callback: async () => {
-                        try {
-                            const response = await fetch(`/school/users/${user.id}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({ _method: 'DELETE' })
-                            });
-                            
-                            if (response.ok) {
-                                window.location.reload();
-                            } else {
-                                const result = await response.json();
-                                if (window.Toast) {
-                                    window.Toast.fire({
-                                        icon: 'error',
-                                        title: result.message || 'Delete failed'
-                                    });
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Delete Error:', error);
-                        }
-                    }
-                }
-            }));
-        },
-        
         init() {
+            window.addEventListener('open-edit-user', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-user', (e) => this.confirmDelete(e.detail));
+
             // Sync Select2 with Alpine state
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {

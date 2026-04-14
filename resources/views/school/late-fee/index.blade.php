@@ -88,8 +88,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-late-fee.window="openEditModal($event.detail)" 
-         x-on:open-delete-late-fee.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$lateFees"
@@ -109,52 +108,52 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <!-- Late Fee Amount -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Late Fine Amount <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="number" 
-                        name="late_fee_amount" 
-                        x-model="formData.late_fee_amount"
-                        @input="clearError('late_fee_amount')"
-                        step="0.01"
-                        placeholder="0.00"
-                        class="modal-input-premium pl-4"
-                        :class="{'border-red-500 ring-red-500/10': errors.late_fee_amount}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                        <span class="text-sm font-bold">₹</span>
+            <div class="space-y-6">
+                <!-- Late Fee Amount -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Late Fine Amount <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="number" 
+                            name="late_fee_amount" 
+                            x-model="formData.late_fee_amount"
+                            @input="clearError('late_fee_amount')"
+                            step="0.01"
+                            placeholder="0.00"
+                            class="modal-input-premium pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.late_fee_amount}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm transition-colors group-focus-within:text-emerald-500">₹</div>
                     </div>
+                    <template x-if="errors.late_fee_amount">
+                        <p class="modal-error-message" x-text="errors.late_fee_amount[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.late_fee_amount">
-                    <p class="modal-error-message" x-text="errors.late_fee_amount[0]"></p>
-                </template>
-            </div>
 
-            <!-- Fine Date -->
-            <div class="space-y-2 mb-8">
-                <label class="modal-label-premium">Select Late Fine Date <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <select 
-                        name="fine_date" 
-                        x-model="formData.fine_date"
-                        @change="clearError('fine_date')"
-                        class="modal-input-premium pl-4 appearance-none"
-                        :class="{'border-red-500 ring-red-500/10': errors.fine_date}"
-                    >
-                        <option value="">Select Day of Month</option>
-                        @for($i = 1; $i <= 31; $i++)
-                            <option value="{{ $i }}">Day {{ $i }}</option>
-                        @endfor
-                    </select>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                        <i class="fas fa-calendar-day text-sm"></i>
+                <!-- Fine Date -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Select Late Fine Date <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <select 
+                            name="fine_date" 
+                            x-model="formData.fine_date"
+                            @change="clearError('fine_date')"
+                            class="modal-input-premium appearance-none pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.fine_date}"
+                        >
+                            <option value="">Select Day of Month</option>
+                            @for($i = 1; $i <= 31; $i++)
+                                <option value="{{ $i }}">Day {{ $i }}</option>
+                            @endfor
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                            <i class="fas fa-calendar-day text-sm"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.fine_date">
+                        <p class="modal-error-message" x-text="errors.fine_date[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.fine_date">
-                    <p class="modal-error-message" x-text="errors.fine_date[0]"></p>
-                </template>
             </div>
 
             <!-- Modal Footer -->
@@ -190,6 +189,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
+            window.addEventListener('open-edit-late-fee', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-late-fee', (e) => this.confirmDelete(e.detail));
+
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {
                     $('select[name="fine_date"]').on('change', (e) => {

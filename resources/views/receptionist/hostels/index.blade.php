@@ -116,7 +116,7 @@
                         'capability' => $row->capability,
                         'hostel_create_date' => $row->hostel_create_date ? $row->hostel_create_date->format('Y-m-d') : '',
                     ];
-                    return "openEditModal(".json_encode($hostelData).")";
+                    return "window.dispatchEvent(new CustomEvent('open-edit-hostel', { detail: ".json_encode($hostelData)." }))";
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-900',
@@ -125,7 +125,11 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "confirmDelete('".route('receptionist.hostels.destroy', $row->id)."', '{$row->hostel_name}')";
+                    $deleteData = [
+                        'url' => route('receptionist.hostels.destroy', $row->id),
+                        'name' => $row->hostel_name
+                    ];
+                    return "window.dispatchEvent(new CustomEvent('open-delete-hostel', { detail: ".json_encode($deleteData)." }))";
                 },
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
@@ -265,7 +269,9 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         
         init() {
-            // Initial state sync
+            window.addEventListener('open-add-hostel', () => this.openAddModal());
+            window.addEventListener('open-edit-hostel', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-hostel', (e) => this.confirmDelete(e.detail));
         },
 
         clearError(field) {
@@ -324,6 +330,15 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        confirmDelete(detail) {
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    message: `Are you sure you want to decommission the registry entry: "${detail.name}"?`,
+                    onConfirm: () => this.deleteHostel(detail.url)
+                }
+            }));
+        },
+
         async deleteHostel(url) {
             try {
                 const response = await fetch(url, {
@@ -359,7 +374,7 @@ document.addEventListener('alpine:init', () => {
                 hostel_name: '',
                 hostel_incharge: '',
                 capability: '',
-                hostel_create_date: '',
+                hostel_create_date: '{{ date('Y-m-d') }}',
             };
             this.$dispatch('open-modal', 'hostel-modal');
         },
@@ -383,24 +398,6 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
-
-// Global helpers
-function openEditModal(hostel) {
-    const el = document.querySelector('[x-data*="hostelManagement"]');
-    if (el) Alpine.$data(el).openEditModal(hostel);
-}
-
-function confirmDelete(url, name) {
-    window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-        detail: {
-            message: `Are you sure you want to decommission the registry entry: "${name}"?`,
-            onConfirm: () => {
-                const el = document.querySelector('[x-data*="hostelManagement"]');
-                if (el) Alpine.$data(el).deleteHostel(url);
-            }
-        }
-    }));
-}
 </script>
 @endpush
 @endsection

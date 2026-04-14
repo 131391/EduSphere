@@ -52,27 +52,27 @@
                         <div class="space-y-2">
                             <label class="text-sm font-bold text-gray-600 ml-1 uppercase">Registration Fee</label>
                             <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-indigo-500 font-black text-lg">₹</span>
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-5 text-indigo-500 font-black text-lg">₹</span>
                                 <input type="number" step="0.01" name="registration_fee" value="{{ old('registration_fee', $settings['registration_fee'] ?? '') }}" 
-                                       class="w-full pl-10 pr-5 py-3.5 bg-gray-50 border-gray-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-black text-lg">
+                                       class="w-full pr-10 pl-5 py-3.5 bg-gray-50 border-gray-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-black text-lg">
                             </div>
                         </div>
 
                         <div class="space-y-2">
                             <label class="text-sm font-bold text-gray-600 ml-1 uppercase">Admission Fee</label>
                             <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-indigo-500 font-black text-lg">₹</span>
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-5 text-indigo-500 font-black text-lg">₹</span>
                                 <input type="number" step="0.01" name="admission_fee" value="{{ old('admission_fee', $settings['admission_fee'] ?? '') }}" 
-                                       class="w-full pl-10 pr-5 py-3.5 bg-gray-50 border-gray-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-black text-lg">
+                                       class="w-full pr-10 pl-5 py-3.5 bg-gray-50 border-gray-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-black text-lg">
                             </div>
                         </div>
 
                         <div class="space-y-2">
                             <label class="text-sm font-bold text-gray-600 ml-1 uppercase">Library Fine (Daily)</label>
                             <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-indigo-500 font-black text-lg">₹</span>
+                                <span class="absolute inset-y-0 right-0 flex items-center pr-5 text-indigo-500 font-black text-lg">₹</span>
                                 <input type="number" step="0.01" name="late_return_library_book_fine" value="{{ old('late_return_library_book_fine', $settings['late_return_library_book_fine'] ?? '') }}" 
-                                       class="w-full pl-10 pr-5 py-3.5 bg-gray-50 border-gray-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-black text-lg">
+                                       class="w-full pr-10 pl-5 py-3.5 bg-gray-50 border-gray-100 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-black text-lg">
                             </div>
                         </div>
 

@@ -43,18 +43,22 @@
                 <!-- Vehicle Select -->
                 <div class="space-y-2">
                     <label class="modal-label-premium">Institutional Fleet <span class="text-red-500 font-bold">*</span></label>
-                    <select id="vehicle_id" 
-                            x-model="formData.vehicle_id"
-                            @change="delete errors.vehicle_id; loadRoutes(true)"
-                            class="modal-input-premium"
-                            :class="errors.vehicle_id ? 'border-red-500 ring-red-500/10' : ''">
-                        <option value="">Select Vehicle</option>
-                        @foreach($vehicles as $vehicle)
-                            <option value="{{ $vehicle->id }}" {{ old('vehicle_id', $selectedVehicle?->id) == $vehicle->id ? 'selected' : '' }}>
-                                {{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="relative group">
+                        <select id="vehicle_id" name="vehicle_id"
+                                x-model="formData.vehicle_id"
+                                class="modal-input-premium pl-10"
+                                :class="errors.vehicle_id ? 'border-red-500 ring-red-500/10' : ''">
+                            <option value="">Select Vehicle</option>
+                            @foreach($vehicles as $vehicle)
+                                <option value="{{ $vehicle->id }}" {{ old('vehicle_id', $selectedVehicle?->id) == $vehicle->id ? 'selected' : '' }}>
+                                    {{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-purple-500 transition-colors">
+                            <i class="fas fa-bus text-[10px]"></i>
+                        </div>
+                    </div>
                     <template x-if="errors.vehicle_id">
                         <p class="modal-error-message" x-text="errors.vehicle_id[0]"></p>
                     </template>
@@ -63,17 +67,21 @@
                 <!-- Route Select -->
                 <div class="space-y-2">
                     <label class="modal-label-premium">Active Transit Channel <span class="text-red-500 font-bold">*</span></label>
-                    <select id="route_id" 
-                            x-model="formData.route_id"
-                            @change="delete errors.route_id"
-                            x-ref="routeSelect"
-                            class="modal-input-premium"
-                            :class="errors.route_id ? 'border-red-500 ring-red-500/10' : ''">
-                        <option value="">Select Route</option>
-                        <template x-for="route in routes" :key="route.id">
-                            <option :value="route.id" x-text="route.route_name"></option>
-                        </template>
-                    </select>
+                    <div class="relative group">
+                        <select id="route_id" name="route_id"
+                                x-model="formData.route_id"
+                                x-ref="routeSelect"
+                                class="modal-input-premium pl-10"
+                                :class="errors.route_id ? 'border-red-500 ring-red-500/10' : ''">
+                            <option value="">Select Route</option>
+                            <template x-for="route in routes" :key="route.id">
+                                <option :value="route.id" x-text="route.route_name"></option>
+                            </template>
+                        </select>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
+                            <i class="fas fa-route text-[10px]"></i>
+                        </div>
+                    </div>
                     <template x-if="errors.route_id">
                         <p class="modal-error-message" x-text="errors.route_id[0]"></p>
                     </template>
@@ -280,63 +288,26 @@ function transportAttendanceReport() {
         errors: {},
 
         init() {
-            // Initialize Select2 for vehicle and route
             this.$nextTick(() => {
-                setTimeout(() => {
-                    if (typeof $ !== 'undefined') {
-                        const $vehicleSelect = $('#vehicle_id');
-                        if ($vehicleSelect.length && !$vehicleSelect.hasClass('select2-hidden-accessible')) {
-                            $vehicleSelect.select2({
-                                placeholder: 'Select Vehicle',
-                                allowClear: false,
-                                width: '100%'
-                            });
-                        }
+                if (typeof $ !== 'undefined') {
+                    // Handle vehicle change
+                    $('#vehicle_id').on('change', (e) => {
+                        this.formData.vehicle_id = e.target.value;
+                        if (this.errors.vehicle_id) delete this.errors.vehicle_id;
+                        this.loadRoutes(true);
+                    });
 
-                        const $routeSelect = $('#route_id');
-                        if ($routeSelect.length && !$routeSelect.hasClass('select2-hidden-accessible')) {
-                            $routeSelect.select2({
-                                placeholder: 'Select Route',
-                                allowClear: false,
-                                width: '100%'
-                            });
-                        }
-
-                        // Handle vehicle change
-                        $('#vehicle_id').on('select2:select select2:change', (e) => {
-                            this.formData.vehicle_id = e.target.value || $('#vehicle_id').val();
-                            if (this.errors.vehicle_id) delete this.errors.vehicle_id;
-                            // Clear route when vehicle changes
-                            this.loadRoutes(true);
-                        });
-
-                        // Handle route change
-                        $('#route_id').on('select2:select select2:change', (e) => {
-                            this.formData.route_id = e.target.value || $('#route_id').val();
-                            if (this.errors.route_id) delete this.errors.route_id;
-                        });
-                    }
-                    
-                    // Enhance month input styling and behavior
-                    const monthInput = document.getElementById('month');
-                    if (monthInput) {
-                        // Sync with Alpine.js on change
-                        monthInput.addEventListener('change', (e) => {
-                            this.formData.month = e.target.value;
-                            if (this.errors.month) delete this.errors.month;
-                        });
-                        
-                        // Sync Alpine.js value to input if needed
-                        if (this.formData.month && !monthInput.value) {
-                            monthInput.value = this.formData.month;
-                        }
-                    }
-                    
-                    // If vehicle is already selected, load routes (preserve route_id if set)
-                    if (this.formData.vehicle_id) {
-                        this.loadRoutes(false);
-                    }
-                }, 300);
+                    // Handle route change
+                    $('#route_id').on('change', (e) => {
+                        this.formData.route_id = e.target.value;
+                        if (this.errors.route_id) delete this.errors.route_id;
+                    });
+                }
+                
+                // If vehicle is already selected, load routes (preserve route_id if set)
+                if (this.formData.vehicle_id) {
+                    this.loadRoutes(false);
+                }
             });
         },
 
@@ -348,21 +319,15 @@ function transportAttendanceReport() {
                 return;
             }
 
-            // Preserve current route_id if we're not clearing it
-            const preserveRouteId = this.formData.route_id && !clearRoute;
-
             try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
                 const response = await fetch('{{ route('receptionist.transport-attendance.get-routes-for-report') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({
-                        vehicle_id: this.formData.vehicle_id,
-                    }),
+                    body: JSON.stringify({ vehicle_id: this.formData.vehicle_id }),
                 });
 
                 const data = await response.json();
@@ -370,102 +335,39 @@ function transportAttendanceReport() {
                 if (response.ok && data.success) {
                     this.routes = data.routes;
                     this.updateRouteOptions();
-                    // Only clear route_id if explicitly requested (e.g., when vehicle changes)
-                    if (clearRoute || !preserveRouteId) {
-                        this.formData.route_id = '';
-                    }
+                    if (clearRoute) this.formData.route_id = '';
                 } else {
-                    if (response.status === 422) {
-                        this.errors = data.errors || {};
-                    }
                     this.routes = [];
                     this.updateRouteOptions();
-                    if (clearRoute) {
-                        this.formData.route_id = '';
-                    }
+                    if (clearRoute) this.formData.route_id = '';
                 }
             } catch (error) {
                 console.error('Error loading routes:', error);
                 this.routes = [];
                 this.updateRouteOptions();
-                if (clearRoute) {
-                    this.formData.route_id = '';
-                }
+                if (clearRoute) this.formData.route_id = '';
             }
         },
 
         updateRouteOptions() {
-            setTimeout(() => {
-                const select = this.$refs.routeSelect || document.getElementById('route_id');
+            this.$nextTick(() => {
+                const select = document.getElementById('route_id');
                 if (!select) return;
 
-                if (typeof $ === 'undefined') {
-                    while (select.options.length > 1) {
-                        select.remove(1);
-                    }
-                    if (Array.isArray(this.routes) && this.routes.length > 0) {
-                        this.routes.forEach(route => {
-                            const option = document.createElement('option');
-                            option.value = route.id;
-                            option.textContent = route.route_name;
-                            select.appendChild(option);
-                        });
-                    }
-                    return;
-                }
+                // Clear and add placeholder
+                while (select.options.length > 1) select.remove(1);
 
-                const $select = $(select);
-                const isSelect2 = $select.hasClass('select2-hidden-accessible');
-                const currentValue = this.formData.route_id;
+                this.routes.forEach(route => {
+                    const option = document.createElement('option');
+                    option.value = route.id;
+                    option.textContent = route.route_name;
+                    select.appendChild(option);
+                });
 
-                if (isSelect2) {
-                    try {
-                        $select.select2('destroy');
-                    } catch (e) {
-                        // Silently handle error
-                    }
+                if (typeof $ !== 'undefined') {
+                    $(select).val(this.formData.route_id).trigger('change');
                 }
-
-                while (select.options.length > 1) {
-                    select.remove(1);
-                }
-
-                if (Array.isArray(this.routes) && this.routes.length > 0) {
-                    this.routes.forEach((route) => {
-                        const option = document.createElement('option');
-                        option.value = route.id;
-                        option.textContent = route.route_name;
-                        select.appendChild(option);
-                    });
-                }
-
-                try {
-                    $select.select2({
-                        placeholder: 'Select Route',
-                        allowClear: false,
-                        width: '100%'
-                    });
-                    
-                    $select.off('select2:select select2:change').on('select2:select select2:change', (e) => {
-                        this.formData.route_id = e.target.value || $select.val();
-                    });
-                    
-                    if (currentValue) {
-                        const optionExists = $select.find(`option[value="${currentValue}"]`).length > 0;
-                        if (optionExists) {
-                            $select.val(currentValue).trigger('change');
-                            this.formData.route_id = currentValue;
-                        } else {
-                            $select.val('').trigger('change');
-                            this.formData.route_id = '';
-                        }
-                    } else {
-                        $select.val('').trigger('change');
-                    }
-                } catch (e) {
-                    // Silently handle error
-                }
-            }, 150);
+            });
         },
 
         searchReport() {

@@ -56,11 +56,11 @@
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
                 'onclick' => function($row) {
-                    $encoded = base64_encode(json_encode([
+                    $data = json_encode([
                         'id' => $row->id,
                         'name' => $row->name,
-                    ]));
-                    return "window.dispatchEvent(new CustomEvent('open-edit-exam-type', { detail: JSON.parse(atob('$encoded')) }))";
+                    ]);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-exam-type', { detail: $data }))";
                 },
                 'title' => 'Edit',
             ],
@@ -76,8 +76,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-exam-type.window="openEditModal($event.detail)" 
-         x-on:open-delete-exam-type.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$examTypes"
@@ -97,31 +96,33 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <!-- Form Body - Using the exact structure from Academic Years -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Type Name <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input type="text" x-model="formData.name" @input="clearError('name')" placeholder="e.g., Mid-Term Assessment"
-                        class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.name}">
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:scale-110 transition-transform">
-                        <i class="fas fa-tag text-[10px]"></i>
+            <div class="space-y-6">
+                <!-- Form Body -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Type Name <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input type="text" x-model="formData.name" @input="clearError('name')" placeholder="e.g., Mid-Term Assessment"
+                            class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.name}">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                            <i class="fas fa-tag text-[10px]"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.name">
-                    <p class="modal-error-message" x-text="errors.name[0]"></p>
-                </template>
-            </div>
 
-            <!-- Notification Card앉 sits like Academic Year standard -->
-            <div class="mb-8 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
-                <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
-                    <i class="fas fa-layer-group text-indigo-600 text-sm"></i>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-[13px] font-bold text-slate-900 leading-tight">Classification Notice</span>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                        Categories help group <span class="text-indigo-600 italic">assessment subjects</span> into logical grading sessions like Mid-Term or Final Exams.
-                    </p>
+                <!-- Notification Card -->
+                <div class="flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-layer-group text-indigo-600 text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Classification Notice</span>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            Categories help group <span class="text-indigo-600 italic">assessment subjects</span> into logical grading sessions like Mid-Term or Final Exams.
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -154,6 +155,11 @@ document.addEventListener('alpine:init', () => {
         errors: {},
         formData: {
             name: ''
+        },
+
+        init() {
+            window.addEventListener('open-edit-exam-type', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-exam-type', (e) => this.confirmDelete(e.detail));
         },
 
         async submitForm() {
@@ -224,28 +230,39 @@ document.addEventListener('alpine:init', () => {
         },
 
         async confirmDelete(type) {
-            if (window.confirm(`Are you sure you want to delete the exam type "${type.name}"?`)) {
-                try {
-                    const response = await fetch(`/school/examination/exam-types/${type.id}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ _method: 'DELETE' })
-                    });
-                    
-                    const result = await response.json();
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert(result.message || 'Delete failed');
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Exam Type',
+                    message: `Are you sure you want to delete the exam type "${type.name}"? This action cannot be undone.`,
+                    callback: async () => {
+                        try {
+                            const response = await fetch(`/school/examination/exam-types/${type.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+                            
+                            if (response.ok) {
+                                window.location.reload();
+                            } else {
+                                const result = await response.json();
+                                if (window.Toast) {
+                                    window.Toast.fire({
+                                        icon: 'error',
+                                        title: result.message || 'Delete failed'
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Delete Error:', error);
+                        }
                     }
-                } catch (error) {
-                    alert('An error occurred while deleting');
                 }
-            }
+            }));
         },
 
         closeModal() {

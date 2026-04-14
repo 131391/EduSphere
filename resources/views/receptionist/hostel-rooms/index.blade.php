@@ -56,7 +56,7 @@
                 </div>
             </div>
             <div class="flex flex-wrap gap-3">
-                <button @click="openAddModal()" 
+                <button @click="$dispatch('open-add-hostel-room')" 
                         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
                     <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
                     Initialize Room
@@ -138,7 +138,7 @@
                         'fan' => $row->fan->value,
                         'room_create_date' => $row->room_create_date ? $row->room_create_date->format('Y-m-d') : '',
                     ];
-                    return "openEditModal(".json_encode($roomData).")";
+                    return "window.dispatchEvent(new CustomEvent('open-edit-hostel-room', { detail: ".json_encode($roomData)." }))";
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-indigo-600 hover:text-indigo-900',
@@ -147,7 +147,11 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "confirmDelete('".route('receptionist.hostel-rooms.destroy', $row->id)."', '{$row->room_name}')";
+                    $deleteData = [
+                        'url' => route('receptionist.hostel-rooms.destroy', $row->id),
+                        'name' => $row->room_name
+                    ];
+                    return "window.dispatchEvent(new CustomEvent('open-delete-hostel-room', { detail: ".json_encode($deleteData)." }))";
                 },
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
@@ -330,6 +334,10 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         
         init() {
+            window.addEventListener('open-add-hostel-room', () => this.openAddModal());
+            window.addEventListener('open-edit-hostel-room', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-hostel-room', (e) => this.confirmDelete(e.detail));
+
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {
                     $('select[name="hostel_id"], select[name="hostel_floor_id"], select[name="ac"], select[name="cooler"], select[name="fan"]').on('change', (e) => {
@@ -439,6 +447,15 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        confirmDelete(detail) {
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    message: `Are you sure you want to decommission the residential node: "${detail.name}"?`,
+                    onConfirm: () => this.deleteRoom(detail.url)
+                }
+            }));
+        },
+
         async deleteRoom(url) {
             try {
                 const response = await fetch(url, {
@@ -481,6 +498,14 @@ document.addEventListener('alpine:init', () => {
             };
             this.floors = [];
             this.$dispatch('open-modal', 'hostel-room-modal');
+
+            this.$nextTick(() => {
+                if (typeof $ !== 'undefined') {
+                    ['hostel_id', 'hostel_floor_id', 'ac', 'cooler', 'fan'].forEach(field => {
+                        $(`select[name="${field}"]`).val(this.formData[field]).trigger('change');
+                    });
+                }
+            });
         },
         
         async openEditModal(room) {
@@ -520,24 +545,6 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
-
-// Global helpers
-function openEditModal(room) {
-    const el = document.querySelector('[x-data*="hostelRoomManagement"]');
-    if (el) Alpine.$data(el).openEditModal(room);
-}
-
-function confirmDelete(url, roomName) {
-    window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-        detail: {
-            message: `Are you sure you want to decommission the residential node: "${roomName}"?`,
-            onConfirm: () => {
-                const el = document.querySelector('[x-data*="hostelRoomManagement"]');
-                if (el) Alpine.$data(el).deleteRoom(url);
-            }
-        }
-    }));
-}
 </script>
 @endpush
 @endsection

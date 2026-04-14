@@ -70,7 +70,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button @click="openAddModal()"
+                    <button @click="$dispatch('open-add-route')"
                         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
                         <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
                         Establish New Route
@@ -111,32 +111,36 @@
             ];
 
             $tableActions = [
-                [
-                    'type' => 'button',
-                    'onclick' => function ($row) {
-                        $routeData = [
-                            'id' => $row->id,
-                            'route_name' => $row->route_name,
-                            'vehicle_id' => $row->vehicle_id,
-                            'route_create_date' => $row->route_create_date ? $row->route_create_date->format('Y-m-d') : null,
-                            'status' => $row->status,
-                        ];
-                        return "openEditModal(" . json_encode($routeData) . ")";
-                    },
-                    'icon' => 'fas fa-edit',
-                    'class' => 'text-blue-600 hover:text-blue-900',
-                    'title' => 'Edit',
-                ],
-                [
-                    'type' => 'button',
-                    'onclick' => function ($row) {
-                        return "confirmDelete('" . route('receptionist.routes.destroy', $row->id) . "', '{$row->route_name}')";
-                    },
-                    'icon' => 'fas fa-trash',
-                    'class' => 'text-red-600 hover:text-red-900',
-                    'title' => 'Delete',
-                ],
-            ];
+            [
+                'type' => 'button',
+                'onclick' => function ($row) {
+                    $routeData = [
+                        'id' => $row->id,
+                        'route_name' => $row->route_name,
+                        'vehicle_id' => $row->vehicle_id,
+                        'route_create_date' => $row->route_create_date ? $row->route_create_date->format('Y-m-d') : null,
+                        'status' => $row->status,
+                    ];
+                    return "window.dispatchEvent(new CustomEvent('open-edit-route', { detail: ".json_encode($routeData)." }))";
+                },
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+            ],
+            [
+                'type' => 'button',
+                'onclick' => function ($row) {
+                    $deleteData = [
+                        'url' => route('receptionist.routes.destroy', $row->id),
+                        'name' => $row->route_name
+                    ];
+                    return "window.dispatchEvent(new CustomEvent('open-delete-route', { detail: ".json_encode($deleteData)." }))";
+                },
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-600 hover:text-red-900',
+                'title' => 'Delete',
+            ],
+        ];
         @endphp
 
         <x-data-table :columns="$tableColumns" :data="$routes" :searchable="true" :actions="$tableActions"
@@ -261,6 +265,10 @@
                             submitting: false,
 
                             async init() {
+                                window.addEventListener('open-add-route', () => this.openAddModal());
+                                window.addEventListener('open-edit-route', (e) => this.openEditModal(e.detail));
+                                window.addEventListener('open-delete-route', (e) => this.confirmDelete(e.detail));
+
                                 await this.fetchVehicles();
 
                                 // Sync Select2 with Alpine state
@@ -320,7 +328,6 @@
                                     } else {
                                         if (response.status === 422) {
                                             this.errors = result.errors || {};
-                                            console.error('Validation Errors Map:', this.errors);
                                         } else {
                                             throw new Error(result.message || 'Transmission failed');
                                         }
@@ -335,6 +342,15 @@
                                 } finally {
                                     this.submitting = false;
                                 }
+                            },
+
+                            confirmDelete(detail) {
+                                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                                    detail: {
+                                        message: `Are you sure you want to decommission the route: "${detail.name}"?`,
+                                        onConfirm: () => this.deleteRoute(detail.url)
+                                    }
+                                }));
                             },
 
                             async deleteRoute(url) {
@@ -386,6 +402,12 @@
                                 };
                                 this.errors = {};
                                 this.$dispatch('open-modal', 'route-modal');
+
+                                this.$nextTick(() => {
+                                    if (typeof $ !== 'undefined') {
+                                        $('select[name="vehicle_id"]').val('').trigger('change');
+                                    }
+                                });
                             },
 
                             openEditModal(route) {
@@ -416,28 +438,6 @@
                             },
                         }));
                     });
-
-                    // Global function to open edit modal (called from table action buttons)
-                    function openEditModal(route) {
-                        const component = Alpine.$data(document.querySelector('[x-data*="routeManagement"]'));
-                        if (component) {
-                            component.openEditModal(route);
-                        }
-                    }
-
-                    function confirmDelete(url, routeName) {
-                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                            detail: {
-                                message: `Are you sure you want to decommission the route: "${routeName}"?`,
-                                onConfirm: () => {
-                                    const component = Alpine.$data(document.querySelector('[x-data*="routeManagement"]'));
-                                    if (component) {
-                                        component.deleteRoute(url);
-                                    }
-                                }
-                            }
-                        }));
-                    }
                 </script>
             </div>
         @endpush

@@ -91,7 +91,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button @click="openAddModal()"
+                    <button @click="$dispatch('open-add-transport-assignment')"
                         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-teal-100 group">
                         <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
                         New Assignment
@@ -175,14 +175,14 @@
                     'class' => 'text-blue-600 hover:text-blue-900',
                     'title' => 'Edit',
                     'onclick' => function ($row) {
-                        return "openEditModal(" . json_encode([
+                        return "window.dispatchEvent(new CustomEvent('open-edit-transport-assignment', { detail: ".json_encode([
                             'id' => $row->id,
                             'student_id' => $row->student_id,
                             'route_id' => $row->route_id,
                             'bus_stop_id' => $row->bus_stop_id,
                             'vehicle_id' => $row->vehicle_id,
                             'fee_per_month' => $row->fee_per_month,
-                        ]) . ")";
+                        ])." }))";
                     }
                 ],
                 [
@@ -192,7 +192,10 @@
                     'title' => 'Delete',
                     'onclick' => function ($row) {
                         $name = trim($row->student->first_name . ' ' . $row->student->last_name);
-                        return "confirmDelete('" . route('receptionist.transport-assignments.destroy', $row->id) . "', '{$name}')";
+                        return "window.dispatchEvent(new CustomEvent('open-delete-transport-assignment', { detail: ".json_encode([
+                            'url' => route('receptionist.transport-assignments.destroy', $row->id),
+                            'name' => $name
+                        ])." }))";
                     }
                 ],
             ];
@@ -319,9 +322,9 @@
                     <div class="bg-slate-50 border border-slate-100 p-6 rounded-2xl shadow-inner group">
                         <label class="modal-label-premium text-slate-500 mb-3 block">Computed Monthly Tariff (Incurred)</label>
                         <div class="relative group-focus-within:scale-[1.01] transition-transform duration-300">
-                            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-teal-600 font-black text-xl">₹</span>
+                            <span class="absolute right-5 top-1/2 -translate-y-1/2 text-teal-600 font-black text-xl">₹</span>
                             <input type="number" name="fee_per_month" x-model="formData.fee_per_month" step="0.01" readonly
-                                class="w-full pl-12 pr-6 py-5 bg-white border border-slate-200 rounded-2xl font-black text-2xl text-slate-800 shadow-sm cursor-not-allowed outline-none"
+                                class="w-full pr-12 pl-6 py-5 bg-white border border-slate-200 rounded-2xl font-black text-2xl text-slate-800 shadow-sm cursor-not-allowed outline-none"
                                 :class="{'border-red-500 ring-red-500/10': errors.fee_per_month}">
                         </div>
                         <div class="flex items-center gap-2 mt-3 ml-2">
@@ -395,6 +398,10 @@
                     },
 
                     async init() {
+                        window.addEventListener('open-add-transport-assignment', () => this.openAddModal());
+                        window.addEventListener('open-edit-transport-assignment', (e) => this.openEditModal(e.detail));
+                        window.addEventListener('open-delete-transport-assignment', (e) => this.confirmDelete(e.detail));
+
                         this.$nextTick(() => {
                             if (typeof $ !== 'undefined') {
                                 // Initialize Select2 Sync
@@ -459,6 +466,15 @@
                         } finally {
                             this.submitting = false;
                         }
+                    },
+
+                    confirmDelete(detail) {
+                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                            detail: {
+                                message: `Strike transport facility record for "${detail.name}"?`,
+                                onConfirm: () => this.deleteAssignment(detail.url)
+                            }
+                        }));
                     },
 
                     async deleteAssignment(url) {
@@ -612,24 +628,6 @@
                     },
                 }));
             });
-
-            // Global Helpers
-            function openEditModal(assignment) {
-                const el = document.querySelector('[x-data*="transportAssignmentManagement"]');
-                if (el) Alpine.$data(el).openEditModal(assignment);
-            }
-
-            function confirmDelete(url, name) {
-                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                    detail: {
-                        message: `Strike transport facility record for "${name}"?`,
-                        onConfirm: () => {
-                            const el = document.querySelector('[x-data*="transportAssignmentManagement"]');
-                            if (el) Alpine.$data(el).deleteAssignment(url);
-                        }
-                    }
-                }));
-            }
         </script>
     @endpush
 @endsection

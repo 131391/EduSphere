@@ -62,60 +62,83 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex flex-wrap items-center justify-end gap-4" x-data="{ showImportModal: false }">
-        <button @click="showImportModal = true" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 flex items-center gap-2 shadow-sm transition">
-            <i class="fas fa-file-import"></i> Import Bulk
+    <div class="flex flex-wrap items-center justify-end gap-4">
+        <button @click="$dispatch('open-modal', 'import-modal')" 
+            class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-indigo-600 text-sm font-black rounded-xl hover:bg-indigo-50 transition-all shadow-sm group">
+            <i class="fas fa-file-import mr-2 group-hover:scale-110 transition-transform"></i>
+            Import Bulk
         </button>
-        <a href="{{ route('receptionist.student-registrations.create') }}" class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600 flex items-center gap-2 shadow-sm transition">
-            <i class="fas fa-plus"></i> New Registration
+        <a href="{{ route('receptionist.student-registrations.create') }}" 
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-teal-100 group">
+            <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
+            New Registration
         </a>
-        <button class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 flex items-center gap-2 shadow-sm transition">
-            <i class="fas fa-sms"></i> Send SMS
+        <button class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-amber-600 text-sm font-black rounded-xl hover:bg-amber-50 transition-all shadow-sm group">
+            <i class="fas fa-sms mr-2 group-hover:scale-110 transition-transform"></i>
+            Send SMS
         </button>
-        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2 shadow-sm transition">
-            <i class="fas fa-envelope"></i> Send Email
+        <button class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-blue-600 text-sm font-black rounded-xl hover:bg-blue-50 transition-all shadow-sm group">
+            <i class="fas fa-envelope mr-2 group-hover:scale-110 transition-transform"></i>
+            Send Email
         </button>
 
         <!-- Import Modal -->
-        <div x-show="showImportModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 transition-opacity" aria-hidden="true" @click="showImportModal = false">
-                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-                </div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <form action="{{ route('receptionist.registrations.import') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Import Registrations</h3>
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 p-4 rounded-lg flex items-start space-x-3">
-                                    <i class="fas fa-info-circle text-blue-500 mt-1"></i>
-                                    <p class="text-sm text-blue-700">
-                                        Please download the template, fill student details, and upload the CSV file here.
-                                    </p>
-                                </div>
-                                <a href="{{ route('receptionist.registrations.download-template') }}" class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
-                                    <i class="fas fa-download mr-2"></i> Download CSV Template
-                                </a>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Select CSV File</label>
-                                    <input type="file" name="file" accept=".csv" required class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                </div>
+        <x-modal name="import-modal" title="Bulk Registration Interface" max-width="lg">
+            <form action="{{ route('receptionist.registrations.import') }}" method="POST" enctype="multipart/form-data" class="p-0">
+                @csrf
+                <div class="p-8 space-y-8">
+                    <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 flex flex-col gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+                                <i class="fas fa-info-circle text-sm"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wider">Interface Guidelines</h4>
+                                <p class="text-[10px] text-indigo-600 font-bold uppercase tracking-widest mt-0.5">Follow the established protocol</p>
                             </div>
                         </div>
-                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                                Start Import
-                            </button>
-                            <button type="button" @click="showImportModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                                Cancel
-                            </button>
+                        <p class="text-xs text-indigo-700/70 font-medium leading-relaxed">
+                            To ensure institutional data integrity, please utilize the standardized CSV template. Map all required student nodes before initiating the transmission.
+                        </p>
+                        <a href="{{ route('receptionist.registrations.download-template') }}" 
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm w-full">
+                            <i class="fas fa-download text-[8px]"></i>
+                            Download Registry Template
+                        </a>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="modal-label-premium">CSV Data Segment <span class="text-red-500 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="file" name="file" accept=".csv" required 
+                                class="w-full text-xs text-slate-500 font-bold
+                                file:mr-4 file:py-3 file:px-6
+                                file:rounded-xl file:border-0
+                                file:text-[10px] file:font-black file:uppercase file:tracking-widest
+                                file:bg-slate-900 file:text-white
+                                hover:file:bg-slate-800 transition-all
+                                cursor-pointer bg-slate-50 border border-slate-100 rounded-2xl pr-4">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
+                                <i class="fas fa-file-csv text-[10px]"></i>
+                            </div>
                         </div>
-                    </form>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-1">Ensure file encoding is set to UTF-8</p>
+                    </div>
                 </div>
-            </div>
-        </div>
+
+                <div class="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-4 rounded-b-3xl">
+                    <button type="button" @click="$dispatch('close-modal', 'import-modal')"
+                        class="px-6 py-3 text-[10px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                        class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-[10px] font-black rounded-xl transition-all shadow-lg shadow-indigo-100 uppercase tracking-widest flex items-center gap-2 group">
+                        <i class="fas fa-upload text-[10px] group-hover:-translate-y-1 transition-transform"></i>
+                        Initialize Import
+                    </button>
+                </div>
+            </form>
+        </x-modal>
     </div>
 
     {{-- Search and Table Section --}}

@@ -9,7 +9,9 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Academic Year <span class="text-red-500">*</span>
                 </label>
-                <select name="academic_year_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('academic_year_id') border-red-500 @enderror">
+                <select name="academic_year_id" 
+                        :class="{'border-red-500 ring-red-500/10': errors.academic_year_id}"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('academic_year_id') border-red-500 @enderror">
                     <option value="">Choose Academic Year</option>
                     @foreach($academicYears as $year)
                         <option value="{{ $year->id }}" {{ old('academic_year_id') == $year->id ? 'selected' : '' }}>
@@ -17,6 +19,9 @@
                         </option>
                     @endforeach
                 </select>
+                <template x-if="errors.academic_year_id">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.academic_year_id[0]"></p>
+                </template>
                 @error('academic_year_id')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -26,7 +31,9 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Class <span class="text-red-500">*</span>
                 </label>
-                <select name="class_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('class_id') border-red-500 @enderror">
+                <select name="class_id" 
+                        :class="{'border-red-500 ring-red-500/10': errors.class_id}"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('class_id') border-red-500 @enderror">
                     <option value="">Choose Class</option>
                     @foreach($classes as $class)
                         <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>
@@ -34,6 +41,9 @@
                         </option>
                     @endforeach
                 </select>
+                <template x-if="errors.class_id">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.class_id[0]"></p>
+                </template>
                 @error('class_id')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -42,7 +52,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject Name</label>
                 <input type="text" name="subject_name" value="{{ old('subject_name') }}" placeholder="Subject Name"
+                       :class="{'border-red-500 ring-red-500/10': errors.subject_name}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('subject_name') border-red-500 @enderror">
+                <template x-if="errors.subject_name">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.subject_name[0]"></p>
+                </template>
                 @error('subject_name')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -53,7 +67,11 @@
                     Student's Name <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="student_name" value="{{ old('student_name') }}" placeholder="Student's Name"
+                       :class="{'border-red-500 ring-red-500/10': errors.student_name}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('student_name') border-red-500 @enderror">
+                <template x-if="errors.student_name">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.student_name[0]"></p>
+                </template>
                 @error('student_name')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -61,12 +79,17 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gender</label>
-                <select name="gender" id="gender" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('gender') border-red-500 @enderror">
+                <select name="gender" id="gender" 
+                        :class="{'border-red-500 ring-red-500/10': errors.gender}"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('gender') border-red-500 @enderror">
                     <option value="">Choose Gender</option>
                     @foreach(\App\Constants\Gender::getOptions() as $value => $label)
                         <option value="{{ $value }}" {{ old('gender') == $value ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
+                <template x-if="errors.gender">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.gender[0]"></p>
+                </template>
                 @error('gender')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -75,7 +98,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Follow Up Date</label>
                 <input type="date" name="follow_up_date" value="{{ old('follow_up_date') }}"
+                       :class="{'border-red-500 ring-red-500/10': errors.follow_up_date}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('follow_up_date') border-red-500 @enderror">
+                <template x-if="errors.follow_up_date">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.follow_up_date[0]"></p>
+                </template>
                 @error('follow_up_date')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -85,7 +112,7 @@
 </div>
 
 {{-- Father's Details Section --}}
-<div class="mb-6" x-data="{ fatherExpanded: false }">
+<div class="mb-6">
     <div class="bg-teal-500 text-white px-4 py-3 rounded-t-lg font-semibold flex items-center justify-between cursor-pointer" @click="fatherExpanded = !fatherExpanded">
         <span>Father's Details</span>
         <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': fatherExpanded }"></i>
@@ -98,7 +125,11 @@
                     Father's Name <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="father_name" value="{{ old('father_name') }}" placeholder="Enter Father's Name"
+                       :class="{'border-red-500 ring-red-500/10': errors.father_name}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('father_name') border-red-500 @enderror">
+                <template x-if="errors.father_name">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.father_name[0]"></p>
+                </template>
                 @error('father_name')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -109,7 +140,11 @@
                     Father Contact No <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="father_contact" value="{{ old('father_contact') }}" placeholder="Enter Father contact no"
+                       :class="{'border-red-500 ring-red-500/10': errors.father_contact}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('father_contact') border-red-500 @enderror">
+                <template x-if="errors.father_contact">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.father_contact[0]"></p>
+                </template>
                 @error('father_contact')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -125,7 +160,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Father Email Id</label>
                 <input type="email" name="father_email" value="{{ old('father_email') }}" placeholder="Enter Father Email id"
+                       :class="{'border-red-500 ring-red-500/10': errors.father_email}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('father_email') border-red-500 @enderror">
+                <template x-if="errors.father_email">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.father_email[0]"></p>
+                </template>
                 @error('father_email')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -198,7 +237,7 @@
 </div>
 
 {{-- Mother's Details Section --}}
-<div class="mb-6" x-data="{ motherExpanded: false }">
+<div class="mb-6">
     <div class="bg-teal-500 text-white px-4 py-3 rounded-t-lg font-semibold flex items-center justify-between cursor-pointer" @click="motherExpanded = !motherExpanded">
         <span>Mother's Details</span>
         <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': motherExpanded }"></i>
@@ -211,7 +250,11 @@
                     Mother's Name <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="mother_name" value="{{ old('mother_name') }}" placeholder="Enter mother's Name"
+                       :class="{'border-red-500 ring-red-500/10': errors.mother_name}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('mother_name') border-red-500 @enderror">
+                <template x-if="errors.mother_name">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.mother_name[0]"></p>
+                </template>
                 @error('mother_name')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -222,7 +265,11 @@
                     Mother Contact No <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="mother_contact" value="{{ old('mother_contact') }}" placeholder="Enter Mother contact no"
+                       :class="{'border-red-500 ring-red-500/10': errors.mother_contact}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('mother_contact') border-red-500 @enderror">
+                <template x-if="errors.mother_contact">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.mother_contact[0]"></p>
+                </template>
                 @error('mother_contact')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -238,7 +285,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mother Email Id</label>
                 <input type="email" name="mother_email" value="{{ old('mother_email') }}" placeholder="Enter Mother Email id"
+                       :class="{'border-red-500 ring-red-500/10': errors.mother_email}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('mother_email') border-red-500 @enderror">
+                <template x-if="errors.mother_email">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.mother_email[0]"></p>
+                </template>
                 @error('mother_email')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -311,7 +362,7 @@
 </div>
 
 {{-- Contact Details Section --}}
-<div class="mb-6" x-data="{ contactExpanded: false }">
+<div class="mb-6">
     <div class="bg-teal-500 text-white px-4 py-3 rounded-t-lg font-semibold flex items-center justify-between cursor-pointer" @click="contactExpanded = !contactExpanded">
         <span>Contact Details</span>
         <i class="fas fa-chevron-down transition-transform duration-200" :class="{ 'rotate-180': contactExpanded }"></i>
@@ -324,7 +375,11 @@
                     Contact No <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="contact_no" value="{{ old('contact_no') }}" placeholder="Enter Contact no"
+                       :class="{'border-red-500 ring-red-500/10': errors.contact_no}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('contact_no') border-red-500 @enderror">
+                <template x-if="errors.contact_no">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.contact_no[0]"></p>
+                </template>
                 @error('contact_no')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -335,7 +390,11 @@
                     Whatsapp No <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="whatsapp_no" value="{{ old('whatsapp_no') }}" placeholder="Enter whatsapp  no"
+                       :class="{'border-red-500 ring-red-500/10': errors.whatsapp_no}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('whatsapp_no') border-red-500 @enderror">
+                <template x-if="errors.whatsapp_no">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.whatsapp_no[0]"></p>
+                </template>
                 @error('whatsapp_no')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -351,7 +410,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Facebook Id</label>
                 <input type="text" name="facebook_id" value="{{ old('facebook_id') }}" placeholder="Enter Facebook Id"
+                       :class="{'border-red-500 ring-red-500/10': errors.facebook_id}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('facebook_id') border-red-500 @enderror">
+                <template x-if="errors.facebook_id">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.facebook_id[0]"></p>
+                </template>
                 @error('facebook_id')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -360,7 +423,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Id</label>
                 <input type="email" name="email_id" value="{{ old('email_id') }}" placeholder="Enter Email id"
+                       :class="{'border-red-500 ring-red-500/10': errors.email_id}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('email_id') border-red-500 @enderror">
+                <template x-if="errors.email_id">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.email_id[0]"></p>
+                </template>
                 @error('email_id')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -408,7 +475,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">DOB</label>
                 <input type="date" name="dob" value="{{ old('dob') }}"
+                       :class="{'border-red-500 ring-red-500/10': errors.dob}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('dob') border-red-500 @enderror">
+                <template x-if="errors.dob">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.dob[0]"></p>
+                </template>
                 @error('dob')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -417,7 +488,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Aadhar No</label>
                 <input type="text" name="aadhar_no" value="{{ old('aadhar_no') }}" placeholder="Aadhar no of the Students"
+                       :class="{'border-red-500 ring-red-500/10': errors.aadhar_no}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('aadhar_no') border-red-500 @enderror">
+                <template x-if="errors.aadhar_no">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.aadhar_no[0]"></p>
+                </template>
                 @error('aadhar_no')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -435,7 +510,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Annual Income</label>
                 <input type="number" step="0.01" name="annual_income" value="{{ old('annual_income') }}" placeholder="Enter Annual Income"
+                       :class="{'border-red-500 ring-red-500/10': errors.annual_income}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('annual_income') border-red-500 @enderror">
+                <template x-if="errors.annual_income">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.annual_income[0]"></p>
+                </template>
                 @error('annual_income')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -461,7 +540,9 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
-                <select name="category" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('category') border-red-500 @enderror">
+                <select name="category" 
+                        :class="{'border-red-500 ring-red-500/10': errors.category}"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('category') border-red-500 @enderror">
                     <option value="">Choose Category</option>
                     <option value="General" {{ old('category') == 'General' ? 'selected' : '' }}>General</option>
                     <option value="OBC" {{ old('category') == 'OBC' ? 'selected' : '' }}>OBC</option>
@@ -469,6 +550,9 @@
                     <option value="ST" {{ old('category') == 'ST' ? 'selected' : '' }}>ST</option>
                     <option value="Other" {{ old('category') == 'Other' ? 'selected' : '' }}>Other</option>
                 </select>
+                <template x-if="errors.category">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.category[0]"></p>
+                </template>
                 @error('category')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -488,7 +572,9 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Religion</label>
-                <select name="religion" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('religion') border-red-500 @enderror">
+                <select name="religion" 
+                        :class="{'border-red-500 ring-red-500/10': errors.religion}"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('religion') border-red-500 @enderror">
                     <option value="">Choose Religion</option>
                     <option value="Hindu" {{ old('religion') == 'Hindu' ? 'selected' : '' }}>Hindu</option>
                     <option value="Muslim" {{ old('religion') == 'Muslim' ? 'selected' : '' }}>Muslim</option>
@@ -496,6 +582,9 @@
                     <option value="Sikh" {{ old('religion') == 'Sikh' ? 'selected' : '' }}>Sikh</option>
                     <option value="Other" {{ old('religion') == 'Other' ? 'selected' : '' }}>Other</option>
                 </select>
+                <template x-if="errors.religion">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.religion[0]"></p>
+                </template>
                 @error('religion')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -503,11 +592,16 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transport Facility</label>
-                <select name="transport_facility" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('transport_facility') border-red-500 @enderror">
+                <select name="transport_facility" 
+                        :class="{'border-red-500 ring-red-500/10': errors.transport_facility}"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('transport_facility') border-red-500 @enderror">
                     <option value="">Choose Transport Facility</option>
                     <option value="Yes" {{ old('transport_facility') == 'Yes' ? 'selected' : '' }}>Yes</option>
                     <option value="No" {{ old('transport_facility') == 'No' ? 'selected' : '' }}>No</option>
                 </select>
+                <template x-if="errors.transport_facility">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.transport_facility[0]"></p>
+                </template>
                 @error('transport_facility')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -554,11 +648,16 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Country <span class="text-red-500">*</span></label>
-                <select name="country_id" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('country_id') border-red-500 @enderror">
+                <select name="country_id" 
+                        :class="{'border-red-500 ring-red-500/10': errors.country_id}"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('country_id') border-red-500 @enderror">
                     @foreach(config('countries') as $id => $name)
                         <option value="{{ $id }}" {{ old('country_id', 1) == $id ? 'selected' : '' }}>{{ $name }}</option>
                     @endforeach
                 </select>
+                <template x-if="errors.country_id">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.country_id[0]"></p>
+                </template>
                 @error('country_id')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -567,7 +666,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Previous School Name</label>
                 <input type="text" name="previous_school_name" value="{{ old('previous_school_name') }}" placeholder="Previous School Name"
+                       :class="{'border-red-500 ring-red-500/10': errors.previous_school_name}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white @error('previous_school_name') border-red-500 @enderror">
+                <template x-if="errors.previous_school_name">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.previous_school_name[0]"></p>
+                </template>
                 @error('previous_school_name')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -643,7 +746,11 @@
                     </div>
                     <input type="file" name="father_photo" accept="image/*" 
                            onchange="previewImage(event, 'father-photo-preview', 'father-photo-icon', 'father-photo-remove')"
+                           :class="{'ring-red-500/50': errors.father_photo}"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                    <template x-if="errors.father_photo">
+                        <p class="text-red-500 text-xs mt-1" x-text="errors.father_photo[0]"></p>
+                    </template>
                     @error('father_photo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -665,7 +772,11 @@
                     </div>
                     <input type="file" name="mother_photo" accept="image/*" 
                            onchange="previewImage(event, 'mother-photo-preview', 'mother-photo-icon', 'mother-photo-remove')"
+                           :class="{'ring-red-500/50': errors.mother_photo}"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                    <template x-if="errors.mother_photo">
+                        <p class="text-red-500 text-xs mt-1" x-text="errors.mother_photo[0]"></p>
+                    </template>
                     @error('mother_photo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -687,7 +798,11 @@
                     </div>
                     <input type="file" name="student_photo" accept="image/*" 
                            onchange="previewImage(event, 'student-photo-preview', 'student-photo-icon', 'student-photo-remove')"
+                           :class="{'ring-red-500/50': errors.student_photo}"
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                    <template x-if="errors.student_photo">
+                        <p class="text-red-500 text-xs mt-1" x-text="errors.student_photo[0]"></p>
+                    </template>
                     @error('student_photo')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror

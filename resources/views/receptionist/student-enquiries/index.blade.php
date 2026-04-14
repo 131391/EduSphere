@@ -177,27 +177,20 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    // Use data attribute to avoid JSON escaping issues
-                    $encodedData = base64_encode(json_encode($row));
-                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-enquiry'))))";
-                },
-                'data-enquiry' => function($row) {
-                    return base64_encode(json_encode($row));
+                    return "window.dispatchEvent(new CustomEvent('open-edit-enquiry', { detail: " . json_encode($row) . " }))";
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',
                 'title' => 'Edit',
             ],
             [
-                'type' => 'form',
-                'action' => function($row) {
-                    return route('receptionist.student-enquiries.destroy', $row->id);
+                'type' => 'button',
+                'onclick' => function($row) {
+                    return "window.dispatchEvent(new CustomEvent('open-delete-enquiry', { detail: { id: " . $row->id . ", name: '" . addslashes($row->student_name) . "' } }))";
                 },
-                'method' => 'DELETE',
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
                 'title' => 'Delete',
-                'confirm' => 'Are you sure you want to delete this enquiry?',
             ],
         ];
     @endphp
@@ -228,22 +221,32 @@
             @include('receptionist.student-enquiries.partials.form')
 
             <!-- Modal Footer -->
-            <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <button type="button" @click="closeModal()"
-                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
+            <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <button type="button" 
+                        @click="closeModal()"
+                        class="px-6 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
                     Cancel
                 </button>
                 <button type="submit"
                         :disabled="submitting"
-                        class="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span x-show="!submitting" x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
-                    <span x-show="submitting" class="flex items-center">
-                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Processing...
-                    </span>
+                        class="relative px-8 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group">
+                    <div class="flex items-center justify-center gap-2">
+                        <template x-if="!submitting">
+                            <span class="flex items-center gap-2">
+                                <i class="fas fa-check-circle transition-transform group-hover:scale-110"></i>
+                                <span x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
+                            </span>
+                        </template>
+                        <template x-if="submitting">
+                            <span class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Processing...</span>
+                            </span>
+                        </template>
+                    </div>
                 </button>
             </div>
         </form>
@@ -257,6 +260,7 @@ document.addEventListener('alpine:init', () => {
         enquiryId: null,
         submitting: false,
         errors: {},
+        formData: {},
         
         clearError(field) {
             if (this.errors[field]) {
@@ -265,6 +269,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
+            window.addEventListener('open-edit-enquiry', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-enquiry', (e) => this.confirmDelete(e.detail));
+
             // Robust error clearing for selects (including Select2)
             this.$nextTick(() => {
                 $(this.$el).find('select').on('change', (e) => {
@@ -280,8 +287,20 @@ document.addEventListener('alpine:init', () => {
             this.$dispatch('close-modal', 'enquiry-modal');
             this.editMode = false;
             this.enquiryId = null;
+            this.formData = {};
             this.clearErrors();
             document.getElementById('enquiryForm').reset();
+            
+            // Clear previews
+            ['father_photo', 'mother_photo', 'student_photo'].forEach(field => {
+                const preview = document.getElementById(`${field.replace('_', '-')}-preview`);
+                const icon = document.getElementById(`${field.replace('_', '-')}-icon`);
+                const removeBtn = document.getElementById(`${field.replace('_', '-')}-remove`);
+                if (preview) { preview.src = '#'; preview.classList.add('hidden'); }
+                if (icon) icon.classList.remove('hidden');
+                if (removeBtn) removeBtn.classList.add('hidden');
+            });
+
             // Reset Select2s
             if (typeof $ !== 'undefined') {
                 $('.select2-hidden-accessible').val('').trigger('change');
@@ -291,8 +310,20 @@ document.addEventListener('alpine:init', () => {
         openAddModal() {
             this.editMode = false;
             this.enquiryId = null;
+            this.formData = {};
             this.clearErrors();
             document.getElementById('enquiryForm').reset();
+
+            // Clear previews
+            ['father_photo', 'mother_photo', 'student_photo'].forEach(field => {
+                const preview = document.getElementById(`${field.replace('_', '-')}-preview`);
+                const icon = document.getElementById(`${field.replace('_', '-')}-icon`);
+                const removeBtn = document.getElementById(`${field.replace('_', '-')}-remove`);
+                if (preview) { preview.src = '#'; preview.classList.add('hidden'); }
+                if (icon) icon.classList.remove('hidden');
+                if (removeBtn) removeBtn.classList.add('hidden');
+            });
+
             if (typeof $ !== 'undefined') {
                 $('.select2-hidden-accessible').val('').trigger('change');
             }
@@ -302,29 +333,23 @@ document.addEventListener('alpine:init', () => {
         openEditModal(enquiry) {
             this.editMode = true;
             this.enquiryId = enquiry.id;
+            this.formData = { ...enquiry };
             this.clearErrors();
             this.$dispatch('open-modal', 'enquiry-modal');
             
-            // Populate form fields
+            // Special handling for dates and checkboxes
             this.$nextTick(() => {
                 const form = document.getElementById('enquiryForm');
                 Object.keys(enquiry).forEach(key => {
                     let value = enquiry[key];
-                    if (value === null || typeof value === 'object') return;
-                    
                     const input = form.querySelector(`[name="${key}"]`);
                     if (input) {
-                        if (input.type === 'file') return;
-                        // Cast to string for select elements to ensure type-safe matching
-                        const safeValue = (input.tagName === 'SELECT') ? String(value) : value;
-                        if ($(input).hasClass('select2-hidden-accessible')) {
-                            $(input).val(safeValue).trigger('change');
-                        } else if (input.type === 'date' && value) {
+                        if (input.type === 'date' && value) {
                             input.value = value.substring(0, 10);
                         } else if (input.type === 'checkbox') {
                             input.checked = !!value;
-                        } else {
-                            input.value = safeValue;
+                        } else if ($(input).hasClass('select2-hidden-accessible')) {
+                            $(input).val(value).trigger('change');
                         }
                     }
                 });
@@ -411,20 +436,51 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        confirmDelete(enquiry) {
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Enquiry',
+                    message: `Are you sure you want to delete the enquiry for "${enquiry.name}"? This action cannot be undone.`,
+                    callback: async () => {
+                        this.submitting = true;
+                        try {
+                            const response = await fetch(`/receptionist/student-enquiries/${enquiry.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
+
+                            const result = await response.json();
+
+                            if (response.ok) {
+                                if (window.Toast) {
+                                    window.Toast.fire({ icon: 'success', title: result.message });
+                                }
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                throw new Error(result.message || 'Deletion failed');
+                            }
+                        } catch (error) {
+                            if (window.Toast) {
+                                window.Toast.fire({ icon: 'error', title: error.message });
+                            }
+                        } finally {
+                            this.submitting = false;
+                        }
+                    }
+                }
+            }));
+        },
+
         clearErrors() {
             this.errors = {};
         }
     }));
 });
-
-// Make functions globally accessible for datatable buttons
-window.openEditModal = function(enquiry) {
-    // Get the Alpine component instance
-    const component = Alpine.$data(document.querySelector('[x-data="enquiryManagement()"]'));
-    if (component) {
-        component.openEditModal(enquiry);
-    }
-};
 </script>
 @endpush
 @endsection

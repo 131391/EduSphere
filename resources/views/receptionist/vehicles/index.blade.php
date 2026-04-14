@@ -82,7 +82,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button @click="openAddModal()"
+                    <button @click="$dispatch('open-add-vehicle')"
                         class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-teal-100 group">
                         <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
                         Register New Vehicle
@@ -196,44 +196,48 @@
                 ],
             ];
 
-            $tableActions = [
-                [
-                    'type' => 'button',
-                    'onclick' => function ($row) {
-                        $vehicleData = [
-                            'id' => $row->id,
-                            'registration_no' => $row->registration_no,
-                            'vehicle_no' => $row->vehicle_no,
-                            'fuel_type' => $row->fuel_type,
-                            'capacity' => $row->capacity,
-                            'initial_reading' => $row->initial_reading,
-                            'engine_no' => $row->engine_no,
-                            'chassis_no' => $row->chassis_no,
-                            'vehicle_type' => $row->vehicle_type,
-                            'model_no' => $row->model_no,
-                            'date_of_purchase' => $row->date_of_purchase ? $row->date_of_purchase->format('Y-m-d') : '',
-                            'vehicle_group' => $row->vehicle_group,
-                            'imei_gps_device' => $row->imei_gps_device,
-                            'tracking_url' => $row->tracking_url,
-                            'manufacturing_year' => $row->manufacturing_year,
-                            'vehicle_create_date' => $row->vehicle_create_date ? $row->vehicle_create_date->format('Y-m-d') : '',
-                        ];
-                        return "openEditModal(" . json_encode($vehicleData) . ")";
-                    },
-                    'icon' => 'fas fa-edit',
-                    'class' => 'text-blue-600 hover:text-blue-900',
-                    'title' => 'Edit',
-                ],
-                [
-                    'type' => 'button',
-                    'onclick' => function ($row) {
-                        return "confirmDelete('" . route('receptionist.vehicles.destroy', $row->id) . "', '{$row->registration_no}')";
-                    },
-                    'icon' => 'fas fa-trash',
-                    'class' => 'text-red-600 hover:text-red-900',
-                    'title' => 'Delete',
-                ],
-            ];
+        $tableActions = [
+            [
+                'type' => 'button',
+                'onclick' => function ($row) {
+                    $vehicleData = [
+                        'id' => $row->id,
+                        'registration_no' => $row->registration_no,
+                        'vehicle_no' => $row->vehicle_no,
+                        'fuel_type' => $row->fuel_type,
+                        'capacity' => $row->capacity,
+                        'initial_reading' => $row->initial_reading,
+                        'engine_no' => $row->engine_no,
+                        'chassis_no' => $row->chassis_no,
+                        'vehicle_type' => $row->vehicle_type,
+                        'model_no' => $row->model_no,
+                        'date_of_purchase' => $row->date_of_purchase ? $row->date_of_purchase->format('Y-m-d') : '',
+                        'vehicle_group' => $row->vehicle_group,
+                        'imei_gps_device' => $row->imei_gps_device,
+                        'tracking_url' => $row->tracking_url,
+                        'manufacturing_year' => $row->manufacturing_year,
+                        'vehicle_create_date' => $row->vehicle_create_date ? $row->vehicle_create_date->format('Y-m-d') : '',
+                    ];
+                    return "window.dispatchEvent(new CustomEvent('open-edit-vehicle', { detail: ".json_encode($vehicleData)." }))";
+                },
+                'icon' => 'fas fa-edit',
+                'class' => 'text-blue-600 hover:text-blue-900',
+                'title' => 'Edit',
+            ],
+            [
+                'type' => 'button',
+                'onclick' => function ($row) {
+                    $deleteData = [
+                        'url' => route('receptionist.vehicles.destroy', $row->id),
+                        'name' => $row->registration_no
+                    ];
+                    return "window.dispatchEvent(new CustomEvent('open-delete-vehicle', { detail: ".json_encode($deleteData)." }))";
+                },
+                'icon' => 'fas fa-trash',
+                'class' => 'text-red-600 hover:text-red-900',
+                'title' => 'Delete',
+            ],
+        ];
         @endphp
 
         <x-data-table :columns="$tableColumns" :data="$vehicles" :searchable="true" :actions="$tableActions"
@@ -442,6 +446,10 @@
                             submitting: false,
 
                             async init() {
+                                window.addEventListener('open-add-vehicle', () => this.openAddModal());
+                                window.addEventListener('open-edit-vehicle', (e) => this.openEditModal(e.detail));
+                                window.addEventListener('open-delete-vehicle', (e) => this.confirmDelete(e.detail));
+
                                 // Sync Select2 with Alpine state
                                 this.$nextTick(() => {
                                     if (typeof $ !== 'undefined') {
@@ -499,7 +507,6 @@
                                     } else {
                                         if (response.status === 422) {
                                             this.errors = result.errors || {};
-                                            console.error('Validation Errors Map:', this.errors);
                                         } else {
                                             throw new Error(result.message || 'Transmission failed');
                                         }
@@ -514,6 +521,15 @@
                                 } finally {
                                     this.submitting = false;
                                 }
+                            },
+
+                            confirmDelete(detail) {
+                                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                                    detail: {
+                                        message: `Are you sure you want to strike the vehicle record for "${detail.name}"?`,
+                                        onConfirm: () => this.deleteVehicle(detail.url)
+                                    }
+                                }));
                             },
 
                             async deleteVehicle(url) {
@@ -568,7 +584,7 @@
 
                                 this.$nextTick(() => {
                                     if (typeof $ !== 'undefined') {
-                                        $('#fuel_type, #vehicle_type').val('').trigger('change.select2');
+                                        $('select[name="fuel_type"], select[name="vehicle_type"]').val('').trigger('change');
                                     }
                                 });
                             },
@@ -612,28 +628,6 @@
                             },
                         }));
                     });
-
-                    // Global function to open edit modal (called from table action buttons)
-                    function openEditModal(vehicle) {
-                        const component = Alpine.$data(document.querySelector('[x-data*="vehicleManagement"]'));
-                        if (component) {
-                            component.openEditModal(vehicle);
-                        }
-                    }
-
-                    function confirmDelete(url, regNo) {
-                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                            detail: {
-                                message: `Are you sure you want to strike the vehicle record for "${regNo}"?`,
-                                onConfirm: () => {
-                                    const component = Alpine.$data(document.querySelector('[x-data*="vehicleManagement"]'));
-                                    if (component) {
-                                        component.deleteVehicle(url);
-                                    }
-                                }
-                            }
-                        }));
-                    }
                 </script>
             </div>
         @endpush

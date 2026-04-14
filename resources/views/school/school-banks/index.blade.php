@@ -93,8 +93,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-school-bank.window="openEditModal($event.detail)" 
-         x-on:open-delete-school-bank.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$banks"
@@ -114,71 +113,83 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <!-- Bank Name -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Bank Name <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="text" 
-                        name="bank_name" 
-                        x-model="formData.bank_name"
-                        @input="clearError('bank_name')"
-                        placeholder="e.g., State Bank of India"
-                        class="modal-input-premium"
-                        :class="{'border-red-500 ring-red-500/10': errors.bank_name}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                        <i class="fas fa-university text-sm"></i>
-                    </div>
-                </div>
-                <template x-if="errors.bank_name">
-                    <p class="modal-error-message" x-text="errors.bank_name[0]"></p>
-                </template>
-            </div>
-
-            <!-- Account Number -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Account Number <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="text" 
-                        name="account_number" 
-                        x-model="formData.account_number"
-                        @input="clearError('account_number')"
-                        placeholder="Enter full account number"
-                        class="modal-input-premium font-bold tracking-wider"
-                        :class="{'border-red-500 ring-red-500/10': errors.account_number}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                        <i class="fas fa-hashtag text-sm"></i>
-                    </div>
-                </div>
-                <template x-if="errors.account_number">
-                    <p class="modal-error-message" x-text="errors.account_number[0]"></p>
-                </template>
-            </div>
-
-            <!-- Branch & IFSC -->
-            <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="space-y-6">
+                <!-- Bank Name -->
                 <div class="space-y-2">
-                    <label class="modal-label-premium">Branch Name</label>
-                    <input 
-                        type="text" 
-                        name="branch_name" 
-                        x-model="formData.branch_name"
-                        placeholder="Branch"
-                        class="modal-input-premium text-sm font-medium"
-                    >
+                    <label class="modal-label-premium">Bank Name <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="text" 
+                            name="bank_name" 
+                            x-model="formData.bank_name"
+                            @input="clearError('bank_name')"
+                            placeholder="e.g., State Bank of India"
+                            class="modal-input-premium pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.bank_name}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                            <i class="fas fa-university text-sm"></i>
+                        </div>
+                    </div>
+                    <template x-if="errors.bank_name">
+                        <p class="modal-error-message" x-text="errors.bank_name[0]"></p>
+                    </template>
                 </div>
+
+                <!-- Account Number -->
                 <div class="space-y-2">
-                    <label class="modal-label-premium">IFSC Code</label>
-                    <input 
-                        type="text" 
-                        name="ifsc_code" 
-                        x-model="formData.ifsc_code"
-                        placeholder="IFSC"
-                        class="modal-input-premium text-sm font-bold uppercase"
-                    >
+                    <label class="modal-label-premium">Account Number <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="text" 
+                            name="account_number" 
+                            x-model="formData.account_number"
+                            @input="clearError('account_number')"
+                            placeholder="Enter full account number"
+                            class="modal-input-premium font-bold tracking-wider pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.account_number}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                            <i class="fas fa-hashtag text-sm"></i>
+                        </div>
+                    </div>
+                    <template x-if="errors.account_number">
+                        <p class="modal-error-message" x-text="errors.account_number[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Branch & IFSC -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Branch Name</label>
+                        <div class="relative group">
+                            <input 
+                                type="text" 
+                                name="branch_name" 
+                                x-model="formData.branch_name"
+                                placeholder="Branch"
+                                class="modal-input-premium text-sm font-medium pr-10"
+                            >
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                                <i class="fas fa-code-branch text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">IFSC Code</label>
+                        <div class="relative group">
+                            <input 
+                                type="text" 
+                                name="ifsc_code" 
+                                x-model="formData.ifsc_code"
+                                placeholder="IFSC"
+                                class="modal-input-premium text-sm font-bold uppercase pr-10"
+                            >
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                                <i class="fas fa-barcode text-sm"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -214,6 +225,11 @@ document.addEventListener('alpine:init', () => {
             account_number: '',
             branch_name: '',
             ifsc_code: ''
+        },
+
+        init() {
+            window.addEventListener('open-edit-school-bank', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-school-bank', (e) => this.confirmDelete(e.detail));
         },
 
         async submitForm() {

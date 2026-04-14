@@ -115,8 +115,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-section.window="openEditModal($event.detail)" 
-         x-on:open-delete-section.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$sections"
@@ -138,7 +137,9 @@
 
             <div class="space-y-6">
                 <!-- Class Selection -->
-                <div class="space-y-2 mb-6">
+            <div class="space-y-6">
+                <!-- Class Selection -->
+                <div class="space-y-2">
                     <label class="modal-label-premium">Assign to Class <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
                         <select 
@@ -153,7 +154,7 @@
                             <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                             <i class="fas fa-chevron-down text-sm"></i>
                         </div>
                     </div>
@@ -163,7 +164,7 @@
                 </div>
 
                 <!-- Section Name -->
-                <div class="space-y-2 mb-6">
+                <div class="space-y-2">
                     <label class="modal-label-premium">Section Name <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
                         <input 
@@ -172,10 +173,10 @@
                             x-model="formData.name"
                             @input="clearError('name')"
                             placeholder="e.g., Section A"
-                            class="modal-input-premium"
+                            class="modal-input-premium pr-10"
                             :class="{'border-red-500 ring-red-500/10': errors.name}"
                         >
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
                             <i class="fas fa-tag text-sm"></i>
                         </div>
                     </div>
@@ -185,7 +186,7 @@
                 </div>
 
                 <!-- Capacity -->
-                <div class="space-y-2 mb-8">
+                <div class="space-y-2">
                     <label class="modal-label-premium">Student Capacity <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
                         <input 
@@ -194,10 +195,10 @@
                             x-model="formData.capacity"
                             @input="clearError('capacity')"
                             placeholder="Max students in this section"
-                            class="modal-input-premium"
+                            class="modal-input-premium pr-10"
                             :class="{'border-red-500 ring-red-500/10': errors.capacity}"
                         >
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
                             <i class="fas fa-user-friends text-sm"></i>
                         </div>
                     </div>
@@ -205,6 +206,7 @@
                         <p class="modal-error-message" x-text="errors.capacity[0]"></p>
                     </template>
                 </div>
+            </div>
             </div>
 
             <!-- Modal Footer -->
@@ -241,6 +243,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
+            window.addEventListener('open-edit-section', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-section', (e) => this.confirmDelete(e.detail));
+            
             // Sync Select2 → Alpine when user picks a new value
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {

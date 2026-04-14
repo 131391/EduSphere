@@ -173,10 +173,8 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "openEditModal(JSON.parse(atob(this.getAttribute('data-visitor'))))";
-                },
-                'data-visitor' => function($row) {
-                    return base64_encode(json_encode($row));
+                    $data = json_encode($row);
+                    return "window.dispatchEvent(new CustomEvent('open-edit-visitor', { detail: $data }))";
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',
@@ -185,7 +183,7 @@
             [
                 'type' => 'button',
                 'onclick' => function($row) {
-                    return "confirmDelete({$row->id})";
+                    return "window.dispatchEvent(new CustomEvent('open-delete-visitor', { detail: { id: " . $row->id . ", name: '" . addslashes($row->name) . "' } }))";
                 },
                 'icon' => 'fas fa-trash',
                 'class' => 'text-red-600 hover:text-red-900',
@@ -218,149 +216,173 @@
             <input type="hidden" name="visitor_id" :value="visitorId" x-show="editMode">
 
 
-            <div class="grid grid-cols-2 gap-6">
-                <!-- Left Column -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Mobile No <span class="text-red-500">*</span></label>
-                        <input type="tel" name="mobile" x-model="formData.mobile" @input="clearError('mobile')" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                               :class="errors.mobile ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                        <template x-if="errors.mobile">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.mobile[0]"></p>
-                        </template>
+            <div class="space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-mobile-alt mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Mobile No <span class="text-red-500">*</span>
+                            </label>
+                            <input type="tel" name="mobile" x-model="formData.mobile" @input="clearError('mobile')" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                   class="modal-input-premium"
+                                   :class="errors.mobile ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                            <template x-if="errors.mobile">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.mobile[0]"></p>
+                            </template>
+                        </div>
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-clipboard-question mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Visit Purpose <span class="text-red-500">*</span>
+                            </label>
+                            <select name="visit_purpose" x-model="formData.visit_purpose" @change="clearError('visit_purpose')"
+                                    class="modal-input-premium"
+                                    :class="errors.visit_purpose ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                                <option value="">Select Purpose</option>
+                                <option value="Walk in">Walk in</option>
+                                <option value="General">General</option>
+                                <option value="Admission">Admission</option>
+                                <option value="Vendor">Vendor</option>
+                                <option value="Fee Deposit">Fee Deposit</option>
+                                <option value="Enquiry">Enquiry</option>
+                                <option value="For Discussion">For Discussion</option>
+                                <option value="Complain">Complain</option>
+                                <option value="Suggestion">Suggestion</option>
+                                <option value="For Document">For Document</option>
+                                <option value="Transfer Certificate">Transfer Certificate</option>
+                            </select>
+                            <template x-if="errors.visit_purpose">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.visit_purpose[0]"></p>
+                            </template>
+                        </div>
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-envelope mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Email ID
+                            </label>
+                            <input type="email" name="email" x-model="formData.email" @input="clearError('email')"
+                                   class="modal-input-premium"
+                                   :class="errors.email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                            <template x-if="errors.email">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.email[0]"></p>
+                            </template>
+                        </div>
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-comment-dots mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Meeting Purpose
+                            </label>
+                            <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose" @input="clearError('meeting_purpose')"
+                                   class="modal-input-premium"
+                                   :class="errors.meeting_purpose ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                            <template x-if="errors.meeting_purpose">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_purpose[0]"></p>
+                            </template>
+                        </div>
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-flag mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Priority <span class="text-red-500">*</span>
+                            </label>
+                            <select name="priority" x-model="formData.priority" @change="clearError('priority')"
+                                    class="modal-input-premium"
+                                    :class="errors.priority ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                                <option value="">Select Priority</option>
+                                @foreach($priorities as $priority)
+                                <option value="{{ $priority->value }}">{{ $priority->label() }}</option>
+                                @endforeach
+                            </select>
+                            <template x-if="errors.priority">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.priority[0]"></p>
+                            </template>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visit Purpose <span class="text-red-500">*</span></label>
-                        <select name="visit_purpose" x-model="formData.visit_purpose" @change="clearError('visit_purpose')"
-                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                                :class="errors.visit_purpose ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                            <option value="">Select Purpose</option>
-                            <option value="Walk in">Walk in</option>
-                            <option value="General">General</option>
-                            <option value="Admission">Admission</option>
-                            <option value="Vendor">Vendor</option>
-                            <option value="Fee Deposit">Fee Deposit</option>
-                            <option value="Enquiry">Enquiry</option>
-                            <option value="For Discussion">For Discussion</option>
-                            <option value="Complain">Complain</option>
-                            <option value="Suggestion">Suggestion</option>
-                            <option value="For Document">For Document</option>
-                            <option value="Transfer Certificate">Transfer Certificate</option>
-                        </select>
-                        <template x-if="errors.visit_purpose">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.visit_purpose[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Email ID</label>
-                        <input type="email" name="email" x-model="formData.email" @input="clearError('email')"
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                               :class="errors.email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                        <template x-if="errors.email">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.email[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Purpose</label>
-                        <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose" @input="clearError('meeting_purpose')"
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                               :class="errors.meeting_purpose ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                        <template x-if="errors.meeting_purpose">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_purpose[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Priority <span class="text-red-500">*</span></label>
-                        <select name="priority" x-model="formData.priority" @change="clearError('priority')"
-                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                                :class="errors.priority ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                            <option value="">Select Priority</option>
-                            @foreach($priorities as $priority)
-                            <option value="{{ $priority->value }}">{{ $priority->label() }}</option>
-                            @endforeach
-                        </select>
-                        <template x-if="errors.priority">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.priority[0]"></p>
-                        </template>
+
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-user mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Visitor's Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
+                                   class="modal-input-premium"
+                                   :class="errors.name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                            <template x-if="errors.name">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.name[0]"></p>
+                            </template>
+                        </div>
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-users-viewfinder mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Visitor Type <span class="text-red-500">*</span>
+                            </label>
+                            <select name="visitor_type" x-model="formData.visitor_type" @change="clearError('visitor_type')"
+                                    class="modal-input-premium"
+                                    :class="errors.visitor_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                                <option value="">Select Type</option>
+                                <option value="Parent">Parent</option>
+                                <option value="General Visitor">General Visitor</option>
+                            </select>
+                            <template x-if="errors.visitor_type">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.visitor_type[0]"></p>
+                            </template>
+                        </div>
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-map-marker-alt mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Address
+                            </label>
+                            <input type="text" name="address" x-model="formData.address" @input="clearError('address')"
+                                   class="modal-input-premium"
+                                   :class="errors.address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                            <template x-if="errors.address">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.address[0]"></p>
+                            </template>
+                        </div>
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-user-tie mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Select Meeting with <span class="text-red-500">*</span>
+                            </label>
+                            <select name="meeting_with" x-model="formData.meeting_with" @change="clearError('meeting_with')"
+                                    class="modal-input-premium"
+                                    :class="errors.meeting_with ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                                <option value="">Select Person</option>
+                                <option value="Principal">Principal</option>
+                                <option value="Teacher">Teacher</option>
+                                <option value="Accountant">Accountant</option>
+                                <option value="Student">Student</option>
+                                <option value="Non Teaching">Non Teaching</option>
+                            </select>
+                            <template x-if="errors.meeting_with">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_with[0]"></p>
+                            </template>
+                        </div>
+                        <div class="group">
+                            <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                                <i class="fas fa-users mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>No. of Guest(s)
+                            </label>
+                            <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1" @input="clearError('no_of_guests')"
+                                   class="modal-input-premium"
+                                   :class="errors.no_of_guests ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                            <template x-if="errors.no_of_guests">
+                                <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.no_of_guests[0]"></p>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Right Column -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor's Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                               :class="errors.name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                        <template x-if="errors.name">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.name[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Visitor Type <span class="text-red-500">*</span></label>
-                        <select name="visitor_type" x-model="formData.visitor_type" @change="clearError('visitor_type')"
-                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                                :class="errors.visitor_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                            <option value="">Select Type</option>
-                            <option value="Parent">Parent</option>
-                            <option value="General Visitor">General Visitor</option>
-                        </select>
-                        <template x-if="errors.visitor_type">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.visitor_type[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Address</label>
-                        <input type="text" name="address" x-model="formData.address" @input="clearError('address')"
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                               :class="errors.address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                        <template x-if="errors.address">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.address[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Meeting with <span class="text-red-500">*</span></label>
-                        <select name="meeting_with" x-model="formData.meeting_with" @change="clearError('meeting_with')"
-                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                                :class="errors.meeting_with ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                            <option value="">Select Person</option>
-                            <option value="Principal">Principal</option>
-                            <option value="Teacher">Teacher</option>
-                            <option value="Accountant">Accountant</option>
-                            <option value="Student">Student</option>
-                            <option value="Non Teaching">Non Teaching</option>
-                        </select>
-                        <template x-if="errors.meeting_with">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_with[0]"></p>
-                        </template>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">No. of Guest(s)</label>
-                        <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1" @input="clearError('no_of_guests')"
-                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                               :class="errors.no_of_guests ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                        <template x-if="errors.no_of_guests">
-                            <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.no_of_guests[0]"></p>
-                        </template>
-                    </div>
+                <!-- Meeting Type -->
+                <div class="group">
+                    <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
+                        <i class="fas fa-video mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Meeting Type <span class="text-red-500">*</span>
+                    </label>
+                    <select name="meeting_type" x-model="formData.meeting_type" @change="clearError('meeting_type')"
+                            class="modal-input-premium"
+                            :class="errors.meeting_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                        <option value="">Select Meeting Type</option>
+                        @foreach($meetingTypes as $meetingType)
+                        <option value="{{ $meetingType->value }}">{{ $meetingType->label() }}</option>
+                        @endforeach
+                    </select>
+                    <template x-if="errors.meeting_type">
+                        <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_type[0]"></p>
+                    </template>
                 </div>
-            </div>
-
-            <!-- Meeting Type -->
-            <div class="mt-4">
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Meeting Type <span class="text-red-500">*</span></label>
-                <select name="meeting_type" x-model="formData.meeting_type" @change="clearError('meeting_type')"
-                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                        :class="errors.meeting_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                    <option value="">Select Meeting Type</option>
-                    @foreach($meetingTypes as $meetingType)
-                    <option value="{{ $meetingType->value }}">{{ $meetingType->label() }}</option>
-                    @endforeach
-                </select>
-                <template x-if="errors.meeting_type">
-                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.meeting_type[0]"></p>
-                </template>
             </div>
 
             <!-- Upload Section -->
@@ -424,56 +446,7 @@
         </form>
     </x-modal>
 
-    <!-- Delete Confirmation Modal -->
-    <div x-show="showDeleteModal" x-cloak 
-         class="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
-         @click.self="showDeleteModal = false">
-        <div class="relative mx-auto w-full max-w-md shadow-2xl rounded-xl bg-white dark:bg-gray-800 overflow-hidden"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 transform scale-95"
-             x-transition:enter-end="opacity-100 transform scale-100">
-            
-            <!-- Modal Header -->
-            <div class="bg-red-500 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white">Confirm Delete</h3>
-                <button @click="showDeleteModal = false" class="text-white hover:text-red-100 transition-colors">
-                    <i class="fas fa-times text-lg"></i>
-                </button>
-            </div>
 
-            <!-- Modal Body -->
-            <div class="p-6">
-                <div class="flex items-center mb-4">
-                    <div class="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-lg font-semibold text-gray-800 dark:text-white">Are you sure?</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone.</p>
-                    </div>
-                </div>
-                <p class="text-gray-700 dark:text-gray-300">
-                    Do you really want to delete this visitor record? This will permanently remove the visitor data from the system.
-                </p>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex items-center justify-end gap-3">
-                <button @click="showDeleteModal = false"
-                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
-                    Cancel
-                </button>
-                <button @click="deleteVisitor"
-                        :disabled="submitting"
-                        class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-md disabled:opacity-50 flex items-center gap-2">
-                    <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    </template>
-                    <span x-text="submitting ? 'Deleting...' : 'Delete'"></span>
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
 
 @push('scripts')
@@ -505,6 +478,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
+            window.addEventListener('open-edit-visitor', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-visitor', (e) => this.confirmDelete(e.detail));
+
             // Listen for modal close event to reset form
             window.addEventListener('close-modal', (event) => {
                 if (event.detail === 'visitor-modal') {
@@ -706,36 +682,44 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async deleteVisitor() {
-            this.submitting = true;
-            try {
-                const response = await fetch(`/receptionist/visitors/${this.deleteVisitorId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ _method: 'DELETE' })
-                });
+        confirmDelete(visitor) {
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: 'Delete Visitor Record',
+                    message: `Are you sure you want to delete the visitor record for "${visitor.name}"? This action cannot be undone.`,
+                    callback: async () => {
+                        this.submitting = true;
+                        try {
+                            const response = await fetch(`/receptionist/visitors/${visitor.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
+                            });
 
-                const result = await response.json();
+                            const result = await response.json();
 
-                if (response.ok) {
-                    if (window.Toast) {
-                        window.Toast.fire({ icon: 'success', title: result.message });
+                            if (response.ok) {
+                                if (window.Toast) {
+                                    window.Toast.fire({ icon: 'success', title: result.message });
+                                }
+                                setTimeout(() => window.location.reload(), 1000);
+                            } else {
+                                throw new Error(result.message || 'Deletion failed');
+                            }
+                        } catch (error) {
+                            if (window.Toast) {
+                                window.Toast.fire({ icon: 'error', title: error.message });
+                            }
+                        } finally {
+                            this.submitting = false;
+                        }
                     }
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    throw new Error(result.message || 'Deletion failed');
                 }
-            } catch (error) {
-                if (window.Toast) {
-                    window.Toast.fire({ icon: 'error', title: error.message });
-                }
-            } finally {
-                this.submitting = false;
-            }
+            }));
         },
         
         openEditModal(visitor) {

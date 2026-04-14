@@ -93,8 +93,7 @@
         ];
     @endphp
 
-    <div x-on:open-edit-news.window="openEditModal($event.detail)" 
-         x-on:open-delete-news.window="confirmDelete($event.detail)">
+    <div>
         <x-data-table 
             :columns="$tableColumns"
             :data="$news"
@@ -114,64 +113,66 @@
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <!-- Title -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Headline <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="text" 
-                        name="title" 
-                        x-model="formData.title"
-                        @input="clearError('title')"
-                        placeholder="e.g., Admissions Open for 2024-25 Session"
-                        class="modal-input-premium pl-4"
-                        :class="{'border-red-500 ring-red-500/10': errors.title}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
-                        <i class="fas fa-heading text-sm"></i>
+            <div class="space-y-6">
+                <!-- Title -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Headline <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="text" 
+                            name="title" 
+                            x-model="formData.title"
+                            @input="clearError('title')"
+                            placeholder="e.g., Admissions Open for 2024-25 Session"
+                            class="modal-input-premium pr-10"
+                            :class="{'border-red-500 ring-red-500/10': errors.title}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
+                            <i class="fas fa-heading text-sm"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.title">
+                        <p class="modal-error-message" x-text="errors.title[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.title">
-                    <p class="modal-error-message" x-text="errors.title[0]"></p>
-                </template>
-            </div>
 
-            <!-- Date -->
-            <div class="space-y-2 mb-6">
-                <label class="modal-label-premium">Distribution Date <span class="text-red-600 font-bold">*</span></label>
-                <div class="relative group">
-                    <input 
-                        type="date" 
-                        name="publish_date" 
-                        x-model="formData.publish_date"
-                        @input="clearError('publish_date')"
-                        class="modal-input-premium pl-4 font-bold"
-                        :class="{'border-red-500 ring-red-500/10': errors.publish_date}"
-                    >
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
-                        <i class="fas fa-calendar-alt text-sm"></i>
+                <!-- Date -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Distribution Date <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="date" 
+                            name="publish_date" 
+                            x-model="formData.publish_date"
+                            @input="clearError('publish_date')"
+                            class="modal-input-premium pr-10 font-bold"
+                            :class="{'border-red-500 ring-red-500/10': errors.publish_date}"
+                        >
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
+                            <i class="fas fa-calendar-alt text-sm"></i>
+                        </div>
                     </div>
+                    <template x-if="errors.publish_date">
+                        <p class="modal-error-message" x-text="errors.publish_date[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.publish_date">
-                    <p class="modal-error-message" x-text="errors.publish_date[0]"></p>
-                </template>
-            </div>
 
-            <!-- Content -->
-            <div class="space-y-2 mb-8">
-                <label class="modal-label-premium">Full Announcement Body <span class="text-red-600 font-bold">*</span></label>
-                <textarea 
-                    name="content" 
-                    x-model="formData.content"
-                    @input="clearError('content')"
-                    rows="5"
-                    placeholder="Detailed message regarding the update..."
-                    class="modal-input-premium px-4 py-3 resize-none h-40"
-                    :class="{'border-red-500 ring-red-500/10': errors.content}"
-                ></textarea>
-                <template x-if="errors.content">
-                    <p class="modal-error-message" x-text="errors.content[0]"></p>
-                </template>
+                <!-- Content -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Full Announcement Body <span class="text-red-600 font-bold">*</span></label>
+                    <textarea 
+                        name="content" 
+                        x-model="formData.content"
+                        @input="clearError('content')"
+                        rows="5"
+                        placeholder="Detailed message regarding the update..."
+                        class="modal-input-premium px-4 py-3 resize-none h-40"
+                        :class="{'border-red-500 ring-red-500/10': errors.content}"
+                    ></textarea>
+                    <template x-if="errors.content">
+                        <p class="modal-error-message" x-text="errors.content[0]"></p>
+                    </template>
+                </div>
             </div>
 
             <!-- Modal Footer -->
@@ -205,6 +206,11 @@ document.addEventListener('alpine:init', () => {
             title: '',
             content: '',
             publish_date: '{{ date('Y-m-d') }}'
+        },
+
+        init() {
+            window.addEventListener('open-edit-news', (e) => this.openEditModal(e.detail));
+            window.addEventListener('open-delete-news', (e) => this.confirmDelete(e.detail));
         },
 
         async submitForm() {

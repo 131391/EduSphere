@@ -4,9 +4,6 @@
 
 @section('content')
     <div class="space-y-6" x-data="transportAttendanceManagement()" x-init="init()">
-        <!-- Success Message -->
-
-    <div class="space-y-6" x-data="transportAttendanceManagement()" x-init="init()">
         {{-- Page Header --}}
         <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -270,42 +267,28 @@
                     },
 
                     async init() {
-                        // Setup Select2 change handlers
                         this.$nextTick(() => {
-                            setTimeout(() => this.setupSelectHandlers(), 500);
-                        });
-                    },
+                            if (typeof $ !== 'undefined') {
+                                // Vehicle Select
+                                $('#vehicle_id').on('change', (e) => {
+                                    this.formData.vehicle_id = e.target.value;
+                                    this.clearError('vehicle_id');
+                                    this.loadRoutes();
+                                });
 
-                    setupSelectHandlers() {
-                        if (typeof $ === 'undefined') return;
+                                // Route Select
+                                $('#route_id').on('change', (e) => {
+                                    this.formData.route_id = e.target.value;
+                                    this.clearError('route_id');
+                                    this.loadStudents();
+                                });
 
-                        // Vehicle Select
-                        const $vehicleSelect = $('#vehicle_id');
-                        $vehicleSelect.off('change').on('change', (e) => {
-                            const val = e.target.value;
-                            if (this.formData.vehicle_id !== val) {
-                                this.formData.vehicle_id = val;
-                                if (this.errors.vehicle_id) delete this.errors.vehicle_id;
-                                this.loadRoutes();
+                                // Attendance Type
+                                $('#attendance_type').on('change', (e) => {
+                                    this.formData.attendance_type = e.target.value;
+                                    this.clearError('attendance_type');
+                                });
                             }
-                        });
-
-                        // Route Select
-                        const $routeSelect = $('#route_id');
-                        $routeSelect.off('change').on('change', (e) => {
-                            const val = e.target.value;
-                            if (this.formData.route_id !== val) {
-                                this.formData.route_id = val;
-                                if (this.errors.route_id) delete this.errors.route_id;
-                                this.loadStudents();
-                            }
-                        });
-
-                        // Attendance Type
-                        const $typeSelect = $('#attendance_type');
-                        $typeSelect.off('change').on('change', (e) => {
-                            this.formData.attendance_type = e.target.value;
-                            if (this.errors.attendance_type) delete this.errors.attendance_type;
                         });
                     },
 

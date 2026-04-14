@@ -132,9 +132,7 @@
             ];
         @endphp
 
-        <div x-on:open-edit-class.window="openEditModal($event.detail)"
-            x-on:toggle-class-availability.window="toggleAvailability($event.detail)"
-            x-on:open-delete-class.window="confirmDelete($event.detail)">
+        <div>
             <x-data-table :columns="$tableColumns" :data="$classes" :actions="$tableActions"
                 empty-message="No classes found" empty-icon="fas fa-chalkboard">
                 Classes List
@@ -149,20 +147,22 @@
                     <input type="hidden" name="_method" value="PUT">
                 </template>
 
-                <!-- Name -->
-                <div class="space-y-2 mb-8">
-                    <label class="modal-label-premium">Class Name <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative group">
-                        <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
-                            placeholder="e.g., Grade 10-A" class="modal-input-premium"
-                            :class="{'border-red-500 ring-red-500/10': errors.name}">
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                            <i class="fas fa-school text-sm"></i>
+                <div class="space-y-6">
+                    <!-- Name -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Class Name <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
+                                placeholder="e.g., Grade 10-A" class="modal-input-premium pr-10"
+                                :class="{'border-red-500 ring-red-500/10': errors.name}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
+                                <i class="fas fa-school text-sm"></i>
+                            </div>
                         </div>
+                        <template x-if="errors.name">
+                            <p class="modal-error-message" x-text="errors.name[0]"></p>
+                        </template>
                     </div>
-                    <template x-if="errors.name">
-                        <p class="modal-error-message" x-text="errors.name[0]"></p>
-                    </template>
                 </div>
 
                 <!-- Modal Footer -->
@@ -197,6 +197,12 @@
                     errors: {},
                     formData: {
                         name: ''
+                    },
+
+                    init() {
+                        window.addEventListener('open-edit-class', (e) => this.openEditModal(e.detail));
+                        window.addEventListener('toggle-class-availability', (e) => this.toggleAvailability(e.detail));
+                        window.addEventListener('open-delete-class', (e) => this.confirmDelete(e.detail));
                     },
 
                     async submitForm() {
