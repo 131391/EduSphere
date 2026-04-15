@@ -72,25 +72,33 @@
             </div>
         </div>
 
-        {{-- Page Header with Actions --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+        <!-- Header Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Enquiry List</h2>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-clipboard-list text-xs"></i>
+                        </div>
+                        Enquiry Management
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and track student admission enquiries and follow-ups.</p>
+                </div>
                 <div class="flex flex-wrap gap-2">
                     <button @click="openAddModal()"
-                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors">
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                         <i class="fas fa-plus mr-2"></i>
                         Add Enquiry
                     </button>
                     <a href="{{ route('school.student-enquiries.index', ['today' => 1]) }}"
-                        class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors">
-                        <i class="fas fa-calendar-day mr-2"></i>
-                        Today Follow Up Data
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-calendar-day mr-2 text-xs"></i>
+                        Today Follow Up
                     </a>
                     <button
-                        class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md transition-colors">
-                        <i class="fas fa-file-excel mr-2"></i>
-                        Export To Excel
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-file-excel mr-2 text-xs"></i>
+                        Excel Export
                     </button>
                 </div>
             </div>
@@ -211,30 +219,17 @@
                 <input type="hidden" name="enquiry_id" x-model="enquiryId">
 
                 @include('school.student-enquiries.partials.form')
-
-                <!-- Modal Footer -->
-                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" @click="closeModal()"
-                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold">
-                        Cancel
-                    </button>
-                    <button type="submit" :disabled="submitting"
-                        class="px-6 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span x-show="!submitting" x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
-                        <span x-show="submitting" class="flex items-center">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
-                                fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                                </circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                            Processing...
-                        </span>
-                    </button>
-                </div>
             </form>
+
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">Cancel</button>
+                <button type="submit" form="enquiryForm" :disabled="submitting" class="btn-premium-primary min-w-[180px] bg-teal-600 hover:bg-teal-700 shadow-teal-200">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                    </template>
+                    <span x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
+                </button>
+            </x-slot>
         </x-modal>
 
         @push('scripts')

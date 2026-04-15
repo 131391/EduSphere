@@ -20,9 +20,9 @@ class StaffController extends TenantController
      */
     public function index(Request $request)
     {
-        $schoolId = $this->getSchoolId();
+        $school_id = $this->getSchoolId();
         
-        $query = Staff::where('school_id', $schoolId)
+        $query = Staff::where('school_id', $school_id)
             ->with(['class', 'section', 'higherQualification']);
 
         // Search functionality
@@ -56,12 +56,20 @@ class StaffController extends TenantController
         $staff = $query->paginate($perPage)->withQueryString();
 
         // Get classes and qualifications for filters
-        $classes = ClassModel::where('school_id', $schoolId)->orderBy('order')->get();
-        $qualifications = Qualification::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get();
+        $classes = ClassModel::where('school_id', $school_id)->orderBy('order')->get();
+        $qualifications = Qualification::where('school_id', $school_id)->where('is_active', true)->orderBy('name')->get();
 
         $countries = \Nnjeim\World\Models\Country::orderBy('name')->get(['id', 'name']);
 
-        return view('receptionist.staff.index', compact('staff', 'classes', 'qualifications', 'countries'));
+        // Staff Statistics
+        $stats = [
+            'total' => Staff::where('school_id', $school_id)->count(),
+            'teaching' => Staff::where('school_id', $school_id)->where('post', StaffPost::Teacher)->count(),
+            'non_teaching' => Staff::where('school_id', $school_id)->where('post', '!=', StaffPost::Teacher)->count(),
+            'recent' => Staff::where('school_id', $school_id)->where('joining_date', '>=', now()->subDays(30))->count(),
+        ];
+
+        return view('receptionist.staff.index', compact('staff', 'classes', 'qualifications', 'countries', 'stats'));
     }
 
     /**
@@ -107,8 +115,17 @@ class StaffController extends TenantController
 
         try {
             Staff::create($validated);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Staff registered successfully.']);
+            }
+
             return redirect()->route('receptionist.staff.index')->with('success', 'Staff added successfully.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Failed to create staff. Please try again.'], 500);
+            }
+
             return back()->withErrors(['error' => 'Failed to create staff. Please try again.'])->withInput();
         }
     }
@@ -163,8 +180,17 @@ class StaffController extends TenantController
 
         try {
             $staff->update($validated);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Staff record updated successfully.']);
+            }
+
             return redirect()->route('receptionist.staff.index')->with('success', 'Staff updated successfully.');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Failed to update staff. Please try again.'], 500);
+            }
+
             return back()->withErrors(['error' => 'Failed to update staff. Please try again.'])->withInput();
         }
     }
@@ -172,7 +198,7 @@ class StaffController extends TenantController
     /**
      * Remove the specified staff.
      */
-    public function destroy(Staff $staff)
+    public function destroy(Request $request, Staff $staff)
     {
         $this->authorizeTenant($staff);
 
@@ -185,6 +211,10 @@ class StaffController extends TenantController
         }
 
         $staff->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Staff record deleted successfully.']);
+        }
 
         return redirect()->route('receptionist.staff.index')->with('success', 'Staff deleted successfully.');
     }

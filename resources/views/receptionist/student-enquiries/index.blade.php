@@ -72,24 +72,33 @@
         </div>
     </div>
 
-    {{-- Page Header with Actions --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Enquiry List</h2>
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-clipboard-list text-xs"></i>
+                    </div>
+                    Enquiry Management
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and track student admission enquiries and follow-ups.</p>
+            </div>
             <div class="flex flex-wrap gap-2">
-                <button @click="openAddModal()" 
-                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors">
+                <button @click="openAddModal()"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                     <i class="fas fa-plus mr-2"></i>
                     Add Enquiry
                 </button>
-                <a href="{{ route('receptionist.student-enquiries.index', ['today' => 1]) }}" 
-                   class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors">
-                    <i class="fas fa-calendar-day mr-2"></i>
-                    Today Follow Up Data
+                <a href="{{ route('receptionist.student-enquiries.index', ['today' => 1]) }}"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-calendar-day mr-2 text-xs"></i>
+                    Today Follow Up
                 </a>
-                <button class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md transition-colors">
-                    <i class="fas fa-file-excel mr-2"></i>
-                    Export To Excel
+                <button
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-file-excel mr-2 text-xs"></i>
+                    Excel Export
                 </button>
             </div>
         </div>
@@ -216,40 +225,19 @@
               class="p-6">
             @csrf
             <input type="hidden" name="enquiry_id" x-model="enquiryId">
- 
 
             @include('receptionist.student-enquiries.partials.form')
-
-            <!-- Modal Footer -->
-            <div class="flex items-center justify-end gap-3 mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
-                <button type="button" 
-                        @click="closeModal()"
-                        class="px-6 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
-                    Cancel
-                </button>
-                <button type="submit"
-                        :disabled="submitting"
-                        class="relative px-8 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group">
-                    <div class="flex items-center justify-center gap-2">
-                        <template x-if="!submitting">
-                            <span class="flex items-center gap-2">
-                                <i class="fas fa-check-circle transition-transform group-hover:scale-110"></i>
-                                <span x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
-                            </span>
-                        </template>
-                        <template x-if="submitting">
-                            <span class="flex items-center gap-2">
-                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>Processing...</span>
-                            </span>
-                        </template>
-                    </div>
-                </button>
-            </div>
         </form>
+
+        <x-slot name="footer">
+            <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">Cancel</button>
+            <button type="submit" form="enquiryForm" :disabled="submitting" class="btn-premium-primary min-w-[180px] bg-teal-600 hover:bg-teal-700 shadow-teal-200">
+                <template x-if="submitting">
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                </template>
+                <span x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
+            </button>
+        </x-slot>
     </x-modal>
 
 @push('scripts')
@@ -261,6 +249,9 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         errors: {},
         formData: {},
+        fatherExpanded: false,
+        motherExpanded: false,
+        contactExpanded: false,
         
         clearError(field) {
             if (this.errors[field]) {
@@ -272,14 +263,13 @@ document.addEventListener('alpine:init', () => {
             window.addEventListener('open-edit-enquiry', (e) => this.openEditModal(e.detail));
             window.addEventListener('open-delete-enquiry', (e) => this.confirmDelete(e.detail));
 
-            // Robust error clearing for selects (including Select2)
+            // Specialized Select2 error clearing
             this.$nextTick(() => {
-                $(this.$el).find('select').on('change', (e) => {
-                    const fieldName = e.target.getAttribute('name');
-                    if (fieldName) {
-                        this.clearError(fieldName);
-                    }
-                });
+                if (typeof $ !== 'undefined') {
+                    $(document).on('change.select2', '#enquiryForm .select2-hidden-accessible', (e) => {
+                        this.clearError(e.target.name);
+                    });
+                }
             });
         },
 
@@ -400,17 +390,7 @@ document.addEventListener('alpine:init', () => {
  
                 if (response.status === 422) {
                     this.errors = result.errors;
-                    if (window.Toast) {
-                        window.Toast.fire({
-                            icon: 'error',
-                            title: 'Please check the form for errors'
-                        });
-                    }
-                    // Scroll to the first error or the summary
-                    this.$nextTick(() => {
-                        const firstError = document.querySelector('.border-red-500, .bg-red-50');
-                        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    });
+                    this.displayErrors(result.errors);
                 } else if (response.ok) {
                     // Success!
                     if (window.Toast) {
@@ -476,8 +456,61 @@ document.addEventListener('alpine:init', () => {
             }));
         },
 
+        clearError(field) {
+            if (this.errors && this.errors[field]) {
+                delete this.errors[field];
+                this.errors = Object.assign({}, this.errors);
+                
+                // Remove manual Select2 error highlights
+                if (typeof $ !== 'undefined') {
+                    const input = document.querySelector(`[name="${field}"]`);
+                    if (input && $(input).hasClass('select2-hidden-accessible')) {
+                        $(input).next('.select2-container').find('.select2-selection').removeClass('!border-red-500');
+                    }
+                }
+            }
+        },
+
+        displayErrors(errors) {
+            if (window.Toast) {
+                window.Toast.fire({
+                    icon: 'error',
+                    title: 'Please check the form for errors'
+                });
+            }
+
+            // Auto-expand sections with errors
+            Object.keys(errors).forEach(field => {
+                if (field.startsWith('father_')) this.fatherExpanded = true;
+                if (field.startsWith('mother_')) this.motherExpanded = true;
+                if (['contact_no', 'whatsapp_no', 'facebook_id', 'email_id', 'sms_no', 'twitter_id', 'emergency_contact_no'].includes(field)) {
+                    this.contactExpanded = true;
+                }
+            });
+
+            this.$nextTick(() => {
+                // Handle Select2 containers
+                Object.keys(errors).forEach(field => {
+                    const input = document.querySelector(`[name="${field}"]`);
+                    if (input && $(input).hasClass('select2-hidden-accessible')) {
+                        const select2Container = $(input).next('.select2-container').find('.select2-selection');
+                        select2Container.addClass('!border-red-500');
+                    }
+                });
+
+                const firstError = document.querySelector('.border-red-500, .!border-red-500');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        },
+
         clearErrors() {
             this.errors = {};
+            // Remove manual Select2 error highlights
+            if (typeof $ !== 'undefined') {
+                $('.select2-container .select2-selection').removeClass('!border-red-500');
+            }
         }
     }));
 });

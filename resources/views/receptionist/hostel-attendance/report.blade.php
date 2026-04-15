@@ -6,115 +6,116 @@
 
 @section('content')
 <div class="space-y-6">
-    {{-- Statistics Overview (Conceptual for current view) --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Audited Records</p>
-                <p class="text-3xl font-black text-gray-800">{{ $attendances->total() }}</p>
-            </div>
-            <div class="bg-indigo-100 p-4 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-file-invoice text-2xl"></i>
-            </div>
-        </div>
-
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Target Hosting</p>
-                <p class="text-3xl font-black text-gray-800">{{ $hostels->count() }}</p>
-            </div>
-            <div class="bg-emerald-100 p-4 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-building-circle-check text-2xl"></i>
+    {{-- Statistics Overview --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Audited Records</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $attendances->total() }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-file-invoice text-blue-600 text-xl"></i>
+                </div>
             </div>
         </div>
 
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Compliance Rate</p>
-                <p class="text-3xl font-black text-emerald-600">{{ $attendances->total() > 0 ? round(($attendances->where('is_present', true)->count() / max($attendances->count(), 1)) * 100) : 0 }}%</p>
-            </div>
-            <div class="bg-emerald-50 p-4 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-chart-line text-2xl"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Target Blocks</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $hostels->count() }}</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-building-circle-check text-emerald-600 text-xl"></i>
+                </div>
             </div>
         </div>
 
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Data Integrity</p>
-                <p class="text-3xl font-black text-indigo-600">High</p>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-teal-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Compliance Rate</p>
+                    <p class="text-3xl font-bold text-teal-600 mt-2">{{ $attendances->total() > 0 ? round(($attendances->where('is_present', true)->count() / max($attendances->count(), 1)) * 100) : 0 }}%</p>
+                </div>
+                <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-teal-600 text-xl"></i>
+                </div>
             </div>
-            <div class="bg-indigo-50 p-4 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-shield-halved text-2xl"></i>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-indigo-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Data Integrity</p>
+                    <p class="text-3xl font-bold text-indigo-600 mt-2">High</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-halved text-indigo-600 text-xl"></i>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Page Header --}}
-    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
                 <a href="{{ route('receptionist.hostel-attendance.index') }}" 
-                   class="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
-                    <i class="fas fa-arrow-left"></i>
+                   class="w-8 h-8 bg-teal-50 border border-teal-100 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-100 transition-all shadow-sm">
+                    <i class="fas fa-arrow-left text-xs"></i>
                 </a>
                 <div>
-                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">Historical Index</h2>
-                    <p class="text-sm text-gray-500 font-medium tracking-tight">Generate multi-dimensional occupancy reports</p>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-history text-xs"></i>
+                        </div>
+                        Historical Index
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Generate multi-dimensional occupancy reports.</p>
                 </div>
             </div>
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-2">
                 @if($attendances->total() > 0)
                 <a href="{{ route('receptionist.hostel-attendance.report', array_merge(request()->all(), ['export' => 'excel'])) }}" 
-                   class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-sm font-black rounded-xl transition-all shadow-xl shadow-emerald-100 group">
-                    <i class="fas fa-file-excel mr-2 group-hover:scale-110 transition-transform"></i>
-                    Export Comprehensive CSV
+                   class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 group">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Export Records (CSV)
                 </a>
                 @endif
             </div>
         </div>
     </div>
 
-    {{-- Universal Filtering Engine --}}
-    <div class="bg-white/80 backdrop-blur-md rounded-3xl p-8 border border-gray-100 shadow-sm mb-8 relative overflow-hidden group transition-all hover:shadow-md">
-        <div class="absolute top-0 right-0 p-8 text-indigo-50/50 opacity-10 group-hover:opacity-20 transition-[opacity,transform] group-hover:scale-110">
-            <i class="fas fa-filter text-9xl"></i>
-        </div>
-
-        <form method="GET" action="{{ route('receptionist.hostel-attendance.report') }}" class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+    {{-- Filtering Engine --}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6 border border-gray-100 dark:border-gray-700">
+        <form method="GET" action="{{ route('receptionist.hostel-attendance.report') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="space-y-2">
-                <label class="modal-label-premium px-1 italic">Segment Filter</label>
-                <div class="relative group/select">
-                    <select name="hostel_id" 
-                            class="modal-input-premium pl-10">
-                        <option value="">All Segments</option>
-                        @foreach($hostels as $hostel)
-                            <option value="{{ $hostel->id }}" {{ request('hostel_id') == $hostel->id ? 'selected' : '' }}>
-                                {{ $hostel->hostel_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within/select:text-indigo-500 transition-colors">
-                        <i class="fas fa-building text-[10px]"></i>
-                    </div>
-                </div>
+                <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Hostel Block</label>
+                <select name="hostel_id" class="modal-input-premium">
+                    <option value="">All Segments</option>
+                    @foreach($hostels as $hostel)
+                        <option value="{{ $hostel->id }}" {{ request('hostel_id') == $hostel->id ? 'selected' : '' }}>
+                            {{ $hostel->hostel_name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <div class="space-y-2">
-                <label class="modal-label-premium px-1 italic">Temporal Start</label>
-                <input type="date" name="date_from" value="{{ request('date_from') }}"
-                       class="modal-input-premium">
+                <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Temporal Start</label>
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="modal-input-premium">
             </div>
 
             <div class="space-y-2">
-                <label class="modal-label-premium px-1 italic">Temporal End</label>
-                <input type="date" name="date_to" value="{{ request('date_to') }}"
-                       class="modal-input-premium">
+                <label class="text-xs font-bold text-gray-600 uppercase tracking-wider">Temporal End</label>
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="modal-input-premium">
             </div>
 
             <div class="flex items-end">
                 <button type="submit" 
-                        class="w-full h-[54px] bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-xs rounded-2xl shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-3 uppercase tracking-widest group">
-                    <i class="fas fa-bolt group-hover:scale-110 transition-transform"></i>
+                        class="w-full h-[42px] bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 group">
+                    <i class="fas fa-search"></i>
                     Synthesize Audit
                 </button>
             </div>
@@ -126,66 +127,63 @@
         $tableColumns = [
             [
                 'key' => 'id',
-                'label' => 'ENTRY ID',
-                'render' => function($row) {
-                    return '<span class="text-[10px] font-black text-gray-400">#' . str_pad($row->id, 5, '0', STR_PAD_LEFT) . '</span>';
+                'label' => 'SR NO',
+                'render' => function($row, $index, $data) {
+                    return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
                 }
             ],
             [
-                'key' => 'identity',
-                'label' => 'RESIDENT IDENTITY',
+                'key' => 'student_name',
+                'label' => 'STUDENT',
                 'render' => function($row) {
                     $student = $row->student;
-                    $name = $student ? trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name) : 'N/A';
-                    $admission = $student->admission_no ?? 'N/A';
-                    return '<div class="flex flex-col">
-                                <span class="font-black text-gray-800">' . $name . '</span>
-                                <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter">' . $admission . '</span>
-                            </div>';
+                    return '<span class="font-bold text-gray-800">' . trim(($student->first_name ?? '') . ' ' . ($student->middle_name ?? '') . ' ' . ($student->last_name ?? '')) . '</span>';
                 }
             ],
             [
-                'key' => 'mapping',
-                'label' => 'MAPPING CONTEXT',
+                'key' => 'admission_no',
+                'label' => 'ADMISSION',
                 'render' => function($row) {
-                    return '<div class="flex flex-col">
-                                <span class="font-bold text-gray-700 text-xs">' . ($row->hostel->hostel_name ?? 'N/A') . '</span>
-                                <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter">Room ' . ($row->room_name ?? 'N/A') . ' • Unit ' . ($row->bed_no ?? 'N/A') . '</span>
-                            </div>';
+                    return $row->student->admission_no ?? 'N/A';
+                }
+            ],
+            [
+                'key' => 'hostel',
+                'label' => 'HOSTEL',
+                'render' => function($row) {
+                    return $row->hostel->hostel_name ?? 'N/A';
+                }
+            ],
+            [
+                'key' => 'room',
+                'label' => 'ROOM/UNIT',
+                'render' => function($row) {
+                    return 'Room ' . ($row->room_name ?? 'N/A') . ' • ' . ($row->bed_no ?? 'N/A');
                 }
             ],
             [
                 'key' => 'status',
-                'label' => 'COMPLIANCE',
+                'label' => 'STATUS',
                 'render' => function($row) {
                     if ($row->is_present) {
-                        return '<div class="flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                    <span class="text-xs font-black text-emerald-600 uppercase tracking-widest">Present</span>
-                                </div>';
+                        return '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase tracking-tight">Present</span>';
                     } else {
-                        return '<div class="flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                    <span class="text-xs font-black text-red-600 uppercase tracking-widest">Absent</span>
-                                </div>';
+                        return '<span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold uppercase tracking-tight">Absent</span>';
                     }
                 }
             ],
             [
                 'key' => 'date',
-                'label' => 'LOG TIMESTAMP',
+                'label' => 'LOG DATE',
                 'render' => function($row) {
-                    return '<div class="flex flex-col">
-                                <span class="font-bold text-gray-700 text-xs">' . ($row->attendance_date ? $row->attendance_date->format('d M, Y') : 'N/A') . '</span>
-                                <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter">Checked: ' . ($row->created_at->format('H:i')) . '</span>
-                            </div>';
+                    return $row->attendance_date ? $row->attendance_date->format('d M, Y') : 'N/A';
                 }
             ],
             [
                 'key' => 'auditor',
                 'label' => 'VERIFIED BY',
                 'render' => function($row) {
-                    return '<span class="text-[10px] font-black text-gray-500 uppercase">' . ($row->markedBy->name ?? 'SYSTEM') . '</span>';
+                    return '<span class="text-[10px] font-bold text-gray-500 uppercase">' . ($row->markedBy->name ?? 'SYSTEM') . '</span>';
                 }
             ],
         ];

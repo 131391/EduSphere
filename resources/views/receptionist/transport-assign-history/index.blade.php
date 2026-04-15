@@ -7,21 +7,21 @@
     <!-- Success Message -->
 
     {{-- Page Header --}}
-    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div class="flex items-center gap-4">
-                <div class="bg-gradient-to-br from-slate-700 to-slate-900 p-3 rounded-2xl shadow-lg shadow-slate-200">
-                    <i class="fas fa-archive text-white text-xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">Assignment Archive</h2>
-                    <p class="text-sm text-gray-500 font-medium">Historical audit trail of student transit mapping</p>
-                </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-archive text-xs"></i>
+                    </div>
+                    Assignment Archive
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Historical audit trail of student transit mapping.</p>
             </div>
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-2">
                 <a href="{{ route('receptionist.transport-assignments.index') }}"
-                    class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                    <i class="fas fa-arrow-left mr-2 text-indigo-500"></i>
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-arrow-left mr-2 text-xs"></i>
                     Back to Registry
                 </a>
             </div>

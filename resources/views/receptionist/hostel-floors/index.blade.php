@@ -7,51 +7,54 @@
 @section('content')
 <div class="space-y-6" x-data="hostelFloorManagement" x-init="init()">
     {{-- Statistics Overview --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Floor Levels</p>
-                <p class="text-3xl font-black text-gray-800">{{ $stats['total_floor'] }}</p>
-            </div>
-            <div class="bg-indigo-100 p-4 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-layer-group text-2xl"></i>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Floor Levels</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_floor'] }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-layer-group text-blue-600 text-xl"></i>
+                </div>
             </div>
         </div>
 
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between group">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Room Capacity</p>
-                <p class="text-3xl font-black text-gray-800">{{ $stats['total_room'] }}</p>
-            </div>
-            <div class="bg-emerald-100 p-4 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-door-open text-2xl"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Inventory Capacity</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_room'] }}</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-door-open text-emerald-600 text-xl"></i>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Page Header --}}
-    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div class="flex items-center gap-4">
-                <a href="{{ route('receptionist.hostels.index') }}" 
-                   class="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all shadow-sm">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">Floor Distribution</h2>
-                    <p class="text-sm text-gray-500 font-medium">Define and organize hostel floor specifications</p>
-                </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-layer-group text-xs"></i>
+                    </div>
+                    Floor Distribution
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage vertical residential zoning and floor specs.</p>
             </div>
-            <div class="flex flex-wrap gap-3">
-                <button @click="$dispatch('open-add-hostel-floor')" 
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
-                    <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
-                    Add Floor Level
+            <div class="flex flex-wrap gap-2">
+                <button @click="$dispatch('open-add-hostel-floor')"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-plus mr-2"></i>
+                    Configure Level
                 </button>
-                <a href="{{ route('receptionist.hostel-floors.export') }}" 
-                   class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                    <i class="fas fa-file-excel mr-2 text-emerald-500"></i>
-                    Floor Export
+                <a href="{{ route('receptionist.hostel-floors.export') }}"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-file-excel mr-2 text-xs"></i>
+                    Export Layout
                 </a>
             </div>
         </div>
@@ -142,112 +145,92 @@
         ];
     @endphp
 
-    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl shadow-gray-100/50 border border-gray-100 overflow-hidden">
-        <x-data-table 
-            :columns="$tableColumns"
-            :data="$floors"
-            :searchable="true"
-            :actions="$tableActions"
-            empty-message="No floor levels configured"
-            empty-icon="fas fa-layer-group"
-        />
-    </div>
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$floors"
+        :searchable="true"
+        :actions="$tableActions"
+        empty-message="No floor levels configured"
+        empty-icon="fas fa-layer-group"
+    >
+        Floor List
+    </x-data-table>
 
     {{-- Add/Edit Floor Modal --}}
     <!-- Add/Edit Floor Modal -->
-    <x-modal name="hostel-floor-modal" alpineTitle="editMode ? 'Modify Floor Specifications' : 'Establish New Floor Level'" maxWidth="xl">
-        <form @submit.prevent="save" method="POST" novalidate>
+    <x-modal name="hostel-floor-modal" alpineTitle="editMode ? 'Modify Floor Specifications' : 'Establish New Floor Level'" maxWidth="2xl">
+        <form @submit.prevent="save" id="floorForm" method="POST" class="space-y-6" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <!-- Form Body - Academic Year Standard -->
             <div class="space-y-6">
-                <!-- Hostel Selection -->
-                <div class="space-y-2 mb-6">
-                    <label class="modal-label-premium">Select Hostel Block <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative group">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Hostel Selection -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Select Hostel Block <span class="text-red-600 font-bold">*</span></label>
                         <select name="hostel_id" x-model="formData.hostel_id" @change="clearError('hostel_id')"
-                                class="modal-input-premium appearance-none pr-10"
+                                class="modal-input-premium"
                                 :class="errors.hostel_id ? 'border-red-500 ring-red-500/10' : ''">
                             <option value="">Choose Hostel Block</option>
                             @foreach($hostels as $hostel)
                                 <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
                             @endforeach
                         </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:rotate-180 transition-transform duration-300">
-                            <i class="fas fa-chevron-down text-[10px]"></i>
-                        </div>
+                        <template x-if="errors.hostel_id">
+                            <p class="modal-error-message" x-text="errors.hostel_id[0]"></p>
+                        </template>
                     </div>
-                    <template x-if="errors.hostel_id">
-                        <p class="modal-error-message" x-text="errors.hostel_id[0]"></p>
-                    </template>
-                </div>
 
-                <!-- Floor Designation -->
-                <div class="space-y-2 mb-6">
-                    <label class="modal-label-premium">Floor Designation <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative group">
+                    <!-- Floor Designation -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Floor Designation <span class="text-red-600 font-bold">*</span></label>
                         <input type="text" name="floor_name" x-model="formData.floor_name" @input="clearError('floor_name')" placeholder="e.g., Ground Floor, Sector A"
-                            class="modal-input-premium pr-10" :class="errors.floor_name ? 'border-red-500 ring-red-500/10' : ''">
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
-                            <i class="fas fa-layer-group text-[10px]"></i>
-                        </div>
+                            class="modal-input-premium" :class="errors.floor_name ? 'border-red-500 ring-red-500/10' : ''">
+                        <template x-if="errors.floor_name">
+                            <p class="modal-error-message" x-text="errors.floor_name[0]"></p>
+                        </template>
                     </div>
-                    <template x-if="errors.floor_name">
-                        <p class="modal-error-message" x-text="errors.floor_name[0]"></p>
-                    </template>
-                </div>
 
-                <!-- Config Grid -->
-                <div class="grid grid-cols-2 gap-6 mb-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Room Capacity</label>
-                        <div class="relative group">
-                            <input type="number" name="total_room" x-model="formData.total_room" @input="clearError('total_room')" placeholder="0"
-                                class="modal-input-premium pr-10 font-bold">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
-                                <i class="fas fa-door-open text-[10px]"></i>
-                            </div>
-                        </div>
+                        <input type="number" name="total_room" x-model="formData.total_room" @input="clearError('total_room')" placeholder="0"
+                            class="modal-input-premium font-bold">
                     </div>
                     <div class="space-y-2">
                         <label class="modal-label-premium">Configuration Date</label>
-                        <div class="relative group">
-                            <input type="date" name="floor_create_date" x-model="formData.floor_create_date" @input="clearError('floor_create_date')"
-                                class="modal-input-premium pr-10">
-                        </div>
+                        <input type="date" name="floor_create_date" x-model="formData.floor_create_date" @input="clearError('floor_create_date')"
+                            class="modal-input-premium">
                     </div>
                 </div>
 
                 <!-- Guidance Notification Card -->
-                <div class="mb-8 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                <div class="flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm mb-8">
                     <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
                         <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Structural Notice</span>
+                        <span class="text-sm font-bold text-slate-900 leading-tight">Structural Notice</span>
                         <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                            Floor designation helps in <span class="text-indigo-600 italic underline decoration-indigo-100">spatial mapping</span> of rooms. Ensure unique names within a hostel block.
+                            Floor designation helps in <span class="text-indigo-600 font-bold underline decoration-indigo-200">spatial mapping</span> of rooms. Ensure unique names within a hostel block.
                         </p>
                     </div>
                 </div>
             </div>
-
-            <!-- Modal Footer - Exact Match Academic Year -->
-            <x-slot name="footer">
-                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
-                    Discard
-                </button>
-                <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
-                    <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                    </template>
-                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Floor' : 'Confirm Floor')"></span>
-                </button>
-            </x-slot>
         </form>
+
+        <x-slot name="footer">
+            <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
+                Cancel
+            </button>
+            <button type="submit" form="floorForm" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
+                <template x-if="submitting">
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                </template>
+                <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Confirm Floor')"></span>
+            </button>
+        </x-slot>
     </x-modal>
 
     {{-- Custom Confirm Modal --}}
@@ -300,7 +283,7 @@ document.addEventListener('alpine:init', () => {
             this.errors = {};
 
             const url = this.editMode 
-                ? `/receptionist/hostel-floors/${this.floorId}` 
+                ? `{{ route('receptionist.hostel-floors.update', '___ID___') }}`.replace('___ID___', this.floorId)
                 : '{{ route('receptionist.hostel-floors.store') }}';
             
             const method = this.editMode ? 'PUT' : 'POST';

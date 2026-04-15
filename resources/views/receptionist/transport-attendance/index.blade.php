@@ -5,21 +5,21 @@
 @section('content')
     <div class="space-y-6" x-data="transportAttendanceManagement()" x-init="init()">
         {{-- Page Header --}}
-        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-2xl shadow-lg shadow-indigo-100">
-                        <i class="fas fa-clipboard-check text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-black text-gray-800 tracking-tight">Boarding Verification</h2>
-                        <p class="text-sm text-gray-500 font-medium">Verify student boarding for active transit corridors</p>
-                    </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-clipboard-check text-xs"></i>
+                        </div>
+                        Boarding Verification
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Verify student boarding for active transit corridors.</p>
                 </div>
-                <div class="flex flex-wrap gap-3">
+                <div class="flex flex-wrap gap-2">
                     <a href="{{ route('receptionist.transport-assignments.index') }}"
-                        class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                        <i class="fas fa-arrow-left mr-2 text-indigo-500"></i>
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-arrow-left mr-2 text-xs"></i>
                         Return to Registry
                     </a>
                 </div>
@@ -27,10 +27,10 @@
         </div>
 
         <!-- Attendance Configuration Form -->
-        <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8 transition-all hover:shadow-md">
-            <form @submit.prevent="save" method="POST" class="p-0 relative" novalidate>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-slate-100 mb-6">
+            <form @submit.prevent="save" method="POST" class="space-y-6" novalidate>
                 @csrf
-                <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <!-- Vehicle Selection -->
                     <div class="space-y-2">
                         <label class="modal-label-premium">Operational Fleet Asset <span class="text-red-500 font-bold">*</span></label>
@@ -46,8 +46,8 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
-                                <i class="fas fa-bus text-[10px]"></i>
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
+                                <i class="fas fa-bus text-xs"></i>
                             </div>
                         </div>
                         <template x-if="errors.vehicle_id">
@@ -65,8 +65,8 @@
                                 :class="errors.route_id ? 'border-red-500 ring-red-500/10' : ''">
                                 <option value="">Select Route</option>
                             </select>
-                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-blue-500 transition-colors">
-                                <i class="fas fa-route text-[10px]"></i>
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
+                                <i class="fas fa-route text-xs"></i>
                             </div>
                         </div>
                         <template x-if="errors.route_id">
@@ -78,7 +78,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium">Operational Stage <span class="text-red-500 font-bold">*</span></label>
                         <select name="attendance_type" id="attendance_type" x-model="formData.attendance_type"
-                            @change="delete errors.attendance_type"
+                            @change="delete errors.attendance_type; loadStudents()"
                             class="modal-input-premium"
                             :class="errors.attendance_type ? 'border-red-500 ring-red-500/10' : ''">
                             <option value="">Select Stage</option>
@@ -98,6 +98,11 @@
                             @input="delete errors.attendance_date" max="{{ date('Y-m-d') }}"
                             class="modal-input-premium"
                             :class="errors.attendance_date ? 'border-red-500 ring-red-500/10' : ''">
+                        <template x-if="errors.attendance_date">
+                            <p class="modal-error-message" x-text="errors.attendance_date[0]"></p>
+                        </template>
+                    </div>
+                </div>
                         <template x-if="errors.attendance_date">
                             <p class="modal-error-message" x-text="errors.attendance_date[0]"></p>
                         </template>

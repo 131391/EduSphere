@@ -5,21 +5,21 @@
 @section('content')
 <div class="space-y-6" x-data="transportAttendanceReport()" x-init="init()">
     {{-- Page Header --}}
-    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div class="flex items-center gap-4">
-                <div class="bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-2xl shadow-lg shadow-purple-100/50">
-                    <i class="fas fa-file-invoice text-white text-xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800 tracking-tight text-shadow-sm">Transit Analytics</h2>
-                    <p class="text-sm text-gray-500 font-medium">Consolidated boarding audit & manifest telemetry</p>
-                </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-file-invoice text-xs"></i>
+                    </div>
+                    Transit Analytics
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Consolidated boarding audit & manifest telemetry.</p>
             </div>
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-wrap gap-2">
                 <a href="{{ route('receptionist.transport-attendance.index') }}"
-                    class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                    <i class="fas fa-arrow-left mr-2 text-purple-500"></i>
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-arrow-left mr-2 text-xs"></i>
                     Back to Verification
                 </a>
             </div>
@@ -27,17 +27,16 @@
     </div>
 
     <!-- Audit Parameters Section -->
-    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8 transition-all hover:shadow-md">
-        <div class="p-8">
-            <div class="mb-8 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100 shadow-sm">
-                    <i class="fas fa-sliders-h text-sm"></i>
-                </div>
-                <div>
-                    <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Audit Parameters</h4>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Define temporal & operational scope</p>
-                </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-slate-100 mb-6">
+        <div class="mb-6 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100 shadow-sm">
+                <i class="fas fa-sliders-h text-xs"></i>
             </div>
+            <div>
+                <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Audit Parameters</h4>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Define temporal & operational scope</p>
+            </div>
+        </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <!-- Vehicle Select -->
@@ -55,8 +54,8 @@
                                 </option>
                             @endforeach
                         </select>
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-purple-500 transition-colors">
-                            <i class="fas fa-bus text-[10px]"></i>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
+                            <i class="fas fa-bus text-xs"></i>
                         </div>
                     </div>
                     <template x-if="errors.vehicle_id">
@@ -78,8 +77,8 @@
                                 <option :value="route.id" x-text="route.route_name"></option>
                             </template>
                         </select>
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
-                            <i class="fas fa-route text-[10px]"></i>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
+                            <i class="fas fa-route text-xs"></i>
                         </div>
                     </div>
                     <template x-if="errors.route_id">

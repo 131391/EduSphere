@@ -13,15 +13,70 @@
     {{-- Success/Error Messages --}}
 
 
+    {{-- Staff Statistics --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-blue-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Total Staff</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['total'] }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class="fas fa-users-gear text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-emerald-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Teaching Staff</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['teaching'] }}</p>
+                </div>
+                <div class="bg-emerald-100 p-3 rounded-full">
+                    <i class="fas fa-chalkboard-user text-emerald-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-amber-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Non-Teaching</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['non_teaching'] }}</p>
+                </div>
+                <div class="bg-amber-100 p-3 rounded-full">
+                    <i class="fas fa-user-tie text-amber-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border-l-4 border-indigo-500 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Recent Joiners</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $stats['recent'] }}</p>
+                </div>
+                <div class="bg-indigo-100 p-3 rounded-full">
+                    <i class="fas fa-user-plus text-indigo-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Page Header with Actions --}}
     <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h2 class="text-xl font-bold text-gray-800">Staff List</h2>
             <div class="flex flex-wrap gap-2">
                 <button @click="openAddModal()" 
-                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors">
+                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
                     <i class="fas fa-plus mr-2"></i>
                     Create Staff
+                </button>
+                <button class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
+                    <i class="fas fa-file-excel mr-2"></i>
+                    Export
                 </button>
             </div>
         </div>
@@ -146,449 +201,396 @@
     </x-data-table>
 
     {{-- Add/Edit Staff Modal --}}
-    <x-modal name="staff-modal" alpineTitle="editMode ? 'Edit Staff' : 'Create Staff'" maxWidth="6xl">
-        <form :action="editMode ? `/receptionist/staff/${staffId}` : '{{ route('receptionist.staff.store') }}'" 
-              method="POST" enctype="multipart/form-data" class="p-6">
+    <x-modal name="staff-modal" alpineTitle="editMode ? 'Modify Staff Information' : 'Register New Staff'" maxWidth="6xl">
+        <form @submit.prevent="submitForm()" method="POST" novalidate>
             @csrf
             <template x-if="editMode">
-                @method('PUT')
+                <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <div class="space-y-6">
-                <div class="bg-teal-50 dark:bg-teal-900 p-6 rounded-xl border border-teal-100 dark:border-teal-800">
-                    <h4 class="text-lg font-bold text-teal-800 dark:text-teal-200 mb-6 flex items-center">
-                        <i class="fas fa-id-card-clip mr-2"></i>
-                        Staff Information
-                    </h4>
-                    
-                    <div class="grid grid-cols-2 gap-6">
-                        {{-- Left Column --}}
-                        <div class="space-y-6">
-                            {{-- Select Post --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-briefcase mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Select Post <span class="text-red-500">*</span>
-                                </label>
-                                <select name="post" 
-                                        id="post"
-                                        x-model="formData.post"
-                                        class="modal-input-premium"
-                                        :class="errors.post ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                    <option value="">Select Post</option>
-                                    @foreach(StaffPost::cases() as $post)
-                                        <option value="{{ $post->value }}" {{ old('post') == $post->value ? 'selected' : '' }}>
-                                            {{ $post->label() }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('post')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
+                <!-- Designated Post -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Designated Post <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <select name="post" x-model="formData.post" @change="clearError('post')"
+                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.post}">
+                            <option value="">Select Designation</option>
+                            @foreach(StaffPost::cases() as $post)
+                                <option value="{{ $post->value }}">{{ $post->label() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <template x-if="errors.post">
+                        <p class="modal-error-message" x-text="errors.post[0]"></p>
+                    </template>
+                </div>
 
-                            {{-- Class --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-chalkboard-user mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Class
-                                </label>
-                                <select name="class_id" 
-                                        id="class_id"
-                                        x-model="formData.class_id"
-                                        @change="loadSections()"
-                                        :disabled="!canSelectClass"
-                                        :class="!canSelectClass ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60' : ''"
-                                        class="modal-input-premium"
-                                        :class="errors.class_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                    <option value="">Select Class</option>
-                                    @foreach($classes as $class)
-                                        <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>
-                                            {{ $class->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('class_id')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Full Name -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Full Staff Name <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="text" name="name" x-model="formData.name"
+                                @input="clearError('name')" placeholder="Legal full name"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.name}">
+                        </div>
+                        <template x-if="errors.name">
+                            <p class="modal-error-message" x-text="errors.name[0]"></p>
+                        </template>
+                    </div>
 
-                            {{-- Name --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-user mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Name <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       name="name" 
-                                       x-model="formData.name"
-                                       value="{{ old('name') }}"
-                                       placeholder="Enter Name"
-                                       class="modal-input-premium"
-                                       :class="errors.name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('name')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    <!-- Mobile -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Primary Contact No <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="tel" name="mobile" x-model="formData.mobile"
+                                @input="clearError('mobile')" placeholder="Active mobile number"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.mobile}">
+                        </div>
+                        <template x-if="errors.mobile">
+                            <p class="modal-error-message" x-text="errors.mobile[0]"></p>
+                        </template>
+                    </div>
+                </div>
 
-                            {{-- Mobile --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-phone mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Mobile
-                                </label>
-                                <input type="tel" 
-                                       name="mobile" 
-                                       x-model="formData.mobile"
-                                       value="{{ old('mobile') }}"
-                                       placeholder="Enter Mobile"
-                                       pattern="[0-9]{10,15}" 
-                                       inputmode="numeric"
-                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                       class="modal-input-premium"
-                                       :class="errors.mobile ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('mobile')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Email -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Email Address</label>
+                        <div class="relative group">
+                            <input type="email" name="email" x-model="formData.email"
+                                @input="clearError('email')" placeholder="staff@school.com"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.email}">
+                        </div>
+                        <template x-if="errors.email">
+                            <p class="modal-error-message" x-text="errors.email[0]"></p>
+                        </template>
+                    </div>
 
-                            {{-- Gender --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-venus-mars mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Gender
-                                </label>
-                                <select name="gender" 
-                                        x-model="formData.gender"
-                                        class="modal-input-premium"
-                                        :class="errors.gender ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                    <option value="">Choose Gender</option>
-                                    @foreach(Gender::cases() as $gender)
-                                        <option value="{{ $gender->value }}" {{ old('gender') == $gender->value ? 'selected' : '' }}>
-                                            {{ $gender->label() }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('gender')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    <!-- Gender -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Gender <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <select name="gender" x-model="formData.gender" @change="clearError('gender')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.gender}">
+                                <option value="">Select Gender</option>
+                                @foreach(Gender::cases() as $gender)
+                                    <option value="{{ $gender->value }}">{{ $gender->label() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <template x-if="errors.gender">
+                            <p class="modal-error-message" x-text="errors.gender[0]"></p>
+                        </template>
+                    </div>
+                </div>
 
-                            {{-- Total Experience --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-history mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Total Experience
-                                </label>
-                                <input type="number" 
-                                       name="total_experience" 
-                                       x-model="formData.total_experience"
-                                       value="{{ old('total_experience') }}"
-                                       placeholder="Enter Total Experience in Year"
-                                       min="0"
-                                       class="modal-input-premium"
-                                       :class="errors.total_experience ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('total_experience')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Previous School Salary --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-sack-dollar mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Previous School Salary (Month)
-                                </label>
-                                <input type="number" 
-                                       name="previous_school_salary" 
-                                       x-model="formData.previous_school_salary"
-                                       value="{{ old('previous_school_salary') }}"
-                                       placeholder="Enter Previous School Salary (Month)"
-                                       step="0.01"
-                                       min="0"
-                                       class="modal-input-premium"
-                                       :class="errors.previous_school_salary ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('previous_school_salary')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Select Country --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-globe mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Select Country
-                                </label>
-                                <select name="country_id" 
-                                        x-model="formData.country_id"
-                                        class="modal-input-premium"
-                                        :class="errors.country_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''"
-                                        data-location-cascade="true"
-                                        data-country-select="true">
-                                    <option value="">Select Country</option>
-                                    @foreach($countries as $country)
-                                        <option value="{{ $country->id }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
-                                            {{ $country->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('country_id')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Select City --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-city mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Select City
-                                </label>
-                                <select name="city_id" 
-                                        x-model="formData.city_id"
-                                        class="modal-input-premium"
-                                        :class="errors.city_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''"
-                                        data-city-select="true">
-                                    <option value="">Select City</option>
-                                </select>
-                                @error('city_id')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Address --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-home mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Address
-                                </label>
-                                <textarea name="address" 
-                                          x-model="formData.address"
-                                          rows="3"
-                                          placeholder="Enter Address"
-                                          class="modal-input-premium"
-                                          :class="errors.address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">{{ old('address') }}</textarea>
-                                @error('address')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Aadhar Card --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-id-card mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Aadhar Card
-                                </label>
-                                <input type="file" 
-                                       name="aadhar_card" 
-                                       accept=".pdf,.jpg,.jpeg,.png"
-                                       @change="previewAadharCard($event)"
-                                       class="modal-input-premium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
-                                       :class="errors.aadhar_card ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('aadhar_card')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                                <template x-if="formData.aadhar_card_preview">
-                                    <div class="mt-2">
-                                        <img :src="formData.aadhar_card_preview" alt="Aadhar Card Preview" class="max-w-xs h-auto rounded shadow-sm border border-gray-200">
-                                    </div>
-                                </template>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Joining Date -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Joining Date <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="date" name="joining_date" x-model="formData.joining_date"
+                                @input="clearError('joining_date')"
+                                class="modal-input-premium !pr-10"
+                                :class="{'border-red-500 ring-red-500/10': errors.joining_date}">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <i class="fas fa-calendar-alt text-sm"></i>
                             </div>
                         </div>
+                        <template x-if="errors.joining_date">
+                            <p class="modal-error-message" x-text="errors.joining_date[0]"></p>
+                        </template>
+                    </div>
 
-                        {{-- Right Column --}}
-                        <div class="space-y-6">
-                            {{-- Joining Date --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-calendar-check mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Joining Date
-                                </label>
-                                <div class="relative">
-                                    <input type="date" 
-                                           name="joining_date" 
-                                           x-model="formData.joining_date"
-                                           value="{{ old('joining_date') }}"
-                                           class="modal-input-premium"
-                                           :class="errors.joining_date ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                </div>
-                                @error('joining_date')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
+                    <!-- Higher Qualification -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Higher Qualification</label>
+                        <div class="relative group">
+                            <select name="higher_qualification_id" x-model="formData.higher_qualification_id"
+                                @change="clearError('higher_qualification_id')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.higher_qualification_id}">
+                                <option value="">Select Qualification</option>
+                                @foreach($qualifications as $qualification)
+                                    <option value="{{ $qualification->id }}">{{ $qualification->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <template x-if="errors.higher_qualification_id">
+                            <p class="modal-error-message" x-text="errors.higher_qualification_id[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Teacher Assignment (Conditional) -->
+                <div x-show="isTeacher" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <!-- Class Assignment -->
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Class Assignment</label>
+                            <div class="relative group">
+                                <select name="class_id" id="class_id" x-model="formData.class_id"
+                                    @change="loadSections(); clearError('class_id')"
+                                    class="modal-input-premium" :disabled="!canSelectClass"
+                                    :class="{'border-red-500 ring-red-500/10': errors.class_id}">
+                                    <option value="">Select Class</option>
+                                    @foreach($classes as $class)
+                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
+                            <template x-if="errors.class_id">
+                                <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                            </template>
+                        </div>
 
-                            {{-- Section --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-layer-group mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Section
-                                </label>
-                                <select name="section_id" 
-                                        id="section_id"
-                                        x-model="formData.section_id"
-                                        :disabled="!canSelectSection"
-                                        :class="!canSelectSection ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60' : ''"
-                                        class="modal-input-premium"
-                                        :class="errors.section_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
+                        <!-- Section Assignment -->
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Section Assignment</label>
+                            <div class="relative group">
+                                <select name="section_id" id="section_id" x-model="formData.section_id"
+                                    @change="clearError('section_id')"
+                                    class="modal-input-premium" :disabled="!canSelectSection"
+                                    :class="{'border-red-500 ring-red-500/10': errors.section_id}">
                                     <option value="">Select Section</option>
                                     <template x-for="section in sections" :key="section.id">
                                         <option :value="section.id" x-text="section.name"></option>
                                     </template>
                                 </select>
-                                @error('section_id')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
                             </div>
-
-                            {{-- Email ID --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-at mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Email ID
-                                </label>
-                                <input type="email" 
-                                       name="email" 
-                                       x-model="formData.email"
-                                       value="{{ old('email') }}"
-                                       placeholder="Enter Email Id"
-                                       class="modal-input-premium"
-                                       :class="errors.email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('email')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Aadhar No --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-barcode mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Aadhar No
-                                </label>
-                                <input type="text" 
-                                       name="aadhar_no" 
-                                       x-model="formData.aadhar_no"
-                                       value="{{ old('aadhar_no') }}"
-                                       placeholder="Enter Aadhar No"
-                                       class="modal-input-premium"
-                                       :class="errors.aadhar_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('aadhar_no')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Higher Qualification --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-graduation-cap mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Higher Qualification
-                                </label>
-                                <select name="higher_qualification_id" 
-                                        x-model="formData.higher_qualification_id"
-                                        class="modal-input-premium"
-                                        :class="errors.higher_qualification_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                    <option value="">Select Higher Qualification</option>
-                                    @foreach($qualifications as $qualification)
-                                        <option value="{{ $qualification->id }}" {{ old('higher_qualification_id') == $qualification->id ? 'selected' : '' }}>
-                                            {{ $qualification->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('higher_qualification_id')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Previous School / Company Name --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-building-columns mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Previous School / Company Name
-                                </label>
-                                <input type="text" 
-                                       name="previous_school_company_name" 
-                                       x-model="formData.previous_school_company_name"
-                                       value="{{ old('previous_school_company_name') }}"
-                                       placeholder="Enter Previous School / Company Name"
-                                       class="modal-input-premium"
-                                       :class="errors.previous_school_company_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('previous_school_company_name')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Current Salary --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-money-bill-wave mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Current Salary (Month)
-                                </label>
-                                <input type="number" 
-                                       name="current_salary" 
-                                       x-model="formData.current_salary"
-                                       value="{{ old('current_salary') }}"
-                                       placeholder="Enter current Salary (Month)"
-                                       step="0.01"
-                                       min="0"
-                                       class="modal-input-premium"
-                                       :class="errors.current_salary ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('current_salary')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Select State --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-map mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Select State
-                                </label>
-                                <select name="state_id" 
-                                        x-model="formData.state_id"
-                                        class="modal-input-premium"
-                                        :class="errors.state_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''"
-                                        data-state-select="true">
-                                    <option value="">Select State</option>
-                                </select>
-                                @error('state_id')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Zip code --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-location-dot mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Zip code
-                                </label>
-                                <input type="text" 
-                                       name="zip_code" 
-                                       x-model="formData.zip_code"
-                                       value="{{ old('zip_code') }}"
-                                       placeholder="zip code"
-                                       class="modal-input-premium"
-                                       :class="errors.zip_code ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('zip_code')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Staff Image --}}
-                            <div class="group">
-                                <label class="modal-label-premium group-focus-within:text-emerald-500 transition-colors duration-200">
-                                    <i class="fas fa-image mr-2 text-gray-400 group-focus-within:text-emerald-500"></i>Staff Image
-                                </label>
-                                <input type="file" 
-                                       name="staff_image" 
-                                       accept=".jpg,.jpeg,.png"
-                                       @change="previewStaffImage($event)"
-                                       class="modal-input-premium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
-                                       :class="errors.staff_image ? 'border-red-500 ring-red-500/5 bg-red-50/20' : ''">
-                                @error('staff_image')
-                                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
-                                @enderror
-                                <template x-if="formData.staff_image_preview">
-                                    <div class="mt-2">
-                                        <img :src="formData.staff_image_preview" alt="Staff Image Preview" class="max-w-xs h-auto rounded shadow-sm border border-gray-200">
-                                    </div>
-                                </template>
-                            </div>
+                            <template x-if="errors.section_id">
+                                <p class="modal-error-message" x-text="errors.section_id[0]"></p>
+                            </template>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Modal Footer --}}
-            <div class="flex items-center justify-center gap-4">
-                <button type="button" @click="closeModal()"
-                        class="px-8 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-semibold">
-                    Cancel
-                </button>
-                <button type="submit"
-                        class="px-8 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors font-semibold shadow-md">
-                    <span x-text="editMode ? 'Update' : 'Submit'"></span>
-                </button>
-            </div>
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Total Experience -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Total Experience (Years)</label>
+                        <div class="relative group">
+                            <input type="number" name="total_experience" x-model="formData.total_experience"
+                                @input="clearError('total_experience')" min="0" placeholder="0"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.total_experience}">
+                        </div>
+                        <template x-if="errors.total_experience">
+                            <p class="modal-error-message" x-text="errors.total_experience[0]"></p>
+                        </template>
+                    </div>
+
+                    <!-- Previous Institution -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Previous Institution / Company</label>
+                        <div class="relative group">
+                            <input type="text" name="previous_school_company_name" x-model="formData.previous_school_company_name"
+                                @input="clearError('previous_school_company_name')" placeholder="Name of last employer"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.previous_school_company_name}">
+                        </div>
+                        <template x-if="errors.previous_school_company_name">
+                            <p class="modal-error-message" x-text="errors.previous_school_company_name[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Previous Salary -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Previous Salary (Monthly)</label>
+                        <div class="relative group">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm pointer-events-none">₹</span>
+                            <input type="number" name="previous_school_salary" x-model="formData.previous_school_salary"
+                                @input="clearError('previous_school_salary')" step="0.01" min="0" placeholder="0.00"
+                                class="modal-input-premium !pr-8" :class="{'border-red-500 ring-red-500/10': errors.previous_school_salary}">
+                        </div>
+                        <template x-if="errors.previous_school_salary">
+                            <p class="modal-error-message" x-text="errors.previous_school_salary[0]"></p>
+                        </template>
+                    </div>
+
+                    <!-- Current Salary -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Current Salary (Monthly) <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm pointer-events-none">₹</span>
+                            <input type="number" name="current_salary" x-model="formData.current_salary"
+                                @input="clearError('current_salary')" step="0.01" min="0" placeholder="0.00"
+                                class="modal-input-premium !pr-8" :class="{'border-red-500 ring-red-500/10': errors.current_salary}">
+                        </div>
+                        <template x-if="errors.current_salary">
+                            <p class="modal-error-message" x-text="errors.current_salary[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-6 mb-6">
+                    <!-- Country -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Country</label>
+                        <div class="relative group">
+                            <select name="country_id" x-model="formData.country_id" @change="clearError('country_id')"
+                                class="modal-input-premium" data-location-cascade="true" data-country-select="true"
+                                :class="{'border-red-500 ring-red-500/10': errors.country_id}">
+                                <option value="">Select Country</option>
+                                @foreach($countries as $country)
+                                    <option value="{{ $country->id }}">{{ $country->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <template x-if="errors.country_id">
+                            <p class="modal-error-message" x-text="errors.country_id[0]"></p>
+                        </template>
+                    </div>
+
+                    <!-- State -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">State</label>
+                        <div class="relative group">
+                            <select name="state_id" x-model="formData.state_id" @change="clearError('state_id')"
+                                class="modal-input-premium" data-state-select="true"
+                                :class="{'border-red-500 ring-red-500/10': errors.state_id}">
+                                <option value="">Select State</option>
+                            </select>
+                        </div>
+                        <template x-if="errors.state_id">
+                            <p class="modal-error-message" x-text="errors.state_id[0]"></p>
+                        </template>
+                    </div>
+
+                    <!-- City -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">City</label>
+                        <div class="relative group">
+                            <select name="city_id" x-model="formData.city_id" @change="clearError('city_id')"
+                                class="modal-input-premium" data-city-select="true"
+                                :class="{'border-red-500 ring-red-500/10': errors.city_id}">
+                                <option value="">Select City</option>
+                            </select>
+                        </div>
+                        <template x-if="errors.city_id">
+                            <p class="modal-error-message" x-text="errors.city_id[0]"></p>
+                        </template>
+                    </div>
+
+                    <!-- Zip Code -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Zip Code</label>
+                        <div class="relative group">
+                            <input type="text" name="zip_code" x-model="formData.zip_code"
+                                @input="clearError('zip_code')" placeholder="PIN / ZIP"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.zip_code}">
+                        </div>
+                        <template x-if="errors.zip_code">
+                            <p class="modal-error-message" x-text="errors.zip_code[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Permanent Address</label>
+                    <div class="relative group">
+                        <textarea name="address" x-model="formData.address"
+                            @input="clearError('address')" rows="2" placeholder="House no, Street, Landmark..."
+                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.address}"></textarea>
+                    </div>
+                    <template x-if="errors.address">
+                        <p class="modal-error-message" x-text="errors.address[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Aadhar Number -->
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Aadhar Card Number</label>
+                    <div class="relative group">
+                        <input type="text" name="aadhar_no" x-model="formData.aadhar_no"
+                            @input="clearError('aadhar_no')" placeholder="12-digit Aadhar number"
+                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.aadhar_no}">
+                    </div>
+                    <template x-if="errors.aadhar_no">
+                        <p class="modal-error-message" x-text="errors.aadhar_no[0]"></p>
+                    </template>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <!-- Aadhar Card Upload -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Aadhar Card Document</label>
+                        <div class="relative group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-20 h-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                                    <img :src="formData.aadhar_card_preview" x-show="formData.aadhar_card_preview" class="w-full h-full object-cover">
+                                    <i x-show="!formData.aadhar_card_preview" class="fas fa-id-card text-xl text-slate-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm">
+                                        <i class="fas fa-upload mr-2 text-slate-400"></i> Choose File
+                                        <input type="file" x-ref="aadharCardInput" accept=".pdf,.jpg,.jpeg,.png"
+                                            @change="previewAadharCard($event); clearError('aadhar_card')" class="hidden">
+                                    </label>
+                                    <p class="text-[10px] text-slate-400 mt-1">PDF, JPG, PNG (max 2MB)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <template x-if="errors.aadhar_card">
+                            <p class="modal-error-message" x-text="errors.aadhar_card[0]"></p>
+                        </template>
+                    </div>
+
+                    <!-- Staff Image Upload -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Staff Photograph</label>
+                        <div class="relative group">
+                            <div class="flex items-center gap-4">
+                                <div class="w-20 h-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                                    <img :src="formData.staff_image_preview" x-show="formData.staff_image_preview" class="w-full h-full object-cover">
+                                    <i x-show="!formData.staff_image_preview" class="fas fa-camera text-xl text-slate-300"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm">
+                                        <i class="fas fa-upload mr-2 text-slate-400"></i> Choose File
+                                        <input type="file" x-ref="staffImageInput" accept=".jpg,.jpeg,.png"
+                                            @change="previewStaffImage($event); clearError('staff_image')" class="hidden">
+                                    </label>
+                                    <p class="text-[10px] text-slate-400 mt-1">JPG, PNG (max 2MB)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <template x-if="errors.staff_image">
+                            <p class="modal-error-message" x-text="errors.staff_image[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Notice Card (same style as Academic Year toggle card) -->
+                <div class="mb-8 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-900 leading-tight">Procedural Audit Compliance</span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">Ensure all salary and qualification data is verified against physical documentation.</span>
+                    </div>
+                    <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-shield-check text-indigo-600 text-sm"></i>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'staff-modal')" class="btn-premium-cancel px-10">
+                        Cancel
+                    </button>
+                    <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
+                        <template x-if="submitting">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                        </template>
+                        <span x-text="editMode ? 'Update Record' : 'Register Staff'"></span>
+                    </button>
+                </x-slot>
         </form>
     </x-modal>
+
+    {{-- Delete Confirmation Modal --}}
+    <x-confirm-modal />
+</div>
 
 @push('scripts')
 <script>
@@ -596,17 +598,11 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('staffManagement', () => ({
         showModal: false,
         editMode: false,
+        submitting: false,
         staffId: null,
         sections: [],
-        get isTeacher() {
-            return this.formData.post == '2'; // Teacher enum value
-        },
-        get canSelectClass() {
-            return this.isTeacher;
-        },
-        get canSelectSection() {
-            return this.isTeacher && !!this.formData.class_id;
-        },
+        errors: {},
+        
         formData: {
             post: '',
             class_id: '',
@@ -630,140 +626,151 @@ document.addEventListener('alpine:init', () => {
             higher_qualification_id: '',
             previous_school_company_name: '',
         },
+
+        get isTeacher() {
+            return String(this.formData.post) === '2';
+        },
+        get canSelectClass() {
+            return this.isTeacher;
+        },
+        get canSelectSection() {
+            return this.isTeacher && !!this.formData.class_id;
+        },
         
         init() {
             window.addEventListener('open-edit-staff', (e) => this.openEditModal(e.detail));
             window.addEventListener('open-delete-staff', (e) => this.confirmDelete(e.detail));
 
-            // Watch for post changes to enable/disable class and section
-            this.$watch('formData.post', (newValue, oldValue) => {
-                if (newValue != '2') { // Not Teacher
-                    // Clear class and section when not teacher
+            this.$watch('formData.post', (newValue) => {
+                if (String(newValue) !== '2') {
                     this.formData.class_id = '';
                     this.formData.section_id = '';
                     this.sections = [];
                 }
-                // Update Select2 disabled state
-                this.$nextTick(() => {
-                    this.updateSelect2DisabledState();
-                });
+                this.$nextTick(() => this.updateSelect2DisabledState());
             });
-            
-            // Watch for isTeacher computed property changes
-            this.$watch('isTeacher', (newValue) => {
-                this.$nextTick(() => {
-                    this.updateSelect2DisabledState();
-                });
-            });
-            
-            // Watch for canSelectClass changes
-            this.$watch('canSelectClass', (newValue) => {
-                this.$nextTick(() => {
-                    this.updateSelect2DisabledState();
-                });
-            });
-            
-            // Watch for canSelectSection changes
-            this.$watch('canSelectSection', (newValue) => {
-                this.$nextTick(() => {
-                    this.updateSelect2DisabledState();
-                });
-            });
-            
-            // Watch for class_id changes to update section state
+
             this.$watch('formData.class_id', (newValue, oldValue) => {
-                // Clear section when class changes
                 if (newValue !== oldValue) {
                     this.formData.section_id = '';
                 }
-                this.$nextTick(() => {
-                    this.updateSelect2DisabledState();
-                });
+                this.$nextTick(() => this.updateSelect2DisabledState());
             });
             
-            // Check if there are validation errors and reopen modal with old data
-            @if($errors->any())
-                this.editMode = {{ old('_method') === 'PUT' ? 'true' : 'false' }};
-                this.staffId = '{{ old('staff_id') }}';
-                this.formData = {
-                    post: '{{ old('post') }}',
-                    class_id: '{{ old('class_id') }}',
-                    section_id: '{{ old('section_id') }}',
-                    name: '{{ old('name') }}',
-                    mobile: '{{ old('mobile') }}',
-                    email: '{{ old('email') }}',
-                    gender: '{{ old('gender') }}',
-                    total_experience: '{{ old('total_experience') }}',
-                    previous_school_salary: '{{ old('previous_school_salary') }}',
-                    current_salary: '{{ old('current_salary') }}',
-                    country_id: '{{ old('country_id') }}',
-                    state_id: '{{ old('state_id') }}',
-                    city_id: '{{ old('city_id') }}',
-                    zip_code: '{{ old('zip_code') }}',
-                    address: '{{ old('address') }}',
-                    aadhar_no: '{{ old('aadhar_no') }}',
-                    joining_date: '{{ old('joining_date') }}',
-                    higher_qualification_id: '{{ old('higher_qualification_id') }}',
-                    previous_school_company_name: '{{ old('previous_school_company_name') }}',
-                };
-                // Load sections if class is selected and is teacher
-                if (this.formData.class_id && this.isTeacher) {
-                    this.loadSections();
-                }
-                this.$nextTick(() => {
-                    this.updateSelect2DisabledState();
-                    this.$dispatch('open-modal', 'staff-modal');
-                });
-            @endif
-            
-            // Sync Select2 with Alpine.js formData
+            // Sync Select2 with Alpine.js
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {
-                    // All select elements in the form
-                    $('select[name="post"], select[name="class_id"], select[name="section_id"], select[name="gender"], select[name="country_id"], select[name="state_id"], select[name="city_id"], select[name="higher_qualification_id"]').on('change', (e) => {
+                    const selectors = 'select[name="post"], select[name="class_id"], select[name="section_id"], select[name="gender"], select[name="country_id"], select[name="state_id"], select[name="city_id"], select[name="higher_qualification_id"]';
+                    $(selectors).on('change', (e) => {
                         const field = e.target.getAttribute('name');
                         if (field && this.formData.hasOwnProperty(field)) {
                             this.formData[field] = e.target.value;
-                            
-                            // Specific logic for class_id to load sections
-                            if (field === 'class_id') {
-                                this.loadSections();
-                            }
+                            this.clearError(field);
+                            if (field === 'class_id') this.loadSections();
                         }
                     });
                 }
             });
         },
+
+        // ── AJAX Form Submission (Academic Year Pattern) ──
+        async submitForm() {
+            if (this.submitting) return;
+            this.submitting = true;
+            this.errors = {};
+
+            const url = this.editMode
+                ? `/receptionist/staff/${this.staffId}`
+                : '{{ route("receptionist.staff.store") }}';
+
+            try {
+                // Use FormData because this form includes file uploads
+                const fd = new FormData();
+                fd.append('_token', '{{ csrf_token() }}');
+                if (this.editMode) fd.append('_method', 'PUT');
+
+                // Append all text fields
+                const fields = [
+                    'post', 'class_id', 'section_id', 'name', 'mobile', 'email',
+                    'gender', 'total_experience', 'previous_school_salary', 'current_salary',
+                    'country_id', 'state_id', 'city_id', 'zip_code', 'address',
+                    'aadhar_no', 'joining_date', 'higher_qualification_id', 'previous_school_company_name'
+                ];
+                fields.forEach(f => {
+                    if (this.formData[f] !== '' && this.formData[f] !== null && this.formData[f] !== undefined) {
+                        fd.append(f, this.formData[f]);
+                    }
+                });
+
+                // Append file inputs (if user selected new files)
+                const aadharInput = this.$refs.aadharCardInput;
+                if (aadharInput && aadharInput.files.length > 0) {
+                    fd.append('aadhar_card', aadharInput.files[0]);
+                }
+                const staffImageInput = this.$refs.staffImageInput;
+                if (staffImageInput && staffImageInput.files.length > 0) {
+                    fd.append('staff_image', staffImageInput.files[0]);
+                }
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: fd
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message
+                        });
+                    }
+                    setTimeout(() => window.location.reload(), 800);
+                } else if (response.status === 422) {
+                    this.errors = result.errors || {};
+                } else {
+                    throw new Error(result.message || 'Something went wrong');
+                }
+            } catch (error) {
+                if (window.Toast) {
+                    window.Toast.fire({
+                        icon: 'error',
+                        title: error.message
+                    });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                delete this.errors[field];
+            }
+        },
         
         updateSelect2DisabledState() {
-            // Update Select2 disabled state for class and section
-            if (typeof $ !== 'undefined') {
-                const $classSelect = $('#class_id');
-                const $sectionSelect = $('#section_id');
-                
-                // Update class select disabled state
-                if ($classSelect.length) {
-                    const shouldDisableClass = !this.canSelectClass;
-                    $classSelect.prop('disabled', shouldDisableClass);
-                    if ($classSelect.hasClass('select2-hidden-accessible')) {
-                        $classSelect.trigger('change.select2');
-                    }
-                }
-                
-                // Update section select disabled state
-                if ($sectionSelect.length) {
-                    const shouldDisableSection = !this.canSelectSection;
-                    $sectionSelect.prop('disabled', shouldDisableSection);
-                    if ($sectionSelect.hasClass('select2-hidden-accessible')) {
-                        $sectionSelect.trigger('change.select2');
-                    }
-                }
+            if (typeof $ === 'undefined') return;
+            const $classSelect = $('#class_id');
+            const $sectionSelect = $('#section_id');
+            
+            if ($classSelect.length) {
+                $classSelect.prop('disabled', !this.canSelectClass).trigger('change.select2');
+            }
+            if ($sectionSelect.length) {
+                $sectionSelect.prop('disabled', !this.canSelectSection).trigger('change.select2');
             }
         },
         
         openAddModal() {
             this.editMode = false;
             this.staffId = null;
+            this.errors = {};
             this.resetForm();
             this.$nextTick(() => {
                 this.updateSelect2DisabledState();
@@ -774,6 +781,7 @@ document.addEventListener('alpine:init', () => {
         openEditModal(staff) {
             this.editMode = true;
             this.staffId = staff.id;
+            this.errors = {};
             this.formData = {
                 post: staff.post ? String(staff.post) : '',
                 class_id: staff.class_id ? String(staff.class_id) : '',
@@ -794,35 +802,43 @@ document.addEventListener('alpine:init', () => {
                 joining_date: staff.joining_date || '',
                 higher_qualification_id: staff.higher_qualification_id ? String(staff.higher_qualification_id) : '',
                 previous_school_company_name: staff.previous_school_company_name || '',
+                aadhar_card_preview: staff.aadhar_card ? `/storage/${staff.aadhar_card}` : '',
+                staff_image_preview: staff.staff_image ? `/storage/${staff.staff_image}` : '',
             };
             
-            // Load sections if class is selected and is teacher
-            if (this.formData.class_id && this.isTeacher) {
-                this.loadSections();
-            }
+            if (this.formData.class_id && this.isTeacher) this.loadSections();
 
-            // Sync Select2 display
             this.$nextTick(() => {
+                this.$dispatch('open-modal', 'staff-modal');
                 setTimeout(() => {
                     if (typeof $ !== 'undefined') {
-                        const fields = ['post', 'class_id', 'section_id', 'gender', 'country_id', 'state_id', 'city_id', 'higher_qualification_id'];
-                        fields.forEach(field => {
-                            if (this.formData[field]) {
-                                $(`select[name="${field}"]`).val(this.formData[field]).trigger('change');
-                            }
-                        });
-                        this.updateSelect2DisabledState();
+                        const selectFields = ['post', 'class_id', 'gender', 'country_id', 'higher_qualification_id'];
+                        selectFields.forEach(f => $(`select[name="${f}"]`).val(this.formData[f]).trigger('change'));
+                        
+                        // Handle Location Cascade
+                        if (window.locationCascade && this.formData.country_id) {
+                            window.locationCascade.loadStates(document.querySelector('select[name="state_id"]'), this.formData.country_id, this.formData.state_id);
+                            setTimeout(() => {
+                                if (this.formData.state_id) {
+                                    window.locationCascade.loadCities(document.querySelector('select[name="city_id"]'), this.formData.state_id, this.formData.city_id);
+                                }
+                            }, 300);
+                        }
+                        
+                        if (this.formData.section_id) {
+                            setTimeout(() => $('#section_id').val(this.formData.section_id).trigger('change'), 400);
+                        }
                     }
-                }, 150);
+                }, 100);
             });
-            
-            confirmDelete(staff) {
+        },
+        
+        async confirmDelete(staff) {
             window.dispatchEvent(new CustomEvent('open-confirm-modal', {
                 detail: {
                     title: 'Delete Staff Record',
-                    message: `Are you sure you want to delete the staff record for "${staff.name}"? This action cannot be undone.`,
+                    message: `Are you sure you want to delete the profile for "${staff.name}"? This action is permanent.`,
                     callback: async () => {
-                        this.submitting = true;
                         try {
                             const response = await fetch(`/receptionist/staff/${staff.id}`, {
                                 method: 'POST',
@@ -840,216 +856,69 @@ document.addEventListener('alpine:init', () => {
                                 if (window.Toast) {
                                     window.Toast.fire({ icon: 'success', title: result.message });
                                 }
-                                setTimeout(() => window.location.reload(), 1000);
+                                setTimeout(() => window.location.reload(), 800);
                             } else {
-                                throw new Error(result.message || 'Deletion failed');
+                                throw new Error(result.message || 'Delete failed');
                             }
                         } catch (error) {
                             if (window.Toast) {
                                 window.Toast.fire({ icon: 'error', title: error.message });
                             }
-                        } finally {
-                            this.submitting = false;
                         }
                     }
                 }
             }));
         },
-            if (staff.staff_image) {
-                this.formData.staff_image_preview = `/storage/${staff.staff_image}`;
-            }
-            
-            this.$nextTick(() => {
-                this.updateSelect2DisabledState();
-                this.$dispatch('open-modal', 'staff-modal');
-                
-                // Update Select2 values after modal opens
-                setTimeout(() => {
-                    if (typeof $ !== 'undefined') {
-                        // Update all Select2 dropdowns with the form data values
-                        $('#post').val(this.formData.post).trigger('change');
-                        $('#class_id').val(this.formData.class_id).trigger('change');
-                        $('select[name="gender"]').val(this.formData.gender).trigger('change');
-                        $('select[name="higher_qualification_id"]').val(this.formData.higher_qualification_id).trigger('change');
-                        
-                        // Handle Location Cascade manually for Edit Mode
-                        const countrySelect = document.querySelector('select[name="country_id"]');
-                        const stateSelect = document.querySelector('select[name="state_id"]');
-                        const citySelect = document.querySelector('select[name="city_id"]');
 
-                        if (window.locationCascade && this.formData.country_id) {
-                            window.locationCascade.setValue(countrySelect, this.formData.country_id);
-                            
-                            if (this.formData.state_id) {
-                                window.locationCascade.loadStates(stateSelect, this.formData.country_id, this.formData.state_id);
-                                
-                                if (this.formData.city_id) {
-                                    window.locationCascade.loadCities(citySelect, this.formData.state_id, this.formData.city_id);
-                                }
-                            } else {
-                                // Just trigger change to load states if no state selected
-                                window.locationCascade.triggerChange(countrySelect);
-                            }
-                        } else {
-                             $('select[name="country_id"]').val(this.formData.country_id).trigger('change');
-                        }
-                        
-                        // Update section after a slight delay to ensure sections are loaded
-                        if (this.formData.section_id) {
-                            setTimeout(() => {
-                                $('#section_id').val(this.formData.section_id).trigger('change');
-                            }, 200);
-                        }
-                    }
-                }, 100);
-            });
-        },
-        
         loadSections() {
-            const classId = this.formData.class_id;
-            // Store current section_id before clearing
-            const currentSectionId = this.formData.section_id;
-            this.sections = [];
-            this.formData.section_id = '';
-            
-            if (classId && this.isTeacher) {
-                fetch(`/receptionist/staff/get-sections/${classId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        this.sections = data.sections || [];
-                        // Restore section_id if it was set and exists in the loaded sections
-                        if (currentSectionId && this.sections.find(s => s.id == currentSectionId)) {
-                            this.formData.section_id = currentSectionId;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading sections:', error);
-                    });
-            }
+            if (!this.formData.class_id || !this.isTeacher) return;
+            fetch(`/receptionist/staff/get-sections/${this.formData.class_id}`)
+                .then(res => res.json())
+                .then(data => { this.sections = data.sections || []; })
+                .catch(err => console.error('Error loading sections:', err));
         },
         
-        previewAadharCard(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.formData.aadhar_card_preview = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
+        previewAadharCard(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => this.formData.aadhar_card_preview = ev.target.result;
+            reader.readAsDataURL(file);
         },
         
-        previewStaffImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.formData.staff_image_preview = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
+        previewStaffImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => this.formData.staff_image_preview = ev.target.result;
+            reader.readAsDataURL(file);
         },
         
         resetForm() {
             this.formData = {
-                post: '',
-                class_id: '',
-                section_id: '',
-                name: '',
-                mobile: '',
-                email: '',
-                gender: '',
-                total_experience: '',
-                previous_school_salary: '',
-                current_salary: '',
-                country_id: '',
-                state_id: '',
-                city_id: '',
-                zip_code: '',
-                address: '',
-                aadhar_no: '',
-                aadhar_card_preview: '',
-                staff_image_preview: '',
-                joining_date: '',
-                higher_qualification_id: '',
-                previous_school_company_name: '',
+                post: '', class_id: '', section_id: '', name: '', mobile: '', email: '', gender: '',
+                total_experience: '', previous_school_salary: '', current_salary: '', country_id: '',
+                state_id: '', city_id: '', zip_code: '', address: '', aadhar_no: '',
+                aadhar_card_preview: '', staff_image_preview: '', joining_date: '',
+                higher_qualification_id: '', previous_school_company_name: '',
             };
             this.sections = [];
+            this.errors = {};
             
-            // Reset Select2 dropdowns
-            this.$nextTick(() => {
-                if (typeof $ !== 'undefined') {
-                    $('#post').val('').trigger('change');
-                    $('#class_id').val('').trigger('change');
-                    $('#section_id').val('').trigger('change');
-                    $('select[name="gender"]').val('').trigger('change');
-                    $('select[name="country_id"]').val('').trigger('change');
-                    $('select[name="higher_qualification_id"]').val('').trigger('change');
-                }
-            });
+            // Reset file inputs
+            if (this.$refs.aadharCardInput) this.$refs.aadharCardInput.value = '';
+            if (this.$refs.staffImageInput) this.$refs.staffImageInput.value = '';
+            
+            if (typeof $ !== 'undefined') {
+                $('select').val('').trigger('change');
+            }
         },
         
         closeModal() {
             this.$dispatch('close-modal', 'staff-modal');
             this.resetForm();
-            this.editMode = false;
-            this.staffId = null;
         }
     }));
-});
-
-// Global function to open edit modal (called from table action buttons)
-function openEditModal(staff) {
-    console.log('openEditModal called with staff:', staff);
-    const element = document.querySelector('[x-data*="staffManagement"]');
-    console.log('Found element:', element);
-    
-    if (!element) {
-        console.error('Could not find staffManagement element');
-        return;
-    }
-    
-    const component = Alpine.$data(element);
-    console.log('Found component:', component);
-    
-    if (component && typeof component.openEditModal === 'function') {
-        component.openEditModal(staff);
-    } else {
-        console.error('Component or openEditModal function not found');
-    }
-}
-
-// Global script to hide validation errors when user starts typing or selecting
-document.addEventListener('DOMContentLoaded', function() {
-    const clearFieldError = function(field) {
-        field.classList.remove('border-red-500');
-        let errorElement = field.nextElementSibling;
-        if (errorElement && errorElement.classList.contains('text-red-500')) {
-            errorElement.remove();
-        }
-        const parentDiv = field.closest('div');
-        if (parentDiv) {
-            const errorInParent = parentDiv.querySelector('p.text-red-500');
-            if (errorInParent) {
-                errorInParent.remove();
-            }
-        }
-    };
-    
-    const modal = document.querySelector('[x-data*="staffManagement"]');
-    if (modal) {
-        modal.addEventListener('input', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                clearFieldError(e.target);
-            }
-        });
-        
-        modal.addEventListener('change', function(e) {
-            if (e.target.tagName === 'SELECT') {
-                clearFieldError(e.target);
-            }
-        });
-    }
 });
 </script>
 @endpush

@@ -7,91 +7,91 @@
 @section('content')
     <div class="space-y-6" x-data="vehicleManagement" x-init="init()">
         {{-- Vehicle Statistics --}}
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Fleet</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['total'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Fleet</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total'] }}</p>
                     </div>
-                    <div class="bg-blue-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-bus text-blue-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-bus text-blue-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Diesel Units</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['diesel'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Diesel Units</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['diesel'] }}</p>
                     </div>
-                    <div class="bg-emerald-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-gas-pump text-emerald-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-gas-pump text-emerald-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Petrol Units</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['petrol'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Petrol Units</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['petrol'] }}</p>
                     </div>
-                    <div class="bg-amber-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-gas-pump text-amber-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-gas-pump text-amber-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">CNG Core</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['cng'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">CNG Core</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['cng'] }}</p>
                     </div>
-                    <div class="bg-purple-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-charging-station text-purple-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-charging-station text-purple-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-teal-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Electric EV</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['electric'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Electric EV</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['electric'] }}</p>
                     </div>
-                    <div class="bg-teal-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-bolt text-teal-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-bolt text-teal-600 text-xl"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Page Header --}}
-        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="bg-gradient-to-br from-teal-500 to-emerald-600 p-3 rounded-2xl shadow-lg shadow-teal-100">
-                        <i class="fas fa-bus-alt text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-black text-gray-800 tracking-tight">Vehicle Management</h2>
-                        <p class="text-sm text-gray-500 font-medium">Coordinate and monitor institutional fleet logistics</p>
-                    </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-bus-alt text-xs"></i>
+                        </div>
+                        Vehicle Management
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Coordinate and monitor institutional fleet logistics.</p>
                 </div>
-                <div class="flex flex-wrap gap-3">
-                    <button @click="$dispatch('open-add-vehicle')"
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-teal-100 group">
-                        <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
+                <div class="flex flex-wrap gap-2">
+                    <button @click="openAddModal()"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-plus mr-2"></i>
                         Register New Vehicle
                     </button>
-                    <button
-                        class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                        <i class="fas fa-file-excel mr-2 text-emerald-500"></i>
+                    <a href="{{ route('receptionist.vehicles.export') }}"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-file-excel mr-2 text-xs"></i>
                         Fleet Export
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -246,172 +246,139 @@
         </x-data-table>
 
         {{-- Add/Edit Vehicle Modal --}}
-        <x-modal name="vehicle-modal" alpineTitle="editMode ? 'Modify Vehicle Specification' : 'Register New Fleet Asset'"
-            maxWidth="5xl">
-            <form @submit.prevent="save" method="POST" class="p-0 relative" novalidate>
+        <x-modal name="vehicle-modal" alpineTitle="editMode ? 'Edit Vehicle Specification' : 'Register New Vehicle'"
+            maxWidth="3xl">
+            <form @submit.prevent="save" id="vehicleForm" method="POST" class="space-y-6" novalidate>
                 @csrf
                 <template x-if="editMode">
                     <input type="hidden" name="_method" value="PUT">
                 </template>
-
-                <div class="p-8 space-y-8">
                     {{-- Core Specifications --}}
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
-                                <i class="fas fa-bus text-sm"></i>
-                            </div>
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Primary Fleet Identity</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Registration No <span class="text-red-600 font-bold">*</span></label>
+                            <input type="text" name="registration_no" x-model="formData.registration_no"
+                                placeholder="e.g., DL-1C-AB-1234" @input="clearError('registration_no')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.registration_no}">
+                            <template x-if="errors.registration_no">
+                                <p class="modal-error-message" x-text="errors.registration_no[0]"></p>
+                            </template>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Registration No <span class="text-red-600 font-bold">*</span></label>
-                                <div class="relative group">
-                                    <input type="text" name="registration_no" x-model="formData.registration_no"
-                                        placeholder="e.g., DL-1C-AB-1234" @input="clearError('registration_no')"
-                                        class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.registration_no}">
-                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
-                                        <i class="fas fa-id-card text-[10px]"></i>
-                                    </div>
-                                </div>
-                                <template x-if="errors.registration_no">
-                                    <p class="modal-error-message" x-text="errors.registration_no[0]"></p>
-                                </template>
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Internal Vehicle No</label>
-                                <div class="relative group">
-                                    <input type="text" name="vehicle_no" x-model="formData.vehicle_no"
-                                        placeholder="Internal ID (Optional)" @input="clearError('vehicle_no')"
-                                        class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.vehicle_no}">
-                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
-                                        <i class="fas fa-hashtag text-[10px]"></i>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Propulsion / Fuel Type <span class="text-red-600 font-bold">*</span></label>
-                                <select name="fuel_type" x-model="formData.fuel_type" id="fuel_type"
-                                    @change="clearError('fuel_type')"
-                                    class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.fuel_type}">
-                                    <option value="">Select Propulsion</option>
-                                    @foreach(\App\Enums\FuelType::cases() as $fuel)
-                                        <option value="{{ $fuel->value }}">{{ $fuel->name }}</option>
-                                    @endforeach
-                                </select>
-                                <template x-if="errors.fuel_type">
-                                    <p class="modal-error-message" x-text="errors.fuel_type[0]"></p>
-                                </template>
-                            </div>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Internal Vehicle No</label>
+                            <input type="text" name="vehicle_no" x-model="formData.vehicle_no"
+                                placeholder="Internal ID (Optional)" @input="clearError('vehicle_no')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.vehicle_no}">
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Seating Capacity</label>
-                                <input type="number" name="capacity" x-model="formData.capacity"
-                                    placeholder="0" @input="clearError('capacity')"
-                                    class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.capacity}">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Initial Reading (KM)</label>
-                                <input type="number" name="initial_reading" x-model="formData.initial_reading"
-                                    placeholder="0" @input="clearError('initial_reading')"
-                                    class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.initial_reading}">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Engine Serial</label>
-                                <input type="text" name="engine_no" x-model="formData.engine_no"
-                                    placeholder="SN-XXXX" @input="clearError('engine_no')"
-                                    class="modal-input-premium">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Chassis Serial</label>
-                                <input type="text" name="chassis_no" x-model="formData.chassis_no"
-                                    placeholder="CS-XXXX" @input="clearError('chassis_no')"
-                                    class="modal-input-premium">
-                            </div>
-                        </div>
-                    </div>
-
-                    <hr class="border-slate-100">
-
-                    {{-- Technical Specifications --}}
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                                <i class="fas fa-microchip text-sm"></i>
-                            </div>
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Auxiliary & Tracking Metadata</h4>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Propulsion / Fuel Type <span class="text-red-600 font-bold">*</span></label>
+                            <select name="fuel_type" x-model="formData.fuel_type" id="fuel_type"
+                                @change="clearError('fuel_type')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.fuel_type}">
+                                <option value="">Select Propulsion</option>
+                                @foreach(\App\Enums\FuelType::cases() as $fuel)
+                                    <option value="{{ $fuel->value }}">{{ $fuel->name }}</option>
+                                @endforeach
+                            </select>
+                            <template x-if="errors.fuel_type">
+                                <p class="modal-error-message" x-text="errors.fuel_type[0]"></p>
+                            </template>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Vehicle Configuration</label>
-                                <select name="vehicle_type" x-model="formData.vehicle_type" id="vehicle_type"
-                                    class="modal-input-premium">
-                                    <option value="">Select Variant</option>
-                                    <option value="bus">School Bus</option>
-                                    <option value="van">Transport Van</option>
-                                    <option value="car">Staff Car</option>
-                                    <option value="truck">Utility Truck</option>
-                                </select>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Model / Year</label>
-                                <input type="text" name="model_no" x-model="formData.model_no"
-                                    placeholder="e.g. 2024 Turbo" class="modal-input-premium">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Purchase Matrix Date</label>
-                                <input type="date" name="date_of_purchase" x-model="formData.date_of_purchase"
-                                    class="modal-input-premium">
-                            </div>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Seating Capacity</label>
+                            <input type="number" name="capacity" x-model="formData.capacity"
+                                placeholder="0" @input="clearError('capacity')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.capacity}">
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">GPS IMEI Metadata</label>
-                                <input type="text" name="imei_gps_device" x-model="formData.imei_gps_device"
-                                    placeholder="Device Identifier" class="modal-input-premium">
-                            </div>
-                            <div class="md:col-span-2 space-y-2">
-                                <label class="modal-label-premium">Live Telemetry / Tracking URL</label>
-                                <input type="url" name="tracking_url" x-model="formData.tracking_url"
-                                    placeholder="https://" class="modal-input-premium">
-                            </div>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Initial Reading (KM)</label>
+                            <input type="number" name="initial_reading" x-model="formData.initial_reading"
+                                placeholder="0" @input="clearError('initial_reading')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.initial_reading}">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Engine Serial</label>
+                            <input type="text" name="engine_no" x-model="formData.engine_no"
+                                placeholder="SN-XXXX" @input="clearError('engine_no')"
+                                class="modal-input-premium">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Chassis Serial</label>
+                            <input type="text" name="chassis_no" x-model="formData.chassis_no"
+                                placeholder="CS-XXXX" @input="clearError('chassis_no')"
+                                class="modal-input-premium">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Vehicle Configuration</label>
+                            <select name="vehicle_type" x-model="formData.vehicle_type" id="vehicle_type"
+                                class="modal-input-premium">
+                                <option value="">Select Variant</option>
+                                <option value="bus">School Bus</option>
+                                <option value="van">Transport Van</option>
+                                <option value="car">Staff Car</option>
+                                <option value="truck">Utility Truck</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Model / Year</label>
+                            <input type="text" name="model_no" x-model="formData.model_no"
+                                placeholder="e.g. 2024 Turbo" class="modal-input-premium">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Purchase Date</label>
+                            <input type="date" name="date_of_purchase" x-model="formData.date_of_purchase"
+                                class="modal-input-premium">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">GPS IMEI Metadata</label>
+                            <input type="text" name="imei_gps_device" x-model="formData.imei_gps_device"
+                                placeholder="Device Identifier" class="modal-input-premium">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Tracking URL</label>
+                            <input type="url" name="tracking_url" x-model="formData.tracking_url"
+                                placeholder="https://" class="modal-input-premium">
                         </div>
                     </div>
 
                     {{-- Administrative Notice --}}
-                    <div class="bg-[#f0f9ff] border border-[#e0f2fe] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
+                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
                         <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                            <i class="fas fa-info-circle text-blue-600 text-sm"></i>
+                            <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-[13px] font-bold text-slate-900 leading-tight">Administrative Notice</span>
+                            <span class="text-sm font-bold text-slate-900 leading-tight">Administrative Notice</span>
                             <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                                Updating vehicle specifications will synchronize across all <span class="text-blue-600 italic underline decoration-blue-100">active route manifests</span> and transit logs.
+                                Updating vehicle specifications will synchronize across all <span class="text-indigo-600 font-bold underline decoration-indigo-200">active route manifests</span> and transit logs.
                             </p>
                         </div>
                     </div>
-                </div>
 
-                {{-- Modal Footer --}}
-                <x-slot name="footer">
-                    <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
-                        Discard Changes
-                    </button>
-                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[180px]">
-                        <template x-if="submitting">
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                        </template>
-                        <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Registry' : 'Establish Record')"></span>
-                    </button>
-                </x-slot>
             </form>
+            {{-- Modal Footer --}}
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
+                    Cancel
+                </button>
+                <button type="submit" form="vehicleForm" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                    </template>
+                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Create Vehicle')"></span>
+                </button>
+            </x-slot>
         </x-modal>
 
         <x-confirm-modal title="Permanently Remove Vehicle?"
@@ -559,7 +526,7 @@
                                 }
                             },
 
-                            openAddModal() {
+                             openAddModal() {
                                 this.editMode = false;
                                 this.vehicleId = null;
                                 this.formData = {

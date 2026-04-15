@@ -7,79 +7,79 @@
 @section('content')
     <div class="space-y-6" x-data="routeManagement" x-init="init()">
         {{-- Route Statistics --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Routes</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['total_routes'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Routes</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_routes'] }}</p>
                     </div>
-                    <div class="bg-indigo-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-route text-indigo-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-route text-blue-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Active Channels</p>
-                        <p class="text-2xl font-black text-emerald-600">{{ $stats['active_routes'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Active Channels</p>
+                        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ $stats['active_routes'] }}</p>
                     </div>
-                    <div class="bg-emerald-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-check-circle text-emerald-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-check-circle text-emerald-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Mapped Fleet</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['mapped_vehicles'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Mapped Fleet</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['mapped_vehicles'] }}</p>
                     </div>
-                    <div class="bg-blue-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-bus text-blue-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-bus text-amber-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Capacity</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['total_capacity'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Capacity</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_capacity'] }}</p>
                     </div>
-                    <div class="bg-amber-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-users text-amber-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-purple-600 text-xl"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Page Header --}}
-        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-2xl shadow-lg shadow-indigo-100">
-                        <i class="fas fa-map-marked-alt text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-black text-gray-800 tracking-tight">Route Manifest</h2>
-                        <p class="text-sm text-gray-500 font-medium">Define and manage institutional transit corridors</p>
-                    </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-route text-xs"></i>
+                        </div>
+                        Route Manifest
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Define and manage institutional transit corridors.</p>
                 </div>
-                <div class="flex flex-wrap gap-3">
-                    <button @click="$dispatch('open-add-route')"
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
-                        <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
+                <div class="flex flex-wrap gap-2">
+                    <button @click="openAddModal()"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-plus mr-2"></i>
                         Establish New Route
                     </button>
-                    <button
-                        class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                        <i class="fas fa-file-excel mr-2 text-emerald-500"></i>
+                    <a href="{{ route('receptionist.routes.export') }}"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-file-excel mr-2 text-xs"></i>
                         Route Export
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -149,24 +149,19 @@
         </x-data-table>
 
         {{-- Add/Edit Route Modal --}}
-        <x-modal name="route-modal" alpineTitle="editMode ? 'Modify Route Specification' : 'Establish New Transit Corridor'" maxWidth="xl">
-            <form @submit.prevent="save" method="POST" class="p-0 relative" novalidate>
+        <x-modal name="route-modal" alpineTitle="editMode ? 'Edit Transit Route' : 'Create Transit Route'" maxWidth="2xl">
+            <form @submit.prevent="save" id="routeForm" method="POST" class="space-y-6" novalidate>
                 @csrf
                 <template x-if="editMode">
                     <input type="hidden" name="_method" value="PUT">
                 </template>
-
-                <div class="p-8 space-y-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Route Designation / Name <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <input type="text" name="route_name" x-model="formData.route_name" placeholder="e.g. North Sector Express"
                                 @input="clearError('route_name')"
-                                class="modal-input-premium pr-10"
+                                class="modal-input-premium"
                                 :class="errors.route_name ? 'border-red-500 ring-red-500/10' : ''">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
-                                <i class="fas fa-route text-[10px]"></i>
-                            </div>
                         </div>
                         <template x-if="errors.route_name">
                             <p class="modal-error-message" x-text="errors.route_name[0]"></p>
@@ -214,32 +209,31 @@
                     </div>
 
                     {{-- Administrative Notice --}}
-                    <div class="bg-[#f5f3ff] border border-[#ddd6fe] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
+                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
                         <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
                             <i class="fas fa-network-wired text-indigo-600 text-sm"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-[13px] font-bold text-slate-900 leading-tight">Infrastructure Correlation</span>
+                            <span class="text-sm font-bold text-slate-900 leading-tight">Infrastructure Correlation</span>
                             <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                                Modifying route mapping will affect <span class="text-indigo-600 italic underline decoration-indigo-100">transit schedules</span> and student stop assignments globally.
+                                Modifying route mapping will affect <span class="text-indigo-600 font-bold underline decoration-indigo-200">transit schedules</span> and student stop assignments globally.
                             </p>
                         </div>
                     </div>
-                </div>
 
-                {{-- Modal Footer --}}
-                <x-slot name="footer">
-                    <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
-                        Discard
-                    </button>
-                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
-                        <template x-if="submitting">
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                        </template>
-                        <span x-text="submitting ? 'Syncing...' : (editMode ? 'Update Manifest' : 'Establish Route')"></span>
-                    </button>
-                </x-slot>
             </form>
+            {{-- Modal Footer --}}
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
+                    Cancel
+                </button>
+                <button type="submit" form="routeForm" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                    </template>
+                    <span x-text="submitting ? 'Syncing...' : (editMode ? 'Update Changes' : 'Create Route')"></span>
+                </button>
+            </x-slot>
         </x-modal>
 
         <x-confirm-modal title="Permanently Decommission Route?"

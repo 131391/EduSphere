@@ -4,101 +4,78 @@
 
 @section('content')
     <div class="space-y-6" x-data="transportAssignmentManagement()" x-init="init()">
-        <!-- Success Message -->
-
-        <!-- Error Banner -->
-        @if($errors->any())
-            <div id="error-banner" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
-                class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <strong class="font-bold">Please fix the following errors:</strong>
-                        <ul class="list-disc list-inside mt-1">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <button @click="show = false" class="absolute top-0 right-0 px-4 py-3">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        @endif
-
-    <div class="space-y-6" x-data="transportAssignmentManagement()" x-init="init()">
         {{-- Transport Assignment Statistics --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Assigned Registry</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['total_assigned'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Assigned Registry</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_assigned'] }}</p>
                     </div>
-                    <div class="bg-blue-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-users text-blue-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Network Utilization</p>
-                        <p class="text-2xl font-black text-emerald-600">{{ $stats['active_routes'] }} <span class="text-xs text-gray-400 uppercase">Routes</span></p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Network Utilization</p>
+                        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ $stats['active_routes'] }} <span class="text-sm text-gray-400 font-medium tracking-tight">Routes</span></p>
                     </div>
-                    <div class="bg-emerald-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-route text-emerald-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-route text-emerald-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Revenue Stream</p>
-                        <p class="text-2xl font-black text-gray-800">₹{{ number_format($stats['total_fees'], 0) }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Revenue Stream</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">₹{{ number_format($stats['total_fees'], 0) }}</p>
                     </div>
-                    <div class="bg-amber-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-wallet text-amber-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-wallet text-amber-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Operational Fleet</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['available_vehicles'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Operational Fleet</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['available_vehicles'] }}</p>
                     </div>
-                    <div class="bg-purple-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-bus text-purple-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-bus text-purple-600 text-xl"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Page Header --}}
-        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="bg-gradient-to-br from-teal-500 to-emerald-600 p-3 rounded-2xl shadow-lg shadow-teal-100">
-                        <i class="fas fa-link text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-black text-gray-800 tracking-tight">Transit Assignments</h2>
-                        <p class="text-sm text-gray-500 font-medium">Map student profiles to institutional network nodes</p>
-                    </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-link text-xs"></i>
+                        </div>
+                        Transit Assignments
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Map student profiles to institutional network nodes.</p>
                 </div>
-                <div class="flex flex-wrap gap-3">
-                    <button @click="$dispatch('open-add-transport-assignment')"
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-teal-100 group">
-                        <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
+                <div class="flex flex-wrap gap-2">
+                    <button @click="openAddModal()"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-plus mr-2"></i>
                         New Assignment
                     </button>
-                    <a href="{{ route('receptionist.transport-assignments.history') }}"
-                        class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                        <i class="fas fa-history mr-2 text-indigo-500"></i>
+                    <a href="{{ route('receptionist.transport-assign-history.index') }}"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-history mr-2 text-xs"></i>
                         Transit History
                     </a>
                 </div>
@@ -226,23 +203,15 @@
         </x-data-table>
 
         {{-- Add/Edit Transport Assignment Modal --}}
-        <x-modal name="assignment-modal" maxWidth="4xl"
-            alpineTitle="editMode ? 'Modify Student Transit Registry' : 'Initialize Transport Facility Mapping'">
-            <form @submit.prevent="save" method="POST" class="p-0 relative" novalidate>
+        <x-modal name="assignment-modal" maxWidth="3xl"
+            alpineTitle="editMode ? 'Edit Transport Assignment' : 'New Transport Assignment'">
+            <form @submit.prevent="save" id="assignmentForm" method="POST" class="space-y-6" novalidate>
                 @csrf
                 <template x-if="editMode">
                     <input type="hidden" name="_method" value="PUT">
                 </template>
-
-                <div class="p-8 space-y-8">
                     {{-- Student & Route Selection --}}
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100 shadow-sm">
-                                <i class="fas fa-user-link text-sm"></i>
-                            </div>
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Candidate Mapping</h4>
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
@@ -278,18 +247,9 @@
                                 </template>
                             </div>
                         </div>
-                    </div>
-
                     <hr class="border-slate-100">
 
-                    {{-- Node & Asset Allocation --}}
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-sm">
-                                <i class="fas fa-bus-alt text-sm"></i>
-                            </div>
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Node & Asset Allocation</h4>
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
@@ -318,51 +278,41 @@
                         </div>
                     </div>
 
-                    {{-- Fee Propagation --}}
-                    <div class="bg-slate-50 border border-slate-100 p-6 rounded-2xl shadow-inner group">
-                        <label class="modal-label-premium text-slate-500 mb-3 block">Computed Monthly Tariff (Incurred)</label>
-                        <div class="relative group-focus-within:scale-[1.01] transition-transform duration-300">
+                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex flex-col gap-3 shadow-sm">
+                        <label class="modal-label-premium !mb-0">Computed Monthly Tariff</label>
+                        <div class="relative">
                             <span class="absolute right-5 top-1/2 -translate-y-1/2 text-teal-600 font-black text-xl">₹</span>
                             <input type="number" name="fee_per_month" x-model="formData.fee_per_month" step="0.01" readonly
-                                class="w-full pr-12 pl-6 py-5 bg-white border border-slate-200 rounded-2xl font-black text-2xl text-slate-800 shadow-sm cursor-not-allowed outline-none"
-                                :class="{'border-red-500 ring-red-500/10': errors.fee_per_month}">
+                                class="w-full pr-12 pl-6 py-4 bg-white border border-slate-200 rounded-xl font-black text-2xl text-slate-800 shadow-sm cursor-not-allowed outline-none">
                         </div>
-                        <div class="flex items-center gap-2 mt-3 ml-2">
-                            <i class="fas fa-shield-alt text-[10px] text-teal-500"></i>
-                            <p class="text-[10px] text-teal-600 font-black uppercase tracking-widest">Locked to Network Node Tariff</p>
-                        </div>
-                        <template x-if="errors.fee_per_month">
-                            <p class="modal-error-message" x-text="errors.fee_per_month[0]"></p>
-                        </template>
                     </div>
 
                     {{-- Administrative Notice --}}
-                    <div class="bg-[#f0f9ff] border border-[#e0f2fe] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
+                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
                         <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
                             <i class="fas fa-exclamation-triangle text-amber-500 text-sm"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-[13px] font-bold text-slate-900 leading-tight">Registry Notice</span>
+                            <span class="text-sm font-bold text-slate-900 leading-tight">Registry Notice</span>
                             <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                                Assignment will be mapped to the <span class="text-blue-600 underline underline-offset-2">current academic session</span>. Any modifications will reflect in the next billing cycle.
+                                Assignment will be mapped to the <span class="text-indigo-600 font-bold underline decoration-indigo-200">current academic session</span>. Any modifications will reflect in the next billing cycle.
                             </p>
                         </div>
                     </div>
-                </div>
 
-                {{-- Modal Footer --}}
-                <x-slot name="footer">
-                    <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
-                        Discard
-                    </button>
-                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[200px]">
-                        <template x-if="submitting">
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                        </template>
-                        <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Assignment' : 'Assign Facility')"></span>
-                    </button>
-                </x-slot>
             </form>
+            {{-- Modal Footer --}}
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
+                    Cancel
+                </button>
+                <button type="submit" form="assignmentForm" :disabled="submitting" class="btn-premium-primary min-w-[200px]">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                    </template>
+                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Assign Student')"></span>
+                </button>
+            </x-slot>
         </x-modal>
 
         <x-confirm-modal title="Strike Transport Record?"

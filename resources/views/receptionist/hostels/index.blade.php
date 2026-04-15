@@ -7,44 +7,90 @@
 @section('content')
 <div class="space-y-6" x-data="hostelManagement" x-init="init()">
     {{-- Hostel Statistics --}}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-        <template x-for="(stat, index) in stats" :key="index">
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1" x-text="stat.label"></p>
-                        <p class="text-2xl font-black text-gray-800" x-text="stat.value"></p>
-                    </div>
-                    <div :class="`p-3 rounded-2xl transition-colors group-hover:scale-110 duration-300 ${stat.colorClass}`">
-                        <i :class="`fas ${stat.icon} text-lg`"></i>
-                    </div>
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Blocks</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_hostel'] }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-building text-blue-600 text-xl"></i>
                 </div>
             </div>
-        </template>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-indigo-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Floors</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_floor'] }}</p>
+                </div>
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-layer-group text-indigo-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Rooms</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_room'] }}</p>
+                </div>
+                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-door-open text-emerald-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Bed Capacity</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_bed'] }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-bed text-purple-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-pink-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Active Residents</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['hosteler_students'] }}</p>
+                </div>
+                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-graduate text-pink-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {{-- Page Header with Actions --}}
-    <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div class="flex items-center gap-4">
-                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-2xl shadow-lg shadow-indigo-100">
-                    <i class="fas fa-building text-white text-xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">Hostel Master</h2>
-                    <p class="text-sm text-gray-500 font-medium">Configure and manage primary hostel blocks</p>
-                </div>
+    {{-- Page Header --}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-building text-xs"></i>
+                    </div>
+                    Hostel Registry
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure and supervise institutional residential blocks.</p>
             </div>
-            <div class="flex flex-wrap gap-3">
-                <button @click="openAddModal()" 
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-indigo-100 group">
-                    <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
-                    Establish New Hostel
+            <div class="flex flex-wrap gap-2">
+                <button @click="openAddModal()"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-plus mr-2"></i>
+                    Establish Block
                 </button>
-                <a href="{{ route('receptionist.hostels.export') }}" 
-                   class="inline-flex items-center px-6 py-3 bg-white border border-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                    <i class="fas fa-file-excel mr-2 text-emerald-500"></i>
-                    Registry Export
+                <a href="{{ route('receptionist.hostels.export') }}"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-file-excel mr-2 text-xs"></i>
+                    Export Records
                 </a>
             </div>
         </div>
@@ -138,103 +184,84 @@
         ];
     @endphp
 
-    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl shadow-gray-100/50 border border-gray-100 overflow-hidden">
-        <x-data-table 
-            :columns="$tableColumns"
-            :data="$hostels"
-            :searchable="true"
-            :actions="$tableActions"
-            empty-message="No hostels found in the school registry"
-            empty-icon="fas fa-bed"
-        />
-    </div>
+    <x-data-table 
+        :columns="$tableColumns"
+        :data="$hostels"
+        :searchable="true"
+        :actions="$tableActions"
+        empty-message="No hostels found in the school registry"
+        empty-icon="fas fa-bed"
+    >
+        Hostel Registry
+    </x-data-table>
 
     {{-- Add/Edit Hostel Modal --}}
     <!-- Add/Edit Hostel Modal -->
-    <x-modal name="hostel-modal" alpineTitle="editMode ? 'Modify Hostel Specifications' : 'Establish New Hostel Node'" maxWidth="xl">
-        <form @submit.prevent="save" method="POST" novalidate>
+    <x-modal name="hostel-modal" alpineTitle="editMode ? 'Modify Hostel Specifications' : 'Establish New Hostel'" maxWidth="2xl">
+        <form @submit.prevent="save" id="hostelForm" method="POST" class="space-y-6" novalidate>
             @csrf
             <template x-if="editMode">
                 <input type="hidden" name="_method" value="PUT">
             </template>
 
-            <!-- Form Body - Academic Year Standard -->
             <div class="space-y-6">
                 <!-- Hostel Identity Block -->
-                <div class="space-y-2 mb-6">
-                    <label class="modal-label-premium">Hostel Name <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative group">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Hostel Name <span class="text-red-600 font-bold">*</span></label>
                         <input type="text" name="hostel_name" x-model="formData.hostel_name" @input="clearError('hostel_name')" placeholder="e.g., Aravali Boys Hostel"
-                            class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.hostel_name}">
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:scale-110 transition-transform">
-                            <i class="fas fa-building text-[10px]"></i>
-                        </div>
+                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.hostel_name}">
+                        <template x-if="errors.hostel_name">
+                            <p class="modal-error-message" x-text="errors.hostel_name[0]"></p>
+                        </template>
                     </div>
-                    <template x-if="errors.hostel_name">
-                        <p class="modal-error-message" x-text="errors.hostel_name[0]"></p>
-                    </template>
-                </div>
 
-                <!-- Incharge Assignment -->
-                <div class="space-y-2 mb-6">
-                    <label class="modal-label-premium">Assigned Incharge / Warden</label>
-                    <div class="relative group">
+                    <!-- Incharge Assignment -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Assigned Incharge / Warden</label>
                         <input type="text" name="hostel_incharge" x-model="formData.hostel_incharge" @input="clearError('hostel_incharge')" placeholder="Assigned Warden Name"
-                            class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.hostel_incharge}">
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
-                            <i class="fas fa-user-tie text-[10px]"></i>
-                        </div>
+                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.hostel_incharge}">
                     </div>
-                </div>
 
-                <!-- Configuration Grid -->
-                <div class="grid grid-cols-2 gap-6 mb-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Total Capacity (Beds)</label>
-                        <div class="relative group">
-                            <input type="number" name="capability" x-model="formData.capability" @input="clearError('capability')" placeholder="0"
-                                class="modal-input-premium pr-10 font-bold" :class="{'border-red-500 ring-red-500/10': errors.capability}">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
-                                <i class="fas fa-bed text-[10px]"></i>
-                            </div>
-                        </div>
+                        <input type="number" name="capability" x-model="formData.capability" @input="clearError('capability')" placeholder="0"
+                            class="modal-input-premium font-bold" :class="{'border-red-500 ring-red-500/10': errors.capability}">
                     </div>
+                    
                     <div class="space-y-2">
                         <label class="modal-label-premium">Establishment Date</label>
-                        <div class="relative group">
-                            <input type="date" name="hostel_create_date" x-model="formData.hostel_create_date" @input="clearError('hostel_create_date')"
-                                class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.hostel_create_date}">
-                        </div>
+                        <input type="date" name="hostel_create_date" x-model="formData.hostel_create_date" @input="clearError('hostel_create_date')"
+                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.hostel_create_date}">
                     </div>
                 </div>
 
                 <!-- Guidance Notification Card -->
-                <div class="mb-8 flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                <div class="flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm mb-8">
                     <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
                         <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-[13px] font-bold text-slate-900 leading-tight">Administrative Notice</span>
+                        <span class="text-sm font-bold text-slate-900 leading-tight">Administrative Notice</span>
                         <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                            Establishing a hostel creates a <span class="text-indigo-600 italic underline decoration-indigo-100">primary facility node</span>. Floors and rooms must be configured subsequently.
+                            Establishing a hostel creates a <span class="text-indigo-600 font-bold underline decoration-indigo-200">primary facility node</span>. Floors and rooms must be configured subsequently.
                         </p>
                     </div>
                 </div>
             </div>
-
-            <!-- Modal Footer - Exact Match Academic Year -->
-            <x-slot name="footer">
-                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
-                    Discard
-                </button>
-                <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
-                    <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                    </template>
-                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Registry' : 'Establish Hostel')"></span>
-                </button>
-            </x-slot>
         </form>
+
+        <x-slot name="footer">
+            <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
+                Cancel
+            </button>
+            <button type="submit" form="hostelForm" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
+                <template x-if="submitting">
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                </template>
+                <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Establish Hostel')"></span>
+            </button>
+        </x-slot>
     </x-modal>
 
     {{-- Custom Confirm Modal --}}
@@ -285,7 +312,7 @@ document.addEventListener('alpine:init', () => {
             this.errors = {};
 
             const url = this.editMode 
-                ? `/receptionist/hostels/${this.hostelId}` 
+                ? `{{ route('receptionist.hostels.update', '___ID___') }}`.replace('___ID___', this.hostelId)
                 : '{{ route('receptionist.hostels.store') }}';
             
             const method = this.editMode ? 'PUT' : 'POST';

@@ -7,74 +7,79 @@
 @section('content')
     <div class="space-y-6" x-data="busStopManagement" x-init="init()">
         {{-- Bus Stop Statistics --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Stops</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['total_stops'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Stops</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_stops'] }}</p>
                     </div>
-                    <div class="bg-teal-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-map-marker-alt text-teal-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-map-marker-alt text-blue-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Coverage Areas</p>
-                        <p class="text-2xl font-black text-blue-600">{{ $stats['distinct_areas'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Coverage Areas</p>
+                        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ $stats['distinct_areas'] }}</p>
                     </div>
-                    <div class="bg-blue-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-globe-asia text-blue-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-globe-asia text-emerald-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Avg. Distance</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['average_distance'] }} <span class="text-xs text-gray-400">KM</span></p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Distance</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['average_distance'] }} <span class="text-sm text-gray-400 font-medium">KM</span></p>
                     </div>
-                    <div class="bg-amber-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-road text-amber-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-road text-amber-600 text-xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-5 transition-all hover:shadow-md group">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Mapped Fleet</p>
-                        <p class="text-2xl font-black text-gray-800">{{ $stats['total_mapped'] }}</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Mapped Fleet</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_mapped'] }}</p>
                     </div>
-                    <div class="bg-indigo-50 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-bus text-indigo-500 text-lg"></i>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-bus text-purple-600 text-xl"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Page Header --}}
-        <div class="bg-white/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-sm mb-8">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-2xl shadow-lg shadow-blue-100">
-                        <i class="fas fa-network-wired text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-black text-gray-800 tracking-tight">Bus Stop Network</h2>
-                        <p class="text-sm text-gray-500 font-medium">Configure and monitor transportation pickup nodes</p>
-                    </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-network-wired text-xs"></i>
+                        </div>
+                        Bus Stop Network
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure and monitor transportation pickup nodes.</p>
                 </div>
-                <div class="flex flex-wrap gap-3">
-                    <button @click="$dispatch('open-add-bus-stop')"
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-sm font-black rounded-xl transition-all shadow-lg shadow-blue-100 group">
-                        <i class="fas fa-plus mr-2 group-hover:rotate-90 transition-transform duration-300"></i>
+                <div class="flex flex-wrap gap-2">
+                    <button @click="openAddModal()"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-plus mr-2"></i>
                         Commission Node
                     </button>
+                    <a href="{{ route('receptionist.bus-stops.export') }}"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-file-excel mr-2 text-xs"></i>
+                        Stop Export
+                    </a>
                 </div>
             </div>
         </div>
@@ -179,61 +184,46 @@
         </x-data-table>
 
         {{-- Add/Edit Bus Stop Modal --}}
-        <x-modal name="bus-stop-modal" alpineTitle="editMode ? 'Modify Network Node' : 'Commission New Bus Stop'"
+        <x-modal name="bus-stop-modal" alpineTitle="editMode ? 'Edit Bus Stop' : 'Create Bus Stop'"
             maxWidth="3xl">
-            <form @submit.prevent="save" class="p-0 relative" novalidate>
+            <form @submit.prevent="save" id="busStopForm" method="POST" class="space-y-6" novalidate>
                 @csrf
                 <template x-if="editMode">
                     <input type="hidden" name="_method" value="PUT">
                 </template>
-
-                <div class="p-8 space-y-8">
                     {{-- Logistics Mapping --}}
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm">
-                                <i class="fas fa-map-marked-alt text-sm"></i>
-                            </div>
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Logistics Mapping</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Assigned Route Designation <span class="text-red-600 font-bold">*</span></label>
+                            <select name="route_id" x-model="formData.route_id" id="route_id"
+                                @change="clearError('route_id')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.route_id}">
+                                <option value="">Select Primary Route</option>
+                                @foreach($routes as $route)
+                                    <option value="{{ $route->id }}">{{ $route->route_name }}</option>
+                                @endforeach
+                            </select>
+                            <template x-if="errors.route_id">
+                                <p class="modal-error-message" x-text="errors.route_id[0]"></p>
+                            </template>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Assigned Route Designation <span class="text-red-600 font-bold">*</span></label>
-                                <select name="route_id" x-model="formData.route_id" id="route_id"
-                                    @change="clearError('route_id')"
-                                    class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.route_id}">
-                                    <option value="">Select Primary Route</option>
-                                    @foreach($routes as $route)
-                                        <option value="{{ $route->id }}">{{ $route->route_name }}</option>
-                                    @endforeach
-                                </select>
-                                <template x-if="errors.route_id">
-                                    <p class="modal-error-message" x-text="errors.route_id[0]"></p>
-                                </template>
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Node Identifier (Stop No) <span class="text-red-600 font-bold">*</span></label>
-                                <input type="text" name="bus_stop_no" x-model="formData.bus_stop_no"
-                                    placeholder="e.g. ST-001" @input="clearError('bus_stop_no')"
-                                    class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.bus_stop_no}">
-                                <template x-if="errors.bus_stop_no">
-                                    <p class="modal-error-message" x-text="errors.bus_stop_no[0]"></p>
-                                </template>
-                            </div>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Node Identifier (Stop No) <span class="text-red-600 font-bold">*</span></label>
+                            <input type="text" name="bus_stop_no" x-model="formData.bus_stop_no"
+                                placeholder="e.g. ST-001" @input="clearError('bus_stop_no')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.bus_stop_no}">
+                            <template x-if="errors.bus_stop_no">
+                                <p class="modal-error-message" x-text="errors.bus_stop_no[0]"></p>
+                            </template>
                         </div>
 
-                        <div class="mt-6 space-y-2">
-                            <label class="modal-label-premium">Geographic Landmark / Node Name <span class="text-red-600 font-bold">*</span></label>
-                            <div class="relative group">
-                                <input type="text" name="bus_stop_name" x-model="formData.bus_stop_name"
-                                    placeholder="e.g. Central Square Park Entrance" @input="clearError('bus_stop_name')"
-                                    class="modal-input-premium pr-10" :class="{'border-red-500 ring-red-500/10': errors.bus_stop_name}">
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-blue-500 transition-colors">
-                                    <i class="fas fa-map-pin text-[10px]"></i>
-                                </div>
-                            </div>
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="modal-label-premium">Geographic Landmark Name <span class="text-red-600 font-bold">*</span></label>
+                            <input type="text" name="bus_stop_name" x-model="formData.bus_stop_name"
+                                placeholder="e.g. Central Square Park Entrance" @input="clearError('bus_stop_name')"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.bus_stop_name}">
                             <template x-if="errors.bus_stop_name">
                                 <p class="modal-error-message" x-text="errors.bus_stop_name[0]"></p>
                             </template>
@@ -243,90 +233,76 @@
                     <hr class="border-slate-100">
 
                     {{-- GPS & Tariff Configuration --}}
-                    <div>
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100 shadow-sm">
-                                <i class="fas fa-satellite text-sm"></i>
-                            </div>
-                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">GPS & Tariff Configuration</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Precision Latitude</label>
+                            <input type="number" step="0.00000001" name="latitude" x-model="formData.latitude"
+                                placeholder="0.00000000" class="modal-input-premium text-xs">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Precision Longitude</label>
+                            <input type="number" step="0.00000001" name="longitude" x-model="formData.longitude"
+                                placeholder="0.00000000" class="modal-input-premium text-xs">
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100 shadow-inner">
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Precision Latitude</label>
-                                <input type="number" step="0.00000001" name="latitude" x-model="formData.latitude"
-                                    placeholder="0.00000000" class="modal-input-premium">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Precision Longitude</label>
-                                <input type="number" step="0.00000001" name="longitude" x-model="formData.longitude"
-                                    placeholder="0.00000000" class="modal-input-premium">
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Distance (KM)</label>
+                            <input type="number" step="0.01" name="distance_from_institute"
+                                x-model="formData.distance_from_institute" class="modal-input-premium" placeholder="0.00">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Monthly Tariff</label>
+                            <div class="relative group">
+                                <input type="number" step="0.01" name="charge_per_month" x-model="formData.charge_per_month"
+                                    class="modal-input-premium" placeholder="0.00">
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-teal-600 font-bold text-sm">₹</div>
                             </div>
                         </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Distance (KM)</label>
-                                <input type="number" step="0.01" name="distance_from_institute"
-                                    x-model="formData.distance_from_institute" class="modal-input-premium" placeholder="0.00">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Monthly Tariff</label>
-                                <div class="relative group">
-                                    <input type="number" step="0.01" name="charge_per_month" x-model="formData.charge_per_month"
-                                        class="modal-input-premium pr-10" placeholder="0.00">
-                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-blue-600 transition-colors">
-                                        <i class="fas fa-rupee-sign text-[10px]"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="modal-label-premium">Postal Code (PIN)</label>
-                                <input type="text" name="area_pin_code" x-model="formData.area_pin_code"
-                                    class="modal-input-premium" placeholder="e.g. 110001">
-                            </div>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Postal Code (PIN)</label>
+                            <input type="text" name="area_pin_code" x-model="formData.area_pin_code"
+                                class="modal-input-premium" placeholder="e.g. 110001">
                         </div>
-                    </div>
 
-                    {{-- Fleet Synchronization --}}
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Operational Fleet Mapping</label>
-                        <select name="vehicle_id" x-model="formData.vehicle_id" id="vehicle_id"
-                            class="modal-input-premium">
-                            <option value="">Select Primary Vehicle Asset</option>
-                            @foreach($vehicles as $vehicle)
-                                <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})</option>
-                            @endforeach
-                        </select>
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Operational Fleet Mapping</label>
+                            <select name="vehicle_id" x-model="formData.vehicle_id" id="vehicle_id"
+                                class="modal-input-premium">
+                                <option value="">Select Primary Vehicle Asset</option>
+                                @foreach($vehicles as $vehicle)
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     {{-- Administrative Notice --}}
-                    <div class="bg-[#f0f9ff] border border-[#e0f2fe] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
+                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
                         <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                            <i class="fas fa-info-circle text-blue-600 text-sm"></i>
+                            <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-[13px] font-bold text-slate-900 leading-tight">Infrastructure Notice</span>
+                            <span class="text-sm font-bold text-slate-900 leading-tight">Infrastructure Notice</span>
                             <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                                Decommissioning or re-routing this stop will impact <span class="text-blue-600 italic underline decoration-blue-100">billing cycles</span> and student notifications for the current month.
+                                Decommissioning or re-routing this stop will impact <span class="text-indigo-600 font-bold underline decoration-indigo-200">billing cycles</span> and student notifications for the current month.
                             </p>
                         </div>
                     </div>
-                </div>
 
-                {{-- Modal Footer --}}
-                <x-slot name="footer">
-                    <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
-                        Discard
-                    </button>
-                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[180px]">
-                        <template x-if="submitting">
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                        </template>
-                        <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Node' : 'Initialize Stop')"></span>
-                    </button>
-                </x-slot>
             </form>
+            {{-- Modal Footer --}}
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
+                    Cancel
+                </button>
+                <button type="submit" form="busStopForm" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                    </template>
+                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Create Stop')"></span>
+                </button>
+            </x-slot>
         </x-modal>
 
         <x-confirm-modal title="Permanently Remove Node?"
@@ -336,6 +312,24 @@
 
     @push('scripts')
         <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('busStopManagement', () => ({
+                    editMode: false,
+                    busStopId: null,
+                    formData: {
+                        route_id: '',
+                        vehicle_id: '',
+                        bus_stop_no: '',
+                        bus_stop_name: '',
+                        latitude: '',
+                        longitude: '',
+                        distance_from_institute: '',
+                        charge_per_month: '',
+                        area_pin_code: '',
+                    },
+                    errors: {},
+                    submitting: false,
+
                     async init() {
                         window.addEventListener('open-add-bus-stop', () => this.openAddModal());
                         window.addEventListener('open-edit-bus-stop', (e) => this.openEditModal(e.detail));
@@ -503,6 +497,5 @@
                 }));
             });
         </script>
-        </div>
     @endpush
 @endsection
