@@ -3,7 +3,7 @@
 @section('title', 'Student Enquiries')
 
 @section('content')
-<div class="space-y-6" x-data="enquiryManagement()">
+<div class="space-y-6">
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <!-- Total Enquiry -->
@@ -26,7 +26,7 @@
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Enquiry</p>
                     <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['pending'] }}</p>
                 </div>
-                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-between">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                     <i class="fas fa-clock text-orange-600 text-xl"></i>
                 </div>
             </div>
@@ -85,11 +85,11 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and track student admission enquiries and follow-ups.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <button @click="openAddModal()"
+                <a href="{{ route('receptionist.student-enquiries.create') }}"
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-plus mr-2"></i>
+                    <i class="fas fa-plus mr-2 text-xs"></i>
                     Add Enquiry
-                </button>
+                </a>
                 <a href="{{ route('receptionist.student-enquiries.index', ['today' => 1]) }}"
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                     <i class="fas fa-calendar-day mr-2 text-xs"></i>
@@ -160,7 +160,6 @@
                 'render' => function($row) {
                     // Convert enum to string for array key lookup
                     if ($row->form_status instanceof EnquiryStatus) {
-                        // Get the enum name (e.g., "PENDING") and convert to lowercase
                         $statusKey = strtolower($row->form_status->name);
                         $label = $row->form_status->label();
                     } else {
@@ -184,9 +183,9 @@
 
         $tableActions = [
             [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    return "window.dispatchEvent(new CustomEvent('open-edit-enquiry', { detail: " . json_encode($row) . " }))";
+                'type' => 'link',
+                'href' => function($row) {
+                    return route('receptionist.student-enquiries.edit', $row->id);
                 },
                 'icon' => 'fas fa-edit',
                 'class' => 'text-blue-600 hover:text-blue-900',
@@ -215,305 +214,47 @@
         Enquiry List
     </x-data-table>
 
-    <!-- Add/Edit Enquiry Modal -->
-    <x-modal name="enquiry-modal" alpineTitle="editMode ? 'Edit Enquiry' : 'Add New Enquiry'" maxWidth="6xl">
-        <form @submit.prevent="submitForm" 
-              id="enquiryForm"
-              method="POST" 
-              enctype="multipart/form-data"
-              novalidate
-              class="p-6">
-            @csrf
-            <input type="hidden" name="enquiry_id" x-model="enquiryId">
+    {{-- Confirm Modal Component --}}
+    <x-confirm-modal />
 
-            @include('receptionist.student-enquiries.partials.form')
-        </form>
+    @push('scripts')
+        <script>
+            window.addEventListener("open-delete-enquiry", (e) => {
+                const enquiry = e.detail;
+                window.dispatchEvent(new CustomEvent("open-confirm-modal", {
+                    detail: {
+                        title: "Delete Enquiry",
+                        message: `Are you sure you want to delete the enquiry for "${enquiry.name}"? This action cannot be undone.`,
+                        callback: async () => {
+                            try {
+                                const response = await fetch(`/receptionist/student-enquiries/${enquiry.id}`, {
+                                    method: "DELETE",
+                                    headers: {
+                                        "Accept": "application/json",
+                                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                    }
+                                });
 
-        <x-slot name="footer">
-            <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">Cancel</button>
-            <button type="submit" form="enquiryForm" :disabled="submitting" class="btn-premium-primary min-w-[180px] bg-teal-600 hover:bg-teal-700 shadow-teal-200">
-                <template x-if="submitting">
-                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                </template>
-                <span x-text="editMode ? 'Update Enquiry' : 'Submit Enquiry'"></span>
-            </button>
-        </x-slot>
-    </x-modal>
+                                const result = await response.json();
 
-@push('scripts')
-<script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('enquiryManagement', () => ({
-        editMode: false,
-        enquiryId: null,
-        submitting: false,
-        errors: {},
-        formData: {},
-        fatherExpanded: false,
-        motherExpanded: false,
-        contactExpanded: false,
-        
-        clearError(field) {
-            if (this.errors[field]) {
-                delete this.errors[field];
-            }
-        },
-
-        init() {
-            window.addEventListener('open-edit-enquiry', (e) => this.openEditModal(e.detail));
-            window.addEventListener('open-delete-enquiry', (e) => this.confirmDelete(e.detail));
-
-            // Specialized Select2 error clearing
-            this.$nextTick(() => {
-                if (typeof $ !== 'undefined') {
-                    $(document).on('change.select2', '#enquiryForm .select2-hidden-accessible', (e) => {
-                        this.clearError(e.target.name);
-                    });
-                }
-            });
-        },
-
-        closeModal() {
-            this.$dispatch('close-modal', 'enquiry-modal');
-            this.editMode = false;
-            this.enquiryId = null;
-            this.formData = {};
-            this.clearErrors();
-            document.getElementById('enquiryForm').reset();
-            
-            // Clear previews
-            ['father_photo', 'mother_photo', 'student_photo'].forEach(field => {
-                const preview = document.getElementById(`${field.replace('_', '-')}-preview`);
-                const icon = document.getElementById(`${field.replace('_', '-')}-icon`);
-                const removeBtn = document.getElementById(`${field.replace('_', '-')}-remove`);
-                if (preview) { preview.src = '#'; preview.classList.add('hidden'); }
-                if (icon) icon.classList.remove('hidden');
-                if (removeBtn) removeBtn.classList.add('hidden');
-            });
-
-            // Reset Select2s
-            if (typeof $ !== 'undefined') {
-                $('.select2-hidden-accessible').val('').trigger('change');
-            }
-        },
-
-        openAddModal() {
-            this.editMode = false;
-            this.enquiryId = null;
-            this.formData = {};
-            this.clearErrors();
-            document.getElementById('enquiryForm').reset();
-
-            // Clear previews
-            ['father_photo', 'mother_photo', 'student_photo'].forEach(field => {
-                const preview = document.getElementById(`${field.replace('_', '-')}-preview`);
-                const icon = document.getElementById(`${field.replace('_', '-')}-icon`);
-                const removeBtn = document.getElementById(`${field.replace('_', '-')}-remove`);
-                if (preview) { preview.src = '#'; preview.classList.add('hidden'); }
-                if (icon) icon.classList.remove('hidden');
-                if (removeBtn) removeBtn.classList.add('hidden');
-            });
-
-            if (typeof $ !== 'undefined') {
-                $('.select2-hidden-accessible').val('').trigger('change');
-            }
-            this.$dispatch('open-modal', 'enquiry-modal');
-        },
-        
-        openEditModal(enquiry) {
-            this.editMode = true;
-            this.enquiryId = enquiry.id;
-            this.formData = { ...enquiry };
-            this.clearErrors();
-            this.$dispatch('open-modal', 'enquiry-modal');
-            
-            // Special handling for dates and checkboxes
-            this.$nextTick(() => {
-                const form = document.getElementById('enquiryForm');
-                Object.keys(enquiry).forEach(key => {
-                    let value = enquiry[key];
-                    const input = form.querySelector(`[name="${key}"]`);
-                    if (input) {
-                        if (input.type === 'date' && value) {
-                            input.value = value.substring(0, 10);
-                        } else if (input.type === 'checkbox') {
-                            input.checked = !!value;
-                        } else if ($(input).hasClass('select2-hidden-accessible')) {
-                            $(input).val(value).trigger('change');
-                        }
-                    }
-                });
-                
-                // Special handling for photos
-                const photoFields = ['father_photo', 'mother_photo', 'student_photo'];
-                photoFields.forEach(field => {
-                    if (enquiry[field]) {
-                        const preview = document.getElementById(`${field.replace('_', '-')}-preview`);
-                        const icon = document.getElementById(`${field.replace('_', '-')}-icon`);
-                        const removeBtn = document.getElementById(`${field.replace('_', '-')}-remove`);
-                        if (preview) { preview.src = `/storage/${enquiry[field]}`; preview.classList.remove('hidden'); }
-                        if (icon) icon.classList.add('hidden');
-                        if (removeBtn) removeBtn.classList.remove('hidden');
-                    }
-                });
-            });
-        },
-
-        async submitForm() {
-            this.submitting = true;
-            this.errors = {};
-
-            const form = document.getElementById('enquiryForm');
-            const formData = new FormData(form);
-            
-            // Add _method for PUT requests
-            if (this.editMode) {
-                formData.append('_method', 'PUT');
-            }
-
-            const url = this.editMode 
-                ? `/school/student-enquiries/${this.enquiryId}`
-                : '{{ route('receptionist.student-enquiries.store') }}';
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                });
-
-                const result = await response.json();
- 
-                if (response.status === 422) {
-                    this.errors = result.errors;
-                    this.displayErrors(result.errors);
-                } else if (response.ok) {
-                    // Success!
-                    if (window.Toast) {
-                        window.Toast.fire({
-                            icon: 'success',
-                            title: result.message || 'Enquiry saved successfully'
-                        });
-                    }
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    throw new Error(result.message || 'Something went wrong');
-                }
-            } catch (error) {
-                console.error('Submission error:', error);
-                if (window.Toast) {
-                    window.Toast.fire({
-                        icon: 'error',
-                        title: error.message || 'Could not save enquiry'
-                    });
-                }
-            } finally {
-                this.submitting = false;
-            }
-        },
-
-        confirmDelete(enquiry) {
-            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                detail: {
-                    title: 'Delete Enquiry',
-                    message: `Are you sure you want to delete the enquiry for "${enquiry.name}"? This action cannot be undone.`,
-                    callback: async () => {
-                        this.submitting = true;
-                        try {
-                            const response = await fetch(`/receptionist/student-enquiries/${enquiry.id}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({ _method: 'DELETE' })
-                            });
-
-                            const result = await response.json();
-
-                            if (response.ok) {
-                                if (window.Toast) {
-                                    window.Toast.fire({ icon: 'success', title: result.message });
+                                if (response.ok) {
+                                    if (window.Toast) {
+                                        window.Toast.fire({ icon: "success", title: result.message });
+                                    }
+                                    setTimeout(() => window.location.reload(), 1000);
+                                } else {
+                                    throw new Error(result.message || "Deletion failed");
                                 }
-                                setTimeout(() => window.location.reload(), 1000);
-                            } else {
-                                throw new Error(result.message || 'Deletion failed');
+                            } catch (error) {
+                                if (window.Toast) {
+                                    window.Toast.fire({ icon: "error", title: error.message });
+                                }
                             }
-                        } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: 'error', title: error.message });
-                            }
-                        } finally {
-                            this.submitting = false;
                         }
                     }
-                }
-            }));
-        },
-
-        clearError(field) {
-            if (this.errors && this.errors[field]) {
-                delete this.errors[field];
-                this.errors = Object.assign({}, this.errors);
-                
-                // Remove manual Select2 error highlights
-                if (typeof $ !== 'undefined') {
-                    const input = document.querySelector(`[name="${field}"]`);
-                    if (input && $(input).hasClass('select2-hidden-accessible')) {
-                        $(input).next('.select2-container').find('.select2-selection').removeClass('!border-red-500');
-                    }
-                }
-            }
-        },
-
-        displayErrors(errors) {
-            if (window.Toast) {
-                window.Toast.fire({
-                    icon: 'error',
-                    title: 'Please check the form for errors'
-                });
-            }
-
-            // Auto-expand sections with errors
-            Object.keys(errors).forEach(field => {
-                if (field.startsWith('father_')) this.fatherExpanded = true;
-                if (field.startsWith('mother_')) this.motherExpanded = true;
-                if (['contact_no', 'whatsapp_no', 'facebook_id', 'email_id', 'sms_no', 'twitter_id', 'emergency_contact_no'].includes(field)) {
-                    this.contactExpanded = true;
-                }
+                }));
             });
-
-            this.$nextTick(() => {
-                // Handle Select2 containers
-                Object.keys(errors).forEach(field => {
-                    const input = document.querySelector(`[name="${field}"]`);
-                    if (input && $(input).hasClass('select2-hidden-accessible')) {
-                        const select2Container = $(input).next('.select2-container').find('.select2-selection');
-                        select2Container.addClass('!border-red-500');
-                    }
-                });
-
-                const firstError = document.querySelector('.border-red-500, .!border-red-500');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            });
-        },
-
-        clearErrors() {
-            this.errors = {};
-            // Remove manual Select2 error highlights
-            if (typeof $ !== 'undefined') {
-                $('.select2-container .select2-selection').removeClass('!border-red-500');
-            }
-        }
-    }));
-});
-</script>
-@endpush
+        </script>
+    @endpush
+</div>
 @endsection

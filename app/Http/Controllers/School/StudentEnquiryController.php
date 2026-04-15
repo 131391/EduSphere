@@ -6,6 +6,7 @@ use App\Http\Controllers\TenantController;
 use App\Models\StudentEnquiry;
 use App\Models\AcademicYear;
 use App\Models\ClassModel;
+use App\Models\Country;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -57,6 +58,16 @@ class StudentEnquiryController extends TenantController
         return view('school.student-enquiries.index', compact('enquiries', 'stats', 'academicYears', 'classes'));
     }
 
+    public function create()
+    {
+        $schoolId = $this->getSchoolId();
+        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
+        $classes = ClassModel::where('school_id', $schoolId)->get();
+        $countries = Country::all();
+
+        return view('school.student-enquiries.create', compact('academicYears', 'classes', 'countries'));
+    }
+
     public function store(Request $request)
     {
         $validated = $this->validateEnquiry($request);
@@ -71,12 +82,10 @@ class StudentEnquiryController extends TenantController
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Student enquiry added successfully.'
+                    'message' => 'Student enquiry added successfully.',
+                    'redirect' => route('school.student-enquiries.index')
                 ]);
             }
-
-            return redirect()->route('school.student-enquiries.index')
-                ->with('success', 'Student enquiry added successfully.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -103,12 +112,10 @@ class StudentEnquiryController extends TenantController
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Student enquiry updated successfully.'
+                    'message' => 'Student enquiry updated successfully.',
+                    'redirect' => route('school.student-enquiries.index')
                 ]);
             }
-
-            return redirect()->route('school.student-enquiries.index')
-                ->with('success', 'Student enquiry updated successfully.');
         } catch (\Exception $e) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -118,6 +125,18 @@ class StudentEnquiryController extends TenantController
             }
             return back()->with('error', 'Failed to update enquiry: ' . $e->getMessage());
         }
+    }
+
+    public function edit(StudentEnquiry $studentEnquiry)
+    {
+        $this->authorizeTenant($studentEnquiry);
+        
+        $schoolId = $this->getSchoolId();
+        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
+        $classes = ClassModel::where('school_id', $schoolId)->get();
+        $countries = Country::all();
+
+        return view('school.student-enquiries.edit', compact('studentEnquiry', 'academicYears', 'classes', 'countries'));
     }
 
     public function destroy(StudentEnquiry $studentEnquiry)
@@ -223,7 +242,7 @@ class StudentEnquiryController extends TenantController
             'previous_class' => 'nullable|string|max:255',
             'identity_marks' => 'nullable|string',
             'permanent_address' => 'nullable|string',
-            'country_id' => 'required|integer|min:1|max:65',
+            'country_id' => 'required|exists:countries,id',
             'previous_school_name' => 'nullable|string|max:255',
             'student_roll_no' => 'nullable|string|max:50',
             'passing_year' => 'nullable|integer|min:1950|max:' . (date('Y') + 20),

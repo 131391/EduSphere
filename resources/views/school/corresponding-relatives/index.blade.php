@@ -3,25 +3,22 @@
 @section('title', 'Corresponding Relatives')
 
 @section('content')
-<div class="p-6 transition-all duration-300 ease-in-out" x-data="relativeManagement()">
-    {{-- Header Section --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight dark:text-white flex items-center gap-3">
-                <span class="p-3 bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-2xl shadow-sm">
-                    <i class="fas fa-users-cog"></i>
-                </span>
-                Corresponding Relatives
-            </h1>
-            <p class="text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2">
-                <span class="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
-                Configure and manage relationship types for student profiles
-            </p>
-        </div>
-        <div class="flex items-center gap-3">
+<div class="space-y-6" x-data="relativeManagement()">
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-users-cog text-xs"></i>
+                    </div>
+                    Corresponding Relatives
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure and manage relationship types for student profiles</p>
+            </div>
             <button @click="openAddModal()" 
-                class="group flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-teal-200 dark:shadow-none transition-all hover:scale-105 active:scale-95">
-                <i class="fas fa-plus group-hover:rotate-90 transition-transform duration-300"></i>
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2"></i>
                 Add New Type
             </button>
         </div>
@@ -106,21 +103,26 @@
             $tableActions = [
                 [
                     'type' => 'button',
-                    'icon' => 'fas fa-pen-nib',
-                    'class' => 'p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-all duration-300 shadow-sm hover:shadow-indigo-200',
-                    'title' => 'Edit Record',
-                    'onclick' => function($row) {
-                        return "openEditModal(" . json_encode($row) . ")";
-                    }
+                    'icon' => 'fas fa-edit',
+                    'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
+                    'onclick' => function ($row) {
+                        $data = json_encode([
+                            'id' => $row->id,
+                            'name' => $row->name,
+                        ]);
+                        return "window.dispatchEvent(new CustomEvent('open-edit-relative', { detail: $data }))";
+                    },
+                    'title' => 'Edit',
                 ],
                 [
                     'type' => 'button',
-                    'icon' => 'fas fa-trash-alt',
-                    'class' => 'p-2 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-all duration-300 shadow-sm hover:shadow-rose-200',
-                    'title' => 'Delete Record',
-                    'onclick' => function($row) {
-                        return "confirmDelete(" . $row->id . ")";
-                    }
+                    'icon' => 'fas fa-trash',
+                    'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
+                    'onclick' => function ($row) {
+                        $name = addslashes($row->name);
+                        return "window.dispatchEvent(new CustomEvent('open-delete-relative', { detail: { id: {$row->id}, name: '{$name}' } }))";
+                    },
+                    'title' => 'Delete',
                 ],
             ];
         @endphp
@@ -142,80 +144,54 @@
 
     {{-- Add/Edit Modal (Premium Design) --}}
     <x-modal name="relative-modal" alpineTitle="editMode ? 'Edit Relationship Type' : 'Configure New Relationship'" maxWidth="md">
-        <div class="relative overflow-hidden">
-            {{-- Background Accent --}}
-            <div class="absolute top-0 right-0 -m-4 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl"></div>
+        <form id="relative-form" @submit.prevent="submitForm()" method="POST">
+            @csrf
+            <template x-if="editMode">
+                <input type="hidden" name="_method" value="PUT">
+            </template>
             
-            <form @submit.prevent="submitForm()" class="p-8 relative z-10" id="relativeForm">
-                @csrf
-                <template x-if="editMode">
-                    @method('PUT')
-                </template>
-                
-                <div class="space-y-6">
-                    <div>
-                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                            <i class="fas fa-tag text-teal-500 text-xs"></i>
-                            Relation Name <span class="text-red-500 animate-pulse">*</span>
-                        </label>
-                        <div class="relative group">
-                            <input 
-                                type="text" 
-                                name="name" 
-                                x-model="formData.name"
-                                placeholder="e.g. Guardian, Spouse, Sibling"
-                                :class="errors.name ? 'border-rose-500 ring-rose-200' : 'border-gray-200 dark:border-gray-600 ring-teal-200'"
-                                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-300 placeholder-gray-400 dark:placeholder-gray-500"
-                                required
-                            >
-                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-300 group-focus-within:text-teal-500 transition-colors">
-                                <i class="fas fa-keyboard"></i>
-                            </div>
-                        </div>
-                        <template x-if="errors.name">
-                            <p class="text-rose-500 text-xs mt-2 flex items-center gap-1 font-medium italic">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <span x-text="errors.name[0]"></span>
-                            </p>
-                        </template>
+            <div class="space-y-6">
+                <div>
+                    <label class="modal-label-premium">Relation Name <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <input 
+                            type="text" 
+                            name="name" 
+                            x-model="formData.name"
+                            @input="clearError('name')"
+                            placeholder="e.g. Guardian, Spouse, Sibling"
+                            class="modal-input-premium"
+                            :class="{'border-red-500 ring-red-500/10': errors.name}"
+                        >
                     </div>
-
-                    {{-- Tips Section --}}
-                    <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-xl border border-teal-100 dark:border-teal-800/30">
-                        <p class="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest flex items-center gap-2 mb-1">
-                            <i class="fas fa-lightbulb"></i> Pro Tip
-                        </p>
-                        <p class="text-xs text-teal-800/70 dark:text-teal-400/70 leading-relaxed font-medium">
-                            Use clear, standardized names for relationship types to ensure consistency across student files.
-                        </p>
-                    </div>
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
+                    </template>
                 </div>
 
-                <div class="flex items-center justify-end gap-3 mt-10">
-                    <button 
-                        type="button" 
-                        @click="closeModal()"
-                        class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
-                    >
-                        Discard
-                    </button>
-                    <button 
-                        type="submit"
-                        :disabled="loading"
-                        class="group relative px-8 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg shadow-teal-100 dark:shadow-none transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
-                    >
-                        <span x-show="!loading" class="flex items-center gap-2">
-                            <span x-text="editMode ? 'Update Changes' : 'Save Record'"></span>
-                            <i class="fas fa-chevron-right text-xs group-hover:translate-x-1 transition-transform"></i>
-                        </span>
-                        <span x-show="loading" class="flex items-center gap-2">
-                            <i class="fas fa-circle-notch animate-spin"></i>
-                            Processing...
-                        </span>
-                    </button>
+                {{-- Tips Section --}}
+                <div class="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-xl border border-teal-100 dark:border-teal-800/30">
+                    <p class="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest flex items-center gap-2 mb-1">
+                        <i class="fas fa-lightbulb"></i> Pro Tip
+                    </p>
+                    <p class="text-xs text-teal-800/70 dark:text-teal-400/70 leading-relaxed font-medium">
+                        Use clear, standardized names for relationship types to ensure consistency across student files.
+                    </p>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <x-slot name="footer">
+                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
+                    Discard
+                </button>
+                <button type="submit" :disabled="loading" form="relative-form" class="btn-premium-primary min-w-[160px] bg-teal-600 hover:bg-teal-700 shadow-teal-200">
+                    <template x-if="loading">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                    </template>
+                    <span x-text="editMode ? 'Update Changes' : 'Save Record'"></span>
+                </button>
+            </x-slot>
+        </form>
     </x-modal>
 </div>
 
@@ -223,183 +199,139 @@
 <x-confirm-modal />
 
 @push('scripts')
-<script>
-function relativeManagement() {
-    return {
-        editMode: false,
-        loading: false,
-        relativeId: null,
-        stats: {
-            total: {{ $relatives->total() }}
-        },
-        formData: {
-            name: ''
-        },
-        errors: {},
+    <script>
+        document.addEventListener("alpine:init", () => {
+            Alpine.data("relativeManagement", () => ({
+                editMode: false,
+                loading: false,
+                relativeId: null,
+                stats: {
+                    total: {{ $relatives->total() }}
+                },
+                formData: {
+                    name: ""
+                },
+                errors: {},
 
-        init() {
-            // Initializations if needed
-        },
+                init() {
+                    window.addEventListener("open-edit-relative", (e) => this.openEditModal(e.detail));
+                    window.addEventListener("open-delete-relative", (e) => this.confirmDelete(e.detail));
+                },
 
-        openAddModal() {
-            this.editMode = false;
-            this.relativeId = null;
-            this.formData = { name: '' };
-            this.errors = {};
-            this.$dispatch('open-modal', 'relative-modal');
-        },
-        
-        openEditModal(relative) {
-            this.editMode = true;
-            this.relativeId = relative.id;
-            this.formData = { name: relative.name };
-            this.errors = {};
-            this.$dispatch('open-modal', 'relative-modal');
-        },
+                openAddModal() {
+                    this.editMode = false;
+                    this.relativeId = null;
+                    this.formData = { name: "" };
+                    this.errors = {};
+                    this.$dispatch("open-modal", "relative-modal");
+                },
+                
+                openEditModal(relative) {
+                    this.editMode = true;
+                    this.relativeId = relative.id;
+                    this.formData = { name: relative.name };
+                    this.errors = {};
+                    this.$dispatch("open-modal", "relative-modal");
+                },
 
-        closeModal() {
-            this.$dispatch('close-modal', 'relative-modal');
-        },
+                closeModal() {
+                    this.$dispatch("close-modal", "relative-modal");
+                },
 
-        async submitForm() {
-            this.loading = true;
-            this.errors = {};
-            
-            const url = this.editMode 
-                ? `/school/corresponding-relatives/${this.relativeId}` 
-                : '{{ route('school.corresponding-relatives.store') }}';
-            
-            const method = this.editMode ? 'PUT' : 'POST';
-            
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        ...this.formData,
-                        _method: method
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    if (window.Toast) {
-                        window.Toast.fire({
-                            icon: 'success',
-                            title: result.message
-                        });
+                clearError(field) {
+                    if (this.errors[field]) {
+                        delete this.errors[field];
                     }
-                    this.closeModal();
-                    this.refreshTable();
-                } else if (response.status === 422) {
-                    this.errors = result.errors;
-                } else {
-                    throw new Error(result.message || 'Something went wrong');
-                }
-            } catch (error) {
-                if (window.Toast) {
-                    window.Toast.fire({
-                        icon: 'error',
-                        title: error.message
-                    });
-                }
-            } finally {
-                this.loading = false;
-            }
-        },
+                },
 
-        async deleteRecord(id) {
-            try {
-                const response = await fetch(`/school/corresponding-relatives/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ _method: 'DELETE' })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    if (window.Toast) {
-                        window.Toast.fire({
-                            icon: 'success',
-                            title: result.message
+                async submitForm() {
+                    if (this.loading) return;
+                    this.loading = true;
+                    this.errors = {};
+                    
+                    const url = this.editMode 
+                        ? `/school/corresponding-relatives/${this.relativeId}` 
+                        : "{{ route('school.corresponding-relatives.store') }}";
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                ...this.formData,
+                                _method: this.editMode ? "PUT" : "POST"
+                            })
                         });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            if (window.Toast) {
+                                window.Toast.fire({
+                                    icon: "success",
+                                    title: result.message
+                                });
+                            }
+                            this.closeModal();
+                            setTimeout(() => window.location.reload(), 800);
+                        } else if (response.status === 422) {
+                            this.errors = result.errors || {};
+                        } else {
+                            throw new Error(result.message || "Operation failed");
+                        }
+                    } catch (error) {
+                        if (window.Toast) {
+                            window.Toast.fire({
+                                icon: "error",
+                                title: error.message
+                            });
+                        }
+                    } finally {
+                        this.loading = false;
                     }
-                    this.refreshTable();
-                } else {
-                    throw new Error(result.message || 'Failed to delete record');
-                }
-            } catch (error) {
-                if (window.Toast) {
-                    window.Toast.fire({
-                        icon: 'error',
-                        title: error.message
-                    });
-                }
-            }
-        },
+                },
 
-        refreshTable() {
-            const currentUrl = new URL(window.location.href);
-            fetch(currentUrl.toString(), {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                async confirmDelete(relative) {
+                    window.dispatchEvent(new CustomEvent("open-confirm-modal", {
+                        detail: {
+                            title: "Delete Relationship Type",
+                            message: `Are you sure you want to delete the relationship type "${relative.name}"? This action cannot be undone and may affect associated student profiles.`,
+                            callback: async () => {
+                                try {
+                                    const response = await fetch(`/school/corresponding-relatives/${relative.id}`, {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "Accept": "application/json",
+                                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                        },
+                                        body: JSON.stringify({ _method: "DELETE" })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        window.location.reload();
+                                    } else {
+                                        const result = await response.json();
+                                        if (window.Toast) {
+                                            window.Toast.fire({
+                                                icon: "error",
+                                                title: result.message || "Delete failed"
+                                            });
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.error("Delete Error:", error);
+                                }
+                            }
+                        }
+                    }));
                 }
-            })
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const newTable = doc.querySelector('#table-container');
-                if (newTable) {
-                    document.querySelector('#table-container').innerHTML = newTable.innerHTML;
-                    // Trigger Alpine init for the new content if needed
-                }
-                // Update stats
-                this.updateStats();
-            });
-        },
-
-        updateStats() {
-            // Optional: Fetch updated stats
-            // For now, let's just use the table refresh logic
-        }
-    };
-}
-
-// Global scope helpers
-function openEditModal(relative) {
-    const el = document.querySelector('[x-data*="relativeManagement"]');
-    if (el) {
-        Alpine.$data(el).openEditModal(relative);
-    }
-}
-
-function confirmDelete(id) {
-    window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-        detail: {
-            title: 'Delete Record',
-            message: 'Are you sure you want to delete this relationship type? This action cannot be undone.',
-            callback: () => {
-                const el = document.querySelector('[x-data*="relativeManagement"]');
-                if (el) {
-                    Alpine.$data(el).deleteRecord(id);
-                }
-            }
-        }
-    }));
-}
-</script>
+            }));
+        });
+    </script>
 @endpush
 @endsection

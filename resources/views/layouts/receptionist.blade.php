@@ -673,8 +673,8 @@
                     placeholder: function () {
                         return $(this).data('placeholder') || 'Select an option';
                     },
-                    allowClear: $(this).data('allow-clear') !== undefined ? $(this).data('allow-clear') : false,
-                    width: '100%'
+                    allowClear: $select.data("allow-clear") !== undefined ? $select.data("allow-clear") : false,
+                    width: "100%"
                 });
 
                 // Global rule: Default Country to India (102) if empty or auto-defaulted
@@ -761,9 +761,9 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('headerActions', () => ({
+            Alpine.data("headerActions", () => ({
                 isFullscreen: false,
-                isDark: localStorage.getItem('darkMode') === 'true',
+                isDark: localStorage.getItem("darkMode") === "true",
                 isFavorite: false,
                 favorites: [],
                 showFavorites: false,
@@ -792,11 +792,11 @@
 
                 toggleDarkMode() {
                     this.isDark = !this.isDark;
-                    localStorage.setItem('darkMode', this.isDark);
+                    localStorage.setItem("darkMode", this.isDark);
                     if (this.isDark) {
-                        document.documentElement.classList.add('dark');
+                        document.documentElement.classList.add("dark");
                     } else {
-                        document.documentElement.classList.remove('dark');
+                        document.documentElement.classList.remove("dark");
                     }
                 },
 
@@ -819,7 +819,7 @@
                     }
 
                     // Save to localStorage
-                    localStorage.setItem('receptionist_favorites', JSON.stringify(this.favorites));
+                    localStorage.setItem("receptionist_favorites", JSON.stringify(this.favorites));
                 },
 
                 checkFavorite() {
@@ -829,17 +829,17 @@
 
                 loadFavorites() {
                     try {
-                        const stored = localStorage.getItem('receptionist_favorites');
+                        const stored = localStorage.getItem("receptionist_favorites");
                         this.favorites = stored ? JSON.parse(stored) : [];
                     } catch (error) {
-                        console.error('Error loading favorites:', error);
+                        console.error("Error loading favorites:", error);
                         this.favorites = [];
                     }
                 },
 
                 removeFavorite(id) {
                     this.favorites = this.favorites.filter(f => f.id !== id);
-                    localStorage.setItem('receptionist_favorites', JSON.stringify(this.favorites));
+                    localStorage.setItem("receptionist_favorites", JSON.stringify(this.favorites));
 
                     // If we removed the current page, update the star icon
                     const currentUrl = window.location.href;

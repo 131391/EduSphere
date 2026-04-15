@@ -178,6 +178,7 @@
                                         min="0" 
                                         placeholder="0.00" 
                                         class="modal-input-premium !py-2 !px-3 !bg-white font-bold text-right text-slate-800"
+                                    >
                                     <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs transition-colors group-focus-within:text-emerald-500">₹</div>
                                 </div>
                             </div>
@@ -371,9 +372,13 @@ document.addEventListener('alpine:init', () => {
             this.submitting = true;
             this.errors = {};
             try {
-                const response = await fetch('{{ route('school.fee-master.store') }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                const response = await fetch("{{ route('school.fee-master.store') }}", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        "Accept": "application/json", 
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}" 
+                    },
                     body: JSON.stringify(this.bulkData)
                 });
                 const result = await response.json();
@@ -394,9 +399,13 @@ document.addEventListener('alpine:init', () => {
             this.errors = {};
             try {
                 const response = await fetch(`/school/fee-master/${this.editData.id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ ...this.editData, _method: 'PUT' })
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        "Accept": "application/json", 
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}" 
+                    },
+                    body: JSON.stringify({ ...this.editData, _method: "PUT" })
                 });
                 const result = await response.json();
                 if (response.ok) {
@@ -421,9 +430,13 @@ document.addEventListener('alpine:init', () => {
             this.submitting = true;
             this.errors = {};
             try {
-                const response = await fetch('{{ route('school.fee-master.store') }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                const response = await fetch("{{ route('school.fee-master.store') }}", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        "Accept": "application/json", 
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}" 
+                    },
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
@@ -456,13 +469,13 @@ document.addEventListener('alpine:init', () => {
                     callback: async () => {
                         try {
                             const response = await fetch(`/school/fee-master/${fee.id}`, {
-                                method: 'POST',
+                                method: "POST",
                                 headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    "Content-Type": "application/json",
+                                    "Accept": "application/json",
+                                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
                                 },
-                                body: JSON.stringify({ _method: 'DELETE' })
+                                body: JSON.stringify({ _method: "DELETE" })
                             });
                             
                             if (response.ok) {

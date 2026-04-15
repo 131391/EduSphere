@@ -858,8 +858,8 @@
                     placeholder: function () {
                         return $(this).data('placeholder') || 'Select an option';
                     },
-                    allowClear: $(this).data('allow-clear') !== undefined ? $(this).data('allow-clear') : false,
-                    width: '100%'
+                    allowClear: $select.data("allow-clear") !== undefined ? $select.data("allow-clear") : false,
+                    width: "100%"
                 });
 
                 // Global rule: Default Country to India (102) if empty or auto-defaulted
@@ -933,9 +933,9 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('headerActions', () => ({
+            Alpine.data("headerActions", () => ({
                 isFullscreen: false,
-                isDark: localStorage.getItem('darkMode') === 'true',
+                isDark: localStorage.getItem("darkMode") === "true",
                 isFavorite: false,
                 favorites: [],
                 showFavorites: false,
@@ -971,14 +971,13 @@
                         document.documentElement.classList.remove('dark');
                     }
                 },
-
                 async toggleFavorite() {
                     try {
-                        const response = await fetch('{{ route('school.favorites.toggle') }}', {
-                            method: 'POST',
+                        const response = await fetch("{{ route('school.favorites.toggle') }}", {
+                            method: "POST",
                             headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
                             },
                             body: JSON.stringify({
                                 title: document.title,
@@ -986,38 +985,38 @@
                             })
                         });
                         const data = await response.json();
-                        this.isFavorite = data.status === 'added';
+                        this.isFavorite = data.status === "added";
                         this.loadFavorites();
                     } catch (error) {
-                        console.error('Error toggling favorite:', error);
+                        console.error("Error toggling favorite:", error);
                     }
                 },
 
                 async checkFavorite() {
                     try {
-                        const response = await fetch('{{ route('school.favorites.check') }}?url=' + encodeURIComponent(window.location.href));
+                        const response = await fetch("{{ route('school.favorites.check') }}?url=" + encodeURIComponent(window.location.href));
                         const data = await response.json();
-                        this.isFavorite = data.is_favorite;
+                        this.isFavorite = data.is_favorite === true || data.is_favorite === "true";
                     } catch (error) {
-                        console.error('Error checking favorite:', error);
+                        console.error("Error checking favorite:", error);
                     }
                 },
 
                 async loadFavorites() {
                     try {
-                        const response = await fetch('{{ route('school.favorites.index') }}');
+                        const response = await fetch("{{ route('school.favorites.index') }}");
                         this.favorites = await response.json();
                     } catch (error) {
-                        console.error('Error loading favorites:', error);
+                        console.error("Error loading favorites:", error);
                     }
                 },
 
                 async removeFavorite(id) {
                     try {
-                        await fetch('{{ url('school/favorites') }}/' + id, {
-                            method: 'DELETE',
+                        await fetch("{{ url('school/favorites') }}/" + id, {
+                            method: "DELETE",
                             headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
                             }
                         });
                         this.loadFavorites();
@@ -1027,7 +1026,7 @@
                             this.isFavorite = false;
                         }
                     } catch (error) {
-                        console.error('Error removing favorite:', error);
+                        console.error("Error removing favorite:", error);
                     }
                 }
             }));
