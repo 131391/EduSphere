@@ -35,8 +35,17 @@ class AuditLogController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
-        $logs = $query->latest()->paginate(25);
+        $logs = $query->latest()->paginate(25)->withQueryString();
 
-        return view('admin.audit-logs.index', compact('logs'));
+        // Stats
+        $stats = [
+            'total'     => Activity::count(),
+            'today'     => Activity::whereDate('created_at', now()->toDateString())->count(),
+            'created'   => Activity::where('description', 'created')->count(),
+            'updated'   => Activity::where('description', 'updated')->count(),
+            'deleted'   => Activity::where('description', 'deleted')->count(),
+        ];
+
+        return view('admin.audit-logs.index', compact('logs', 'stats'));
     }
 }

@@ -3,7 +3,7 @@
 @section('title', 'Edit School')
 
 @section('content')
-<div class="w-full space-y-6">
+<div class="w-full space-y-6" x-data="adminSchoolEdit()">
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -20,7 +20,7 @@
         </div>
     </div>
 
-    <form action="{{ route('admin.schools.update', $school->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+    <form @submit.prevent="submitForm" action="{{ route('admin.schools.update', $school->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6" id="schoolEditForm">
         @csrf
         @method('PUT')
 
@@ -43,13 +43,15 @@
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-school text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
                                     </div>
-                                    <input type="text" name="name" id="name" value="{{ old('name', $school->name) }}" required
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none @error('name') border-red-500 @enderror"
+                                    <input type="text" name="name" id="name" x-model="formData.name" required
+                                        @input="clearError('name')"
+                                        :class="hasError('name') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                         placeholder="Enter school name">
                                 </div>
-                                @error('name')
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
-                                @enderror
+                                <template x-if="hasError('name')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('name')"></p>
+                                </template>
                             </div>
 
                             <div class="space-y-2">
@@ -58,13 +60,15 @@
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-fingerprint text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
                                     </div>
-                                    <input type="text" name="code" id="code" value="{{ old('code', $school->code) }}" required
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none @error('code') border-red-500 @enderror"
+                                    <input type="text" name="code" id="code" x-model="formData.code" required
+                                        @input="clearError('code')"
+                                        :class="hasError('code') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                         placeholder="e.g. SCH001">
                                 </div>
-                                @error('code')
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
-                                @enderror
+                                <template x-if="hasError('code')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('code')"></p>
+                                </template>
                             </div>
 
                             <div class="space-y-2">
@@ -74,17 +78,19 @@
                                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                             <i class="fas fa-link text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
                                         </div>
-                                        <input type="text" name="subdomain" id="subdomain" value="{{ old('subdomain', $school->subdomain) }}" required
-                                            class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-l-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none @error('subdomain') border-red-500 @enderror"
+                                        <input type="text" name="subdomain" id="subdomain" x-model="formData.subdomain" required
+                                            @input="clearError('subdomain')"
+                                            :class="hasError('subdomain') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                            class="w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-l-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                             placeholder="subdomain">
                                     </div>
                                     <span class="inline-flex items-center px-4 bg-gray-100 border border-l-0 border-gray-200 rounded-r-2xl text-gray-500 text-sm font-semibold">
                                         .edusphere.local
                                     </span>
                                 </div>
-                                @error('subdomain')
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
-                                @enderror
+                                <template x-if="hasError('subdomain')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('subdomain')"></p>
+                                </template>
                             </div>
 
                             <div class="space-y-2">
@@ -93,13 +99,15 @@
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-globe text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
                                     </div>
-                                    <input type="text" name="domain" id="domain" value="{{ old('domain', $school->domain) }}"
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none @error('domain') border-red-500 @enderror"
+                                    <input type="text" name="domain" id="domain" x-model="formData.domain"
+                                        @input="clearError('domain')"
+                                        :class="hasError('domain') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                         placeholder="e.g. school.com">
                                 </div>
-                                @error('domain')
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
-                                @enderror
+                                <template x-if="hasError('domain')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('domain')"></p>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -121,18 +129,20 @@
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-envelope text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
                                     </div>
-                                    <input type="text" name="email" id="email" value="{{ old('email', $school->email) }}"
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none @error('email') border-red-500 @enderror"
+                                    <input type="text" name="email" id="email" x-model="formData.email"
+                                        @input="clearError('email')"
+                                        :class="hasError('email') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                         placeholder="school@example.com">
                                 </div>
-                                @error('email')
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
-                                @enderror
+                                <template x-if="hasError('email')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('email')"></p>
+                                </template>
                             </div>
 
                             <div class="space-y-2">
                                 <label for="phone" class="text-sm font-bold text-gray-700 ml-1">Phone Number <span class="text-red-500">*</span></label>
-                                <x-phone-input name="phone" id="phone" :value="$school->phone" />
+                                <x-phone-input name="phone" id="phone" x-model="formData.phone" />
                             </div>
 
                             <div class="md:col-span-2 space-y-2">
@@ -141,13 +151,15 @@
                                     <div class="absolute top-3 left-4 pointer-events-none">
                                         <i class="fas fa-map-marker-alt text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
                                     </div>
-                                    <textarea name="address" id="address" rows="3"
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none @error('address') border-red-500 @enderror"
-                                        placeholder="Enter full address">{{ old('address', $school->address) }}</textarea>
+                                    <textarea name="address" id="address" rows="3" x-model="formData.address"
+                                        @input="clearError('address')"
+                                        :class="hasError('address') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                                        placeholder="Enter full address"></textarea>
                                 </div>
-                                @error('address')
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
-                                @enderror
+                                <template x-if="hasError('address')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('address')"></p>
+                                </template>
                             </div>
 
                             <div class="space-y-2">
@@ -156,49 +168,64 @@
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-globe text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
                                     </div>
-                                    <select name="country_id" id="country_id"
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none appearance-none cursor-pointer"
+                                    <select name="country_id" id="country_id" x-model="formData.country_id"
+                                        @change="clearError('country_id'); $nextTick(() => { formData.state_id = ''; formData.city_id = ''; })"
+                                        :class="hasError('country_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none appearance-none cursor-pointer no-select2"
                                         data-location-cascade="true"
-                                        data-country-select="true">
+                                        data-country-select="true"
+                                        :data-selected="formData.country_id">
                                         <option value="">Select Country</option>
-                                        @if($school->country_id)
-                                            <option value="{{ $school->country_id }}" selected>{{ $school->country->name ?? 'Selected Country' }}</option>
-                                        @endif
                                     </select>
                                     <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                         <i class="fas fa-chevron-down text-gray-400"></i>
                                     </div>
                                 </div>
-                                @error('country_id')
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1">{{ $message }}</p>
-                                @enderror
+                                <template x-if="hasError('country_id')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('country_id')"></p>
+                                </template>
                             </div>
 
                             <div class="space-y-2">
                                 <label for="state_id" class="text-sm font-bold text-gray-700 ml-1">State</label>
-                                <select name="state_id" id="state_id"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                                <select name="state_id" id="state_id" x-model="formData.state_id"
+                                    @change="clearError('state_id'); $nextTick(() => { formData.city_id = ''; })"
+                                    :class="hasError('state_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none no-select2"
                                     data-state-select="true"
-                                    data-selected="{{ old('state_id', $school->state_id) }}">
+                                    :data-selected="formData.state_id">
                                     <option value="">Select State</option>
                                 </select>
+                                <template x-if="hasError('state_id')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('state_id')"></p>
+                                </template>
                             </div>
 
                             <div class="space-y-2">
                                 <label for="city_id" class="text-sm font-bold text-gray-700 ml-1">City</label>
-                                <select name="city_id" id="city_id"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                                <select name="city_id" id="city_id" x-model="formData.city_id"
+                                    @change="clearError('city_id')"
+                                    :class="hasError('city_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none no-select2"
                                     data-city-select="true"
-                                    data-selected="{{ old('city_id', $school->city_id) }}">
+                                    :data-selected="formData.city_id">
                                     <option value="">Select City</option>
                                 </select>
+                                <template x-if="hasError('city_id')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('city_id')"></p>
+                                </template>
                             </div>
 
                             <div class="space-y-2">
                                 <label for="pincode" class="text-sm font-bold text-gray-700 ml-1">Pincode</label>
-                                <input type="text" name="pincode" id="pincode" value="{{ old('pincode', $school->pincode) }}"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                                <input type="text" name="pincode" id="pincode" x-model="formData.pincode"
+                                    @input="clearError('pincode')"
+                                    :class="hasError('pincode') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                     placeholder="Enter pincode">
+                                <template x-if="hasError('pincode')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('pincode')"></p>
+                                </template>
                             </div>
 
                             <div class="md:col-span-2 space-y-2">
@@ -207,10 +234,15 @@
                                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <i class="fas fa-link text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
                                     </div>
-                                    <input type="url" name="website" id="website" value="{{ old('website', $school->website) }}"
-                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                                    <input type="url" name="website" id="website" x-model="formData.website"
+                                        @input="clearError('website')"
+                                        :class="hasError('website') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                         placeholder="https://www.school.com">
                                 </div>
+                                <template x-if="hasError('website')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('website')"></p>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -230,28 +262,39 @@
                     <div class="p-6 space-y-6">
                         <div class="space-y-2">
                             <label for="status" class="text-sm font-bold text-gray-700 ml-1">Account Status <span class="text-red-500">*</span></label>
-                            <select name="status" id="status" required
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none appearance-none cursor-pointer">
+                            <select name="status" id="status" x-model="formData.status" required
+                                @change="clearError('status')"
+                                :class="hasError('status') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none appearance-none cursor-pointer no-select2">
                                 @foreach(\App\Enums\SchoolStatus::cases() as $status)
-                                    <option value="{{ $status->value }}" {{ old('status', $school->status instanceof \UnitEnum ? $school->status->value : $school->status) == $status->value ? 'selected' : '' }}>
-                                        {{ $status->label() }}
-                                    </option>
+                                    <option value="{{ $status->value }}">{{ $status->label() }}</option>
                                 @endforeach
                             </select>
+                            <template x-if="hasError('status')">
+                                <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('status')"></p>
+                            </template>
                         </div>
 
                         <div class="space-y-2">
                             <label for="subscription_start_date" class="text-sm font-bold text-gray-700 ml-1">Subscription Start</label>
-                            <input type="date" name="subscription_start_date" id="subscription_start_date" 
-                                value="{{ old('subscription_start_date', $school->subscription_start_date ? $school->subscription_start_date->format('Y-m-d') : '') }}"
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
+                            <input type="date" name="subscription_start_date" id="subscription_start_date" x-model="formData.subscription_start_date"
+                                @input="clearError('subscription_start_date')"
+                                :class="hasError('subscription_start_date') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
+                            <template x-if="hasError('subscription_start_date')">
+                                <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('subscription_start_date')"></p>
+                            </template>
                         </div>
 
                         <div class="space-y-2">
                             <label for="subscription_end_date" class="text-sm font-bold text-gray-700 ml-1">Subscription End</label>
-                            <input type="date" name="subscription_end_date" id="subscription_end_date" 
-                                value="{{ old('subscription_end_date', $school->subscription_end_date ? $school->subscription_end_date->format('Y-m-d') : '') }}"
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
+                            <input type="date" name="subscription_end_date" id="subscription_end_date" x-model="formData.subscription_end_date"
+                                @input="clearError('subscription_end_date')"
+                                :class="hasError('subscription_end_date') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
+                             <template x-if="hasError('subscription_end_date')">
+                                <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('subscription_end_date')"></p>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -269,13 +312,23 @@
                             <input type="hidden" name="admin_id" value="{{ $admin->id }}">
                             <div class="space-y-2">
                                 <label for="admin_name" class="text-sm font-bold text-gray-700 ml-1">Admin Name</label>
-                                <input type="text" name="admin_name" id="admin_name" value="{{ old('admin_name', $admin->name) }}"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                                <input type="text" name="admin_name" id="admin_name" x-model="formData.admin_name"
+                                    @input="clearError('admin_name')"
+                                    :class="hasError('admin_name') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                                <template x-if="hasError('admin_name')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('admin_name')"></p>
+                                </template>
                             </div>
                             <div class="space-y-2">
                                 <label for="admin_email" class="text-sm font-bold text-gray-700 ml-1">Admin Email</label>
-                                <input type="email" name="admin_email" id="admin_email" value="{{ old('admin_email', $admin->email) }}"
-                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                                <input type="email" name="admin_email" id="admin_email" x-model="formData.admin_email"
+                                    @input="clearError('admin_email')"
+                                    :class="hasError('admin_email') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                                <template x-if="hasError('admin_email')">
+                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('admin_email')"></p>
+                                </template>
                             </div>
                             <div class="pt-4 border-t border-gray-50">
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Change Password</p>
@@ -283,22 +336,21 @@
                                     <div class="space-y-2">
                                         <label for="admin_password" class="text-sm font-bold text-gray-700 ml-1">New Password</label>
                                         <input type="password" name="admin_password" id="admin_password" placeholder="Leave blank to keep current"
-                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
-                                        @error('admin_password')
-                                            <p class="text-xs text-red-500 ml-1">{{ $message }}</p>
-                                        @enderror
+                                            x-model="formData.admin_password"
+                                            @input="clearError('admin_password')"
+                                            :class="hasError('admin_password') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                            class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                                        <template x-if="hasError('admin_password')">
+                                            <p class="text-xs text-red-500 ml-1" x-text="getError('admin_password')"></p>
+                                        </template>
                                     </div>
                                     <div class="space-y-2">
                                         <label for="admin_password_confirmation" class="text-sm font-bold text-gray-700 ml-1">Confirm Password</label>
                                         <input type="password" name="admin_password_confirmation" id="admin_password_confirmation" placeholder="Confirm new password"
-                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
+                                            x-model="formData.admin_password_confirmation"
+                                            class="w-full px-4 py-3 bg-gray-50 border rounded-2xl focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
                                     </div>
                                 </div>
-                            </div>
-                        @else
-                            <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start">
-                                <i class="fas fa-exclamation-triangle text-amber-500 mt-1 mr-3"></i>
-                                <p class="text-sm text-amber-700">No primary administrator account found for this school.</p>
                             </div>
                         @endif
                     </div>
@@ -316,33 +368,46 @@
                         <div class="space-y-4">
                             <label class="text-sm font-bold text-gray-700 ml-1">School Logo</label>
                             
-                            <div class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative group">
+                            <div class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative group"
+                                :class="hasError('logo') ? 'border-red-500' : 'border-gray-200'">
                                 @if($school->logo)
-                                <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name }}" class="w-32 h-32 rounded-2xl object-cover shadow-md mb-4">
+                                <img id="logo-preview" src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name }}" class="w-32 h-32 rounded-2xl object-cover shadow-md mb-4">
                                 @else
-                                <div class="w-32 h-32 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-4">
+                                <div id="logo-placeholder" class="w-32 h-32 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-4">
                                     <i class="fas fa-school text-gray-300 text-4xl"></i>
                                 </div>
+                                <img id="logo-preview" src="#" class="hidden w-32 h-32 rounded-2xl object-cover shadow-md mb-4">
                                 @endif
                                 
                                 <div class="text-center">
                                     <p class="text-sm font-bold text-gray-700">Change Logo</p>
                                     <p class="text-xs text-gray-500 mt-1">JPG, PNG or SVG (Max 2MB)</p>
                                 </div>
-                                <input type="file" name="logo" id="logo" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                                <input type="file" name="logo" id="logo" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" @change="previewLogo($event)">
                             </div>
                             
-                            @error('logo')
-                            <p class="mt-1 text-xs text-red-600 font-medium text-center">{{ $message }}</p>
-                            @enderror
+                            <template x-if="hasError('logo')">
+                                <p class="mt-1 text-xs text-red-600 font-medium text-center" x-text="getError('logo')"></p>
+                            </template>
                         </div>
                     </div>
                 </div>
 
                 <!-- Form Actions Card -->
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-                    <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-2xl shadow-lg shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center">
-                        <i class="fas fa-save mr-3"></i>Save Changes
+                    <button type="submit" 
+                        :disabled="loading"
+                        class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-2xl shadow-lg shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <template x-if="!loading">
+                            <span class="flex items-center">
+                                <i class="fas fa-save mr-3"></i>Save Changes
+                            </span>
+                        </template>
+                        <template x-if="loading">
+                            <span class="flex items-center">
+                                <i class="fas fa-spinner fa-spin mr-3"></i>Updating...
+                            </span>
+                        </template>
                     </button>
                     <a href="{{ route('admin.schools.index') }}" class="w-full mt-3 py-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-2xl transition-all flex items-center justify-center">
                         Cancel
@@ -352,5 +417,132 @@
         </div>
     </form>
 </div>
-@endsection
 
+<script>
+function adminSchoolEdit() {
+    return {
+        formData: {
+            name: @json($school->name),
+            code: @json($school->code),
+            subdomain: @json($school->subdomain),
+            domain: @json($school->domain),
+            email: @json($school->email),
+            phone: @json($school->phone),
+            address: @json($school->address),
+            city_id: @json($school->city_id),
+            state_id: @json($school->state_id),
+            country_id: @json($school->country_id),
+            pincode: @json($school->pincode),
+            website: @json($school->website),
+            status: @json($school->status instanceof \UnitEnum ? $school->status->value : $school->status),
+            subscription_start_date: @json($school->subscription_start_date ? $school->subscription_start_date->format('Y-m-d') : ''),
+            subscription_end_date: @json($school->subscription_end_date ? $school->subscription_end_date->format('Y-m-d') : ''),
+            admin_name: @json($admin->name ?? ''),
+            admin_email: @json($admin->email ?? ''),
+            admin_password: '',
+            admin_password_confirmation: ''
+        },
+        errors: {},
+        loading: false,
+
+        init() {
+            // Synchronize cascading selects after external script loads options
+            this.$nextTick(() => {
+                // We use a small delay to ensure the location-cascade.js and select2 are fully initialized
+                setTimeout(() => {
+                    // Force update Alpine state from DOM for location-cascade fields if they changed
+                    if (document.getElementById('country_id')) this.formData.country_id = document.getElementById('country_id').value;
+                    if (document.getElementById('state_id')) this.formData.state_id = document.getElementById('state_id').value;
+                    if (document.getElementById('city_id')) this.formData.city_id = document.getElementById('city_id').value;
+                    
+                    // Trigger native input event for custom components like phone-input
+                    const phoneInput = document.getElementById('phone');
+                    if (phoneInput) {
+                        phoneInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }, 800);
+            });
+        },
+
+        submitForm() {
+            this.loading = true;
+            this.errors = {};
+
+            let form = document.getElementById('schoolEditForm');
+            let formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('success', data.message || 'School updated successfully');
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1500);
+                } else {
+                    if (response.status === 422) {
+                        this.errors = data.errors || {};
+                        showToast('error', 'Please fix the errors below');
+                    } else {
+                        showToast('error', data.message || 'An error occurred while updating the school');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'An unexpected error occurred');
+            })
+            .finally(() => {
+                this.loading = false;
+            });
+        },
+
+        clearError(field) {
+            if (this.errors[field]) {
+                const nextErrors = { ...this.errors };
+                delete nextErrors[field];
+                this.errors = nextErrors;
+            }
+        },
+
+        hasError(field) {
+            return !!(this.errors && this.errors[field] && this.errors[field].length > 0);
+        },
+
+        getError(field) {
+            return this.hasError(field) ? this.errors[field][0] : '';
+        },
+
+        previewLogo(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = document.getElementById('logo-preview');
+                    const placeholder = document.getElementById('logo-placeholder');
+                    
+                    if (preview) {
+                        preview.src = e.target.result;
+                        preview.classList.remove('hidden');
+                    }
+                    if (placeholder) {
+                        placeholder.classList.add('hidden');
+                    }
+                    
+                    this.clearError('logo');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+}
+</script>
+@endsection

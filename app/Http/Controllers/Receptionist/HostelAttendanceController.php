@@ -20,12 +20,23 @@ class HostelAttendanceController extends TenantController
     {
         $schoolId = $this->getSchoolId();
         
-        // Get all hostels for the school
-        $hostels = Hostel::where('school_id', $schoolId)
-            ->orderBy('hostel_name')
-            ->get();
+        // Calculate Global Stats for today
+        $today = now()->toDateString();
+        $stats = [
+            'total_residents' => HostelBedAssignment::where('school_id', $schoolId)
+                ->whereNull('deleted_at')
+                ->count(),
+            'present_today' => HostelAttendance::where('school_id', $schoolId)
+                ->where('attendance_date', $today)
+                ->where('is_present', true)
+                ->count(),
+            'absent_today' => HostelAttendance::where('school_id', $schoolId)
+                ->where('attendance_date', $today)
+                ->where('is_present', false)
+                ->count(),
+        ];
 
-        return view('receptionist.hostel-attendance.index', compact('hostels'));
+        return view('receptionist.hostel-attendance.index', compact('hostels', 'stats'));
     }
 
     /**

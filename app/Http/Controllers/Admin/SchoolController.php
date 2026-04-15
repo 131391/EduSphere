@@ -175,6 +175,14 @@ class SchoolController extends Controller
 
             \DB::commit();
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'School and Administrator account created successfully.',
+                    'redirect' => route('admin.schools.index')
+                ]);
+            }
+
             return redirect()->route('admin.schools.index')
                 ->with('success', 'School and Administrator account created successfully.');
 
@@ -185,6 +193,13 @@ class SchoolController extends Controller
                 Storage::disk('public')->delete($validated['logo']);
             }
             
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create school: ' . $e->getMessage()
+                ], 500);
+            }
+
             return back()->withInput()->with('error', 'Failed to create school: ' . $e->getMessage());
         }
     }
@@ -255,6 +270,14 @@ class SchoolController extends Controller
         } catch (\Exception $e) {
             \DB::rollBack();
             return back()->withInput()->with('error', 'Failed to update school: ' . $e->getMessage());
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'School updated successfully.',
+                'redirect' => route('admin.schools.index')
+            ]);
         }
 
         return redirect()->route('admin.schools.index')

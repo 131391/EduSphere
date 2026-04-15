@@ -638,6 +638,14 @@
                 subtree: true
             });
         });
+
+        // Global Toast Notification Helper
+        window.showToast = function(type, message) {
+            const event = new CustomEvent('show-toast', {
+                detail: { type, message }
+            });
+            window.dispatchEvent(event);
+        };
     </script>
 
     <!-- Global Form Validation Error Handler -->

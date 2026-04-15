@@ -24,23 +24,6 @@
           class="space-y-8">
         @csrf
         
-        <div id="ajax-errors" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg shadow-sm">
-            <div class="flex items-start">
-                <div class="flex-shrink-0 mt-0.5">
-                    <i class="fas fa-exclamation-circle text-red-500"></i>
-                </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800" id="error-title">
-                        There were errors with your submission
-                    </h3>
-                    <div class="mt-2 text-sm text-red-700">
-                        <ul class="list-disc pl-5 space-y-1" id="error-list">
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Admission Info -->
         @include('school.admission.partials._admission_info')
 
@@ -131,13 +114,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         displayErrors(errors) {
-            const errorContainer = document.getElementById('ajax-errors');
-            const errorList = document.getElementById('error-list');
-            const errorTitle = document.getElementById('error-title');
-            
-            errorList.innerHTML = '';
-            errorTitle.innerText = `There were ${Object.keys(errors).length} errors with your submission`;
-            
             Object.keys(errors).forEach(field => {
                 const input = document.querySelector(`[name="${field}"]`);
                 if (input) {
@@ -146,21 +122,26 @@ document.addEventListener('alpine:init', () => {
                         $(input).next('.select2-container').find('.select2-selection').addClass('border-red-500');
                     }
 
-                    // Add to top list
-                    const li = document.createElement('li');
-                    li.innerText = errors[field][0];
-                    errorList.appendChild(li);
+                    // Find or create error message element
+                    let errorMsg = input.closest('div').querySelector('.error-message');
+                    if (!errorMsg) {
+                        errorMsg = document.createElement('p');
+                        errorMsg.className = 'error-message text-red-500 text-xs mt-1';
+                        input.closest('div').appendChild(errorMsg);
+                    }
+                    errorMsg.innerText = errors[field][0];
                 }
             });
             
-            errorContainer.classList.remove('hidden');
-            errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const firstError = document.querySelector('.border-red-500');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         },
 
         clearErrors() {
             document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
-            document.getElementById('ajax-errors').classList.add('hidden');
-            document.getElementById('error-list').innerHTML = '';
+            document.querySelectorAll('.error-message').forEach(el => el.remove());
         }
     }));
 });
@@ -457,43 +438,23 @@ $(document).ready(function() {
         }
     @endif
     
-    // Global error clearing - clear errors when fields are interacted with (but not on page load)
-    // Use a flag to track if this is user interaction vs page load
-    let isUserInteraction = false;
-    let pageLoadComplete = false;
-    
-    // Mark page load as complete after a delay
-    setTimeout(function() {
-        pageLoadComplete = true;
-        // Only enable user interaction clearing after page is fully loaded
-        setTimeout(function() {
-            isUserInteraction = true;
-        }, 100);
-    }, 1000);
-    
+    // Global error clearing - clear errors when fields are interacted with
     $(document).on('input change', 'input, select, textarea', function(e) {
-        // Only clear errors if this is actual user interaction, not page load or programmatic change
-        if (!isUserInteraction || !pageLoadComplete) return;
-        
-        // Don't clear if this was triggered programmatically (e.g., by Select2 initialization)
-        if (e.originalEvent === undefined) return;
-        
         const $field = $(this);
-        const fieldName = $field.attr('name');
+        const $wrapper = $field.closest('div');
         
-        if (fieldName && $field.val()) {
-            // Remove red border
-            $field.removeClass('border-red-500');
-            
-            // Remove error message (only <p> tags with text-red-500, not asterisks in labels)
-            $field.closest('div').find('p.text-red-500').remove();
-            
-            // For Select2 fields, also remove error styling from container
-            if ($field.hasClass('select2-hidden-accessible')) {
-                $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
-            }
+        // Always remove red border from the field itself on interaction
+        $field.removeClass('border-red-500');
+        
+        // If it's a Select2 field, remove border from its container too
+        if ($field.hasClass('select2-hidden-accessible')) {
+            $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
         }
+        
+        // Remove the error message text
+        $wrapper.find('.error-message, p.text-red-500').remove();
     });
+
 
     /**
      * Fix form submission issues caused by Select2 and disabled selects:

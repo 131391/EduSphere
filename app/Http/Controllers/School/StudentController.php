@@ -35,12 +35,24 @@ class StudentController extends TenantController
         }
 
         $students = $query->latest()->paginate(20);
+
+        // Stats
+        $stats = [
+            'total' => \App\Models\Student::where('school_id', $this->getSchoolId())->count(),
+            'active' => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', 'active')->count(),
+            'inactive' => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', 'inactive')->count(),
+            'admissions_this_month' => \App\Models\Student::where('school_id', $this->getSchoolId())
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+        ];
+
         $classes = \App\Models\ClassModel::where('school_id', $this->getSchoolId())->get();
         $sections = $request->filled('class_id') 
             ? \App\Models\Section::where('class_id', $request->class_id)->get()
             : collect();
 
-        return view('school.students.index', compact('students', 'classes', 'sections', 'request'));
+        return view('school.students.index', compact('students', 'classes', 'sections', 'request', 'stats'));
     }
 
     public function create()
@@ -103,6 +115,13 @@ class StudentController extends TenantController
         $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
         
         $student->delete();
+
+        if (request()->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Student record moved to archives successfully.'
+            ]);
+        }
 
         return redirect()->route('school.students.index')
             ->with('success', 'Student record moved to archives.');

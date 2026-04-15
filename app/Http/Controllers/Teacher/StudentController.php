@@ -40,7 +40,15 @@ class StudentController extends Controller
         $students = $query->orderBy('first_name')->paginate(20)->withQueryString();
         $classes  = $teacher->classes()->get();
 
-        return view('teacher.students.index', compact('students', 'classes', 'teacher'));
+        // Stats
+        $stats = [
+            'total'   => Student::where('school_id', $teacher->school_id)->whereIn('class_id', $classIds)->count(),
+            'male'    => Student::where('school_id', $teacher->school_id)->whereIn('class_id', $classIds)->where('gender', \App\Enums\Gender::Male)->count(),
+            'female'  => Student::where('school_id', $teacher->school_id)->whereIn('class_id', $classIds)->where('gender', \App\Enums\Gender::Female)->count(),
+            'classes' => $classIds->count(),
+        ];
+
+        return view('teacher.students.index', compact('students', 'classes', 'teacher', 'stats'));
     }
 
     public function show($id)

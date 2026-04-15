@@ -1,7 +1,7 @@
 {{-- Photo Details --}}
 <div class="mb-6">
-    <div class="bg-teal-500 text-white px-4 py-3 rounded-t-lg font-semibold">
-        Photo Details
+    <div class="bg-teal-500 text-white px-4 py-3 rounded-t-lg font-semibold flex items-center justify-between">
+        <span>Photo Details</span>
     </div>
     <div class="bg-white dark:bg-gray-800 p-6 rounded-b-lg border border-gray-200 dark:border-gray-700">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

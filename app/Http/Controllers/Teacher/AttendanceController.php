@@ -48,8 +48,17 @@ class AttendanceController extends Controller
 
         $statuses = AttendanceStatus::cases();
 
+        // Calculate Stats
+        $stats = [
+            'present' => $existingAttendance->filter(fn($val) => $val === 1)->count(),
+            'absent'  => $existingAttendance->filter(fn($val) => $val === 2)->count(),
+            'others'  => $existingAttendance->filter(fn($val) => $val > 2)->count(),
+            'total'   => $students->count(),
+            'unmarked'=> $students->count() - $existingAttendance->count(),
+        ];
+
         return view('teacher.attendance.index', compact(
-            'teacher', 'classes', 'students', 'existingAttendance', 'date', 'classId', 'statuses'
+            'teacher', 'classes', 'students', 'existingAttendance', 'date', 'classId', 'statuses', 'stats'
         ));
     }
 

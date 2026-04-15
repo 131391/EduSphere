@@ -39,10 +39,19 @@ class UserController extends Controller
             $query->where('status', $request->status);
         }
 
-        $users = $query->orderBy('created_at', 'desc')->paginate(25);
+        $users = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
         $schools = School::orderBy('name')->get(['id', 'name']);
         $roles = Role::orderBy('name')->get(['id', 'name', 'slug']);
 
-        return view('admin.users.index', compact('users', 'schools', 'roles'));
+        // Stats
+        $stats = [
+            'total'     => User::count(),
+            'active'    => User::where('status', \App\Enums\UserStatus::Active)->count(),
+            'inactive'  => User::where('status', \App\Enums\UserStatus::Inactive)->count(),
+            'suspended' => User::where('status', \App\Enums\UserStatus::Suspended)->count(),
+            'pending'   => User::where('status', \App\Enums\UserStatus::Pending)->count(),
+        ];
+
+        return view('admin.users.index', compact('users', 'schools', 'roles', 'stats'));
     }
 }

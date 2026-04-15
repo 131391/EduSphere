@@ -15,30 +15,14 @@
 
 
 
-    <form action="{{ route('receptionist.admission.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+    <form x-data="admissionForm()" 
+          @submit.prevent="submitForm"
+          action="{{ route('receptionist.admission.store') }}" 
+          method="POST" 
+          id="admissionForm"
+          enctype="multipart/form-data" 
+          class="space-y-8">
         @csrf
-        
-        @if ($errors->any())
-            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg shadow-sm">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 mt-0.5">
-                        <i class="fas fa-exclamation-circle text-red-500"></i>
-                    </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-red-800">
-                            There were {{ $errors->count() }} errors with your submission
-                        </h3>
-                        <div class="mt-2 text-sm text-red-700">
-                            <ul class="list-disc pl-5 space-y-1">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
         
         <!-- Admission Info -->
         @include('receptionist.admission.partials._admission_info')
@@ -73,6 +57,95 @@
 
 @push('scripts')
 <script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('admissionForm', () => ({
+        submitting: false,
+        
+        async submitForm() {
+            this.submitting = true;
+            this.clearErrors();
+
+            const form = document.getElementById('admissionForm');
+            
+            // Trigger the JQuery fix for disabled selects before creating FormData
+            $(form).find('select[disabled]').removeAttr('disabled');
+            
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.status === 422) {
+                    this.displayErrors(result.errors);
+                } else if (response.ok) {
+                    if (window.Toast) {
+                        window.Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Admission completed successfully'
+                        });
+                    }
+                    if (result.redirect) {
+                        setTimeout(() => window.location.href = result.redirect, 1000);
+                    }
+                } else {
+                    throw new Error(result.message || 'Something went wrong');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                if (window.Toast) {
+                    window.Toast.fire({
+                        icon: 'error',
+                        title: error.message || 'Could not complete admission'
+                    });
+                }
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        displayErrors(errors) {
+            Object.keys(errors).forEach(field => {
+                const input = document.querySelector(`[name="${field}"]`);
+                if (input) {
+                    input.classList.add('border-red-500');
+                    if ($(input).hasClass('select2-hidden-accessible')) {
+                        $(input).next('.select2-container').find('.select2-selection').addClass('border-red-500');
+                    }
+
+                    // Find or create error message element
+                    let errorMsg = input.closest('div').querySelector('.error-message');
+                    if (!errorMsg) {
+                        errorMsg = document.createElement('p');
+                        errorMsg.className = 'error-message text-red-500 text-xs mt-1';
+                        input.closest('div').appendChild(errorMsg);
+                    }
+                    errorMsg.innerText = errors[field][0];
+                }
+            });
+            
+            const firstError = document.querySelector('.border-red-500');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        },
+
+        clearErrors() {
+            document.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+            document.querySelectorAll('.error-message').forEach(el => el.remove());
+        }
+    }));
+});
+
 // Helper function to load image preview from storage path
 function loadImagePreview(imagePath, previewId, iconId, removeBtnId) {
     if (!imagePath) return;
@@ -365,43 +438,23 @@ $(document).ready(function() {
         }
     @endif
     
-    // Global error clearing - clear errors when fields are interacted with (but not on page load)
-    // Use a flag to track if this is user interaction vs page load
-    let isUserInteraction = false;
-    let pageLoadComplete = false;
-    
-    // Mark page load as complete after a delay
-    setTimeout(function() {
-        pageLoadComplete = true;
-        // Only enable user interaction clearing after page is fully loaded
-        setTimeout(function() {
-            isUserInteraction = true;
-        }, 100);
-    }, 1000);
-    
+    // Global error clearing - clear errors when fields are interacted with
     $(document).on('input change', 'input, select, textarea', function(e) {
-        // Only clear errors if this is actual user interaction, not page load or programmatic change
-        if (!isUserInteraction || !pageLoadComplete) return;
-        
-        // Don't clear if this was triggered programmatically (e.g., by Select2 initialization)
-        if (e.originalEvent === undefined) return;
-        
         const $field = $(this);
-        const fieldName = $field.attr('name');
+        const $wrapper = $field.closest('div');
         
-        if (fieldName && $field.val()) {
-            // Remove red border
-            $field.removeClass('border-red-500');
-            
-            // Remove error message (only <p> tags with text-red-500, not asterisks in labels)
-            $field.closest('div').find('p.text-red-500').remove();
-            
-            // For Select2 fields, also remove error styling from container
-            if ($field.hasClass('select2-hidden-accessible')) {
-                $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
-            }
+        // Always remove red border from the field itself on interaction
+        $field.removeClass('border-red-500');
+        
+        // If it's a Select2 field, remove border from its container too
+        if ($field.hasClass('select2-hidden-accessible')) {
+            $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
         }
+        
+        // Remove the error message text
+        $wrapper.find('.error-message, p.text-red-500').remove();
     });
+
 
     /**
      * Fix form submission issues caused by Select2 and disabled selects:

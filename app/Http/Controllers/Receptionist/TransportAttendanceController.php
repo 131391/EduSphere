@@ -42,10 +42,27 @@ class TransportAttendanceController extends TenantController
         // Get attendance types
         $attendanceTypes = TransportAttendanceType::cases();
 
+        // Calculate Global Stats for today
+        $today = now()->toDateString();
+        $stats = [
+            'total_students' => StudentTransportAssignment::where('school_id', $schoolId)
+                ->where('academic_year_id', $currentAcademicYear->id)
+                ->count(),
+            'boarded_today' => TransportAttendance::where('school_id', $schoolId)
+                ->where('attendance_date', $today)
+                ->where('is_present', true)
+                ->count(),
+            'absent_today' => TransportAttendance::where('school_id', $schoolId)
+                ->where('attendance_date', $today)
+                ->where('is_present', false)
+                ->count(),
+        ];
+
         return view('receptionist.transport-attendance.index', compact(
             'vehicles',
             'attendanceTypes',
-            'currentAcademicYear'
+            'currentAcademicYear',
+            'stats'
         ));
     }
 

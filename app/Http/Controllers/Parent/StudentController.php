@@ -18,10 +18,20 @@ class StudentController extends Controller
         }
 
         $children = $parentProfile->students()
-            ->with(['class', 'section', 'academicYear'])
+            ->with(['class', 'section', 'academicYear', 'attendance', 'fees'])
             ->get();
 
-        return view('parent.children.index', compact('children', 'parentProfile'));
+        $stats = [
+            'total_children' => $children->count(),
+            'total_due'      => $children->sum(function($c) { return $c->fees->sum('due_amount'); }),
+            'avg_attendance' => $children->avg(function($c) {
+                $total = $c->attendance->count();
+                $pres = $c->attendance->filter(fn($a) => $a->status?->value === 1)->count();
+                return $total > 0 ? ($pres / $total) * 100 : 0;
+            }) ?? 0,
+        ];
+
+        return view('parent.children.index', compact('children', 'parentProfile', 'stats'));
     }
 
     public function show($id)

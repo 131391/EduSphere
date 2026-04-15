@@ -23,14 +23,28 @@ class ResultController extends Controller
         $selectedChildId = $request->filled('student_id') ? $request->student_id : optional($children->first())->id;
 
         $results = collect();
+        $stats = [
+            'total_exams' => 0,
+            'avg_pct'     => 0,
+            'best_subject' => 'N/A'
+        ];
+
         if ($selectedChildId && $children->contains('id', $selectedChildId)) {
-            $results = Result::where('student_id', $selectedChildId)
+            $allResults = Result::where('student_id', $selectedChildId)
                 ->with(['exam', 'subject'])
                 ->orderByDesc('created_at')
-                ->get()
-                ->groupBy(fn($r) => optional($r->exam)->name ?? 'Unknown Exam');
+                ->get();
+
+            if ($allResults->isNotEmpty()) {
+                $stats['total_exams'] = $allResults->groupBy('exam_id')->count();
+                $stats['avg_pct']     = round($allResults->avg('percentage'), 1);
+                $bestResult = $allResults->sortByDesc('percentage')->first();
+                $stats['best_subject'] = optional($bestResult->subject)->name ?? 'N/A';
+            }
+
+            $results = $allResults->groupBy(fn($r) => optional($r->exam)->name ?? 'Unknown Exam');
         }
 
-        return view('parent.results.index', compact('children', 'results', 'selectedChildId', 'parentProfile'));
+        return view('parent.results.index', compact('children', 'results', 'selectedChildId', 'parentProfile', 'stats'));
     }
 }

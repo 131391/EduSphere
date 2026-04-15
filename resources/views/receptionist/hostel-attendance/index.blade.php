@@ -1,218 +1,228 @@
 @extends('layouts.receptionist')
 
-@section('title', 'Hostel Registry - Receptionist')
-@section('page-title', 'Hostel Registry')
-@section('page-description', 'Track and synchronize student residential attendance metrics')
+@section('title', 'Hostel Census Registry')
 
 @section('content')
 <div class="space-y-6" x-data="hostelAttendanceManagement()" x-init="init()">
-    {{-- Statistics Overview --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Managed Blocks</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $hostels->count() }}</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-building text-blue-600 text-xl"></i>
-                </div>
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 border border-teal-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-hotel text-xs"></i>
+                    </div>
+                    Hostel Residential Census
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Capture and synchronize real-time residential presence across institutional blocks.</p>
             </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Residents</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2" x-text="students.length || '0'">0</p>
-                </div>
-                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-users text-emerald-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-teal-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Synchronized</p>
-                    <p class="text-3xl font-bold text-teal-600 mt-2" x-text="checkedStudents.length || '0'">0</p>
-                </div>
-                <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-check-circle text-teal-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-red-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Exceptions</p>
-                    <p class="text-3xl font-bold text-red-600 mt-2" x-text="students.length - checkedStudents.length || '0'">0</p>
-                </div>
-                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                </div>
+            
+            <div class="flex items-center gap-3">
+                <a href="{{ route('receptionist.hostel-attendance.report') }}" 
+                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm">
+                    <i class="fas fa-file-invoice mr-2 opacity-50"></i>
+                    Attendance Reports
+                </a>
             </div>
         </div>
     </div>
 
-    {{-- Configuration Header --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
-        <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
-            <div class="flex items-center gap-4 w-full lg:w-auto">
-                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}" 
-                   class="w-8 h-8 bg-teal-50 border border-teal-100 rounded-lg flex items-center justify-center text-teal-600 hover:bg-teal-100 transition-all shadow-sm">
-                    <i class="fas fa-arrow-left text-xs"></i>
-                </a>
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                            <i class="fas fa-clipboard-check text-xs"></i>
-                        </div>
-                        Hostel Registry
-                    </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Capture real-time occupancy and presence metrics.</p>
-                </div>
+    <!-- Stats Section -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-teal-50 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+            <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <i class="fas fa-users text-xl"></i>
             </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Total Residents</p>
+                <p class="text-xl font-black text-gray-800">{{ number_format($stats['total_residents']) }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-teal-50 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <i class="fas fa-check-double text-xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Present Today</p>
+                <p class="text-xl font-black text-emerald-600">{{ number_format($stats['present_today']) }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-teal-50 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+            <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <i class="fas fa-user-clock text-xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Absent Today</p>
+                <p class="text-xl font-black text-rose-600">{{ number_format($stats['absent_today']) }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-teal-50 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <i class="fas fa-building text-xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Active Blocks</p>
+                <p class="text-xl font-black text-amber-600">{{ $hostels->count() }}</p>
+            </div>
+        </div>
+    </div>
 
-            <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-                <div class="w-full sm:w-64">
-                    <select name="hostel_id" x-model="formData.hostel_id" id="hostel_id"
-                            class="modal-input-premium">
-                        <option value="">Select Hostel Block</option>
-                        @foreach($hostels as $hostel)
-                            <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
-                        @endforeach
-                    </select>
+    <!-- Configuration Selector -->
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden shadow-teal-100/20 shadow-xl">
+        <div class="p-8">
+            <div class="flex flex-col md:flex-row items-center gap-6">
+                <!-- Hostel Selection -->
+                <div class="flex-1 w-full space-y-2">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Residential Block</label>
+                    <div class="relative group">
+                        <select id="hostel_id" x-model="formData.hostel_id" @change="loadStudents()"
+                                class="w-full h-12 pl-10 pr-4 bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 rounded-2xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all appearance-none outline-none shadow-sm cursor-pointer">
+                            <option value="">Select Hostel Block</option>
+                            @foreach($hostels as $hostel)
+                                <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500 opacity-50 group-hover:opacity-100 transition-opacity">
+                            <i class="fas fa-building text-[10px]"></i>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="w-full sm:w-48">
-                    <input type="date" x-model="formData.attendance_date" @change="loadStudents(); clearError('attendance_date')"
-                           max="{{ date('Y-m-d') }}"
-                           class="modal-input-premium">
+                <!-- Session Date -->
+                <div class="w-full md:w-64 space-y-2">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Census Date</label>
+                    <div class="relative group">
+                        <input type="date" x-model="formData.attendance_date" @change="loadStudents()" max="{{ date('Y-m-d') }}"
+                               class="w-full h-12 pl-10 pr-4 bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 rounded-2xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none shadow-sm cursor-pointer">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500 opacity-50 group-hover:opacity-100 transition-opacity">
+                            <i class="fas fa-calendar-check text-[10px]"></i>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="w-full sm:w-auto">
+                <!-- Sync Control -->
+                <div class="w-full md:w-auto pt-6 md:pt-6">
                     <button @click="save()" :disabled="!canSubmit || submitting"
-                            class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 active:scale-95 group">
+                            class="w-full h-12 px-8 bg-gray-800 dark:bg-gray-700 hover:bg-black dark:hover:bg-gray-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-xl disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3">
                         <template x-if="submitting">
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span>
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         </template>
-                        <i x-show="!submitting" class="fas fa-save mr-2"></i>
-                        <span x-text="submitting ? 'Propagating...' : 'Finalize Registry'"></span>
+                        <i class="fas fa-cloud-upload-alt text-sm" x-show="!submitting"></i>
+                        <span x-text="submitting ? 'Propagating...' : 'Sync Census'"></span>
                     </button>
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- Registry Grid --}}
-    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl shadow-gray-100/50 border border-gray-100 overflow-hidden relative min-h-[400px]">
-        {{-- Loading Overlay --}}
-        <div x-show="loading" class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center transition-all">
-            <div class="flex flex-col items-center gap-4">
-                <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                <p class="text-xs font-black text-indigo-600 uppercase tracking-widest">Querying Matrix...</p>
+        <!-- Census Manifest Section -->
+        <div x-show="students.length > 0" x-collapse>
+            <div class="px-8 py-5 bg-gray-50/50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white dark:bg-gray-800 border border-teal-100 flex items-center justify-center text-teal-500 shadow-sm">
+                        <i class="fas fa-users-viewfinder text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-gray-800 dark:text-white uppercase tracking-widest leading-tight">Occupancy Manifest</h3>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1"><span x-text="students.length"></span> Registered Inmates</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 bg-white dark:bg-gray-800 p-1 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-inner">
+                    <button type="button" @click="checkAll()"
+                        class="px-5 py-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white text-[10px] font-black rounded-xl transition-all uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-check-double text-[8px]"></i>
+                        Mark All Present
+                    </button>
+                    <button type="button" @click="uncheckAll()"
+                        class="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white text-[10px] font-black rounded-xl transition-all uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-times text-[8px]"></i>
+                        Mark All Absent
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto text-sm">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50/30 dark:bg-gray-700/10">
+                            <th class="text-left px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID</th>
+                            <th class="text-left px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident Identity</th>
+                            <th class="text-left px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cluster Context</th>
+                            <th class="text-left px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Presence State</th>
+                            <th class="text-right px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Observational Log</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <template x-for="(student, index) in students" :key="student.id">
+                            <tr class="hover:bg-teal-50/30 dark:hover:bg-teal-900/10 transition-colors group">
+                                <td class="px-8 py-4">
+                                    <span class="text-xs font-black text-gray-300 group-hover:text-teal-400 transition-colors">#<span x-text="String(index + 1).padStart(2, '0')"></span></span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold border border-gray-200 dark:border-gray-600 uppercase text-[10px]" x-text="student.name.split(' ').map(n => n[0]).join('')"></div>
+                                        <div>
+                                            <div class="text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-tight" x-text="student.name"></div>
+                                            <div class="text-[10px] font-bold text-gray-400" x-text="`Adm: ${student.admission_no}`"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-[11px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-tight" x-text="'Floor ' + student.floor_name"></span>
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase" x-text="'Room ' + student.room_name + ' • Bed ' + student.bed_no"></span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <label class="inline-flex items-center cursor-pointer group/toggle">
+                                        <input type="checkbox" :checked="checkedStudents.includes(String(student.id))" @change="updateStatus(student.id, $event.target.checked)" class="sr-only peer">
+                                        <div class="w-24 h-9 p-1 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-100 dark:border-rose-900/30 relative transition-all duration-300 peer-checked:bg-emerald-500 peer-checked:border-emerald-600">
+                                            <div class="absolute inset-y-1 left-1 w-7 h-7 bg-white dark:bg-gray-700 rounded-lg shadow-sm transition-all duration-300 peer-checked:left-16 flex items-center justify-center text-[10px]">
+                                                <i class="fas" :class="checkedStudents.includes(String(student.id)) ? 'fa-check text-emerald-500' : 'fa-times text-rose-500'"></i>
+                                            </div>
+                                            <div class="flex justify-between items-center h-full px-2 text-[8px] font-black uppercase tracking-widest">
+                                                <span class="text-emerald-500 opacity-0 peer-checked:opacity-100 transition-opacity">IN</span>
+                                                <span class="text-rose-500 peer-checked:opacity-0 transition-opacity">OUT</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </td>
+                                <td class="px-8 py-4 text-right">
+                                    <input type="text" x-model="student.remarks"
+                                           placeholder="Presence observations..."
+                                           class="w-full max-w-[200px] h-9 px-4 bg-gray-50/50 dark:bg-gray-700/50 border-transparent focus:bg-white dark:focus:bg-gray-800 focus:border-teal-500/30 rounded-xl transition-all text-[10px] font-bold placeholder:text-gray-300">
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Verification Footer -->
+            <div class="px-8 py-6 bg-gray-50/30 dark:bg-gray-700/10 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 flex items-center justify-center text-emerald-500 shadow-sm">
+                        <i class="fas fa-shield-check text-[10px]"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Institutional Security Protocol Verified</p>
+                </div>
             </div>
         </div>
 
-        {{-- Global Error Announcement --}}
-        <template x-if="Object.keys(errors).length > 0">
-            <div class="m-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
-                <div class="flex items-center gap-2 mb-2">
-                    <i class="fas fa-exclamation-circle text-red-500"></i>
-                    <span class="text-xs font-black text-red-700 uppercase tracking-widest">Synchronization Exceptions</span>
-                </div>
-                <ul class="list-disc list-inside space-y-1">
-                    <template x-for="(messages, field) in errors" :key="field">
-                        <template x-for="message in messages" :key="message">
-                            <li class="text-[10px] text-red-600 font-bold uppercase" x-text="message"></li>
-                        </template>
-                    </template>
-                </ul>
+        <!-- Empty State -->
+        <div x-show="students.length === 0" 
+            class="p-24 text-center bg-gray-50/20 rounded-b-3xl border-t border-gray-100 dark:border-gray-700">
+            <div class="w-24 h-24 bg-white dark:bg-gray-800 rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6 border border-gray-100 dark:border-gray-700">
+                <i class="fas fa-users-viewfinder text-4xl text-gray-100"></i>
             </div>
-        </template>
-
-        <template x-if="students.length > 0">
-            <div class="p-0">
-                <div class="bg-gray-50/50 border-b border-gray-100 px-8 py-4 flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                            <i class="fas fa-users-viewfinder"></i>
-                            Occupancy Segment
-                        </h3>
-                        <span class="px-3 py-1 bg-white border border-gray-100 rounded-lg text-[10px] font-black text-indigo-600" x-text="students.length + ' Nodes Loaded'"></span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button @click="checkAll()" class="px-4 py-2 bg-white border border-gray-200 text-indigo-600 text-[10px] font-black uppercase rounded-lg hover:bg-indigo-50 transition-colors">Select All</button>
-                        <button @click="uncheckAll()" class="px-4 py-2 bg-white border border-gray-200 text-red-600 text-[10px] font-black uppercase rounded-lg hover:bg-red-50 transition-colors">Clear All</button>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50/30">
-                            <tr>
-                                <th class="px-8 py-5 text-left">
-                                    <div class="flex items-center gap-2">
-                                        <input type="checkbox" @change="toggleAll($event)" :checked="checkedStudents.length === students.length"
-                                               class="w-5 h-5 rounded-lg border-gray-200 text-indigo-600 focus:ring-indigo-500/20 transition-all cursor-pointer">
-                                        <span class="text-[10px] text-gray-400 uppercase font-black tracking-widest">Status</span>
-                                    </div>
-                                </th>
-                                <th class="px-6 py-5 text-left text-[10px] text-gray-400 uppercase font-black tracking-widest">Resident Identity</th>
-                                <th class="px-6 py-5 text-left text-[10px] text-gray-400 uppercase font-black tracking-widest">Residential Node</th>
-                                <th class="px-8 py-5 text-left text-[10px] text-gray-400 uppercase font-black tracking-widest">Observations / Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50">
-                            <template x-for="(student, index) in students" :key="student.id">
-                                <tr class="hover:bg-indigo-50/10 transition-colors group">
-                                    <td class="px-8 py-6">
-                                        <label class="flex items-center gap-3 cursor-pointer">
-                                            <input type="checkbox" 
-                                                   :checked="checkedStudents.includes(String(student.id))"
-                                                   @change="updateStatus(student.id, $event.target.checked)"
-                                                   class="w-6 h-6 rounded-xl border-gray-200 text-emerald-600 focus:ring-emerald-500/20 transition-all cursor-pointer shadow-sm">
-                                            <span class="text-xs font-black uppercase tracking-widest" :class="checkedStudents.includes(String(student.id)) ? 'text-emerald-600' : 'text-gray-400'" x-text="checkedStudents.includes(String(student.id)) ? 'Present' : 'Absent'"></span>
-                                        </label>
-                                    </td>
-                                    <td class="px-6 py-6">
-                                        <div class="flex flex-col">
-                                            <span class="font-black text-gray-800" x-text="student.name"></span>
-                                            <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter" x-text="student.admission_no + ' • ' + (student.class_name || 'N/A') + ' ' + (student.section_name || '')"></span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-6">
-                                        <div class="flex flex-col">
-                                            <span class="font-bold text-gray-700 text-xs" x-text="'Room ' + student.room_name"></span>
-                                            <span class="text-[10px] text-gray-400 uppercase font-black tracking-tighter" x-text="student.floor_name + ' • Unit ' + student.bed_no"></span>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-6">
-                                        <input type="text" x-model="student.remarks"
-                                               placeholder="Add observational note..."
-                                               class="w-full px-4 py-2 bg-gray-50/50 border border-transparent rounded-xl focus:bg-white focus:border-indigo-100 transition-all text-xs font-bold placeholder:text-gray-300">
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </template>
-
-        {{-- Initial/Empty State --}}
-        <div x-show="!loading && students.length === 0" class="flex flex-col items-center justify-center py-24 px-8 text-center animate-fade-in">
-            <div class="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-indigo-200 mb-8 rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                <i class="fas fa-users-viewfinder text-5xl"></i>
-            </div>
-            <h3 class="text-xl font-black text-gray-800 tracking-tight mb-2" x-text="formData.hostel_id ? 'Matrix Exhausted' : 'Segment Unselected'"></h3>
-            <p class="text-sm text-gray-500 max-w-sm font-medium" x-text="formData.hostel_id ? 'No student nodes are currently mapped to this residential block.' : 'Please select a hostel block to initialize the occupancy matrix.'"></p>
+            <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Census Matrix Uninitialized</h3>
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest max-w-sm mx-auto mt-2 leading-relaxed">
+                Select a residential block from the parameters above to initiate the student occupancy verified census protocol.
+            </p>
         </div>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -280,7 +290,6 @@ document.addEventListener('alpine:init', () => {
                 }
             } catch (error) {
                 console.error('Matrix Query failure:', error);
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Operational failure: Matrix retrieval blocked.' });
             } finally {
                 this.loading = false;
             }
@@ -292,11 +301,6 @@ document.addEventListener('alpine:init', () => {
 
         uncheckAll() {
             this.checkedStudents = [];
-        },
-
-        toggleAll(event) {
-            if (event.target.checked) this.checkAll();
-            else this.uncheckAll();
         },
 
         updateStatus(studentId, isChecked) {
@@ -340,13 +344,12 @@ document.addEventListener('alpine:init', () => {
 
                 if (response.ok) {
                     if (window.Toast) {
-                        await window.Toast.fire({
+                        window.Toast.fire({
                             icon: 'success',
-                            title: result.message || 'Attendance synchronized'
+                            title: result.message || 'Census Synchronized'
                         });
                     }
-                } else if (response.status === 422) {
-                    this.errors = result.errors || {};
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
                     throw new Error(result.message || 'Registry synchronization failure');
                 }
@@ -359,14 +362,5 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 </script>
-<style>
-    @keyframes fade-in {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in {
-        animation: fade-in 0.5s ease-out forwards;
-    }
-</style>
 @endpush
-@endsection
+

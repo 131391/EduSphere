@@ -1,450 +1,422 @@
 @extends('layouts.receptionist')
 
-@section('title', 'Student Attendance - Transport')
+@section('title', 'Transport Boarding Registry')
 
 @section('content')
-    <div class="space-y-6" x-data="transportAttendanceManagement()" x-init="init()">
-        {{-- Page Header --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                            <i class="fas fa-clipboard-check text-xs"></i>
-                        </div>
-                        Boarding Verification
-                    </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Verify student boarding for active transit corridors.</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('receptionist.transport-assignments.index') }}"
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                        <i class="fas fa-arrow-left mr-2 text-xs"></i>
-                        Return to Registry
-                    </a>
-                </div>
+<div class="space-y-6" x-data="transportAttendanceManagement()" x-init="init()">
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 border border-teal-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-shuttle-van text-xs"></i>
+                    </div>
+                    Boarding Verification Registry
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time boarding verification and manifest synchronization for fleet operations.</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}" 
+                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm">
+                    <i class="fas fa-file-invoice mr-2 opacity-50"></i>
+                    Monthly Audit
+                </a>
             </div>
         </div>
+    </div>
 
-        <!-- Attendance Configuration Form -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-slate-100 mb-6">
-            <form @submit.prevent="save" method="POST" class="space-y-6" novalidate>
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <!-- Vehicle Selection -->
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Operational Fleet Asset <span class="text-red-500 font-bold">*</span></label>
-                        <div class="relative group">
-                            <select name="vehicle_id" id="vehicle_id" x-model="formData.vehicle_id"
-                                @change="clearError('vehicle_id'); loadRoutes()" x-ref="vehicleSelect"
-                                class="modal-input-premium pl-10"
-                                :class="errors.vehicle_id ? 'border-red-500 ring-red-500/10' : ''">
-                                <option value="">Select Vehicle</option>
-                                @foreach($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}">
-                                        {{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
-                                <i class="fas fa-bus text-xs"></i>
-                            </div>
+    <!-- Stats Section -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-teal-50 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+            <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <i class="fas fa-id-badge text-xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Global Boarders</p>
+                <p class="text-xl font-black text-gray-800">{{ number_format($stats['total_students']) }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-teal-50 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <i class="fas fa-bus-alt text-xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Boarded Today</p>
+                <p class="text-xl font-black text-emerald-600">{{ number_format($stats['boarded_today']) }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-teal-50 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+            <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <i class="fas fa-user-minus text-xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Absent Today</p>
+                <p class="text-xl font-black text-rose-600">{{ number_format($stats['absent_today']) }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-teal-50 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                <i class="fas fa-route text-xl"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">Fleet Assigned</p>
+                <p class="text-xl font-black text-amber-600">{{ $vehicles->count() }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden shadow-teal-100/20 shadow-xl">
+        <div class="p-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Vehicle Selection -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Fleet Asset</label>
+                    <div class="relative group">
+                        <select id="vehicle_id" x-model="formData.vehicle_id" @change="loadRoutes()"
+                                class="w-full h-12 pl-10 pr-4 bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 rounded-2xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all appearance-none outline-none shadow-sm cursor-pointer">
+                            <option value="">Select Vehicle</option>
+                            @foreach($vehicles as $vehicle)
+                                <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})</option>
+                            @endforeach
+                        </select>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500">
+                            <i class="fas fa-bus text-[10px]"></i>
                         </div>
-                        <template x-if="errors.vehicle_id">
-                            <p class="modal-error-message" x-text="errors.vehicle_id[0]"></p>
-                        </template>
                     </div>
+                </div>
 
-                    <!-- Route Selection -->
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Assigned Transit Route <span class="text-red-500 font-bold">*</span></label>
-                        <div class="relative group">
-                            <select name="route_id" id="route_id" x-model="formData.route_id"
-                                @change="delete errors.route_id; loadStudents()" x-ref="routeSelect"
-                                class="modal-input-premium pl-10"
-                                :class="errors.route_id ? 'border-red-500 ring-red-500/10' : ''">
-                                <option value="">Select Route</option>
-                            </select>
-                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
-                                <i class="fas fa-route text-xs"></i>
-                            </div>
+                <!-- Route Selection -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Transit Route</label>
+                    <div class="relative group">
+                        <select id="route_id" x-model="formData.route_id" @change="loadStudents()"
+                                class="w-full h-12 pl-10 pr-4 bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 rounded-2xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all appearance-none outline-none shadow-sm cursor-pointer">
+                            <option value="">Select Route</option>
+                        </select>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500">
+                            <i class="fas fa-route text-[10px]"></i>
                         </div>
-                        <template x-if="errors.route_id">
-                            <p class="modal-error-message" x-text="errors.route_id[0]"></p>
-                        </template>
                     </div>
+                </div>
 
-                    <!-- Attendance Type Selection -->
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Operational Stage <span class="text-red-500 font-bold">*</span></label>
-                        <select name="attendance_type" id="attendance_type" x-model="formData.attendance_type"
-                            @change="delete errors.attendance_type; loadStudents()"
-                            class="modal-input-premium"
-                            :class="errors.attendance_type ? 'border-red-500 ring-red-500/10' : ''">
+                <!-- Stage Selection -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Operational Stage</label>
+                    <div class="relative group">
+                        <select x-model="formData.attendance_type" @change="loadStudents()"
+                                class="w-full h-12 pl-10 pr-4 bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 rounded-2xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all appearance-none outline-none shadow-sm cursor-pointer">
                             <option value="">Select Stage</option>
                             @foreach($attendanceTypes as $type)
                                 <option value="{{ $type->value }}">{{ $type->label() }}</option>
                             @endforeach
                         </select>
-                        <template x-if="errors.attendance_type">
-                            <p class="modal-error-message" x-text="errors.attendance_type[0]"></p>
-                        </template>
-                    </div>
-
-                    <!-- Attendance Date -->
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Verification Session Date <span class="text-red-500 font-bold">*</span></label>
-                        <input type="date" name="attendance_date" id="attendance_date" x-model="formData.attendance_date"
-                            @input="delete errors.attendance_date" max="{{ date('Y-m-d') }}"
-                            class="modal-input-premium"
-                            :class="errors.attendance_date ? 'border-red-500 ring-red-500/10' : ''">
-                        <template x-if="errors.attendance_date">
-                            <p class="modal-error-message" x-text="errors.attendance_date[0]"></p>
-                        </template>
-                    </div>
-                </div>
-                        <template x-if="errors.attendance_date">
-                            <p class="modal-error-message" x-text="errors.attendance_date[0]"></p>
-                        </template>
-                    </div>
-                </div>
-
-                {{-- Verification Footer --}}
-                <div class="px-8 py-6 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-emerald-500 shadow-sm">
-                            <i class="fas fa-shield-alt text-[10px]"></i>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500">
+                            <i class="fas fa-toggle-on text-[10px]"></i>
                         </div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Operational Integrity Verified</p>
                     </div>
-                    <button type="submit" :disabled="!canSubmit || submitting"
-                        class="min-w-[240px] px-10 py-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-black rounded-2xl transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:shadow-none uppercase tracking-widest flex items-center justify-center gap-3 group">
-                        <template x-if="submitting">
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        </template>
-                        <i class="fas fa-save group-hover:scale-110 transition-transform" x-show="!submitting"></i>
-                        <span x-text="submitting ? 'Propagating...' : 'Finalize Boarding Manifest'"></span>
+                </div>
+
+                <!-- Session Date -->
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Verification Date</label>
+                    <div class="relative group">
+                        <input type="date" x-model="formData.attendance_date" max="{{ date('Y-m-d') }}"
+                               class="w-full h-12 pl-10 pr-4 bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 rounded-2xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none shadow-sm">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500">
+                            <i class="fas fa-calendar-alt text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boarding Manifest Section (Students List) -->
+        <div x-show="students.length > 0" x-collapse>
+            <div class="px-8 py-5 bg-gray-50/50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white dark:bg-gray-800 border border-teal-100 flex items-center justify-center text-teal-500 shadow-sm">
+                        <i class="fas fa-id-card text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-gray-800 dark:text-white uppercase tracking-widest">Boarding Manifest</h3>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider"><span x-text="students.length"></span> Students Identified</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 bg-white dark:bg-gray-800 p-1 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-inner">
+                    <button type="button" @click="checkAll()"
+                        class="px-5 py-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white text-[10px] font-black rounded-xl transition-all uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-check-double text-[8px]"></i>
+                        Verify All
+                    </button>
+                    <button type="button" @click="uncheckAll()"
+                        class="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white text-[10px] font-black rounded-xl transition-all uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-times text-[8px]"></i>
+                        Reset Clear
                     </button>
                 </div>
+            </div>
 
-                <!-- Students List -->
-                <div x-show="students.length > 0" class="p-8 border-t border-slate-100 bg-white" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
-                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Boarding Manifest</h3>
-                            </div>
-                            <p class="text-xs text-slate-500 font-medium">Capture real-time transit status for <span class="text-indigo-600 font-bold" x-text="students.length"></span> assigned boarders</p>
-                        </div>
-                        <div class="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 shadow-inner">
-                            <button type="button" @click="checkAll()"
-                                class="px-5 py-2.5 bg-white text-indigo-600 hover:text-indigo-700 text-[10px] font-black rounded-xl transition-all uppercase tracking-widest shadow-sm border border-slate-100 flex items-center gap-2">
-                                <i class="fas fa-check-double text-[8px]"></i>
-                                Board All
-                            </button>
-                            <button type="button" @click="uncheckAll()"
-                                class="px-5 py-2.5 text-slate-500 hover:text-slate-700 text-[10px] font-black rounded-xl transition-all uppercase tracking-widest flex items-center gap-2">
-                                <i class="fas fa-times text-[8px]"></i>
-                                Clear All
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="overflow-hidden rounded-3xl border border-slate-100 shadow-sm">
-                        <table class="min-w-full divide-y divide-slate-100">
-                            <thead class="bg-slate-50/50">
-                                <tr>
-                                    <th class="px-6 py-5 text-left">
-                                        <div class="flex items-center">
-                                            <input type="checkbox" @change="toggleAll($event.target.checked)"
-                                                :checked="allChecked"
-                                                class="rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500/20 h-6 w-6 transition-all cursor-pointer shadow-sm">
+            <div class="overflow-x-auto text-sm">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50/30 dark:bg-gray-700/10">
+                            <th class="text-left px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID</th>
+                            <th class="text-left px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Boarder Identity</th>
+                            <th class="text-left px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Academic Node</th>
+                            <th class="text-left px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Station Stop</th>
+                            <th class="text-right px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Boarding Auth</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <template x-for="(student, index) in students" :key="student.id">
+                            <tr class="hover:bg-teal-50/30 dark:hover:bg-teal-900/10 transition-colors group">
+                                <td class="px-8 py-4">
+                                    <span class="text-xs font-black text-gray-300 group-hover:text-teal-400 transition-colors">#<span x-text="String(index + 1).padStart(2, '0')"></span></span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold border border-gray-200 dark:border-gray-600 uppercase text-[10px]" x-text="student.name.split(' ').map(n => n[0]).join('')"></div>
+                                        <div>
+                                            <div class="text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-tight" x-text="student.name"></div>
+                                            <div class="text-[10px] font-bold text-gray-400" x-text="`Adm: ${student.admission_no}`"></div>
                                         </div>
-                                    </th>
-                                    <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Boarder Profile</th>
-                                    <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Context</th>
-                                    <th class="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Network Node</th>
-                                    <th class="px-6 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Boarding Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-slate-50">
-                                <template x-for="(student, index) in students" :key="student.id">
-                                    <tr class="hover:bg-indigo-50/30 transition-all group">
-                                        <td class="px-6 py-5 whitespace-nowrap">
-                                            <input type="checkbox" :id="`student_${student.id}`"
-                                                :value="student.id.toString()" x-model="checkedStudents"
-                                                class="rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500/20 h-6 w-6 transition-all cursor-pointer shadow-sm group-hover:scale-110">
-                                        </td>
-                                        <td class="px-6 py-5 whitespace-nowrap">
-                                            <div class="flex flex-col">
-                                                <span class="text-sm font-black text-slate-800" x-text="student.name"></span>
-                                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5" x-text="student.admission_no"></span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 text-[10px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-tight" x-text="`${student.class} - ${student.section}`"></span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-map-pin text-gray-300 text-[10px]"></i>
+                                        <span class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase" x-text="student.bus_stop_name"></span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-4 text-right">
+                                    <label class="inline-flex items-center cursor-pointer group/toggle">
+                                        <input type="checkbox" :value="student.id.toString()" x-model="checkedStudents" class="sr-only peer">
+                                        <div class="w-24 h-9 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 relative transition-all duration-300 peer-checked:bg-emerald-500 peer-checked:border-emerald-600">
+                                            <div class="absolute inset-y-1 left-1 w-7 h-7 bg-white dark:bg-gray-700 rounded-lg shadow-sm transition-all duration-300 peer-checked:left-16 flex items-center justify-center text-[10px]">
+                                                <i class="fas fa-bus-alt text-teal-500 peer-checked:text-emerald-500"></i>
                                             </div>
-                                        </td>
-                                        <td class="px-6 py-5 whitespace-nowrap">
-                                            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
-                                                <i class="fas fa-graduation-cap text-[10px] text-slate-400"></i>
-                                                <span class="text-[11px] font-black text-slate-600 uppercase tracking-tight" x-text="`${student.class} - ${student.section}`"></span>
+                                            <div class="flex justify-between items-center h-full px-2 text-[8px] font-black uppercase tracking-widest">
+                                                <span class="text-emerald-500">Mark</span>
+                                                <span class="text-gray-400">Off</span>
                                             </div>
-                                        </td>
-                                        <td class="px-6 py-5 whitespace-nowrap cursor-help group/node">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 border border-blue-100 shadow-sm group-hover/node:scale-110 transition-transform">
-                                                    <i class="fas fa-map-marker-alt text-[10px]"></i>
-                                                </div>
-                                                <span class="text-xs font-bold text-slate-600 group-hover:text-indigo-600 transition-colors" x-text="student.bus_stop_name"></span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 whitespace-nowrap text-right">
-                                            <label :for="`student_${student.id}`" class="cursor-pointer">
-                                                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm border"
-                                                    :class="checkedStudents.includes(student.id.toString()) 
-                                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100/20' 
-                                                        : 'bg-rose-50 text-rose-600 border-rose-100 shadow-rose-100/20'">
-                                                    <i class="fas" :class="checkedStudents.includes(student.id.toString()) ? 'fa-check-circle' : 'fa-times-circle'"></i>
-                                                    <span x-text="checkedStudents.includes(student.id.toString()) ? 'Boarded' : 'Absent'"></span>
-                                                </span>
-                                            </label>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Hidden Context Transmission -->
-                    <div class="hidden">
-                        <template x-for="student in students" :key="'h1_'+student.id">
-                            <input type="hidden" name="students[]" :value="student.id">
+                                        </div>
+                                    </label>
+                                </td>
+                            </tr>
                         </template>
-                        <template x-for="studentId in checkedStudents" :key="'h2_'+studentId">
-                            <input type="hidden" name="checked_students[]" :value="studentId">
-                        </template>
-                    </div>
-                </div>
+                    </tbody>
+                </table>
+            </div>
 
-                <!-- Empty Registry State -->
-                <div x-show="students.length === 0 && formData.route_id" 
-                    x-transition
-                    class="p-20 text-center bg-slate-50/50 rounded-b-3xl border-t border-slate-100">
-                    <div class="relative inline-block mb-6">
-                        <div class="w-24 h-24 bg-white rounded-3xl shadow-sm flex items-center justify-center border border-slate-100">
-                            <i class="fas fa-users-slash text-slate-200 text-4xl"></i>
-                        </div>
-                        <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-rose-500 rounded-2xl flex items-center justify-center text-white shadow-lg border-4 border-white">
-                            <i class="fas fa-exclamation text-xs"></i>
-                        </div>
+            <!-- Sync Control Footer -->
+            <div class="px-8 py-6 bg-gray-50/50 dark:bg-gray-700/30 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 border border-teal-100 dark:border-gray-700 flex items-center justify-center text-teal-500 shadow-sm">
+                        <i class="fas fa-shield-alt text-[10px]"></i>
                     </div>
-                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-2">Null Manifest Encountered</h3>
-                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest max-w-sm mx-auto leading-relaxed">
-                        No active student profiles are currently mapped to the selected transit corridor for this session.
-                    </p>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Manifest Integrity Secured</p>
                 </div>
-            </form>
+                
+                <button type="button" @click="save" :disabled="!canSubmit || submitting"
+                        class="min-w-[280px] h-14 px-8 bg-gray-800 dark:bg-gray-700 hover:bg-black dark:hover:bg-gray-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-xl disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-4 ring-4 ring-gray-100 dark:ring-gray-800/50 group">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <i class="fas fa-cloud-upload-alt text-sm group-hover:scale-110 transition-transform" x-show="!submitting"></i>
+                    <span x-text="submitting ? 'Propagating Manifest...' : 'Synchronize Registry State'"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div x-show="students.length === 0" 
+            class="p-24 text-center bg-gray-50/20 rounded-b-3xl border-t border-gray-100 dark:border-gray-700">
+            <div class="w-24 h-24 bg-white dark:bg-gray-800 rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6 border border-gray-100 dark:border-gray-700">
+                <i class="fas fa-shuttle-van text-4xl text-gray-200"></i>
+            </div>
+            <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Fleet Manifest Empty</h3>
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest max-w-sm mx-auto mt-2 leading-relaxed">
+                Select a specific fleet asset and transit corridor from the verification parameters above to initiate boarding protocols.
+            </p>
         </div>
     </div>
-
-    @push('scripts')
-        <script>
-            function transportAttendanceManagement() {
-                return {
-                    formData: {
-                        vehicle_id: '',
-                        route_id: '',
-                        attendance_type: '',
-                        attendance_date: '{{ date('Y-m-d') }}',
-                    },
-                    routes: [],
-                    students: [],
-                    checkedStudents: [],
-                    submitting: false,
-                    errors: {},
-
-                    get canSubmit() {
-                        return !!(this.formData.vehicle_id && this.formData.route_id && this.formData.attendance_type && this.formData.attendance_date && this.students.length > 0);
-                    },
-
-                    clearError(field) {
-                        if (this.errors[field]) {
-                            delete this.errors[field];
-                        }
-                    },
-
-                    async init() {
-                        this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                // Vehicle Select
-                                $('#vehicle_id').on('change', (e) => {
-                                    this.formData.vehicle_id = e.target.value;
-                                    this.clearError('vehicle_id');
-                                    this.loadRoutes();
-                                });
-
-                                // Route Select
-                                $('#route_id').on('change', (e) => {
-                                    this.formData.route_id = e.target.value;
-                                    this.clearError('route_id');
-                                    this.loadStudents();
-                                });
-
-                                // Attendance Type
-                                $('#attendance_type').on('change', (e) => {
-                                    this.formData.attendance_type = e.target.value;
-                                    this.clearError('attendance_type');
-                                });
-                            }
-                        });
-                    },
-
-                    async loadRoutes() {
-                        if (!this.formData.vehicle_id) {
-                            this.routes = [];
-                            this.formData.route_id = '';
-                            this.updateRouteOptions();
-                            return;
-                        }
-
-                        try {
-                            const response = await fetch('{{ route('receptionist.transport-attendance.get-routes') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({ vehicle_id: this.formData.vehicle_id })
-                            });
-
-                            const data = await response.json();
-                            if (data.success) {
-                                this.routes = data.routes;
-                                this.updateRouteOptions();
-                            } else if (data.errors) {
-                                this.errors = data.errors;
-                            }
-                        } catch (error) {
-                            console.error('Route load failed', error);
-                        }
-                    },
-
-                    updateRouteOptions() {
-                        if (typeof $ === 'undefined') return;
-                        const $select = $('#route_id');
-
-                        // Clear and add placeholder
-                        $select.empty().append('<option value="">Select Route</option>');
-
-                        this.routes.forEach(route => {
-                            $select.append(`<option value="${route.id}">${route.route_name}</option>`);
-                        });
-
-                        if ($select.hasClass('select2-hidden-accessible')) {
-                            $select.trigger('change');
-                        }
-                    },
-
-                    async loadStudents() {
-                        if (!this.formData.vehicle_id || !this.formData.route_id) {
-                            this.students = [];
-                            this.checkedStudents = [];
-                            return;
-                        }
-
-                        try {
-                            const response = await fetch('{{ route('receptionist.transport-attendance.get-students') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    vehicle_id: this.formData.vehicle_id,
-                                    route_id: this.formData.route_id,
-                                })
-                            });
-
-                            const data = await response.json();
-                            if (data.success) {
-                                this.students = data.students;
-                                // Default to checked
-                                this.checkedStudents = this.students.map(s => s.id.toString());
-                            } else if (data.errors) {
-                                this.errors = data.errors;
-                            }
-                        } catch (error) {
-                            console.error('Student load failed', error);
-                        }
-                    },
-
-                    async save() {
-                        if (!this.canSubmit || this.submitting) return;
-
-                        this.submitting = true;
-                        this.errors = {};
-
-                        try {
-                            const response = await fetch('{{ route('receptionist.transport-attendance.store') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    ...this.formData,
-                                    students: this.students.map(s => s.id),
-                                    checked_students: this.checkedStudents
-                                })
-                            });
-
-                            const result = await response.json();
-
-                            if (response.ok) {
-                                if (window.Toast) {
-                                    window.Toast.fire({
-                                        icon: 'success',
-                                        title: result.message || 'Manifest Synchronized'
-                                    });
-                                }
-                                setTimeout(() => window.location.reload(), 1500);
-                            } else {
-                                if (response.status === 422) {
-                                    this.errors = result.errors || {};
-                                    if (window.Toast) {
-                                        window.Toast.fire({ icon: 'error', title: 'Data integrity failure' });
-                                    }
-                                } else {
-                                    throw new Error(result.message || 'Transmission error');
-                                }
-                            }
-                        } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: 'error', title: error.message });
-                            }
-                        } finally {
-                            this.submitting = false;
-                        }
-                    },
-
-                    checkAll() {
-                        this.checkedStudents = this.students.map(s => s.id.toString());
-                    },
-
-                    uncheckAll() {
-                        this.checkedStudents = [];
-                    },
-
-                    toggleAll(checked) {
-                        if (checked) this.checkAll(); else this.uncheckAll();
-                    },
-
-                    get allChecked() {
-                        return this.students.length > 0 && this.checkedStudents.length === this.students.length;
-                    },
-                };
-            }
-        </script>
-    @endpush
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    function transportAttendanceManagement() {
+        return {
+            formData: {
+                vehicle_id: '',
+                route_id: '',
+                attendance_type: '',
+                attendance_date: '{{ date('Y-m-d') }}',
+            },
+            routes: [],
+            students: [],
+            checkedStudents: [],
+            submitting: false,
+            errors: {},
+
+            get canSubmit() {
+                return !!(this.formData.vehicle_id && this.formData.route_id && this.formData.attendance_type && this.formData.attendance_date && this.students.length > 0);
+            },
+
+            clearError(field) {
+                if (this.errors[field]) {
+                    delete this.errors[field];
+                }
+            },
+
+            async init() {
+                this.$nextTick(() => {
+                    if (typeof $ !== 'undefined') {
+                        // Vehicle Select
+                        $('#vehicle_id').on('change', (e) => {
+                            this.formData.vehicle_id = e.target.value;
+                            this.clearError('vehicle_id');
+                            this.loadRoutes();
+                        });
+
+                        // Route Select
+                        $('#route_id').on('change', (e) => {
+                            this.formData.route_id = e.target.value;
+                            this.clearError('route_id');
+                            this.loadStudents();
+                        });
+                    }
+                });
+            },
+
+            async loadRoutes() {
+                if (!this.formData.vehicle_id) {
+                    this.routes = [];
+                    this.formData.route_id = '';
+                    this.updateRouteOptions();
+                    return;
+                }
+
+                try {
+                    const response = await fetch('{{ route('receptionist.transport-attendance.get-routes') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ vehicle_id: this.formData.vehicle_id })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        this.routes = data.routes;
+                        this.updateRouteOptions();
+                    }
+                } catch (error) {
+                    console.error('Route load failed', error);
+                }
+            },
+
+            updateRouteOptions() {
+                if (typeof $ === 'undefined') return;
+                const $select = $('#route_id');
+                $select.empty().append('<option value="">Select Route</option>');
+                this.routes.forEach(route => {
+                    $select.append(`<option value="${route.id}">${route.route_name}</option>`);
+                });
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.trigger('change');
+                }
+            },
+
+            async loadStudents() {
+                if (!this.formData.vehicle_id || !this.formData.route_id) {
+                    this.students = [];
+                    this.checkedStudents = [];
+                    return;
+                }
+
+                try {
+                    const response = await fetch('{{ route('receptionist.transport-attendance.get-students') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            vehicle_id: this.formData.vehicle_id,
+                            route_id: this.formData.route_id,
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        this.students = data.students;
+                        this.checkedStudents = this.students.map(s => s.id.toString());
+                    }
+                } catch (error) {
+                    console.error('Student load failed', error);
+                }
+            },
+
+            async save() {
+                if (!this.canSubmit || this.submitting) return;
+
+                this.submitting = true;
+                this.errors = {};
+
+                try {
+                    const response = await fetch('{{ route('receptionist.transport-attendance.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            ...this.formData,
+                            students: this.students.map(s => s.id),
+                            checked_students: this.checkedStudents
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        if (window.Toast) {
+                            window.Toast.fire({
+                                icon: 'success',
+                                title: result.message || 'Manifest Synchronized'
+                            });
+                        }
+                        setTimeout(() => window.location.reload(), 1500);
+                    }
+                } catch (error) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'error', title: 'Transmission failure encountered' });
+                    }
+                } finally {
+                    this.submitting = false;
+                }
+            },
+
+            checkAll() {
+                this.checkedStudents = this.students.map(s => s.id.toString());
+            },
+
+            uncheckAll() {
+                this.checkedStudents = [];
+            },
+        };
+    }
+</script>
+@endpush

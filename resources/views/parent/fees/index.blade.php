@@ -1,110 +1,176 @@
 @extends('layouts.parent')
 
-@section('title', "Fee Details")
-@section('page-title', 'Fee Details')
+@section('title', 'Fee Statement')
 
 @section('content')
 <div class="space-y-6">
-
-    <!-- Child Selector -->
-    @if($children->count() > 1)
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-        <form method="GET" action="{{ route('parent.fees.index') }}" class="flex flex-wrap gap-3 items-end">
-            <div class="flex-1 min-w-[200px]">
-                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide">Filter by Child</label>
-                <select name="student_id" onchange="this.form.submit()"
-                        class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500">
-                    <option value="">All Children</option>
-                    @foreach($children as $child)
-                    <option value="{{ $child->id }}" {{ $selectedChildId == $child->id ? 'selected' : '' }}>
-                        {{ $child->full_name }} ({{ optional($child->class)->name }})
-                    </option>
-                    @endforeach
-                </select>
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 border border-emerald-100/50">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <i class="fas fa-receipt text-xs"></i>
+                    </div>
+                    Fee Management
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tracking financial records and payment status for your children.</p>
             </div>
-        </form>
+            
+            @if($children->count() > 1)
+            <div class="flex items-center gap-3">
+                <form method="GET" action="{{ route('parent.fees.index') }}" class="relative group">
+                    <select name="student_id" onchange="this.form.submit()"
+                            class="appearance-none pl-10 pr-10 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all cursor-pointer">
+                        <option value="">All Children</option>
+                        @foreach($children as $child)
+                        <option value="{{ $child->id }}" {{ $selectedChildId == $child->id ? 'selected' : '' }}>
+                            {{ $child->full_name }}
+                        </option>
+                        @endforeach
+                    </select>
+                    <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                        <i class="fas fa-child text-xs"></i>
+                    </div>
+                    <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <i class="fas fa-chevron-down text-[10px]"></i>
+                    </div>
+                </form>
+            </div>
+            @endif
+        </div>
     </div>
-    @endif
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Total Payable</p>
-            <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1">₹{{ number_format($summary['total_payable'], 2) }}</p>
+    <!-- Stats Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-50 flex items-center gap-5 group hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i class="fas fa-file-invoice-dollar text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Total Payable</p>
+                <p class="text-2xl font-black text-gray-800">₹{{ number_format($summary['total_payable'], 2) }}</p>
+            </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700">
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Total Paid</p>
-            <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">₹{{ number_format($summary['total_paid'], 2) }}</p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-50 flex items-center gap-5 group hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i class="fas fa-check-double text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Total Paid</p>
+                <p class="text-2xl font-black text-emerald-600">₹{{ number_format($summary['total_paid'], 2) }}</p>
+            </div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-100 dark:border-gray-700 col-span-2 lg:col-span-1">
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">Balance Due</p>
-            <p class="text-2xl font-bold mt-1 {{ $summary['total_due'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
-                ₹{{ number_format($summary['total_due'], 2) }}
-            </p>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-50 flex items-center gap-5 group hover:shadow-md transition-all duration-300">
+            <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i class="fas fa-exclamation-circle text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Outstanding Due</p>
+                <p class="text-2xl font-black text-rose-600">₹{{ number_format($summary['total_due'], 2) }}</p>
+            </div>
         </div>
     </div>
 
-    <!-- Fee Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-            <h3 class="text-base font-semibold text-gray-800 dark:text-white">Fee Statement</h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-700/50">
-                    <tr>
-                        @if(!$selectedChildId)
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Child</th>
-                        @endif
-                        <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fee Head</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Period</th>
-                        <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payable</th>
-                        <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Paid</th>
-                        <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Due</th>
-                        <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @forelse($fees as $fee)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                        @if(!$selectedChildId)
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs font-medium">{{ optional($fee->student)->full_name ?? '—' }}</td>
-                        @endif
-                        <td class="px-6 py-3 font-medium text-gray-800 dark:text-gray-200">{{ optional($fee->feeName)->name ?? '—' }}</td>
-                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{{ $fee->fee_period ?? '—' }}</td>
-                        <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300">₹{{ number_format($fee->payable_amount, 2) }}</td>
-                        <td class="px-4 py-3 text-right text-green-600 dark:text-green-400">₹{{ number_format($fee->paid_amount ?? 0, 2) }}</td>
-                        <td class="px-4 py-3 text-right {{ ($fee->due_amount ?? 0) > 0 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-500 dark:text-gray-400' }}">
-                            ₹{{ number_format($fee->due_amount ?? 0, 2) }}
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            @php
-                                $label = $fee->payment_status?->label() ?? 'Pending';
-                                $colors = ['Paid' => 'green', 'Partial' => 'blue', 'Pending' => 'yellow', 'Overdue' => 'red'];
-                                $color = $colors[$label] ?? 'gray';
-                            @endphp
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                bg-{{ $color }}-100 dark:bg-{{ $color }}-900/30 text-{{ $color }}-700 dark:text-{{ $color }}-300">
-                                {{ $label }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <a href="{{ route('parent.fees.show', $fee->id) }}"
-                               class="text-indigo-600 dark:text-indigo-400 hover:underline text-xs font-medium">Detail</a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="px-6 py-16 text-center">
-                            <i class="fas fa-receipt text-4xl text-gray-300 dark:text-gray-600 mb-3 block"></i>
-                            <p class="text-gray-500 dark:text-gray-400">No fee records found.</p>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    @php
+        $tableColumns = [
+            [
+                'key' => 'fee_head',
+                'label' => 'Fee Structure',
+                'sortable' => false,
+                'render' => function($row) {
+                    return '
+                        <div>
+                            <div class="text-sm font-bold text-gray-800">'.e($row->feeName->name ?? '—').'</div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">'.e($row->fee_period ?? '—').'</div>
+                        </div>';
+                }
+            ],
+            [
+                'key' => 'student',
+                'label' => 'Student',
+                'sortable' => false,
+                'hidden' => (bool)$selectedChildId,
+                'render' => function($row) {
+                    return '<div class="text-xs font-semibold text-gray-600">'.e($row->student->full_name ?? '—').'</div>';
+                }
+            ],
+            [
+                'key' => 'amounts',
+                'label' => 'Payments',
+                'sortable' => false,
+                'render' => function($row) {
+                    return '
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between gap-4">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">Payable</span>
+                                <span class="text-sm font-bold text-gray-700 text-right">₹'.number_format($row->payable_amount, 2).'</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-4">
+                                <span class="text-[10px] font-bold text-emerald-500 uppercase">Paid</span>
+                                <span class="text-sm font-bold text-emerald-600 text-right">₹'.number_format($row->paid_amount ?? 0, 2).'</span>
+                            </div>
+                        </div>';
+                }
+            ],
+            [
+                'key' => 'due',
+                'label' => 'Balance Due',
+                'sortable' => true,
+                'render' => function($row) {
+                    $due = $row->due_amount ?? 0;
+                    $color = $due > 0 ? 'rose' : 'emerald';
+                    return '
+                        <div class="flex flex-col items-end">
+                            <span class="text-sm font-black text-'.$color.'-600">₹'.number_format($due, 2).'</span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Remaining</span>
+                        </div>';
+                }
+            ],
+            [
+                'key' => 'status',
+                'label' => 'Status',
+                'sortable' => true,
+                'render' => function($row) {
+                    $label = $row->payment_status?->label() ?? 'Pending';
+                    $config = match($label) {
+                        'Paid'    => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'border' => 'border-emerald-100', 'icon' => 'fa-check-circle'],
+                        'Partial' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-700', 'border' => 'border-blue-100', 'icon' => 'fa-adjust'],
+                        'Pending' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'border' => 'border-amber-100', 'icon' => 'fa-clock'],
+                        'Overdue' => ['bg' => 'bg-rose-50', 'text' => 'text-rose-700', 'border' => 'border-rose-100', 'icon' => 'fa-exclamation-triangle'],
+                        default   => ['bg' => 'bg-gray-50', 'text' => 'text-gray-700', 'border' => 'border-gray-100', 'icon' => 'fa-info-circle'],
+                    };
+                    
+                    return '
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-2xl '.$config['bg'].' '.$config['text'].' '.$config['border'].' border text-[10px] font-black uppercase tracking-widest">
+                            <i class="fas '.$config['icon'].' text-[8px]"></i>
+                            '.$label.'
+                        </span>';
+                }
+            ],
+        ];
+
+        $tableActions = [
+            [
+                'label' => 'Details',
+                'icon' => 'fas fa-arrow-right',
+                'url' => function($row) { return route('parent.fees.show', $row->id); },
+                'class' => 'bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white shadow-sm ring-1 ring-teal-100'
+            ],
+        ];
+    @endphp
+
+    <div class="mt-4">
+        <x-data-table 
+            :columns="$tableColumns" 
+            :data="$fees" 
+            :actions="$tableActions"
+            empty-message="No fee records found for the selected criteria." 
+            empty-icon="fas fa-receipt"
+        >
+            Fee Statement & Payment History
+        </x-data-table>
     </div>
 </div>
 @endsection
+

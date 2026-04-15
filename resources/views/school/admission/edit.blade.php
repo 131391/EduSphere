@@ -158,25 +158,23 @@ $(document).ready(function() {
         loadImagePreview('{{ $student->mother_signature }}', 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove');
     @endif
 
-    // Global error clearing logic
-    let isUserInteraction = false;
-    let pageLoadComplete = false;
-    setTimeout(function() {
-        pageLoadComplete = true;
-        setTimeout(function() { isUserInteraction = true; }, 100);
-    }, 1000);
-    
+    // Global error clearing - clear errors when fields are interacted with
     $(document).on('input change', 'input, select, textarea', function(e) {
-        if (!isUserInteraction || !pageLoadComplete || e.originalEvent === undefined) return;
         const $field = $(this);
-        if ($field.attr('name') && $field.val()) {
-            $field.removeClass('border-red-500');
-            $field.closest('div').find('p.text-red-500').remove();
-            if ($field.hasClass('select2-hidden-accessible')) {
-                $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
-            }
+        const $wrapper = $field.closest('div');
+        
+        // Always remove red border from the field itself on interaction
+        $field.removeClass('border-red-500');
+        
+        // If it's a Select2 field, remove border from its container too
+        if ($field.hasClass('select2-hidden-accessible')) {
+            $field.next('.select2-container').find('.select2-selection').removeClass('border-red-500');
         }
+        
+        // Remove the error message text
+        $wrapper.find('.error-message, p.text-red-500').remove();
     });
+
 
     // Form submission interceptor
     document.querySelectorAll('form').forEach(function(form) {
@@ -187,4 +185,18 @@ $(document).ready(function() {
     });
 });
 </script>
+
+@if ($errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var firstError = document.querySelector('.text-red-500.text-xs.mt-1, .border-red-500');
+            if (firstError) {
+                firstError.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        });
+    </script>
+@endif
 @endpush
