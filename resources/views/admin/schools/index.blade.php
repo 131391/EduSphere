@@ -142,85 +142,91 @@
     ];
 @endphp
 
-<div class="space-y-8">
+<div class="space-y-6">
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4">
         <!-- Total Schools -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-lg">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Schools</p>
-                    <h3 class="text-3xl font-extrabold text-gray-900 dark:text-white mt-2">{{ $totalSchools ?? $schools->total() }}</h3>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Schools</p>
+                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $totalSchools ?? $schools->total() }}</h3>
                 </div>
-                <div class="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-university text-blue-600 dark:text-blue-400 text-2xl"></i>
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-university text-blue-600 dark:text-blue-400 text-xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Active Schools -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border-t-4 border-green-500 transition-all duration-300 hover:shadow-lg">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-green-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Schools</p>
-                    <h3 class="text-3xl font-extrabold text-green-600 mt-2">{{ $activeSchools ?? 0 }}</h3>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Active Schools</p>
+                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2 leading-none">
+                        <span class="text-green-600">{{ $activeSchools ?? 0 }}</span>
+                    </h3>
                 </div>
-                <div class="w-14 h-14 bg-green-50 dark:bg-green-900/20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-check-double text-green-600 dark:text-green-400 text-2xl"></i>
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-check-double text-green-600 dark:text-green-400 text-xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Inactive Schools -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border-t-4 border-red-500 transition-all duration-300 hover:shadow-lg">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-red-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Inactive Schools</p>
-                    <h3 class="text-3xl font-extrabold text-red-600 mt-2">{{ $inactiveSchools ?? 0 }}</h3>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Inactive Schools</p>
+                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2 leading-none">
+                        <span class="text-red-600">{{ $inactiveSchools ?? 0 }}</span>
+                    </h3>
                 </div>
-                <div class="w-14 h-14 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-2xl"></i>
+                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Suspended Schools -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border-t-4 border-amber-500 transition-all duration-300 hover:shadow-lg">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Suspended</p>
-                    <h3 class="text-3xl font-extrabold text-amber-600 mt-2">{{ $suspendedSchools ?? 0 }}</h3>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Suspended Schools</p>
+                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2 leading-none">
+                        <span class="text-amber-600">{{ $suspendedSchools ?? 0 }}</span>
+                    </h3>
                 </div>
-                <div class="w-14 h-14 bg-amber-50 dark:bg-amber-900/20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-2xl"></i>
+                <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xl"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Page Header Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border border-blue-100/50 dark:border-gray-700">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-200 dark:shadow-none">
-                    <i class="fas fa-university"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Schools Management</h1>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Manage all educational institutions and their configurations</p>
-                </div>
+    <!-- Header Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-blue-100/50 dark:border-gray-700">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                        <i class="fas fa-university text-xs"></i>
+                    </div>
+                    Schools Management
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and track all schools and their configurations in the system.</p>
             </div>
-            <div class="flex items-center space-x-3">
+            <div class="flex flex-wrap gap-2">
                 <a href="{{ route('admin.schools.create') }}" 
-                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-2xl transition-all duration-200 shadow-lg shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 active:translate-y-0">
-                    <i class="fas fa-plus-circle mr-2"></i>
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-plus mr-2 text-xs"></i>
                     Add New School
                 </a>
-                <button @click="window.location.href='{{ route('admin.schools.index', ['export' => 'csv']) }}'"
-                    class="inline-flex items-center px-6 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold rounded-2xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm hover:shadow-md">
-                    <i class="fas fa-file-export mr-2 text-blue-500"></i>
-                    Export Results
-                </button>
+                <a href="{{ route('admin.schools.index', ['export' => 'csv']) }}"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-file-excel mr-2 text-xs"></i>
+                    Excel Export
+                </a>
             </div>
         </div>
     </div>
