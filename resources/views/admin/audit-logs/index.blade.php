@@ -7,66 +7,66 @@
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <!-- Global Events -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Global Events</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total']) }}</h3>
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Global Events</p>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($stats['total']) }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-database text-blue-600 dark:text-blue-400 text-xl"></i>
+                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-database text-blue-600 dark:text-blue-400 text-lg"></i>
                 </div>
             </div>
         </div>
 
         <!-- Today Activity -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-emerald-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Today Activity</p>
-                    <h3 class="text-3xl font-bold text-emerald-600 mt-2">{{ number_format($stats['today']) }}</h3>
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Today Activity</p>
+                    <h3 class="text-2xl font-bold text-emerald-600 mt-1">{{ number_format($stats['today']) }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-bolt text-emerald-600 dark:text-emerald-400 text-xl"></i>
+                <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-bolt text-emerald-600 dark:text-emerald-400 text-lg"></i>
                 </div>
             </div>
         </div>
 
         <!-- Creations -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-green-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-green-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Creations</p>
-                    <h3 class="text-3xl font-bold text-green-600 mt-2">{{ number_format($stats['created']) }}</h3>
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Creations</p>
+                    <h3 class="text-2xl font-bold text-green-600 mt-1">{{ number_format($stats['created']) }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-plus-circle text-green-600 dark:text-green-400 text-xl"></i>
+                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-plus-circle text-green-600 dark:text-green-400 text-lg"></i>
                 </div>
             </div>
         </div>
 
         <!-- Updates -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-indigo-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-indigo-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Updates</p>
-                    <h3 class="text-3xl font-bold text-indigo-600 mt-2">{{ number_format($stats['updated']) }}</h3>
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Updates</p>
+                    <h3 class="text-2xl font-bold text-indigo-600 mt-1">{{ number_format($stats['updated']) }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-edit text-indigo-600 dark:text-indigo-400 text-xl"></i>
+                <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-edit text-indigo-600 dark:text-indigo-400 text-lg"></i>
                 </div>
             </div>
         </div>
 
         <!-- Deletions -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-rose-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-rose-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Deletions</p>
-                    <h3 class="text-3xl font-bold text-rose-600 mt-2">{{ number_format($stats['deleted']) }}</h3>
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Deletions</p>
+                    <h3 class="text-2xl font-bold text-rose-600 mt-1">{{ number_format($stats['deleted']) }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-rose-100 dark:bg-rose-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-trash-alt text-rose-600 dark:text-rose-400 text-xl"></i>
+                <div class="w-10 h-10 bg-rose-100 dark:bg-rose-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-trash-alt text-rose-600 dark:text-rose-400 text-lg"></i>
                 </div>
             </div>
         </div>

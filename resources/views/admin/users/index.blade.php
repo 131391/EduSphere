@@ -7,66 +7,66 @@
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <!-- Total Users -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
-                        <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ number_format($stats['total']) }}</h3>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Total Users</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($stats['total']) }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                        <i class="fas fa-users text-blue-600 dark:text-blue-400 text-xl"></i>
+                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                        <i class="fas fa-users text-blue-600 dark:text-blue-400 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Active Users -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500 transition-all duration-300 hover:shadow-md">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-emerald-500 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Active</p>
-                        <h3 class="text-3xl font-bold text-emerald-600 mt-2">{{ number_format($stats['active']) }}</h3>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Active Users</p>
+                        <h3 class="text-2xl font-bold text-emerald-600 mt-1">{{ number_format($stats['active']) }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                        <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400 text-xl"></i>
+                    <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                        <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Inactive Users -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-gray-400 transition-all duration-300 hover:shadow-md">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-gray-400 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Inactive</p>
-                        <h3 class="text-3xl font-bold text-gray-500 dark:text-white mt-2">{{ number_format($stats['inactive']) }}</h3>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Inactive Users</p>
+                        <h3 class="text-2xl font-bold text-gray-500 dark:text-white mt-1">{{ number_format($stats['inactive']) }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                        <i class="fas fa-pause-circle text-gray-600 dark:text-gray-400 text-xl"></i>
+                    <div class="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                        <i class="fas fa-pause-circle text-gray-600 dark:text-gray-400 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Suspended Users -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-rose-500 transition-all duration-300 hover:shadow-md">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-rose-500 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Suspended</p>
-                        <h3 class="text-3xl font-bold text-rose-600 mt-2">{{ number_format($stats['suspended']) }}</h3>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Suspended Users</p>
+                        <h3 class="text-2xl font-bold text-rose-600 mt-1">{{ number_format($stats['suspended']) }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-rose-100 dark:bg-rose-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                        <i class="fas fa-ban text-rose-600 dark:text-rose-400 text-xl"></i>
+                    <div class="w-10 h-10 bg-rose-100 dark:bg-rose-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                        <i class="fas fa-ban text-rose-600 dark:text-rose-400 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Pending Users -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500 transition-all duration-300 hover:shadow-md">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-amber-500 transition-all duration-300 hover:shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
-                        <h3 class="text-3xl font-bold text-amber-600 mt-2">{{ number_format($stats['pending']) }}</h3>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Pending Users</p>
+                        <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ number_format($stats['pending']) }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                        <i class="fas fa-clock text-amber-600 dark:text-amber-400 text-xl"></i>
+                    <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                        <i class="fas fa-clock text-amber-600 dark:text-amber-400 text-lg"></i>
                     </div>
                 </div>
             </div>

@@ -146,59 +146,59 @@
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-4">
         <!-- Total Schools -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Schools</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $totalSchools ?? $schools->total() }}</h3>
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Total Schools</p>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $totalSchools ?? $schools->total() }}</h3>
                 </div>
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-university text-blue-600 dark:text-blue-400 text-xl"></i>
+                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-university text-blue-600 dark:text-blue-400 text-lg"></i>
                 </div>
             </div>
         </div>
 
         <!-- Active Schools -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-green-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-green-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Active Schools</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2 leading-none">
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Active Schools</p>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1 leading-none">
                         <span class="text-green-600">{{ $activeSchools ?? 0 }}</span>
                     </h3>
                 </div>
-                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-check-double text-green-600 dark:text-green-400 text-xl"></i>
+                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-check-double text-green-600 dark:text-green-400 text-lg"></i>
                 </div>
             </div>
         </div>
 
         <!-- Inactive Schools -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-red-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-red-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Inactive Schools</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2 leading-none">
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Inactive Schools</p>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1 leading-none">
                         <span class="text-red-600">{{ $inactiveSchools ?? 0 }}</span>
                     </h3>
                 </div>
-                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-xl"></i>
+                <div class="w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-lg"></i>
                 </div>
             </div>
         </div>
 
         <!-- Suspended Schools -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500 transition-all duration-300 hover:shadow-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-amber-500 transition-all duration-300 hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Suspended Schools</p>
-                    <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2 leading-none">
+                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Suspended Schools</p>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1 leading-none">
                         <span class="text-amber-600">{{ $suspendedSchools ?? 0 }}</span>
                     </h3>
                 </div>
-                <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xl"></i>
+                <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-lg"></i>
                 </div>
             </div>
         </div>
