@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\School;
 use App\Models\User;
-use App\Models\Student;
 use Illuminate\Http\Request;
 
 class GlobalSearchController extends Controller
@@ -16,7 +15,7 @@ class GlobalSearchController extends Controller
     public function search(Request $request)
     {
         $query = $request->input('q');
-        
+
         if (empty($query)) {
             return response()->json(['results' => []]);
         }
@@ -28,7 +27,7 @@ class GlobalSearchController extends Controller
             ->orWhere('code', 'like', "%{$query}%")
             ->take(5)
             ->get();
-        
+
         foreach ($schools as $school) {
             $results[] = [
                 'type' => 'School',
@@ -45,7 +44,7 @@ class GlobalSearchController extends Controller
             ->orWhere('email', 'like', "%{$query}%")
             ->take(5)
             ->get();
-            
+
         foreach ($users as $user) {
             $results[] = [
                 'type' => 'User',

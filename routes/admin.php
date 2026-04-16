@@ -27,7 +27,7 @@ Route::post('schools/data', [SchoolController::class, 'index'])->name('schools.d
 Route::resource('schools', SchoolController::class);
 
 // Global User Management
-Route::get('/users', [UserController::class, 'index'])->name('users.index');
+Route::match(['get', 'post'], '/users', [UserController::class, 'index'])->name('users.index');
 
 // Audit Logs
 Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
