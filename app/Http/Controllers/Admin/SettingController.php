@@ -28,6 +28,10 @@ class SettingController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        if ($request->ajax()) {
+            return response()->json(['message' => 'Password changed successfully.']);
+        }
+
         return back()->with('success', 'Password changed successfully.');
     }
 

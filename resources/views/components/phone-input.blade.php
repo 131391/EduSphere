@@ -13,7 +13,7 @@
 <div class="relative phone-input-wrapper">
     <!-- Country Code Prefix -->
     <div class="absolute inset-y-0 left-0 flex items-center pointer-events-none z-10">
-        <span class="px-3 py-2 text-gray-700 font-medium bg-gray-50 border-r border-gray-300 rounded-l-md h-full flex items-center select-none">
+        <span class="px-3 py-2 text-gray-700 font-medium bg-white border-r border-gray-300 rounded-l-md h-full flex items-center select-none">
             +91
         </span>
     </div>
@@ -27,8 +27,7 @@
         placeholder="{{ $placeholder }}"
         inputmode="numeric"
         oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
-        class="w-full pl-[70px] pr-3 py-2 border {{ $errorClass }} rounded-md focus:outline-none focus:ring-2 transition-all duration-200"
-        {{ $attributes }}
+        {{ $attributes->merge(['class' => "w-full pl-[70px] pr-3 py-2 border $errorClass rounded-md focus:outline-none focus:ring-2 transition-all duration-200"]) }}
     >
     
     <!-- Character Counter (Optional) -->
