@@ -142,65 +142,85 @@
     ];
 @endphp
 
-<div class="space-y-6">
-    <!-- Success Message -->
-
-    <!-- Page Header -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Schools Management</h1>
-            <p class="text-gray-600 mt-1">Manage all schools in the system</p>
+<div class="space-y-8">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Total Schools -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Schools</p>
+                    <h3 class="text-3xl font-extrabold text-gray-900 dark:text-white mt-2">{{ $totalSchools ?? $schools->total() }}</h3>
+                </div>
+                <div class="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-university text-blue-600 dark:text-blue-400 text-2xl"></i>
+                </div>
+            </div>
         </div>
-        <a href="{{ route('admin.schools.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
-            <i class="fas fa-plus mr-2"></i>
-            Add New School
-        </a>
+
+        <!-- Active Schools -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border-t-4 border-green-500 transition-all duration-300 hover:shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Schools</p>
+                    <h3 class="text-3xl font-extrabold text-green-600 mt-2">{{ $activeSchools ?? 0 }}</h3>
+                </div>
+                <div class="w-14 h-14 bg-green-50 dark:bg-green-900/20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-check-double text-green-600 dark:text-green-400 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inactive Schools -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border-t-4 border-red-500 transition-all duration-300 hover:shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Inactive Schools</p>
+                    <h3 class="text-3xl font-extrabold text-red-600 mt-2">{{ $inactiveSchools ?? 0 }}</h3>
+                </div>
+                <div class="w-14 h-14 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suspended Schools -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border-t-4 border-amber-500 transition-all duration-300 hover:shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Suspended</p>
+                    <h3 class="text-3xl font-extrabold text-amber-600 mt-2">{{ $suspendedSchools ?? 0 }}</h3>
+                </div>
+                <div class="w-14 h-14 bg-amber-50 dark:bg-amber-900/20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110">
+                    <i class="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-2xl"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm">Total Schools</p>
-                    <p class="text-2xl font-bold text-gray-800 mt-1">{{ $totalSchools ?? $schools->total() }}</p>
+    <!-- Page Header Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-6 border border-blue-100/50 dark:border-gray-700">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="fas fa-university"></i>
                 </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-school text-blue-600"></i>
+                <div>
+                    <h1 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Schools Management</h1>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Manage all educational institutions and their configurations</p>
                 </div>
             </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm">Active Schools</p>
-                    <p class="text-2xl font-bold text-green-600 mt-1">{{ $activeSchools ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-check-circle text-green-600"></i>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm">Inactive Schools</p>
-                    <p class="text-2xl font-bold text-red-600 mt-1">{{ $inactiveSchools ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-times-circle text-red-600"></i>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm">Suspended</p>
-                    <p class="text-2xl font-bold text-yellow-600 mt-1">{{ $suspendedSchools ?? 0 }}</p>
-                </div>
-                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
-                </div>
+            <div class="flex items-center space-x-3">
+                <a href="{{ route('admin.schools.create') }}" 
+                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-2xl transition-all duration-200 shadow-lg shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-0.5 active:translate-y-0">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Add New School
+                </a>
+                <button @click="window.location.href='{{ route('admin.schools.index', ['export' => 'csv']) }}'"
+                    class="inline-flex items-center px-6 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold rounded-2xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm hover:shadow-md">
+                    <i class="fas fa-file-export mr-2 text-blue-500"></i>
+                    Export Results
+                </button>
             </div>
         </div>
     </div>
