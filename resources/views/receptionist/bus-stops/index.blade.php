@@ -1,321 +1,314 @@
 @extends('layouts.receptionist')
 
-@section('title', 'Bus Stop Management - Receptionist')
+@section('title', 'Bus Stop Network - Receptionist')
 @section('page-title', 'Bus Stop Management')
-@section('page-description', 'Manage bus stops and transportation points')
 
 @section('content')
-    <div class="space-y-6" x-data="busStopManagement" x-init="init()">
-        {{-- Bus Stop Statistics --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Stops</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_stops'] }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-map-marker-alt text-blue-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Coverage Areas</p>
-                        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ $stats['distinct_areas'] }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-globe-asia text-emerald-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Distance</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['average_distance'] }} <span class="text-sm text-gray-400 font-medium">KM</span></p>
-                    </div>
-                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-road text-amber-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Mapped Fleet</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_mapped'] }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-bus text-purple-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
+    <div class="space-y-6" x-data="ajaxDataTable({
+            endpoint: '{{ route('receptionist.bus-stops.index') }}',
+            initialData: @js($initialData),
+            initialFilters: { search: '' }
+        })">
+        {{-- High-Density Statistics Dashboard --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <x-stat-card title="Total Stops" value="{{ $stats['total_stops'] }}" icon="fas fa-map-marker-alt"
+                color="blue" />
+            <x-stat-card title="Coverage Areas" value="{{ $stats['distinct_areas'] }}" icon="fas fa-globe-asia"
+                color="teal" />
+            <x-stat-card title="Avg. Distance" value="{{ $stats['average_distance'] }} KM" icon="fas fa-road"
+                color="amber" />
+            <x-stat-card title="Mapped Fleet" value="{{ $stats['total_mapped'] }}" icon="fas fa-bus-alt" color="purple" />
         </div>
 
-        {{-- Page Header --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                            <i class="fas fa-network-wired text-xs"></i>
-                        </div>
-                        Bus Stop Network
-                    </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure and monitor transportation pickup nodes.</p>
+        {{-- Action Header --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/50 p-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-network-wired text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">Institutional Transit
+                            Network</h2>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Manage pickup nodes
+                            and geographic landmarks</p>
+                    </div>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <button @click="openAddModal()"
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                        <i class="fas fa-plus mr-2"></i>
+
+                <div class="flex items-center gap-3">
+                    <div class="relative group">
+                        <input type="text" x-model.debounce.300ms="filters.search"
+                            placeholder="Search stops, routes, codes..."
+                            class="w-full md:w-72 bg-slate-50 border-none rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-teal-500/20 transition-all font-medium">
+                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    </div>
+
+                    <button @click="$dispatch('open-stop-modal')"
+                        class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95">
+                        <i class="fas fa-plus text-[10px]"></i>
                         Commission Node
                     </button>
-                    <a href="{{ route('receptionist.bus-stops.export') }}"
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                        <i class="fas fa-file-excel mr-2 text-xs"></i>
-                        Stop Export
-                    </a>
+
+                    <button @click="exportData()"
+                        class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 active:scale-95">
+                        <i class="fas fa-file-csv text-teal-600"></i>
+                        Export
+                    </button>
                 </div>
             </div>
         </div>
 
-        @php
-            $tableColumns = [
-                [
-                    'key' => 'sr_no',
-                    'label' => 'SR NO',
-                    'sortable' => false,
-                    'render' => function ($row, $index, $data) {
-                        return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
-                    }
-                ],
-                [
-                    'key' => 'route_name',
-                    'label' => 'ROUTE NAME',
-                    'sortable' => true,
-                    'render' => function ($row) {
-                        return $row->route ? $row->route->route_name : 'N/A';
-                    }
-                ],
-                [
-                    'key' => 'bus_stop_no',
-                    'label' => 'BUS STOP NO',
-                    'sortable' => true,
-                ],
-                [
-                    'key' => 'bus_stop_name',
-                    'label' => 'BUS STOP NAME',
-                    'sortable' => true,
-                ],
-                [
-                    'key' => 'distance_from_institute',
-                    'label' => 'DISTANCE (KM)',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'charge_per_month',
-                    'label' => 'CHARGE/MONTH',
-                    'sortable' => false,
-                    'render' => function ($row) {
-                        return '₹' . number_format($row->charge_per_month, 2);
-                    }
-                ],
-                [
-                    'key' => 'area_pin_code',
-                    'label' => 'PIN CODE',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'vehicle_no',
-                    'label' => 'VEHICLE',
-                    'sortable' => false,
-                    'render' => function ($row) {
-                        return $row->vehicle ? $row->vehicle->vehicle_no : 'N/A';
-                    }
-                ],
-            ];
+        {{-- Registry Table --}}
+        <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden min-h-[400px] relative">
+            <div x-show="loading"
+                class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                <div class="flex flex-col items-center gap-3">
+                    <div class="w-10 h-10 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Synchronizing Network...</span>
+                </div>
+            </div>
 
-            $tableActions = [
-                [
-                    'type' => 'button',
-                    'onclick' => function ($row) {
-                        $stopData = [
-                            'id' => $row->id,
-                            'route_id' => $row->route_id,
-                            'vehicle_id' => $row->vehicle_id,
-                            'bus_stop_no' => $row->bus_stop_no,
-                            'bus_stop_name' => $row->bus_stop_name,
-                            'latitude' => $row->latitude,
-                            'longitude' => $row->longitude,
-                            'distance_from_institute' => $row->distance_from_institute,
-                            'charge_per_month' => $row->charge_per_month,
-                            'area_pin_code' => $row->area_pin_code,
-                        ];
-                        return "window.dispatchEvent(new CustomEvent('open-edit-bus-stop', { detail: ".json_encode($stopData)." }))";
-                    },
-                    'icon' => 'fas fa-edit',
-                    'class' => 'text-blue-600 hover:text-blue-900',
-                    'title' => 'Edit',
-                ],
-                [
-                    'type' => 'button',
-                    'onclick' => function ($row) {
-                        $deleteData = [
-                            'url' => url('receptionist/bus-stops/' . $row->id),
-                            'name' => $row->bus_stop_name
-                        ];
-                        return "window.dispatchEvent(new CustomEvent('open-delete-bus-stop', { detail: ".json_encode($deleteData)." }))";
-                    },
-                    'icon' => 'fas fa-trash',
-                    'class' => 'text-red-600 hover:text-red-900',
-                    'title' => 'Delete',
-                ],
-            ];
-        @endphp
-
-        <x-data-table :columns="$tableColumns" :data="$busStops" :searchable="true" :actions="$tableActions"
-            empty-message="No bus stops found" empty-icon="fas fa-map-marker-alt">
-            Bus Stop List
-        </x-data-table>
-
-        {{-- Add/Edit Bus Stop Modal --}}
-        <x-modal name="bus-stop-modal" alpineTitle="editMode ? 'Edit Bus Stop' : 'Create Bus Stop'"
-            maxWidth="3xl">
-            <form @submit.prevent="save" id="busStopForm" method="POST" class="space-y-6" novalidate>
-                @csrf
-                <template x-if="editMode">
-                    <input type="hidden" name="_method" value="PUT">
-                </template>
-                    {{-- Logistics Mapping --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Assigned Route Designation <span class="text-red-600 font-bold">*</span></label>
-                            <select name="route_id" x-model="formData.route_id" id="route_id"
-                                @change="clearError('route_id')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.route_id}">
-                                <option value="">Select Primary Route</option>
-                                @foreach($routes as $route)
-                                    <option value="{{ $route->id }}">{{ $route->route_name }}</option>
-                                @endforeach
-                            </select>
-                            <template x-if="errors.route_id">
-                                <p class="modal-error-message" x-text="errors.route_id[0]"></p>
-                            </template>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Node Identifier (Stop No) <span class="text-red-600 font-bold">*</span></label>
-                            <input type="text" name="bus_stop_no" x-model="formData.bus_stop_no"
-                                placeholder="e.g. ST-001" @input="clearError('bus_stop_no')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.bus_stop_no}">
-                            <template x-if="errors.bus_stop_no">
-                                <p class="modal-error-message" x-text="errors.bus_stop_no[0]"></p>
-                            </template>
-                        </div>
-
-                        <div class="md:col-span-2 space-y-2">
-                            <label class="modal-label-premium">Geographic Landmark Name <span class="text-red-600 font-bold">*</span></label>
-                            <input type="text" name="bus_stop_name" x-model="formData.bus_stop_name"
-                                placeholder="e.g. Central Square Park Entrance" @input="clearError('bus_stop_name')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.bus_stop_name}">
-                            <template x-if="errors.bus_stop_name">
-                                <p class="modal-error-message" x-text="errors.bus_stop_name[0]"></p>
-                            </template>
-                        </div>
-                    </div>
-
-                    <hr class="border-slate-100">
-
-                    {{-- GPS & Tariff Configuration --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Precision Latitude</label>
-                            <input type="number" step="0.00000001" name="latitude" x-model="formData.latitude"
-                                placeholder="0.00000000" class="modal-input-premium text-xs">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Precision Longitude</label>
-                            <input type="number" step="0.00000001" name="longitude" x-model="formData.longitude"
-                                placeholder="0.00000000" class="modal-input-premium text-xs">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Distance (KM)</label>
-                            <input type="number" step="0.01" name="distance_from_institute"
-                                x-model="formData.distance_from_institute" class="modal-input-premium" placeholder="0.00">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Monthly Tariff</label>
-                            <div class="relative group">
-                                <input type="number" step="0.01" name="charge_per_month" x-model="formData.charge_per_month"
-                                    class="modal-input-premium" placeholder="0.00">
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-teal-600 font-bold text-sm">₹</div>
-                            </div>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Postal Code (PIN)</label>
-                            <input type="text" name="area_pin_code" x-model="formData.area_pin_code"
-                                class="modal-input-premium" placeholder="e.g. 110001">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Operational Fleet Mapping</label>
-                            <select name="vehicle_id" x-model="formData.vehicle_id" id="vehicle_id"
-                                class="modal-input-premium">
-                                <option value="">Select Primary Vehicle Asset</option>
-                                @foreach($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    {{-- Administrative Notice --}}
-                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
-                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                            <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-900 leading-tight">Infrastructure Notice</span>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                                Decommissioning or re-routing this stop will impact <span class="text-indigo-600 font-bold underline decoration-indigo-200">billing cycles</span> and student notifications for the current month.
-                            </p>
-                        </div>
-                    </div>
-
-            </form>
-            {{-- Modal Footer --}}
-            <x-slot name="footer">
-                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
-                    Cancel
-                </button>
-                <button type="submit" form="busStopForm" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
-                    <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 dark:bg-gray-900/50 border-b border-slate-100 dark:border-gray-700">
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Stop Identifier
+                        </th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Logistics
+                            Mapping</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">GPS & Tariff
+                        </th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
+                    <template x-for="stop in items" :key="stop.id">
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-900/20 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight"
+                                            x-text="stop.bus_stop_name"></span>
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tight mt-0.5"
+                                            x-text="'NODE NO: ' + stop.bus_stop_no"></span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-route text-[10px] text-slate-400"></i>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300"
+                                            x-text="stop.route_name"></span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase"
+                                            x-text="stop.vehicle_label"></span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-teal-600" x-text="stop.charge"></span>
+                                        <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase"
+                                            x-text="stop.distance"></span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 opacity-60">
+                                        <i class="fas fa-crosshairs text-[8px] text-slate-400"></i>
+                                        <span class="text-[10px] font-bold text-slate-500 tracking-tight"
+                                            x-text="stop.coords"></span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2 text-right">
+                                    <button @click="$dispatch('open-stop-modal', stop)"
+                                        class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
+                                        <i class="fas fa-edit text-xs"></i>
+                                    </button>
+                                    <button @click="$dispatch('open-delete-modal', {
+                                            url: '{{ route('receptionist.bus-stops.index') }}/' + stop.id,
+                                            name: stop.bus_stop_name
+                                        })"
+                                        class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
+                                        <i class="fas fa-trash-alt text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                     </template>
-                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Create Stop')"></span>
-                </button>
-            </x-slot>
-        </x-modal>
+                </tbody>
+            </table>
 
-        <x-confirm-modal title="Permanently Remove Node?"
-            message="This action will decommission the bus stop from the network. This cannot be undone."
-            confirm-text="Decommission" confirm-color="red" />
+            {{-- Empty State --}}
+            <template x-if="!loading && items.length === 0">
+                <div class="py-20 flex flex-col items-center">
+                    <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
+                        <i class="fas fa-map-marked text-4xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">No Network Nodes</h3>
+                    <p class="text-sm text-slate-500">Kickstart coverage by commissioning your first bus stop</p>
+                </div>
+            </template>
+
+            {{-- Load More --}}
+            <div class="p-6 border-t border-slate-50 flex justify-center" x-show="hasMore">
+                <button @click="loadMore()" :disabled="loading"
+                    class="px-8 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-all disabled:opacity-50">
+                    Expand Coverage
+                </button>
+            </div>
+        </div>
     </div>
+
+    {{-- Add/Edit Stop Modal --}}
+    <x-modal name="bus-stop-modal" x-data="stopForm()" @open-stop-modal.window="open($event.detail)"
+        alpineTitle="editMode ? 'Modify Network Node' : 'Commission Pickup Point'" maxWidth="3xl">
+        <form @submit.prevent="save" id="busStopForm" class="space-y-6">
+            @csrf
+            <template x-if="editMode">
+                <input type="hidden" name="_method" value="PUT">
+            </template>
+
+            {{-- Logistics Section --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation
+                        <span class="text-red-500">*</span></label>
+                    <select x-model="formData.route_id"
+                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                        <option value="">Select Primary Route</option>
+                        @foreach($routes as $route)
+                            <option value="{{ $route->id }}">{{ $route->route_name }}</option>
+                        @endforeach
+                    </select>
+                    <p x-show="errors.route_id" x-text="errors.route_id[0]" class="text-[10px] font-bold text-red-500 ml-1">
+                    </p>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Node Identifier (Stop
+                        No) <span class="text-red-500">*</span></label>
+                    <input type="text" x-model="formData.bus_stop_no" placeholder="e.g. ST-001"
+                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium">
+                    <p x-show="errors.bus_stop_no" x-text="errors.bus_stop_no[0]"
+                        class="text-[10px] font-bold text-red-500 ml-1"></p>
+                </div>
+
+                <div class="md:col-span-2 space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Geographic Landmark
+                        Name <span class="text-red-500">*</span></label>
+                    <input type="text" x-model="formData.bus_stop_name" placeholder="e.g. Central Square Park Entrance"
+                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium">
+                    <p x-show="errors.bus_stop_name" x-text="errors.bus_stop_name[0]"
+                        class="text-[10px] font-bold text-red-500 ml-1"></p>
+                </div>
+            </div>
+
+            <hr class="border-slate-100/50">
+
+            {{-- GPS & Tariff Section --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Latitude</label>
+                    <input type="number" step="0.00000001" x-model="formData.latitude" placeholder="0.00000000"
+                        class="w-full bg-slate-100/50 border-none rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Longitude</label>
+                    <input type="number" step="0.00000001" x-model="formData.longitude" placeholder="0.00000000"
+                        class="w-full bg-slate-100/50 border-none rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">PIN Code</label>
+                    <input type="text" x-model="formData.area_pin_code" placeholder="110001"
+                        class="w-full bg-slate-100/50 border-none rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Distance & Tariff
+                        Mapping</label>
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1 group">
+                            <input type="number" step="0.01" x-model="formData.distance_from_institute"
+                                placeholder="Distance (KM)"
+                                class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            <span
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">KM</span>
+                        </div>
+                        <div class="relative flex-1 group">
+                            <input type="number" step="0.01" x-model="formData.charge_per_month" placeholder="Tariff (MT)"
+                                class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            <span
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-teal-600">₹</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Fleet Assignment
+                        Override</label>
+                    <select x-model="formData.vehicle_id"
+                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                        <option value="">Allocated via Route</option>
+                        @foreach($vehicles as $vehicle)
+                            <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            {{-- Instructional Notice --}}
+            <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
+                <i class="fas fa-satellite-dish text-indigo-600 mt-0.5"></i>
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold text-slate-900 leading-tight">Spatial Accuracy Correlation</span>
+                    <p
+                        class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wider opacity-80 leading-relaxed">
+                        Geocoding this node enables <span class="text-indigo-600 font-bold underline">Institutional GPS
+                            Tracking</span> and automated student proximity alerts.
+                    </p>
+                </div>
+            </div>
+        </form>
+
+        <x-slot name="footer">
+            <button @click="$dispatch('close-modal', 'bus-stop-modal')"
+                class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                Cancel
+            </button>
+            <button type="submit" form="busStopForm" :disabled="submitting"
+                class="bg-slate-900 hover:bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50">
+                <template x-if="submitting">
+                    <i class="fas fa-spinner animate-spin mr-2"></i>
+                </template>
+                <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Node' : 'Commission Node')"></span>
+            </button>
+        </x-slot>
+    </x-modal>
+
+    <x-confirm-modal title="Decommission Network Node?"
+        message="This operation will remove the stop from active manifests. Associated billing cycles will be terminated."
+        confirm-text="Decommission" confirm-color="red" />
 
     @push('scripts')
         <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('busStopManagement', () => ({
+            function stopForm() {
+                return {
                     editMode: false,
-                    busStopId: null,
+                    submitting: false,
                     formData: {
                         route_id: '',
                         vehicle_id: '',
@@ -325,94 +318,39 @@
                         longitude: '',
                         distance_from_institute: '',
                         charge_per_month: '',
-                        area_pin_code: '',
+                        area_pin_code: ''
                     },
                     errors: {},
-                    submitting: false,
 
-                    async init() {
-                        window.addEventListener('open-add-bus-stop', () => this.openAddModal());
-                        window.addEventListener('open-edit-bus-stop', (e) => this.openEditModal(e.detail));
-                        window.addEventListener('open-delete-bus-stop', (e) => this.confirmDelete(e.detail));
-
-                        this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('select[name="route_id"], select[name="vehicle_id"]').on('change', (e) => {
-                                    const field = e.target.getAttribute('name');
-                                    if (field && this.formData.hasOwnProperty(field)) {
-                                        this.formData[field] = e.target.value;
-                                        this.clearError(field);
-                                    }
-                                });
-                            }
-                        });
-                    },
-
-                    clearError(field) {
-                        if (this.errors[field]) {
-                            delete this.errors[field];
+                    async open(stop = null) {
+                        this.errors = {};
+                        if (stop) {
+                            this.editMode = true;
+                            this.stopId = stop.id;
+                            this.formData = { ...stop.raw };
+                        } else {
+                            this.editMode = false;
+                            this.formData = {
+                                route_id: '',
+                                vehicle_id: '',
+                                bus_stop_no: '',
+                                bus_stop_name: '',
+                                latitude: '',
+                                longitude: '',
+                                distance_from_institute: '',
+                                charge_per_month: '',
+                                area_pin_code: ''
+                            };
                         }
-                    },
-
-                    openAddModal() {
-                        this.editMode = false;
-                        this.busStopId = null;
-                        this.errors = {};
-                        this.formData = {
-                            route_id: '',
-                            vehicle_id: '',
-                            bus_stop_no: '',
-                            bus_stop_name: '',
-                            latitude: '',
-                            longitude: '',
-                            distance_from_institute: '',
-                            charge_per_month: '',
-                            area_pin_code: '',
-                        };
                         this.$dispatch('open-modal', 'bus-stop-modal');
-                        this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('select[name="route_id"], select[name="vehicle_id"]').val('').trigger('change');
-                            }
-                        });
-                    },
-
-                    openEditModal(busStop) {
-                        this.editMode = true;
-                        this.busStopId = busStop.id;
-                        this.errors = {};
-                        this.formData = {
-                            route_id: busStop.route_id ? String(busStop.route_id) : '',
-                            vehicle_id: busStop.vehicle_id ? String(busStop.vehicle_id) : '',
-                            bus_stop_no: busStop.bus_stop_no || '',
-                            bus_stop_name: busStop.bus_stop_name || '',
-                            latitude: busStop.latitude || '',
-                            longitude: busStop.longitude || '',
-                            distance_from_institute: busStop.distance_from_institute || '',
-                            charge_per_month: busStop.charge_per_month || '',
-                            area_pin_code: busStop.area_pin_code || '',
-                        };
-                        this.$dispatch('open-modal', 'bus-stop-modal');
-
-                        this.$nextTick(() => {
-                            setTimeout(() => {
-                                if (typeof $ !== 'undefined') {
-                                    $('select[name="route_id"]').val(this.formData.route_id).trigger('change');
-                                    $('select[name="vehicle_id"]').val(this.formData.vehicle_id).trigger('change');
-                                }
-                            }, 150);
-                        });
                     },
 
                     async save() {
                         this.submitting = true;
                         this.errors = {};
-
                         const url = this.editMode
-                            ? `{{ url('receptionist/bus-stops') }}/${this.busStopId}`
+                            ? `{{ route('receptionist.bus-stops.index') }}/${this.stopId}`
                             : `{{ route('receptionist.bus-stops.store') }}`;
-
-                        const method = this.editMode ? 'PUT' : 'POST';
 
                         try {
                             const response = await fetch(url, {
@@ -424,78 +362,26 @@
                                 },
                                 body: JSON.stringify({
                                     ...this.formData,
-                                    _method: method
+                                    _method: this.editMode ? 'PUT' : 'POST'
                                 })
                             });
 
                             const result = await response.json();
-
                             if (response.ok) {
-                                if (window.Toast) {
-                                    window.Toast.fire({
-                                        icon: 'success',
-                                        title: result.message || 'Node configuration propagated'
-                                    });
-                                }
-                                setTimeout(() => window.location.reload(), 1000);
+                                window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'bus-stop-modal');
+                                this.$dispatch('refresh-table');
                             } else {
-                                if (response.status === 422) {
-                                    this.errors = result.errors || {};
-                                } else {
-                                    throw new Error(result.message || 'Transmission failed');
-                                }
+                                this.errors = result.errors || {};
                             }
-                        } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: 'error', title: error.message });
-                            }
+                        } catch (e) {
+                            window.Toast.fire({ icon: 'error', title: 'Network Propagation Failure' });
                         } finally {
                             this.submitting = false;
                         }
-                    },
-
-                    confirmDelete(detail) {
-                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                            detail: {
-                                message: `Are you sure you want to decommission the bus stop node "${detail.name}"?`,
-                                onConfirm: () => this.deleteBusStop(detail.url)
-                            }
-                        }));
-                    },
-
-                    async deleteBusStop(url) {
-                        try {
-                            const response = await fetch(url, {
-                                method: 'DELETE',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                    'Accept': 'application/json'
-                                }
-                            });
-
-                            const result = await response.json();
-
-                            if (response.ok) {
-                                if (window.Toast) {
-                                    window.Toast.fire({ icon: 'success', title: result.message });
-                                }
-                                setTimeout(() => window.location.reload(), 1000);
-                            } else {
-                                throw new Error(result.message || 'Decommissioning failed');
-                            }
-                        } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: 'error', title: error.message });
-                            }
-                        }
-                    },
-
-                    closeModal() {
-                        this.$dispatch('close-modal', 'bus-stop-modal');
-                        this.errors = {};
-                    },
-                }));
-            });
+                    }
+                }
+            }
         </script>
     @endpush
 @endsection

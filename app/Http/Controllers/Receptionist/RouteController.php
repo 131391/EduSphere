@@ -10,8 +10,12 @@ use Illuminate\Validation\Rule;
 use App\Enums\RouteStatus;
 use Illuminate\Validation\ValidationException;
 
+use App\Traits\HasAjaxDataTable;
+
 class RouteController extends TenantController
 {
+    use HasAjaxDataTable;
+
     /**
      * Display a listing of routes.
      */
@@ -27,7 +31,8 @@ class RouteController extends TenantController
             $query->where(function($q) use ($search) {
                 $q->where('route_name', 'like', "%{$search}%")
                   ->orWhereHas('vehicle', function($vq) use ($search) {
-                      $vq->where('vehicle_no', 'like', "%{$search}%");
+                      $vq->where('vehicle_no', 'like', "%{$search}%")
+                        ->orWhere('registration_no', 'like', "%{$search}%");
                   });
             });
         }
@@ -37,21 +42,44 @@ class RouteController extends TenantController
         $sortDirection = $request->input('direction', 'desc');
         $query->orderBy($sortColumn, $sortDirection);
 
-        // Pagination
-        $perPage = $request->input('per_page', 15);
-        $routes = $query->paginate($perPage)->withQueryString();
+        // Core AJAX Data Handler
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->getDataTableResponse($query, $request);
+        }
+
+        // Initial hydration for zero-blink loading
+        $initialData = $this->getDataTableResponse($query, $request)->getData(true);
 
         // Statistics for the premium dashboard
         $stats = [
             'total_routes' => TransportRoute::where('school_id', $schoolId)->count(),
             'active_routes' => TransportRoute::where('school_id', $schoolId)->where('status', RouteStatus::Active)->count(),
-            'mapped_vehicles' => TransportRoute::where('school_id', $schoolId)->distinct('vehicle_id')->count(),
+            'mapped_vehicles' => TransportRoute::where('school_id', $schoolId)->whereNotNull('vehicle_id')->distinct('vehicle_id')->count(),
             'total_capacity' => TransportRoute::where('school_id', $schoolId)->with('vehicle')->get()->sum(function($route) {
                 return $route->vehicle->capacity ?? 0;
             }),
         ];
 
-        return view('receptionist.routes.index', compact('routes', 'stats'));
+        return view('receptionist.routes.index', compact('initialData', 'stats'));
+    }
+
+    /**
+     * Standard row transformer for high-performance datatables.
+     */
+    protected function transformRow($route): array
+    {
+        return [
+            'id' => $route->id,
+            'route_name' => $route->route_name,
+            'vehicle_id' => $route->vehicle_id,
+            'vehicle_label' => $route->vehicle ? ($route->vehicle->registration_no . ' (' . ($route->vehicle->vehicle_no ?? 'N/A') . ')') : 'Unassigned Assets',
+            'vehicle_capacity' => $route->vehicle->capacity ?? 'N/A',
+            'created_at' => $route->route_create_date ? $route->route_create_date->format('M d, Y') : ($route->created_at->format('M d, Y')),
+            'status' => $route->status->value,
+            'status_label' => $route->status->name,
+            'status_color' => $route->status === RouteStatus::Active ? 'teal' : 'slate',
+            'raw_date' => $route->route_create_date ? $route->route_create_date->format('Y-m-d') : $route->created_at->format('Y-m-d'),
+        ];
     }
 
     /**
@@ -203,11 +231,53 @@ class RouteController extends TenantController
     }
 
     /**
-     * Export routes to Excel.
+     * Export routes to CSV using high-performance streaming.
      */
     public function export()
     {
-        // Excel export functionality - to be implemented with Laravel Excel
-        return back()->with('info', 'Export functionality coming soon.');
+        $schoolId = $this->getSchoolId();
+        $fileName = 'institutional_routes_manifest_' . now()->format('Y_m_d_His') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$fileName\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        return response()->stream(function() use ($schoolId) {
+            $handle = fopen('php://output', 'w');
+            
+            // CSV Standard Headers
+            fputcsv($handle, [
+                'MANIFEST ID',
+                'ROUTE DESIGNATION',
+                'MAPPED VEHICLE (REG)',
+                'INTERNAL VEHICLE NO',
+                'CAPACITY',
+                'ESTABLISHMENT DATE',
+                'OPERATIONAL STATUS'
+            ]);
+
+            // Chunked processing for memory efficiency
+            TransportRoute::where('school_id', $schoolId)
+                ->with('vehicle')
+                ->chunk(200, function($routes) use ($handle) {
+                    foreach ($routes as $route) {
+                        fputcsv($handle, [
+                            $route->id,
+                            $route->route_name,
+                            $route->vehicle->registration_no ?? 'UNASSIGNED',
+                            $route->vehicle->vehicle_no ?? 'N/A',
+                            $route->vehicle->capacity ?? 0,
+                            $route->route_create_date ? $route->route_create_date->format('Y-m-d') : $route->created_at->format('Y-m-d'),
+                            $route->status->name
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, 200, $headers);
     }
 }

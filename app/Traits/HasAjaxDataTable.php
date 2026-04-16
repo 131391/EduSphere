@@ -60,4 +60,37 @@ trait HasAjaxDataTable
             'stats' => $stats,
         ]);
     }
+
+    /**
+     * Handle standard AJAX table request
+     */
+    protected function handleAjaxTable($query, $transformer, $stats = [])
+    {
+        $perPage = request('per_page', 15);
+        $paginator = $query->paginate($perPage);
+        return $this->ajaxResponse($paginator, $stats, $transformer);
+    }
+
+    /**
+     * Get initial hydration data for Blade render
+     */
+    protected function getHydrationData($query, $transformer, $extraData = [])
+    {
+        $perPage = request('per_page', 15);
+        $paginator = $query->paginate($perPage);
+
+        $data = [
+            'rows' => $paginator->getCollection()->map($transformer)->values(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'from'         => $paginator->firstItem(),
+                'to'           => $paginator->lastItem(),
+            ],
+        ];
+
+        return array_merge($data, $extraData);
+    }
 }

@@ -1,601 +1,361 @@
 @extends('layouts.receptionist')
 
-@section('title', 'Vehicle Management - Receptionist')
+@section('title', 'Vehicle Registry - Receptionist')
 @section('page-title', 'Vehicle Management')
-@section('page-description', 'Manage school vehicles and transportation')
 
 @section('content')
-    <div class="space-y-6" x-data="vehicleManagement" x-init="init()">
-        {{-- Vehicle Statistics --}}
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Fleet</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total'] }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-bus text-blue-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Diesel Units</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['diesel'] }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-gas-pump text-emerald-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Petrol Units</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['petrol'] }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-gas-pump text-amber-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">CNG Core</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['cng'] }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-charging-station text-purple-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-teal-500">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Electric EV</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['electric'] }}</p>
-                    </div>
-                    <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-bolt text-teal-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
+    <div class="space-y-6" x-data="ajaxDataTable({
+        endpoint: '{{ route('receptionist.vehicles.index') }}',
+        initialData: @js($initialData),
+        initialFilters: { search: '' }
+    })">
+        {{-- High-Density Statistics Dashboard --}}
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <x-stat-card title="Total Fleet" value="{{ $stats['total'] }}" icon="fas fa-bus" color="blue" />
+            <x-stat-card title="Diesel Units" value="{{ $stats['diesel'] }}" icon="fas fa-gas-pump" color="slate" />
+            <x-stat-card title="Petrol Units" value="{{ $stats['petrol'] }}" icon="fas fa-gas-pump" color="indigo" />
+            <x-stat-card title="CNG Core" value="{{ $stats['cng'] }}" icon="fas fa-charging-station" color="purple" />
+            <x-stat-card title="Electric EV" value="{{ $stats['electric'] }}" icon="fas fa-bolt" color="teal" />
         </div>
 
-        {{-- Page Header --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                            <i class="fas fa-bus-alt text-xs"></i>
-                        </div>
-                        Vehicle Management
-                    </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Coordinate and monitor institutional fleet logistics.</p>
+        {{-- Action Header --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/50 p-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-truck-pickup text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">Institutional Fleet Registry</h2>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Coordinate and monitor logistics assets</p>
+                    </div>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <button @click="openAddModal()"
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                        <i class="fas fa-plus mr-2"></i>
-                        Register New Vehicle
+
+                <div class="flex items-center gap-3">
+                    <div class="relative group">
+                        <input type="text" x-model.debounce.300ms="filters.search" placeholder="Search registration, engine..." 
+                            class="w-full md:w-72 bg-slate-50 border-none rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-teal-500/20 transition-all font-medium">
+                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    </div>
+                    
+                    <button @click="$dispatch('open-vehicle-modal')" 
+                        class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95">
+                        <i class="fas fa-plus text-[10px]"></i>
+                        Register Vehicle
                     </button>
-                    <a href="{{ route('receptionist.vehicles.export') }}"
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                        <i class="fas fa-file-excel mr-2 text-xs"></i>
-                        Fleet Export
-                    </a>
+
+                    <button @click="exportData()" 
+                        class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 active:scale-95">
+                        <i class="fas fa-file-csv text-teal-600"></i>
+                        Export
+                    </button>
                 </div>
             </div>
         </div>
 
-        {{-- Vehicles Table --}}
-        @php
-            $tableColumns = [
-                [
-                    'key' => 'sr_no',
-                    'label' => 'SR NO',
-                    'sortable' => false,
-                    'render' => function ($row, $index, $data) {
-                        return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
-                    }
-                ],
-                [
-                    'key' => 'registration_no',
-                    'label' => 'REGISTRATION NO',
-                    'sortable' => true,
-                ],
-                [
-                    'key' => 'vehicle_no',
-                    'label' => 'VEHICLE NO',
-                    'sortable' => true,
-                ],
-                [
-                    'key' => 'fuel_type',
-                    'label' => 'FUEL TYPE',
-                    'sortable' => true,
-                    'render' => function ($row) {
-                        return $row->getFuelTypeLabel();
-                    }
-                ],
-                [
-                    'key' => 'capacity',
-                    'label' => 'CAPACITY',
-                    'sortable' => true,
-                ],
-                [
-                    'key' => 'initial_reading',
-                    'label' => 'INITIAL READING',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'engine_no',
-                    'label' => 'ENGINE NO',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'chassis_no',
-                    'label' => 'CHASSIS NO',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'vehicle_type',
-                    'label' => 'VEHICLE TYPE',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'model_no',
-                    'label' => 'MODEL NO',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'date_of_purchase',
-                    'label' => 'DATE OF PURCHASE',
-                    'sortable' => true,
-                    'render' => function ($row) {
-                        return $row->date_of_purchase ? $row->date_of_purchase->format('Y-m-d') : 'N/A';
-                    }
-                ],
-                [
-                    'key' => 'vehicle_group',
-                    'label' => 'VEHICLE GROUP',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'imei_gps_device',
-                    'label' => 'IMEI NO OF GPS DEVICE',
-                    'sortable' => false,
-                ],
-                [
-                    'key' => 'tracking_url',
-                    'label' => 'TRACKING URL',
-                    'sortable' => false,
-                    'render' => function ($row) {
-                        return $row->tracking_url ? '<a href="' . $row->tracking_url . '" target="_blank" class="text-blue-600 hover:underline">View</a>' : 'N/A';
-                    }
-                ],
-                [
-                    'key' => 'manufacturing_year',
-                    'label' => 'MANUFACTURING YEAR',
-                    'sortable' => true,
-                ],
-                [
-                    'key' => 'vehicle_create_date',
-                    'label' => 'VEHICLE CREATE DATE',
-                    'sortable' => true,
-                    'render' => function ($row) {
-                        return $row->vehicle_create_date ? $row->vehicle_create_date->format('Y-m-d') : 'N/A';
-                    }
-                ],
-            ];
-
-        $tableActions = [
-            [
-                'type' => 'button',
-                'onclick' => function ($row) {
-                    $vehicleData = [
-                        'id' => $row->id,
-                        'registration_no' => $row->registration_no,
-                        'vehicle_no' => $row->vehicle_no,
-                        'fuel_type' => $row->fuel_type,
-                        'capacity' => $row->capacity,
-                        'initial_reading' => $row->initial_reading,
-                        'engine_no' => $row->engine_no,
-                        'chassis_no' => $row->chassis_no,
-                        'vehicle_type' => $row->vehicle_type,
-                        'model_no' => $row->model_no,
-                        'date_of_purchase' => $row->date_of_purchase ? $row->date_of_purchase->format('Y-m-d') : '',
-                        'vehicle_group' => $row->vehicle_group,
-                        'imei_gps_device' => $row->imei_gps_device,
-                        'tracking_url' => $row->tracking_url,
-                        'manufacturing_year' => $row->manufacturing_year,
-                        'vehicle_create_date' => $row->vehicle_create_date ? $row->vehicle_create_date->format('Y-m-d') : '',
-                    ];
-                    return "window.dispatchEvent(new CustomEvent('open-edit-vehicle', { detail: ".json_encode($vehicleData)." }))";
-                },
-                'icon' => 'fas fa-edit',
-                'class' => 'text-blue-600 hover:text-blue-900',
-                'title' => 'Edit',
-            ],
-            [
-                'type' => 'button',
-                'onclick' => function ($row) {
-                    $deleteData = [
-                        'url' => route('receptionist.vehicles.destroy', $row->id),
-                        'name' => $row->registration_no
-                    ];
-                    return "window.dispatchEvent(new CustomEvent('open-delete-vehicle', { detail: ".json_encode($deleteData)." }))";
-                },
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900',
-                'title' => 'Delete',
-            ],
-        ];
-        @endphp
-
-        <x-data-table :columns="$tableColumns" :data="$vehicles" :searchable="true" :actions="$tableActions"
-            empty-message="No vehicles found" empty-icon="fas fa-bus">
-            Vehicle List
-        </x-data-table>
-
-        {{-- Add/Edit Vehicle Modal --}}
-        <x-modal name="vehicle-modal" alpineTitle="editMode ? 'Edit Vehicle Specification' : 'Register New Vehicle'"
-            maxWidth="3xl">
-            <form @submit.prevent="save" id="vehicleForm" method="POST" class="space-y-6" novalidate>
-                @csrf
-                <template x-if="editMode">
-                    <input type="hidden" name="_method" value="PUT">
-                </template>
-                    {{-- Core Specifications --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Registration No <span class="text-red-600 font-bold">*</span></label>
-                            <input type="text" name="registration_no" x-model="formData.registration_no"
-                                placeholder="e.g., DL-1C-AB-1234" @input="clearError('registration_no')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.registration_no}">
-                            <template x-if="errors.registration_no">
-                                <p class="modal-error-message" x-text="errors.registration_no[0]"></p>
-                            </template>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Internal Vehicle No</label>
-                            <input type="text" name="vehicle_no" x-model="formData.vehicle_no"
-                                placeholder="Internal ID (Optional)" @input="clearError('vehicle_no')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.vehicle_no}">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Propulsion / Fuel Type <span class="text-red-600 font-bold">*</span></label>
-                            <select name="fuel_type" x-model="formData.fuel_type" id="fuel_type"
-                                @change="clearError('fuel_type')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.fuel_type}">
-                                <option value="">Select Propulsion</option>
-                                @foreach(\App\Enums\FuelType::cases() as $fuel)
-                                    <option value="{{ $fuel->value }}">{{ $fuel->name }}</option>
-                                @endforeach
-                            </select>
-                            <template x-if="errors.fuel_type">
-                                <p class="modal-error-message" x-text="errors.fuel_type[0]"></p>
-                            </template>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Seating Capacity</label>
-                            <input type="number" name="capacity" x-model="formData.capacity"
-                                placeholder="0" @input="clearError('capacity')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.capacity}">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Initial Reading (KM)</label>
-                            <input type="number" name="initial_reading" x-model="formData.initial_reading"
-                                placeholder="0" @input="clearError('initial_reading')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.initial_reading}">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Engine Serial</label>
-                            <input type="text" name="engine_no" x-model="formData.engine_no"
-                                placeholder="SN-XXXX" @input="clearError('engine_no')"
-                                class="modal-input-premium">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Chassis Serial</label>
-                            <input type="text" name="chassis_no" x-model="formData.chassis_no"
-                                placeholder="CS-XXXX" @input="clearError('chassis_no')"
-                                class="modal-input-premium">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Vehicle Configuration</label>
-                            <select name="vehicle_type" x-model="formData.vehicle_type" id="vehicle_type"
-                                class="modal-input-premium">
-                                <option value="">Select Variant</option>
-                                <option value="bus">School Bus</option>
-                                <option value="van">Transport Van</option>
-                                <option value="car">Staff Car</option>
-                                <option value="truck">Utility Truck</option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Model / Year</label>
-                            <input type="text" name="model_no" x-model="formData.model_no"
-                                placeholder="e.g. 2024 Turbo" class="modal-input-premium">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Purchase Date</label>
-                            <input type="date" name="date_of_purchase" x-model="formData.date_of_purchase"
-                                class="modal-input-premium">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">GPS IMEI Metadata</label>
-                            <input type="text" name="imei_gps_device" x-model="formData.imei_gps_device"
-                                placeholder="Device Identifier" class="modal-input-premium">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Tracking URL</label>
-                            <input type="url" name="tracking_url" x-model="formData.tracking_url"
-                                placeholder="https://" class="modal-input-premium">
-                        </div>
-                    </div>
-
-                    {{-- Administrative Notice --}}
-                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
-                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-                            <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-900 leading-tight">Administrative Notice</span>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                                Updating vehicle specifications will synchronize across all <span class="text-indigo-600 font-bold underline decoration-indigo-200">active route manifests</span> and transit logs.
-                            </p>
-                        </div>
-                    </div>
-
-            </form>
-            {{-- Modal Footer --}}
-            <x-slot name="footer">
-                <button type="button" @click="closeModal()" :disabled="submitting" class="btn-premium-cancel px-10">
-                    Cancel
-                </button>
-                <button type="submit" form="vehicleForm" :disabled="submitting" class="btn-premium-primary min-w-[160px]">
-                    <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                    </template>
-                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Create Vehicle')"></span>
-                </button>
-            </x-slot>
-        </x-modal>
-
-        <x-confirm-modal title="Permanently Remove Vehicle?"
-            message="This action will strike the vehicle from the registry. This cannot be undone."
-            confirm-text="Strike Record" confirm-color="red" />
-
-        @push('scripts')
-                <script>
-                    document.addEventListener('alpine:init', () => {
-                        Alpine.data('vehicleManagement', () => ({
-                            showModal: false,
-                            editMode: false,
-                            vehicleId: null,
-                            formData: {
-                                registration_no: '',
-                                vehicle_no: '',
-                                fuel_type: '',
-                                capacity: '',
-                                initial_reading: '',
-                                engine_no: '',
-                                chassis_no: '',
-                                vehicle_type: '',
-                                model_no: '',
-                                date_of_purchase: '',
-                                vehicle_group: '',
-                                imei_gps_device: '',
-                                tracking_url: '',
-                                manufacturing_year: '',
-                                vehicle_create_date: '',
-                            },
-                            errors: {},
-                            submitting: false,
-
-                            async init() {
-                                window.addEventListener('open-add-vehicle', () => this.openAddModal());
-                                window.addEventListener('open-edit-vehicle', (e) => this.openEditModal(e.detail));
-                                window.addEventListener('open-delete-vehicle', (e) => this.confirmDelete(e.detail));
-
-                                // Sync Select2 with Alpine state
-                                this.$nextTick(() => {
-                                    if (typeof $ !== 'undefined') {
-                                        $('select[name="fuel_type"], select[name="vehicle_type"]').on('change', (e) => {
-                                            const field = e.target.getAttribute('name');
-                                            if (field && this.formData.hasOwnProperty(field)) {
-                                                this.formData[field] = e.target.value;
-                                                this.clearError(field);
-                                            }
-                                        });
-                                    }
-                                });
-                            },
-
-                            clearError(field) {
-                                if (this.errors[field]) {
-                                    delete this.errors[field];
-                                }
-                            },
-
-                            async save() {
-                                this.submitting = true;
-                                this.errors = {};
-
-                                const url = this.editMode
-                                    ? `/receptionist/vehicles/${this.vehicleId}`
-                                    : '{{ route('receptionist.vehicles.store') }}';
-
-                                const method = this.editMode ? 'PUT' : 'POST';
-
-                                try {
-                                    const response = await fetch(url, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                        },
-                                        body: JSON.stringify({
-                                            ...this.formData,
-                                            _method: method
-                                        })
-                                    });
-
-                                    const result = await response.json();
-
-                                    if (response.ok) {
-                                        if (window.Toast) {
-                                            window.Toast.fire({
-                                                icon: 'success',
-                                                title: result.message || 'Vehicle registry updated'
-                                            });
-                                        }
-                                        setTimeout(() => window.location.reload(), 1000);
-                                    } else {
-                                        if (response.status === 422) {
-                                            this.errors = result.errors || {};
-                                        } else {
-                                            throw new Error(result.message || 'Transmission failed');
-                                        }
-                                    }
-                                } catch (error) {
-                                    if (window.Toast) {
-                                        window.Toast.fire({
-                                            icon: 'error',
-                                            title: error.message
-                                        });
-                                    }
-                                } finally {
-                                    this.submitting = false;
-                                }
-                            },
-
-                            confirmDelete(detail) {
-                                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                                    detail: {
-                                        message: `Are you sure you want to strike the vehicle record for "${detail.name}"?`,
-                                        onConfirm: () => this.deleteVehicle(detail.url)
-                                    }
-                                }));
-                            },
-
-                            async deleteVehicle(url) {
-                                try {
-                                    const response = await fetch(url, {
-                                        method: 'DELETE',
-                                        headers: {
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                            'Accept': 'application/json'
-                                        }
-                                    });
-
-                                    const result = await response.json();
-
-                                    if (response.ok) {
-                                        if (window.Toast) {
-                                            window.Toast.fire({ icon: 'success', title: result.message });
-                                        }
-                                        setTimeout(() => window.location.reload(), 1000);
-                                    } else {
-                                        throw new Error(result.message || 'Deletion failed');
-                                    }
-                                } catch (error) {
-                                    if (window.Toast) {
-                                        window.Toast.fire({ icon: 'error', title: error.message });
-                                    }
-                                }
-                            },
-
-                             openAddModal() {
-                                this.editMode = false;
-                                this.vehicleId = null;
-                                this.formData = {
-                                    registration_no: '',
-                                    vehicle_no: '',
-                                    fuel_type: '',
-                                    capacity: '',
-                                    initial_reading: '',
-                                    engine_no: '',
-                                    chassis_no: '',
-                                    vehicle_type: '',
-                                    model_no: '',
-                                    date_of_purchase: '',
-                                    vehicle_group: '',
-                                    imei_gps_device: '',
-                                    tracking_url: '',
-                                    manufacturing_year: '',
-                                    vehicle_create_date: '{{ date('Y-m-d') }}',
-                                };
-                                this.errors = {};
-                                this.$dispatch('open-modal', 'vehicle-modal');
-
-                                this.$nextTick(() => {
-                                    if (typeof $ !== 'undefined') {
-                                        $('select[name="fuel_type"], select[name="vehicle_type"]').val('').trigger('change');
-                                    }
-                                });
-                            },
-
-                            openEditModal(vehicle) {
-                                this.editMode = true;
-                                this.vehicleId = vehicle.id;
-                                this.errors = {};
-                                this.formData = {
-                                    registration_no: vehicle.registration_no || '',
-                                    vehicle_no: vehicle.vehicle_no || '',
-                                    fuel_type: vehicle.fuel_type ? String(vehicle.fuel_type) : '',
-                                    capacity: vehicle.capacity || '',
-                                    initial_reading: vehicle.initial_reading || '',
-                                    engine_no: vehicle.engine_no || '',
-                                    chassis_no: vehicle.chassis_no || '',
-                                    vehicle_type: vehicle.vehicle_type ? String(vehicle.vehicle_type) : '',
-                                    model_no: vehicle.model_no || '',
-                                    date_of_purchase: vehicle.date_of_purchase || '',
-                                    vehicle_group: vehicle.vehicle_group || '',
-                                    imei_gps_device: vehicle.imei_gps_device || '',
-                                    tracking_url: vehicle.tracking_url || '',
-                                    manufacturing_year: vehicle.manufacturing_year || '',
-                                    vehicle_create_date: vehicle.vehicle_create_date || '',
-                                };
-                                this.$dispatch('open-modal', 'vehicle-modal');
-
-                                this.$nextTick(() => {
-                                    setTimeout(() => {
-                                        if (typeof $ !== 'undefined') {
-                                            $('select[name="fuel_type"]').val(this.formData.fuel_type).trigger('change');
-                                            $('select[name="vehicle_type"]').val(this.formData.vehicle_type).trigger('change');
-                                        }
-                                    }, 150);
-                                });
-                            },
-
-                            closeModal() {
-                                this.$dispatch('close-modal', 'vehicle-modal');
-                                this.errors = {};
-                            },
-                        }));
-                    });
-                </script>
+        {{-- Registry Table --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden min-h-[400px] relative">
+            <div x-show="loading" class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                <div class="flex flex-col items-center gap-3">
+                    <div class="w-10 h-10 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Synchronizing...</span>
+                </div>
             </div>
-        @endpush
+
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 dark:bg-gray-900/50 border-b border-slate-100 dark:border-gray-700">
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Vehicle Identity</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Propulsion Specs</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Configuration</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Operational Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
+                    <template x-for="vehicle in items" :key="vehicle.id">
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-900/20 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600">
+                                        <i class="fas fa-bus-alt"></i>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight" x-text="vehicle.registration_no"></span>
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tight mt-0.5" x-text="'Ref: ' + (vehicle.vehicle_no || 'N/A')"></span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-1.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full" :class="'bg-' + vehicle.fuel_color + '-500'"></span>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="vehicle.fuel_label"></span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase" x-text="'Capacity: ' + vehicle.capacity"></span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="vehicle.model_no"></span>
+                                    <span class="text-[10px] font-bold text-slate-500 uppercase mt-0.5" x-text="'Purchased: ' + vehicle.purchase_date"></span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button @click="$dispatch('open-vehicle-modal', vehicle)" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
+                                        <i class="fas fa-edit text-xs"></i>
+                                    </button>
+                                    <button @click="$dispatch('open-delete-modal', {
+                                        url: '{{ route('receptionist.vehicles.index') }}/' + vehicle.id,
+                                        name: vehicle.registration_no
+                                    })" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
+                                        <i class="fas fa-trash-alt text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+            {{-- Empty State --}}
+            <template x-if="!loading && items.length === 0">
+                <div class="py-20 flex flex-col items-center">
+                    <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
+                        <i class="fas fa-bus-alt text-4xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Fleet Registry Empty</h3>
+                    <p class="text-sm text-slate-500">No vehicles found matching your criteria</p>
+                </div>
+            </template>
+
+            {{-- Load More --}}
+            <div class="p-6 border-t border-slate-50 flex justify-center" x-show="hasMore">
+                <button @click="loadMore()" :disabled="loading" 
+                    class="px-8 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-all disabled:opacity-50">
+                    Discover More Assets
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Add/Edit Vehicle Modal --}}
+    <x-modal name="vehicle-modal" x-data="vehicleForm()" @open-vehicle-modal.window="open($event.detail)" alpineTitle="editMode ? 'Edit Vehicle Specification' : 'Register New Vehicle'" maxWidth="3xl">
+        <form @submit.prevent="save" id="vehicleForm" class="space-y-6">
+            @csrf
+            <template x-if="editMode">
+                <input type="hidden" name="_method" value="PUT">
+            </template>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- Column 1 --}}
+                <div class="space-y-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Registration Number <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="formData.registration_no" placeholder="e.g., DL 1C AB 1234"
+                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.registration_no ? 'ring-2 ring-red-500/20' : ''">
+                        <p x-show="errors.registration_no" x-text="errors.registration_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Propulsion / Fuel Type <span class="text-red-500">*</span></label>
+                        <select x-model="formData.fuel_type" class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            <option value="">Select Propulsion</option>
+                            @foreach(\App\Enums\FuelType::cases() as $fuel)
+                                <option value="{{ $fuel->value }}">{{ $fuel->name }}</option>
+                            @endforeach
+                        </select>
+                        <p x-show="errors.fuel_type" x-text="errors.fuel_type[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Seating Capacity</label>
+                        <input type="number" x-model="formData.capacity" placeholder="0" 
+                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Engine Serial</label>
+                        <input type="text" x-model="formData.engine_no" placeholder="SN-XXXX" 
+                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                    </div>
+                </div>
+
+                {{-- Column 2 --}}
+                <div class="space-y-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Internal Reference No</label>
+                        <input type="text" x-model="formData.vehicle_no" placeholder="e.g. BUS-01" 
+                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Vehicle Variant</label>
+                        <select x-model="formData.vehicle_type" class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            <option value="">Select Configuration</option>
+                            <option value="bus">School Bus</option>
+                            <option value="van">Transport Van</option>
+                            <option value="car">Staff Car</option>
+                            <option value="truck">Utility Truck</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Model / Year</label>
+                        <input type="text" x-model="formData.model_no" placeholder="e.g. 2024 Turbo" 
+                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Purchase Date</label>
+                        <input type="date" x-model="formData.date_of_purchase" 
+                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
+                <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold text-slate-900 leading-tight">Asset Synchronization Notice</span>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wider opacity-80 leading-relaxed">
+                        Changes to vehicle specifications will automatically propagate to all <span class="text-indigo-600 font-bold underline">Route Manifests</span> and <span class="text-indigo-600 font-bold underline">Historical Transit Logs</span>.
+                    </p>
+                </div>
+            </div>
+        </form>
+
+        <x-slot name="footer">
+            <button @click="$dispatch('close-modal', 'vehicle-modal')" class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                Cancel
+            </button>
+            <button type="submit" form="vehicleForm" :disabled="submitting" 
+                class="bg-slate-900 hover:bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50">
+                <template x-if="submitting">
+                    <i class="fas fa-spinner animate-spin mr-2"></i>
+                </template>
+                <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Metadata' : 'Create Record')"></span>
+            </button>
+        </x-slot>
+    </x-modal>
+
+    <x-confirm-modal title="Strike Vehicle from Registry?" 
+        message="This action will permanently decommissioning the vehicle asset. This operation is irreversible." 
+        confirm-text="Strike Record" confirm-color="red" />
+
+    @push('scripts')
+    <script>
+        function vehicleForm() {
+            return {
+                editMode: false,
+                submitting: false,
+                formData: {
+                    registration_no: '',
+                    fuel_type: '',
+                    capacity: '',
+                    engine_no: '',
+                    vehicle_no: '',
+                    vehicle_type: '',
+                    model_no: '',
+                    date_of_purchase: '',
+                },
+                errors: {},
+
+                open(vehicle = null) {
+                    this.errors = {};
+                    if (vehicle) {
+                        this.editMode = true;
+                        this.vehicleId = vehicle.id;
+                        // Fetch full data for editing if needed, or use transformed data
+                        this.formData = {
+                            registration_no: vehicle.registration_no,
+                            fuel_type: vehicle.fuel_type || '', // We need to handle this correctly if it's not in the transformer
+                            capacity: parseFloat(vehicle.capacity),
+                            engine_no: vehicle.engine_no === 'N/A' ? '' : vehicle.engine_no,
+                            vehicle_no: vehicle.vehicle_no || '',
+                            vehicle_type: vehicle.vehicle_type || '',
+                            model_no: vehicle.model_no === 'N/A' ? '' : vehicle.model_no,
+                            date_of_purchase: vehicle.purchase_date_raw || '', // We might need bit more data in transformer
+                        };
+                        // Since transformer is optimized for display, we might need a quick AJAX fetch for full edit data
+                        this.fetchFullData(vehicle.id);
+                    } else {
+                        this.editMode = false;
+                        this.formData = {
+                            registration_no: '',
+                            fuel_type: '',
+                            capacity: '',
+                            engine_no: '',
+                            vehicle_no: '',
+                            vehicle_type: '',
+                            model_no: '',
+                            date_of_purchase: '',
+                        };
+                    }
+                    this.$dispatch('open-modal', 'vehicle-modal');
+                },
+
+                async fetchFullData(id) {
+                    try {
+                        const response = await fetch(`{{ route('receptionist.vehicles.index') }}/${id}/edit`, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            this.formData = {
+                                registration_no: data.registration_no,
+                                fuel_type: data.fuel_type,
+                                capacity: data.capacity,
+                                engine_no: data.engine_no || '',
+                                vehicle_no: data.vehicle_no || '',
+                                vehicle_type: data.vehicle_type || '',
+                                model_no: data.model_no || '',
+                                date_of_purchase: data.date_of_purchase ? data.date_of_purchase.split('T')[0] : '',
+                            };
+                        }
+                    } catch (e) {
+                        console.error('Failed to fetch full vehicle data');
+                    }
+                },
+
+                async save() {
+                    this.submitting = true;
+                    this.errors = {};
+                    const url = this.editMode 
+                        ? `{{ route('receptionist.vehicles.index') }}/${this.vehicleId}`
+                        : `{{ route('receptionist.vehicles.store') }}`;
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                ...this.formData,
+                                _method: this.editMode ? 'PUT' : 'POST'
+                            })
+                        });
+
+                        const result = await response.json();
+                        if (response.ok) {
+                            window.Toast.fire({ icon: 'success', title: result.message });
+                            this.$dispatch('close-modal', 'vehicle-modal');
+                            this.$dispatch('refresh-table');
+                        } else {
+                            this.errors = result.errors || {};
+                        }
+                    } catch (e) {
+                        window.Toast.fire({ icon: 'error', title: 'System Propagation Failure' });
+                    } finally {
+                        this.submitting = false;
+                    }
+                }
+            }
+        }
+    </script>
+    @endpush
 @endsection

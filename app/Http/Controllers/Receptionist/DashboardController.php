@@ -5,9 +5,8 @@ namespace App\Http\Controllers\Receptionist;
 use App\Http\Controllers\TenantController;
 use App\Models\Visitor;
 use App\Models\Student;
-use App\Models\FeeCollection;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Enums\VisitPurpose;
 
 class DashboardController extends TenantController
 {
@@ -24,9 +23,9 @@ class DashboardController extends TenantController
             'today_admission' => Student::where('school_id', $schoolId)
                 ->whereDate('created_at', $today)->count(),
             'total_enquiry' => Visitor::where('school_id', $schoolId)
-                ->whereIn('visit_purpose', ['Admission Enquiry', 'General Enquiry'])->count(),
+                ->whereIn('visit_purpose', [VisitPurpose::Admission->value, VisitPurpose::Enquiry->value])->count(),
             'today_enquiry' => Visitor::where('school_id', $schoolId)
-                ->whereIn('visit_purpose', ['Admission Enquiry', 'General Enquiry'])
+                ->whereIn('visit_purpose', [VisitPurpose::Admission->value, VisitPurpose::Enquiry->value])
                 ->whereDate('created_at', $today)->count(),
             'running_classes' => \App\Models\ClassModel::where('school_id', $schoolId)->count(),
             'total_sections' => \App\Models\Section::where('school_id', $schoolId)->count(),

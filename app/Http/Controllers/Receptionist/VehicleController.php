@@ -9,18 +9,49 @@ use Illuminate\Validation\Rule;
 use App\Enums\FuelType;
 use Illuminate\Validation\ValidationException;
 
+use App\Traits\HasAjaxDataTable;
+
 class VehicleController extends TenantController
 {
+    use HasAjaxDataTable;
+
     /**
      * Display a listing of vehicles.
      */
     public function index(Request $request)
     {
         $schoolId = $this->getSchoolId();
-        
+
+        // 1. Row Transformer (Gold Standard UI consistency)
+        $transformer = function ($vehicle) {
+            $fuelLabels = [
+                Vehicle::FUEL_TYPE_DIESEL => ['label' => 'Diesel', 'color' => 'slate'],
+                Vehicle::FUEL_TYPE_PETROL => ['label' => 'Petrol', 'color' => 'blue'],
+                Vehicle::FUEL_TYPE_CNG    => ['label' => 'CNG Core', 'color' => 'purple'],
+                Vehicle::FUEL_TYPE_ELECTRIC => ['label' => 'Electric EV', 'color' => 'teal'],
+            ];
+            $fuelInfo = $fuelLabels[$vehicle->fuel_type] ?? ['label' => 'Unknown', 'color' => 'gray'];
+
+            return [
+                'id'                => $vehicle->id,
+                'registration_no'   => $vehicle->registration_no,
+                'vehicle_no'        => $vehicle->vehicle_no,
+                'capacity'          => $vehicle->capacity . ' Units',
+                'fuel_label'        => $fuelInfo['label'],
+                'fuel_color'        => $fuelInfo['color'],
+                'engine_no'         => $vehicle->engine_no ?? 'N/A',
+                'model_no'          => $vehicle->model_no ?? 'N/A',
+                'purchase_date'     => $vehicle->date_of_purchase ? $vehicle->date_of_purchase->format('d M, Y') : 'N/A',
+                'tracking_url'      => $vehicle->tracking_url,
+                'status_label'      => 'Active Fleet',
+                'status_color'      => 'emerald',
+            ];
+        };
+
+        // 2. Build Query
         $query = Vehicle::where('school_id', $schoolId);
 
-        // Search functionality
+        // Apply filters
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -31,25 +62,59 @@ class VehicleController extends TenantController
             });
         }
 
-        // Sorting
-        $sortColumn = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
-        $query->orderBy($sortColumn, $sortDirection);
+        // 3. Handle AJAX or CSV Export vs Blade Hydration
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer);
+        }
 
-        // Pagination
-        $perPage = $request->input('per_page', 15);
-        $vehicles = $query->paginate($perPage)->withQueryString();
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
 
-        // Statistics for the page
-        $stats = [
-            'total' => Vehicle::where('school_id', $schoolId)->count(),
-            'diesel' => Vehicle::where('school_id', $schoolId)->where('fuel_type', Vehicle::FUEL_TYPE_DIESEL)->count(),
-            'petrol' => Vehicle::where('school_id', $schoolId)->where('fuel_type', Vehicle::FUEL_TYPE_PETROL)->count(),
-            'cng' => Vehicle::where('school_id', $schoolId)->where('fuel_type', Vehicle::FUEL_TYPE_CNG)->count(),
-            'electric' => Vehicle::where('school_id', $schoolId)->where('fuel_type', Vehicle::FUEL_TYPE_ELECTRIC)->count(),
+        // 4. Blade Hydration
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => Vehicle::where('school_id', $schoolId)->count(),
+                'diesel' => Vehicle::where('school_id', $schoolId)->where('fuel_type', Vehicle::FUEL_TYPE_DIESEL)->count(),
+                'petrol' => Vehicle::where('school_id', $schoolId)->where('fuel_type', Vehicle::FUEL_TYPE_PETROL)->count(),
+                'cng' => Vehicle::where('school_id', $schoolId)->where('fuel_type', Vehicle::FUEL_TYPE_CNG)->count(),
+                'electric' => Vehicle::where('school_id', $schoolId)->where('fuel_type', Vehicle::FUEL_TYPE_ELECTRIC)->count(),
+            ]
+        ]);
+
+        return view('receptionist.vehicles.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats']
+        ]);
+    }
+
+    private function exportToCsv($query)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="institutional_fleet_registry_' . now()->format('Y-m-d') . '.csv"',
         ];
 
-        return view('receptionist.vehicles.index', compact('vehicles', 'stats'));
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Registration No', 'Vehicle No', 'Fuel Type', 'Capacity', 'Engine No', 'Model No', 'Purchase Date']);
+
+            $query->orderBy('created_at', 'desc')->cursor()->each(function ($vehicle) use ($file) {
+                fputcsv($file, [
+                    $vehicle->registration_no,
+                    $vehicle->vehicle_no,
+                    $vehicle->getFuelTypeLabel(),
+                    $vehicle->capacity,
+                    $vehicle->engine_no,
+                    $vehicle->model_no,
+                    $vehicle->date_of_purchase ? $vehicle->date_of_purchase->format('Y-m-d') : 'N/A'
+                ]);
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     /**

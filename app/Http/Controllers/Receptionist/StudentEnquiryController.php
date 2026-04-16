@@ -13,49 +13,136 @@ use Illuminate\Validation\Rule;
 use App\Enums\EnquiryStatus;
 use App\Enums\Gender;
 
+use App\Traits\HasAjaxDataTable;
+
 class StudentEnquiryController extends TenantController
 {
+    use HasAjaxDataTable;
+
     public function index(Request $request)
     {
         $school = auth()->user()->school;
-        
+
+        // 1. Row Transformer (Crucial for Gold Standard UI consistency)
+        $transformer = function ($enquiry) {
+            $status = $enquiry->form_status;
+
+            // Map Tailwind-style config for badges
+            $statusConfig = [
+                'bg' => 'bg-' . $status?->color() . '-50',
+                'text' => 'text-' . $status?->color() . '-700',
+                'border' => 'border-' . $status?->color() . '-100',
+                'icon' => match ($status) {
+                    EnquiryStatus::Pending => 'fa-clock',
+                    EnquiryStatus::Completed => 'fa-check-circle',
+                    EnquiryStatus::Cancelled => 'fa-times-circle',
+                    EnquiryStatus::Admitted => 'fa-user-check',
+                    default => 'fa-question-circle'
+                }
+            ];
+
+            return [
+                'id' => $enquiry->id,
+                'enquiry_no' => $enquiry->enquiry_no,
+                'student_name' => $enquiry->student_name,
+                'initials' => collect(explode(' ', $enquiry->student_name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
+                'father_name' => $enquiry->father_name,
+                'contact_no' => $enquiry->contact_no,
+                'class_name' => $enquiry->class?->class_name ?? 'N/A',
+                'academic_year' => $enquiry->academicYear?->year_name ?? 'N/A',
+                'status_label' => $status?->label() ?? 'Pending',
+                'status_config' => $statusConfig,
+                'enquiry_date' => $enquiry->created_at->format('d M, Y'),
+                'follow_up' => $enquiry->follow_up_date ? $enquiry->follow_up_date->format('d M, Y') : '--',
+                'can_edit' => $status === EnquiryStatus::Pending,
+            ];
+        };
+
+        // 2. Build Query
         $query = StudentEnquiry::where('school_id', $school->id)
             ->with(['academicYear', 'class']);
 
-        // Search functionality
+        // Apply filters
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('enquiry_no', 'like', "%{$search}%")
-                  ->orWhere('student_name', 'like', "%{$search}%")
-                  ->orWhere('father_name', 'like', "%{$search}%")
-                  ->orWhere('contact_no', 'like', "%{$search}%");
+                    ->orWhere('student_name', 'like', "%{$search}%")
+                    ->orWhere('father_name', 'like', "%{$search}%")
+                    ->orWhere('contact_no', 'like', "%{$search}%");
             });
         }
 
-        // Sorting
-        $sortColumn = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
-        $query->orderBy($sortColumn, $sortDirection);
+        if ($request->filled('status')) {
+            $query->where('form_status', $request->status);
+        }
 
-        // Pagination
-        $perPage = $request->input('per_page', 15);
-        $enquiries = $query->paginate($perPage)->withQueryString();
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
 
-        // Statistics - Scoped to school
-        $stats = [
-            'total' => StudentEnquiry::where('school_id', $school->id)->count(),
-            'pending' => StudentEnquiry::where('school_id', $school->id)->pending()->count(),
-            'cancelled' => StudentEnquiry::where('school_id', $school->id)->cancelled()->count(),
-            'registration' => StudentEnquiry::where('school_id', $school->id)->completed()->count(),
-            'admitted' => StudentEnquiry::where('school_id', $school->id)->admitted()->count(),
-        ];
+        if ($request->filled('academic_year_id')) {
+            $query->where('academic_year_id', $request->academic_year_id);
+        }
 
-        // Get academic years and classes for dropdowns
+        // 3. Handle AJAX or CSV Export vs Blade Hydration
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer);
+        }
+
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
+
+        // 4. Blade Hydration
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => StudentEnquiry::where('school_id', $school->id)->count(),
+                'pending' => StudentEnquiry::where('school_id', $school->id)->pending()->count(),
+                'cancelled' => StudentEnquiry::where('school_id', $school->id)->cancelled()->count(),
+                'registration' => StudentEnquiry::where('school_id', $school->id)->completed()->count(),
+                'admitted' => StudentEnquiry::where('school_id', $school->id)->admitted()->count(),
+            ]
+        ]);
+
         $academicYears = AcademicYear::where('school_id', $school->id)->get();
         $classes = ClassModel::where('school_id', $school->id)->get();
 
-        return view('receptionist.student-enquiries.index', compact('enquiries', 'stats', 'academicYears', 'classes'));
+        return view('receptionist.student-enquiries.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+            'academicYears' => $academicYears,
+            'classes' => $classes,
+        ]);
+    }
+
+    private function exportToCsv($query)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="student_enquiries_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Enquiry No', 'Student Name', 'Father Name', 'Contact', 'Class', 'Status', 'Date']);
+
+            $query->orderBy('created_at', 'desc')->cursor()->each(function ($enq) use ($file) {
+                fputcsv($file, [
+                    $enq->enquiry_no,
+                    $enq->student_name,
+                    $enq->father_name,
+                    $enq->contact_no,
+                    $enq->class?->class_name ?? 'N/A',
+                    $enq->form_status?->label() ?? 'Pending',
+                    $enq->created_at->format('Y-m-d')
+                ]);
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function create()
@@ -114,7 +201,7 @@ class StudentEnquiryController extends TenantController
     public function edit(StudentEnquiry $studentEnquiry)
     {
         $this->authorizeTenant($studentEnquiry);
-        
+
         $schoolId = $this->getSchoolId();
         $academicYears = AcademicYear::where('school_id', $schoolId)->get();
         $classes = ClassModel::where('school_id', $schoolId)->get();
@@ -187,18 +274,18 @@ class StudentEnquiryController extends TenantController
             // Enquiry Form
             'academic_year_id' => [
                 'required',
-                \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())
+                Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())
             ],
             'class_id' => [
                 'required',
-                \Illuminate\Validation\Rule::exists('classes', 'id')->where('school_id', $this->getSchoolId())
+                Rule::exists('classes', 'id')->where('school_id', $this->getSchoolId())
             ],
 
             'subject_name' => 'nullable|string|max:255',
             'student_name' => 'required|string|max:255',
             'gender' => ['nullable', 'integer', Rule::enum(Gender::class)],
             'follow_up_date' => 'nullable|date',
-            
+
             // Father's Details
             'father_name' => 'required|string|max:255',
             'father_contact' => 'required|string|max:20',
@@ -210,7 +297,7 @@ class StudentEnquiryController extends TenantController
             'father_office_address' => 'nullable|string',
             'father_department' => 'nullable|string|max:255',
             'father_designation' => 'nullable|string|max:255',
-            
+
             // Mother's Details
             'mother_name' => 'required|string|max:255',
             'mother_contact' => 'required|string|max:20',
@@ -222,7 +309,7 @@ class StudentEnquiryController extends TenantController
             'mother_office_address' => 'nullable|string',
             'mother_department' => 'nullable|string|max:255',
             'mother_designation' => 'nullable|string|max:255',
-            
+
             // Contact Details
             'contact_no' => 'required|string|max:20',
             'whatsapp_no' => 'required|string|max:20',
@@ -231,7 +318,7 @@ class StudentEnquiryController extends TenantController
             'sms_no' => 'nullable|string|max:20',
             'twitter_id' => 'nullable|string|max:255',
             'emergency_contact_no' => 'nullable|string|max:20',
-            
+
             // Personal Details
             'dob' => 'nullable|date',
             'aadhar_no' => 'nullable|string|max:12',
@@ -254,12 +341,12 @@ class StudentEnquiryController extends TenantController
             'exam_name' => 'nullable|string|max:255',
             'board_university' => 'nullable|string|max:255',
             'only_child' => 'nullable|boolean',
-            
+
             // Photos
             'father_photo' => 'nullable|image|max:2048',
             'mother_photo' => 'nullable|image|max:2048',
             'student_photo' => 'nullable|image|max:2048',
-            
+
             // Status
             'form_status' => ['nullable', 'integer', Rule::enum(EnquiryStatus::class)],
         ]);

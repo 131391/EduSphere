@@ -46,6 +46,9 @@ class Visitor extends Model
         'priority' => VisitorPriority::class,
         'meeting_type' => VisitorMode::class,
         'status' => VisitorStatus::class,
+        'visit_purpose' => \App\Enums\VisitPurpose::class,
+        'visitor_type' => \App\Enums\VisitorType::class,
+        'meeting_with' => \App\Enums\MeetingWith::class,
     ];
 
     public function school()

@@ -15,7 +15,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
-use App\Enums\FeeStatus;
 use App\Http\Requests\School\StoreAdmissionRequest;
 use App\Models\Fee;
 use App\Models\FeeName;
@@ -26,22 +25,51 @@ use App\Traits\HandlesFileCopies;
 use App\Enums\GeneralStatus;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+use App\Models\StudentEnquiry;
+use App\Enums\EnquiryStatus;
+
+use App\Traits\HasAjaxDataTable;
+
 class AdmissionController extends TenantController
 {
-    use HandlesFileCopies;
+    use HandlesFileCopies, HasAjaxDataTable;
+
     public function index(Request $request)
     {
-        $query = Student::query()
-            ->with(['class', 'section'])
-            ->where('school_id', $this->getSchoolId());
+        $schoolId = $this->getSchoolId();
 
+        // 1. Row Transformer (Gold Standard UI consistency)
+        $transformer = function ($student) {
+            return [
+                'id' => $student->id,
+                'admission_no' => $student->admission_no,
+                'registration_no' => $student->registration_no ?? 'N/A',
+                'full_name' => $student->full_name,
+                'initials' => collect(explode(' ', $student->full_name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
+                'phone' => $student->phone,
+                'email' => $student->email ?? 'N/A',
+                'father_name' => $student->father_name,
+                'class_name' => $student->class?->class_name ?? 'N/A',
+                'section_name' => $student->section?->section_name ?? 'A',
+                'admission_date' => $student->admission_date ? $student->admission_date->format('d M, Y') : 'N/A',
+                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                'status_label' => $student->status?->label() ?? 'Active',
+                'status_color' => 'teal', // Standard for confirmed admissions
+            ];
+        };
+
+        // 2. Build Query
+        $query = Student::where('school_id', $schoolId)
+            ->with(['class', 'section']);
+
+        // Apply filters
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('admission_no', 'like', "%{$search}%")
-                  ->orWhere('father_name', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('admission_no', 'like', "%{$search}%")
+                    ->orWhere('father_name', 'like', "%{$search}%");
             });
         }
 
@@ -49,26 +77,68 @@ class AdmissionController extends TenantController
             $query->where('class_id', $request->class_id);
         }
 
-        $students = $query->latest()->paginate(10);
-        
-        // Stats
-        $totalRegistration = StudentRegistration::where('school_id', $this->getSchoolId())->count();
-        $admissionDone = Student::where('school_id', $this->getSchoolId())->count();
-        $pendingRegistration = StudentRegistration::where('school_id', $this->getSchoolId())->pending()->count();
-        $cancelledRegistration = StudentRegistration::where('school_id', $this->getSchoolId())->cancelled()->count();
-        $totalEnquiry = \App\Models\StudentEnquiry::where('school_id', $this->getSchoolId())->count();
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->section_id);
+        }
 
-        $classes = \App\Models\ClassModel::where('school_id', $this->getSchoolId())->get();
+        // 3. Handle AJAX or CSV Export vs Blade Hydration
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer);
+        }
 
-        return view('receptionist.admission.index', compact(
-            'students', 
-            'totalRegistration', 
-            'admissionDone', 
-            'pendingRegistration', 
-            'cancelledRegistration',
-            'totalEnquiry',
-            'classes'
-        ));
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
+
+        // 4. Blade Hydration
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total_registration' => StudentRegistration::where('school_id', $schoolId)->count(),
+                'admission_done' => Student::where('school_id', $schoolId)->count(),
+                'pending_registration' => StudentRegistration::where('school_id', $schoolId)->pending()->count(),
+                'cancelled_registration' => StudentRegistration::where('school_id', $schoolId)->cancelled()->count(),
+                'total_enquiry' => StudentEnquiry::where('school_id', $schoolId)->count(),
+            ]
+        ]);
+
+        $classes = ClassModel::where('school_id', $schoolId)->get();
+        $sections = Section::where('school_id', $schoolId)->get();
+
+        return view('receptionist.admission.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+            'classes' => $classes,
+            'sections' => $sections,
+        ]);
+    }
+
+    private function exportToCsv($query)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="student_admission_registry_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Admission No', 'Student Name', 'Father Name', 'Class', 'Section', 'Phone', 'Date']);
+
+            $query->orderBy('created_at', 'desc')->cursor()->each(function ($student) use ($file) {
+                fputcsv($file, [
+                    $student->admission_no,
+                    $student->full_name,
+                    $student->father_name,
+                    $student->class?->class_name ?? 'N/A',
+                    $student->section?->section_name ?? 'N/A',
+                    $student->phone,
+                    $student->admission_date ? $student->admission_date->format('Y-m-d') : 'N/A'
+                ]);
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function create()
@@ -76,12 +146,12 @@ class AdmissionController extends TenantController
         $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
         $sections = Section::where('school_id', $this->getSchoolId())->get();
         $academicYears = AcademicYear::where('school_id', $this->getSchoolId())->get();
-        
+
         // Fetch student registrations for dropdown
         $registrations = StudentRegistration::where('school_id', $this->getSchoolId())
             ->pending()
             ->get();
-        
+
         // Fetch master data
         $bloodGroups = \App\Models\BloodGroup::where('school_id', $this->getSchoolId())->get();
         $religions = \App\Models\Religion::where('school_id', $this->getSchoolId())->get();
@@ -91,15 +161,15 @@ class AdmissionController extends TenantController
         $qualifications = \App\Models\Qualification::where('school_id', $this->getSchoolId())->get();
         $transportRoutes = \App\Models\TransportRoute::where('school_id', $this->getSchoolId())->get();
         $hostels = \App\Models\Hostel::where('school_id', $this->getSchoolId())->get();
-        
+
         // Generate next admission number
         $lastStudent = Student::where('school_id', $this->getSchoolId())->latest()->first();
         $nextAdmissionNo = $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
 
         return view('receptionist.admission.create', compact(
-            'classes', 
-            'sections', 
-            'academicYears', 
+            'classes',
+            'sections',
+            'academicYears',
             'nextAdmissionNo',
             'registrations',
             'bloodGroups',
@@ -123,7 +193,7 @@ class AdmissionController extends TenantController
         try {
             $student = new Student();
             $student->school_id = $school->id;
-            
+
             // Generate Admission No early if not provided to use for User generation
             $admissionNo = $request->admission_no;
             if (!$admissionNo) {
@@ -135,7 +205,7 @@ class AdmissionController extends TenantController
             // Create Student User Account
             $studentRole = \App\Models\Role::where('slug', \App\Models\Role::STUDENT)->first();
             $userEmail = $request->email ?: 'student.' . $admissionNo . '@edusphere.local';
-            
+
             $user = \App\Models\User::create([
                 'name' => trim($request->first_name . ' ' . $request->last_name),
                 'email' => $userEmail,
@@ -145,25 +215,36 @@ class AdmissionController extends TenantController
                 'phone' => $request->phone,
                 'status' => \App\Enums\UserStatus::Active,
             ]);
-            
+
             $student->user_id = $user->id;
-            
+
             // Exclude non-model fields
             $excludedFields = [
-                'student_photo', 'father_photo', 'mother_photo',
-                'student_signature', 'father_signature', 'mother_signature',
-                'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
-                'student_signature_path', 'father_signature_path', 'mother_signature_path',
-                'admission_fee', 'transport_route_id', 'hostel_id'
+                'student_photo',
+                'father_photo',
+                'mother_photo',
+                'student_signature',
+                'father_signature',
+                'mother_signature',
+                'registration_id',
+                'student_photo_path',
+                'father_photo_path',
+                'mother_photo_path',
+                'student_signature_path',
+                'father_signature_path',
+                'mother_signature_path',
+                'admission_fee',
+                'transport_route_id',
+                'hostel_id'
             ];
-            
+
             $student->fill($request->except($excludedFields));
-            
+
             // Handle Photo/Signature copies or uploads using Trait
             $student->photo = $this->storeTenantFile($request->file('student_photo'), "students/{$school->id}/photos", $request->student_photo_path);
             $student->father_photo = $this->storeTenantFile($request->file('father_photo'), "parents/{$school->id}/photos", $request->father_photo_path);
             $student->mother_photo = $this->storeTenantFile($request->file('mother_photo'), "parents/{$school->id}/photos", $request->mother_photo_path);
-            
+
             // Admission No is already generated above
 
             // Concatenate Parent Names if necessary (handled by validation mapping usually but ensuring here)
@@ -248,7 +329,7 @@ class AdmissionController extends TenantController
                     ->first();
                 if ($registration) {
                     $registration->update(['admission_status' => AdmissionStatus::Admitted]);
-                    
+
                     // Transition Registration Fees and Payments to this student's ledger
                     $registrationFees = Fee::where('school_id', $school->id)
                         ->where('registration_id', $registration->id)
@@ -261,9 +342,9 @@ class AdmissionController extends TenantController
                     }
 
                     if ($registration->enquiry_id) {
-                        $enquiry = \App\Models\StudentEnquiry::find($registration->enquiry_id);
+                        $enquiry = StudentEnquiry::find($registration->enquiry_id);
                         if ($enquiry) {
-                            $enquiry->update(['form_status' => \App\Enums\EnquiryStatus::Admitted]);
+                            $enquiry->update(['form_status' => EnquiryStatus::Admitted]);
                         }
                     }
                 }
@@ -293,14 +374,14 @@ class AdmissionController extends TenantController
 
         // Fetch student registrations (Pending + current student's registration)
         $registrations = StudentRegistration::where('school_id', $this->getSchoolId())
-            ->where(function($query) use ($student) {
+            ->where(function ($query) use ($student) {
                 $query->where('admission_status', AdmissionStatus::Pending);
                 if ($student->registration_no) {
                     $query->orWhere('registration_no', $student->registration_no);
                 }
             })
             ->get();
-        
+
         // Fetch master data
         $bloodGroups = \App\Models\BloodGroup::where('school_id', $this->getSchoolId())->get();
         $religions = \App\Models\Religion::where('school_id', $this->getSchoolId())->get();
@@ -312,10 +393,10 @@ class AdmissionController extends TenantController
         $hostels = \App\Models\Hostel::where('school_id', $this->getSchoolId())->get();
 
         return view('receptionist.admission.edit', compact(
-            'student', 
-            'classes', 
-            'sections', 
-            'academicYears', 
+            'student',
+            'classes',
+            'sections',
+            'academicYears',
             'registrations',
             'bloodGroups',
             'religions',
@@ -363,21 +444,41 @@ class AdmissionController extends TenantController
         try {
             // Exclude fields that don't exist in students table or need special handling
             $excludedFields = [
-                'student_photo', 'father_photo', 'mother_photo',
-                'student_signature', 'father_signature', 'mother_signature',
-                'father_first_name', 'father_middle_name', 'father_last_name',
-                'father_mobile_no', 'father_landline', 'father_landline_no',
-                'father_organization', 'father_office_address',
+                'student_photo',
+                'father_photo',
+                'mother_photo',
+                'student_signature',
+                'father_signature',
+                'mother_signature',
+                'father_first_name',
+                'father_middle_name',
+                'father_last_name',
+                'father_mobile_no',
+                'father_landline',
+                'father_landline_no',
+                'father_organization',
+                'father_office_address',
                 'father_designation',
-                'mother_first_name', 'mother_middle_name', 'mother_last_name',
-                'mother_mobile_no', 'mother_landline', 'mother_landline_no',
-                'mother_organization', 'mother_office_address',
+                'mother_first_name',
+                'mother_middle_name',
+                'mother_last_name',
+                'mother_mobile_no',
+                'mother_landline',
+                'mother_landline_no',
+                'mother_organization',
+                'mother_office_address',
                 'mother_designation',
-                'father_name_prefix', 'mother_name_prefix',
-                'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
-                'student_signature_path', 'father_signature_path', 'mother_signature_path'
+                'father_name_prefix',
+                'mother_name_prefix',
+                'registration_id',
+                'student_photo_path',
+                'father_photo_path',
+                'mother_photo_path',
+                'student_signature_path',
+                'father_signature_path',
+                'mother_signature_path'
             ];
-            
+
             $student->fill($request->except($excludedFields));
 
             // Concatenate Father Name
@@ -503,11 +604,11 @@ class AdmissionController extends TenantController
         $sections = Section::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
             ->get(['id', 'name']);
-        
+
         $admissionFee = \App\Models\AdmissionFee::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
             ->first();
-        
+
         return response()->json([
             'sections' => $sections,
             'admission_fee' => $admissionFee ? $admissionFee->amount : 0
@@ -522,11 +623,11 @@ class AdmissionController extends TenantController
         $registration = StudentRegistration::where('id', $registrationId)
             ->where('school_id', $this->getSchoolId())
             ->first();
-        
+
         if (!$registration) {
             return response()->json(['error' => 'Registration not found'], 404);
         }
-        
+
         // Format dates for JavaScript
         $data = $registration->toArray();
         if ($registration->dob) {
@@ -535,20 +636,20 @@ class AdmissionController extends TenantController
         if ($registration->registration_date) {
             $data['registration_date'] = \Carbon\Carbon::parse($registration->registration_date)->format('Y-m-d');
         }
-        
+
         return response()->json($data);
     }
 
     public function downloadPdf($id)
     {
         $school = $this->getSchool();
-        
+
         $student = Student::with(['class', 'section', 'academicYear'])
             ->where('school_id', $this->getSchoolId())
             ->findOrFail($id);
-        
+
         $pdf = Pdf::loadView('pdf.student-admission', compact('student', 'school'));
-        
+
         return $pdf->download('student-admission-' . $student->admission_no . '.pdf');
     }
 }

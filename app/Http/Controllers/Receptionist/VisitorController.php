@@ -6,65 +6,163 @@ use App\Http\Controllers\TenantController;
 use App\Models\Visitor;
 use App\Enums\VisitorPriority;
 use App\Enums\VisitorMode;
+use App\Enums\VisitorStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use App\Enums\VisitPurpose;
+use App\Enums\VisitorType;
+use App\Enums\MeetingWith;
+
+use App\Traits\HasAjaxDataTable;
 
 class VisitorController extends TenantController
 {
+    use HasAjaxDataTable;
+
     public function index(Request $request)
     {
         $schoolId = $this->getSchoolId();
-        
+
+        // 1. Row Transformer (Crucial for Gold Standard UI consistency)
+        $transformer = function ($visitor) {
+            $status = $visitor->status;
+            $priority = $visitor->priority;
+
+            // Map Tailwind-style config for badges
+            $statusConfig = [
+                'bg' => 'bg-' . $status?->color() . '-50',
+                'text' => 'text-' . $status?->color() . '-700',
+                'border' => 'border-' . $status?->color() . '-100',
+                'icon' => match ($status) {
+                    VisitorStatus::Scheduled => 'fa-calendar',
+                    VisitorStatus::CheckedIn => 'fa-sign-in-alt',
+                    VisitorStatus::Completed => 'fa-check-double',
+                    VisitorStatus::Cancelled => 'fa-times-circle',
+                    default => 'fa-user-clock'
+                }
+            ];
+
+            return [
+                'id' => $visitor->id,
+                'visitor_no' => $visitor->visitor_no,
+                'name' => $visitor->name,
+                'initials' => collect(explode(' ', $visitor->name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
+                'mobile' => $visitor->mobile,
+                'email' => $visitor->email,
+                'meeting_with' => $visitor->meeting_with?->label() ?? 'N/A',
+                'visit_purpose' => $visitor->visit_purpose?->label() ?? 'N/A',
+                'source' => $visitor->source ?? 'N/A',
+                'meeting_type' => $visitor->meeting_type?->label() ?? 'N/A',
+                'priority_label' => $priority?->label() ?? 'Medium',
+                'priority_color' => $priority?->color() ?? 'blue',
+                'status_label' => $status?->label() ?? 'N/A',
+                'status_config' => $statusConfig,
+                'check_in' => $visitor->check_in ? $visitor->check_in->format('d M, h:i A') : '--',
+                'check_out' => $visitor->check_out ? $visitor->check_out->format('d M, h:i A') : '--',
+                'scheduled_at' => $visitor->meeting_scheduled ? $visitor->meeting_scheduled->format('d M, h:i A') : 'N/A',
+                'can_check_in' => $status === VisitorStatus::Scheduled,
+                'can_check_out' => $status === VisitorStatus::CheckedIn,
+            ];
+        };
+
+        // 2. Build Query
         $query = Visitor::where('school_id', $schoolId);
 
-        // Filter by today if requested
-        if ($request->has('today')) {
+        // Apply filters
+        if ($request->filled('today')) {
             $query->whereDate('created_at', Carbon::today());
         }
 
-        // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%")
-                  ->orWhere('visitor_no', 'like', "%{$search}%");
+                    ->orWhere('mobile', 'like', "%{$search}%")
+                    ->orWhere('visitor_no', 'like', "%{$search}%");
             });
         }
 
-        // Sorting
-        $sortColumn = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
-        $query->orderBy($sortColumn, $sortDirection);
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
 
-        // Pagination
-        $perPage = $request->input('per_page', 15);
-        $visitors = $query->paginate($perPage)->withQueryString();
+        if ($request->filled('meeting_type')) {
+            $query->where('meeting_type', $request->meeting_type);
+        }
 
-        // Statistics for the page
-        $stats = [
-            'total' => Visitor::where('school_id', $schoolId)->count(),
-            'online' => Visitor::where('school_id', $schoolId)->where('meeting_type', 'online')->count(),
-            'offline' => Visitor::where('school_id', $schoolId)->where('meeting_type', 'offline')->count(),
-            'office' => Visitor::where('school_id', $schoolId)->where('meeting_type', 'office')->count(),
-            'cancelled' => Visitor::where('school_id', $schoolId)->where('status', 'cancelled')->count(),
+        // 3. Handle AJAX or CSV Export vs Blade Hydration
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer);
+        }
+
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
+
+        // 4. Blade Hydration
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => Visitor::where('school_id', $schoolId)->count(),
+                'online' => Visitor::where('school_id', $schoolId)->where('meeting_type', VisitorMode::Online)->count(),
+                'offline' => Visitor::where('school_id', $schoolId)->where('meeting_type', VisitorMode::Offline)->count(),
+                'office' => Visitor::where('school_id', $schoolId)->where('meeting_type', VisitorMode::Office)->count(),
+                'cancelled' => Visitor::where('school_id', $schoolId)->where('status', VisitorStatus::Cancelled)->count(),
+            ]
+        ]);
+
+        $priorities = VisitorPriority::cases();
+        $meetingTypes = VisitorMode::cases();
+        $visitPurposes = VisitPurpose::cases();
+        $visitorTypes = VisitorType::cases();
+        $meetingWithCases = MeetingWith::cases();
+
+        return view('receptionist.visitors.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+            'priorities' => $priorities,
+            'meetingTypes' => $meetingTypes,
+            'visitPurposes' => $visitPurposes,
+            'visitorTypes' => $visitorTypes,
+            'meetingWithCases' => $meetingWithCases,
+        ]);
+    }
+
+    private function exportToCsv($query)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="visitors_export_' . now()->format('Y-m-d') . '.csv"',
         ];
 
-        // Get priority options from enum
-        $priorities = VisitorPriority::cases();
-        
-        // Get meeting type options from enum
-        $meetingTypes = VisitorMode::cases();
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Visitor No', 'Name', 'Mobile', 'Email', 'Purpose', 'Meeting With', 'Status', 'Date']);
 
-        return view('receptionist.visitors.index', compact('visitors', 'stats', 'priorities', 'meetingTypes'));
+            $query->orderBy('created_at', 'desc')->cursor()->each(function ($visitor) use ($file) {
+                fputcsv($file, [
+                    $visitor->visitor_no,
+                    $visitor->name,
+                    $visitor->mobile,
+                    $visitor->email,
+                    $visitor->visit_purpose,
+                    $visitor->meeting_with,
+                    $visitor->status?->label() ?? 'N/A',
+                    $visitor->created_at->format('Y-m-d H:i')
+                ]);
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function show(Visitor $visitor)
     {
         $this->authorizeAccess($visitor);
-        
+
         return view('receptionist.visitors.show', compact('visitor'));
     }
 
@@ -76,10 +174,10 @@ class VisitorController extends TenantController
                 'mobile' => 'required|string|max:20',
                 'email' => 'nullable|email',
                 'address' => 'nullable|string',
-                'visitor_type' => 'required|string',
-                'visit_purpose' => 'required|string',
+                'visitor_type' => ['required', 'string', Rule::enum(VisitorType::class)],
+                'visit_purpose' => ['required', 'string', Rule::enum(VisitPurpose::class)],
                 'meeting_purpose' => 'nullable|string',
-                'meeting_with' => 'required|string',
+                'meeting_with' => ['required', 'string', Rule::enum(MeetingWith::class)],
                 'priority' => ['required', 'integer', Rule::enum(VisitorPriority::class)],
                 'no_of_guests' => 'nullable|integer|min:1',
                 'meeting_type' => ['required', 'integer', Rule::enum(VisitorMode::class)],
@@ -104,7 +202,7 @@ class VisitorController extends TenantController
 
             // Convert priority to integer (form sends as string, enum needs int)
             $validated['priority'] = (int) $validated['priority'];
-            
+
             // Convert meeting_type to integer (form sends as string, enum needs int)
             $validated['meeting_type'] = (int) $validated['meeting_type'];
 
@@ -142,7 +240,7 @@ class VisitorController extends TenantController
     public function update(Request $request, Visitor $visitor)
     {
         $this->authorizeAccess($visitor);
-        
+
         try {
             // Store visitor ID for redirect back on validation error
             $request->merge(['visitor_id' => $visitor->id]);
@@ -152,10 +250,10 @@ class VisitorController extends TenantController
                 'mobile' => 'required|string|max:20',
                 'email' => 'nullable|email',
                 'address' => 'nullable|string',
-                'visitor_type' => 'required|string',
-                'visit_purpose' => 'required|string',
+                'visitor_type' => ['required', 'string', Rule::enum(VisitorType::class)],
+                'visit_purpose' => ['required', 'string', Rule::enum(VisitPurpose::class)],
                 'meeting_purpose' => 'nullable|string',
-                'meeting_with' => 'required|string',
+                'meeting_with' => ['required', 'string', Rule::enum(MeetingWith::class)],
                 'priority' => ['required', 'integer', Rule::enum(VisitorPriority::class)],
                 'no_of_guests' => 'nullable|integer|min:1',
                 'meeting_type' => ['required', 'integer', Rule::enum(VisitorMode::class)],
@@ -182,7 +280,7 @@ class VisitorController extends TenantController
 
             // Convert priority to integer (form sends as string, enum needs int)
             $validated['priority'] = (int) $validated['priority'];
-            
+
             // Convert meeting_type to integer (form sends as string, enum needs int)
             $validated['meeting_type'] = (int) $validated['meeting_type'];
 
