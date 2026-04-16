@@ -23,6 +23,7 @@ Route::post('schools/{id}/restore', [SchoolController::class, 'restore'])->name(
 Route::delete('schools/{id}/force-delete', [SchoolController::class, 'forceDelete'])->name('schools.force-delete');
 Route::get('schools/{id}/features', [SchoolController::class, 'features'])->name('schools.features');
 Route::put('schools/{id}/features', [SchoolController::class, 'updateFeatures'])->name('schools.update-features');
+Route::post('schools/data', [SchoolController::class, 'index'])->name('schools.data');
 Route::resource('schools', SchoolController::class);
 
 // Global User Management

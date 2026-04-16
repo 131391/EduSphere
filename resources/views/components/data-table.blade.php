@@ -122,15 +122,15 @@
                             <span>{{ $column['label'] ?? ucfirst($column['key']) }}</span>
                             @if(isset($column['sortable']) && $column['sortable'])
                             <div class="flex flex-col">
-                                <i 
-                                    class="fas fa-sort-up text-xs"
+                                <i
+                                    class="fas fa-sort-up text-xs text-gray-300"
                                     :class="{
                                         'text-blue-600': currentSort === '{{ $column['key'] }}' && currentDirection === 'asc',
                                         'text-gray-300': currentSort !== '{{ $column['key'] }}' || currentDirection !== 'asc'
                                     }"
                                 ></i>
-                                <i 
-                                    class="fas fa-sort-down text-xs -mt-1"
+                                <i
+                                    class="fas fa-sort-down text-xs -mt-1 text-gray-300"
                                     :class="{
                                         'text-blue-600': currentSort === '{{ $column['key'] }}' && currentDirection === 'desc',
                                         'text-gray-300': currentSort !== '{{ $column['key'] }}' || currentDirection !== 'desc'

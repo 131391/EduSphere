@@ -12,6 +12,9 @@ if (token) {
     window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
 }
 
+// Import reusable Alpine.js components
+import './components/ajax-data-table';
+
 // Initialize Alpine.js via Vite bundle (replaces CDN loading)
 Alpine.plugin(collapse);
 window.Alpine = Alpine;

@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\School;
 use App\Enums\SchoolStatus;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 
 class SchoolController extends Controller
 {
+    use HasAjaxDataTable;
+
     public function index(Request $request)
     {
         $query = School::withTrashed()->with(['city', 'state', 'country']);
@@ -18,60 +20,57 @@ class SchoolController extends Controller
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('subdomain', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhereHas('city', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('state', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('subdomain', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhereHas('city', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('state', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
-        // Filter by status
+        // Filter by status (using Enum integer values)
         if ($request->filled('status')) {
-            $statusMap = [
-                'active' => SchoolStatus::Active->value,
-                'inactive' => SchoolStatus::Inactive->value,
-                'suspended' => SchoolStatus::Suspended->value,
-            ];
-            if (isset($statusMap[$request->status])) {
-                $query->where('status', $statusMap[$request->status]);
+            $statusValue = (int) $request->status;
+            if (in_array($statusValue, array_column(SchoolStatus::cases(), 'value'))) {
+                $query->where('status', $statusValue);
             }
         }
 
-        // Filter by subscription status
+        // Filter by subscription status (1 = Active, 0 = Expired)
         if ($request->filled('subscription_status')) {
-            if ($request->subscription_status === 'active') {
-                $query->where(function($q) {
+            if ($request->subscription_status == 1) { // Active
+                $query->where(function ($q) {
                     $q->whereNull('subscription_end_date')
-                      ->orWhere('subscription_end_date', '>=', now());
+                        ->orWhere('subscription_end_date', '>=', now());
                 });
-            } elseif ($request->subscription_status === 'expired') {
-                $query->where('subscription_end_date', '<', now());
+            } elseif ($request->subscription_status == 0) { // Expired
+                $query->whereNotNull('subscription_end_date')
+                    ->where('subscription_end_date', '<', now());
             }
         }
 
         // Sorting
         $sortColumn = $request->input('sort', 'id');
         $sortDirection = $request->input('direction', 'desc');
-        
+
         // Validate sort column to prevent SQL injection
         $allowedSortColumns = ['id', 'name', 'code', 'email', 'status', 'created_at', 'subscription_end_date'];
         if (!in_array($sortColumn, $allowedSortColumns)) {
             $sortColumn = 'id';
         }
-        
+
         $allowedDirections = ['asc', 'desc'];
         if (!in_array($sortDirection, $allowedDirections)) {
             $sortDirection = 'desc';
         }
-        
+
         $query->orderBy($sortColumn, $sortDirection);
 
         // Per page
@@ -82,39 +81,89 @@ class SchoolController extends Controller
         }
 
         // Get statistics (before pagination)
-        $totalSchools = School::withTrashed()->count();
-        $activeSchools = School::withTrashed()->where('status', SchoolStatus::Active->value)->count();
-        $inactiveSchools = School::withTrashed()->where('status', SchoolStatus::Inactive->value)->count();
-        $suspendedSchools = School::withTrashed()->where('status', SchoolStatus::Suspended->value)->count();
+        $stats = [
+            'total' => School::withTrashed()->count(),
+            'active' => School::withTrashed()->where('status', SchoolStatus::Active->value)->count(),
+            'inactive' => School::withTrashed()->where('status', SchoolStatus::Inactive->value)->count(),
+            'suspended' => School::withTrashed()->where('status', SchoolStatus::Suspended->value)->count(),
+        ];
 
         // Export functionality (BEFORE pagination so we export full result set)
-        if ($request->has('export') && $request->export === 'csv') {
-            return $this->exportToCsv($query->get());
+        if ($request->input('export') === 'csv') {
+            return $this->exportToCsv($query);
         }
 
         // Paginate results
         $schools = $query->paginate($perPage);
 
-        return view('admin.schools.index', compact('schools', 'totalSchools', 'activeSchools', 'inactiveSchools', 'suspendedSchools'));
+        // Row Transformer for consistent API
+        $transformer = function ($school) {
+            return [
+                'id'          => $school->id,
+                'name'        => $school->name,
+                'code'        => $school->code,
+                'subdomain'   => $school->subdomain,
+                'domain'      => $school->domain,
+                'email'       => $school->email,
+                'phone'       => $school->phone,
+                'logo_url'    => $school->logo ? asset('storage/' . $school->logo) : null,
+                'location'    => trim(($school->city->name ?? '') . ', ' . ($school->state->name ?? ''), ', '),
+                'status'      => $school->status->value,
+                'status_label' => $school->status->label(),
+                'status_color' => match($school->status) {
+                    SchoolStatus::Active    => 'green',
+                    SchoolStatus::Inactive  => 'gray',
+                    SchoolStatus::Suspended => 'yellow',
+                },
+                'subscription_end_date' => $school->subscription_end_date
+                    ? $school->subscription_end_date->format('M d, Y')
+                    : null,
+                'subscription_active' => $school->isSubscriptionActive(),
+                'show_url' => route('admin.schools.show', $school->id),
+                'edit_url' => route('admin.schools.edit', $school->id),
+                'delete_url' => route('admin.schools.destroy', $school->id),
+            ];
+        };
+
+        // AJAX response — return JSON with transformed data
+        if ($request->ajax()) {
+            return $this->ajaxResponse($schools, $stats, $transformer);
+        }
+
+        // Standard Blade response for initial page load
+        $initialData = [
+            'rows' => $schools->getCollection()->map($transformer)->values(),
+            'pagination' => [
+                'current_page' => $schools->currentPage(),
+                'last_page'    => $schools->lastPage(),
+                'per_page'     => $schools->perPage(),
+                'total'        => $schools->total(),
+                'from'         => $schools->firstItem(),
+                'to'           => $schools->lastItem(),
+            ],
+            'stats' => $stats
+        ];
+
+        return view('admin.schools.index', compact('schools', 'stats', 'initialData'));
     }
 
-    private function exportToCsv($schools)
+    private function exportToCsv($query)
     {
         $filename = 'schools_' . date('Y-m-d_His') . '.csv';
-        
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function() use ($schools) {
+        $callback = function () use ($query) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV Headers
             fputcsv($file, ['ID', 'Name', 'Code', 'Subdomain', 'Email', 'Phone', 'Status', 'City', 'State', 'Country', 'Created At']);
-            
-            // CSV Data
-            foreach ($schools as $school) {
+
+            // CSV Data using Cursor to prevent memory exhaustion
+            foreach ($query->cursor() as $school) {
                 fputcsv($file, [
                     $school->id,
                     $school->name,
@@ -122,14 +171,14 @@ class SchoolController extends Controller
                     $school->subdomain,
                     $school->email,
                     $school->phone,
-                    $school->status,
+                    $school->status->label(),
                     $school->city->name ?? '',
                     $school->state->name ?? '',
                     $school->country->name ?? '',
                     $school->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -155,7 +204,7 @@ class SchoolController extends Controller
 
             // Create School
             $schoolData = collect($validated)->except(['admin_name', 'admin_email', 'admin_password', 'admin_password_confirmation'])->toArray();
-            
+
             $school = School::create($schoolData);
 
             // Seed Master Data for the new school
@@ -192,7 +241,7 @@ class SchoolController extends Controller
             if (isset($validated['logo'])) {
                 Storage::disk('public')->delete($validated['logo']);
             }
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -207,10 +256,10 @@ class SchoolController extends Controller
     public function show($id)
     {
         $school = School::withTrashed()->findOrFail($id);
-        
+
         // Fetch the primary administrator
         $admin = \App\Models\User::where('school_id', $school->id)
-            ->whereHas('role', function($q) {
+            ->whereHas('role', function ($q) {
                 $q->where('slug', \App\Models\Role::SCHOOL_ADMIN);
             })->first();
 
@@ -220,10 +269,10 @@ class SchoolController extends Controller
     public function edit($id)
     {
         $school = School::withTrashed()->findOrFail($id);
-        
+
         // Fetch the primary administrator
         $admin = \App\Models\User::where('school_id', $school->id)
-            ->whereHas('role', function($q) {
+            ->whereHas('role', function ($q) {
                 $q->where('slug', \App\Models\Role::SCHOOL_ADMIN);
             })->first();
 
@@ -251,9 +300,10 @@ class SchoolController extends Controller
             // Update Admin User if admin_id is provided
             if ($request->filled('admin_id')) {
                 $admin = \App\Models\User::findOrFail($request->admin_id);
-                
+
                 $adminData = [];
-                if ($request->filled('admin_name')) $adminData['name'] = $request->admin_name;
+                if ($request->filled('admin_name'))
+                    $adminData['name'] = $request->admin_name;
                 if ($request->filled('admin_email')) {
                     $adminData['email'] = $request->admin_email;
                 }
@@ -287,10 +337,17 @@ class SchoolController extends Controller
     /**
      * Soft-delete a school
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $school = School::findOrFail($id);
         $school->delete();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'School deleted successfully.',
+            ]);
+        }
 
         return redirect()->route('admin.schools.index')
             ->with('success', 'School deleted successfully.');
@@ -375,4 +432,3 @@ class SchoolController extends Controller
             ->with('success', 'Feature flags updated for ' . $school->name . '.');
     }
 }
-

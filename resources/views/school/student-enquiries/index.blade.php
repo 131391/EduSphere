@@ -7,66 +7,66 @@
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <!-- Total Enquiry -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-teal-500">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-teal-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Enquiry</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Total Enquiry</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['total'] }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-clipboard-list text-teal-600 text-xl"></i>
+                    <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-clipboard-list text-teal-600 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Pending Enquiry -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-orange-500">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-orange-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Enquiry</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['pending'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Pending</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['pending'] }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-between">
-                        <i class="fas fa-clock text-orange-600 text-xl"></i>
+                    <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-clock text-orange-600 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Cancelled Enquiry -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-red-500">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-red-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Cancelled Enquiry</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['cancelled'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Cancelled</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['cancelled'] }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-times-circle text-red-600 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Total Registration -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Registration</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['registration'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Registrations</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['registration'] }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-user-check text-blue-600 text-xl"></i>
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-user-check text-blue-600 text-lg"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Admission Done -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-green-500">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-green-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Admission Done</p>
-                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['admitted'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Admitted</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['admitted'] }}</h3>
                     </div>
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-graduation-cap text-green-600 text-xl"></i>
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-graduation-cap text-green-600 text-lg"></i>
                     </div>
                 </div>
             </div>

@@ -10,86 +10,96 @@
         <!-- Success/Error Messages -->
 
         {{-- Visitor Statistics --}}
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow-sm border-l-4 border-blue-500 p-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <!-- Total Visitors -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Total Visitors</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ $stats['total'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Total Visitors</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['total'] }}</h3>
                     </div>
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-users text-blue-600"></i>
+                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-users text-lg"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border-l-4 border-green-500 p-4">
+            <!-- Online Visitors -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-emerald-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Online Visitors</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ $stats['online'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Online</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['online'] }}</h3>
                     </div>
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i class="fas fa-video text-green-600"></i>
+                    <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-video text-lg"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border-l-4 border-yellow-500 p-4">
+            <!-- Offline/Office -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-amber-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Offline/Office</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ $stats['offline'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Campus</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['offline'] }}</h3>
                     </div>
-                    <div class="bg-yellow-100 p-3 rounded-full">
-                        <i class="fas fa-building text-yellow-600"></i>
+                    <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/20 text-amber-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-building text-lg"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border-l-4 border-red-500 p-4">
+            <!-- Cancelled -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-rose-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Cancelled</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ $stats['cancelled'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Cancelled</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['cancelled'] }}</h3>
                     </div>
-                    <div class="bg-red-100 p-3 rounded-full">
-                        <i class="fas fa-times-circle text-red-600"></i>
+                    <div class="w-10 h-10 bg-rose-100 dark:bg-rose-900/20 text-rose-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-times-circle text-lg"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm border-l-4 border-purple-500 p-4">
+            <!-- Online Meetings -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-indigo-500 transition-all duration-300 hover:shadow-md group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Online Meetings</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ $stats['office'] }}</p>
+                        <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Meetings</p>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $stats['office'] }}</h3>
                     </div>
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <i class="fas fa-laptop text-purple-600"></i>
+                    <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-laptop text-lg"></i>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Page Header with Actions --}}
-        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-teal-100/50 dark:border-gray-700">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h2 class="text-xl font-bold text-gray-800">Visitor List</h2>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                        <i class="fas fa-users text-xs"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Visitor Registry</h2>
+                </div>
                 <div class="flex flex-wrap gap-2">
                     <button @click="openAddModal()"
-                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors">
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                         <i class="fas fa-plus mr-2"></i>
                         New Visitor
                     </button>
                     <a href="{{ route('receptionist.visitors.index', ['today' => 1]) }}"
-                        class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition-colors">
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                         <i class="fas fa-calendar-day mr-2"></i>
                         Today's Visitors
                     </a>
                     <button
-                        class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md transition-colors">
-                        <i class="fas fa-file-excel mr-2"></i>
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                        <i class="fas fa-file-excel mr-2 text-xs"></i>
                         Export
                     </button>
                 </div>

@@ -252,28 +252,31 @@
                         <button @click="toggleFavorite()"
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
                             :class="{ 'text-yellow-500': isFavorited }" title="Add to favorites">
-                            <i class="text-xl far fa-star" :class="isFavorited ? 'fas fa-star' : 'far fa-star'"></i>
+                            <i class="text-xl" :class="isFavorited ? 'fas fa-star' : 'far fa-star'" x-cloak></i>
+                            <i class="text-xl far fa-star ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Bookmark Button -->
                         <button @click="toggleBookmark()"
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
                             :class="{ 'text-blue-500': isBookmarked }" title="Bookmark this page">
-                            <i class="text-xl far fa-bookmark"
-                                :class="isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'"></i>
+                            <i class="text-xl" :class="isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'" x-cloak></i>
+                            <i class="text-xl far fa-bookmark ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Fullscreen Toggle -->
                         <button @click="toggleFullscreen()"
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
                             title="Toggle fullscreen">
-                            <i class="text-xl fas" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'"></i>
+                            <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
+                            <i class="text-xl fas fa-expand ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Dark Mode Toggle -->
                         <button @click="toggleDarkMode()" class="text-gray-500 hover:text-gray-700 transition-colors"
                             :class="{ 'text-yellow-400': isDarkMode }" title="Toggle dark mode">
-                            <i class="text-xl far fa-moon" :class="isDarkMode ? 'fas fa-sun' : 'far fa-moon'"></i>
+                            <i class="text-xl" :class="isDarkMode ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
+                            <i class="text-xl far fa-moon ssr-icon-fallback"></i>
                         </button>
 
                         <!-- User Dropdown -->
@@ -432,6 +435,9 @@
                 isDarkMode: localStorage.getItem('darkMode') === 'true' || false,
 
                 init() {
+                    // Remove SSR fallback icons now that Alpine has hydrated
+                    this.$el.querySelectorAll('.ssr-icon-fallback').forEach(el => el.remove());
+
                     // Apply dark mode on load
                     if (this.isDarkMode) {
                         document.documentElement.classList.add('dark');
@@ -573,6 +579,12 @@
                     },
                     allowClear: $(this).data('allow-clear') !== undefined ? $(this).data('allow-clear') : false,
                     width: '100%'
+                });
+
+                // BRIDGE: Select2 -> Native DOM (Allows Alpine.js x-model and @change to work)
+                $select.on('select2:select select2:unselect select2:clear', function () {
+                    this.dispatchEvent(new Event('change', { bubbles: true }));
+                    this.dispatchEvent(new Event('input', { bubbles: true }));
                 });
 
                 // Global rule: Default Country to India (102) if empty or auto-defaulted
