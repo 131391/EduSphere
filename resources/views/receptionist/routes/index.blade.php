@@ -4,141 +4,240 @@
 @section('page-title', 'Route Management')
 
 @section('content')
-    <div class="space-y-6" x-data="ajaxDataTable({
-        endpoint: '{{ route('receptionist.routes.fetch') }}',
-        initialData: @js($initialData),
-        initialFilters: { search: '' }
-    })">
+    <div x-data="ajaxDataTable({
+            fetchUrl: '{{ route('receptionist.routes.fetch') }}',
+            defaultSort: 'created_at',
+            defaultDirection: 'desc',
+            defaultPerPage: 25,
+            defaultFilters: { search: '' },
+            initialRows: @js($initialData['rows']),
+            initialPagination: @js($initialData['pagination']),
+            initialStats: @js($stats)
+        })" class="space-y-6">
+
         {{-- High-Density Statistics Dashboard --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <x-stat-card title="Total Corridors" value="{{ $stats['total_routes'] }}" icon="fas fa-route" color="blue" />
-            <x-stat-card title="Active Channels" value="{{ $stats['active_routes'] }}" icon="fas fa-check-double" color="teal" />
-            <x-stat-card title="Mapped Fleet" value="{{ $stats['mapped_vehicles'] }}" icon="fas fa-bus-alt" color="indigo" />
-            <x-stat-card title="Peak Capacity" value="{{ $stats['total_capacity'] }}" icon="fas fa-users" color="purple" />
+            <x-stat-card label="Total Corridors" :value="$stats['total_routes']" icon="fas fa-route" color="blue"
+                alpine-text="stats.total_routes" />
+            <x-stat-card label="Active Channels" :value="$stats['active_routes']" icon="fas fa-check-double" color="teal"
+                alpine-text="stats.active_routes" />
+            <x-stat-card label="Mapped Fleet" :value="$stats['mapped_vehicles']" icon="fas fa-bus-alt" color="indigo"
+                alpine-text="stats.mapped_vehicles" />
+            <x-stat-card label="Peak Capacity" :value="$stats['total_capacity']" icon="fas fa-users" color="purple"
+                alpine-text="stats.total_capacity" />
         </div>
 
-        {{-- Action Header --}}
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/50 p-4">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600">
-                        <i class="fas fa-network-wired text-xl"></i>
+        <!-- Header Section -->
+        <x-page-header title="Transport Routes" description="Manage routes and vehicle assignments"
+            icon="fas fa-network-wired">
+            <button @click="$dispatch('open-route-modal')"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                Add Route
+            </button>
+            <button @click="exportData('csv')" :disabled="exporting"
+                class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
+                <span x-show="exporting"
+                    class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"
+                    x-cloak></span>
+                <i x-show="!exporting" class="fas fa-file-excel mr-2 text-xs"></i>
+                <span x-text="exporting ? 'Exporting...' : 'Excel Export'">Excel Export</span>
+            </button>
+        </x-page-header>
+
+        <!-- AJAX Data Table -->
+        <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header with Search and Filters -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Left: Title and Search -->
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Route Manifest</h2>
+                        <x-table.search placeholder="Search routes, vehicles..." />
                     </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">Transport Routes</h2>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Manage routes and vehicle assignments</p>
+
+                    <!-- Right: Filters and Actions -->
+                    <div class="flex items-center gap-3">
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <div class="relative group">
-                        <input type="text" x-model.debounce.300ms="filters.search" placeholder="Search routes, vehicles..."
-                            class="w-full md:w-72 bg-slate-50 border-none rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-teal-500/20 transition-all font-medium">
-                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    </div>
-                    
-                    <button @click="$dispatch('open-route-modal')" 
-                        class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95">
-                        <i class="fas fa-plus text-[10px]"></i>
-                        Add Route
-                    </button>
-
-                    <button @click="exportData()" 
-                        class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 active:scale-95">
-                        <i class="fas fa-file-csv text-teal-600"></i>
-                        Export
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        {{-- Manifest Table --}}
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden min-h-[400px] relative">
-            <div x-show="loading" class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
-                <div class="flex flex-col items-center gap-3">
-                    <div class="w-10 h-10 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
-                    <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Loading...</span>
-                </div>
-            </div>
-
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50/50 dark:bg-gray-900/50 border-b border-slate-100 dark:border-gray-700">
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Route Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Assigned Vehicle</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
-                    <template x-for="route in items" :key="route.id">
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-900/20 transition-colors group">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-indigo-100 group-hover:text-indigo-600">
-                                        <i class="fas fa-route"></i>
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight" x-text="route.route_name"></span>
-                                        <span class="text-[10px] font-medium text-slate-400 mt-0.5" x-text="'Created: ' + route.created_at"></span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col gap-1">
-                                    <div class="flex items-center gap-2">
-                                        <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
-                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="route.vehicle_label"></span>
-                                    </div>
-                                    <span class="text-[10px] font-medium text-slate-500" x-text="'Capacity: ' + route.vehicle_capacity + ' seats'"></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" 
-                                    :class="'bg-' + route.status_color + '-50 text-' + route.status_color + '-600 ring-1 ring-' + route.status_color + '-200'"
-                                    x-text="route.status_label"></span>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2 text-right">
-                                    <button @click="$dispatch('open-route-modal', route)" title="Edit" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
-                                        <i class="fas fa-edit text-xs"></i>
-                                    </button>
-                                    <button @click="$dispatch('open-delete-modal', {
-                                        url: '{{ route('receptionist.routes.index') }}/' + route.id,
-                                        name: route.route_name
-                                    })" title="Delete" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
-                                        <i class="fas fa-trash-alt text-xs"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                <!-- Active Filters Display -->
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <div x-show="value"
+                            class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
+                            <span x-text="getFilterLabel(key, value)"></span>
+                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </template>
-                </tbody>
-            </table>
-
-            {{-- Empty State --}}
-            <template x-if="!loading && items.length === 0">
-                <div class="py-20 flex flex-col items-center">
-                    <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
-                        <i class="fas fa-route text-4xl"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800">No Routes Found</h3>
-                    <p class="text-sm text-slate-500">Get started by adding your first transport route.</p>
+                    <button @click="clearAllFilters()"
+                        class="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition-colors">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Clear All</span>
+                    </button>
                 </div>
-            </template>
-
-            {{-- Load More --}}
-            <div class="p-6 border-t border-slate-50 flex justify-center" x-show="hasMore">
-                <button @click="loadMore()" :disabled="loading" 
-                    class="px-8 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-all disabled:opacity-50">
-                    Load More
-                </button>
             </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto relative ajax-table-wrapper">
+                <x-table.loading-overlay />
+
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <x-table.sort-header column="route_name" label="Route Name" sort-var="sort"
+                                direction-var="direction" />
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Assigned Vehicle</th>
+                            <x-table.sort-header column="status" label="Status" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">
+                                Actions</th>
+                        </tr>
+                    </thead>
+
+                    <!-- Initial Blade Render (Zero Blink) -->
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @if(empty($initialData['rows']))
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-route text-4xl text-gray-300 mb-4"></i>
+                                        <p class="text-lg text-gray-500">No routes found matching your criteria.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
+                        @foreach($initialData['rows'] as $row)
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-indigo-100 group-hover:text-indigo-600">
+                                            <i class="fas fa-route"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-sm font-bold text-slate-800 dark:text-white leading-tight">{{ $row['route_name'] }}</span>
+                                            <span class="text-[10px] font-medium text-slate-400 mt-0.5">Created:
+                                                {{ $row['created_at'] }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
+                                            <span
+                                                class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $row['vehicle_label'] }}</span>
+                                        </div>
+                                        <span class="text-[10px] font-medium text-slate-500">Capacity:
+                                            {{ $row['vehicle_capacity'] }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-{{ $row['status_color'] }}-50 text-{{ $row['status_color'] }}-600 ring-1 ring-{{ $row['status_color'] }}-200">
+                                        {{ $row['status_label'] }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2 text-right">
+                                        <button @click="$dispatch('open-route-modal', {{ json_encode($row) }})" title="Edit"
+                                            class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
+                                            <i class="fas fa-edit text-xs"></i>
+                                        </button>
+                                        <button
+                                            @click="quickAction(`/receptionist/routes/{{ $row['id'] }}`, 'Delete Route', 'DELETE')"
+                                            title="Delete"
+                                            class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+
+                    <!-- Dynamic Table Body (Successive Hydration) -->
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak
+                        :class="loading ? 'opacity-50' : 'opacity-100'">
+                        <template x-for="row in rows" :key="row.id">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-indigo-100 group-hover:text-indigo-600">
+                                            <i class="fas fa-route"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight"
+                                                x-text="row.route_name"></span>
+                                            <span class="text-[10px] font-medium text-slate-400 mt-0.5"
+                                                x-text="'Created: ' + row.created_at"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
+                                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300"
+                                                x-text="row.vehicle_label"></span>
+                                        </div>
+                                        <span class="text-[10px] font-medium text-slate-500"
+                                            x-text="'Capacity: ' + row.vehicle_capacity + ' seats'"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                        :class="'bg-' + row.status_color + '-50 text-' + row.status_color + '-600 ring-1 ring-' + row.status_color + '-200'"
+                                        x-text="row.status_label"></span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2 text-right">
+                                        <button @click="$dispatch('open-route-modal', row)" title="Edit"
+                                            class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
+                                            <i class="fas fa-edit text-xs"></i>
+                                        </button>
+                                        <button
+                                            @click="quickAction(`/receptionist/routes/${row.id}`, 'Delete Route', 'DELETE')"
+                                            title="Delete"
+                                            class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <x-table.empty-state :colspan="4" icon="fas fa-route"
+                            message="No routes found matching your criteria." />
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Server-rendered pagination: visible instantly, hidden once Alpine takes over -->
+            @if($initialData['pagination']['total'] > 0)
+                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
+                    :class="{ 'hidden': true }">
+                    <div class="text-sm text-gray-700 dark:text-gray-300">
+                        Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of
+                        {{ $initialData['pagination']['total'] }} results
+                    </div>
+                </div>
+            @endif
+
+            <x-table.pagination />
         </div>
     </div>
 
     {{-- Add/Edit Route Modal --}}
-    <x-modal name="route-modal" x-data="routeForm()" @open-route-modal.window="open($event.detail)" alpineTitle="editMode ? 'Edit Route' : 'Add New Route'" maxWidth="2xl">
+    <x-modal name="route-modal" x-data="routeForm()" @open-route-modal.window="open($event.detail)"
+        alpineTitle="editMode ? 'Edit Route' : 'Add New Route'" maxWidth="2xl">
         <form @submit.prevent="save" id="routeForm" class="space-y-6">
             @csrf
             <template x-if="editMode">
@@ -147,35 +246,45 @@
 
             <div class="space-y-4">
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation / Name <span class="text-red-500">*</span></label>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation /
+                        Name <span class="text-red-500">*</span></label>
                     <input type="text" x-model="formData.route_name" placeholder="e.g. North Sector Express"
                         class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
                         :class="errors.route_name ? 'ring-2 ring-red-500/20' : ''">
-                    <p x-show="errors.route_name" x-text="errors.route_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                    <p x-show="errors.route_name" x-text="errors.route_name[0]"
+                        class="text-[10px] font-bold text-red-500 ml-1"></p>
                 </div>
 
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assigned Fleet Asset <span class="text-red-500">*</span></label>
-                    <select x-model="formData.vehicle_id" class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assigned Fleet Asset
+                        <span class="text-red-500">*</span></label>
+                    <select x-model="formData.vehicle_id"
+                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                         <option value="">Select Primary Vehicle</option>
                         <template x-for="vehicle in vehicles" :key="vehicle.id">
-                            <option :value="vehicle.id" x-text="`${vehicle.registration_no} (${vehicle.vehicle_no || 'N/A'})`"></option>
+                            <option :value="vehicle.id"
+                                x-text="`${vehicle.registration_no} (${vehicle.vehicle_no || 'N/A'})`"></option>
                         </template>
                     </select>
-                    <p x-show="errors.vehicle_id" x-text="errors.vehicle_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                    <p x-show="errors.vehicle_id" x-text="errors.vehicle_id[0]"
+                        class="text-[10px] font-bold text-red-500 ml-1"></p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Activation Date <span class="text-red-500">*</span></label>
-                        <input type="date" x-model="formData.route_create_date" 
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Activation Date
+                            <span class="text-red-500">*</span></label>
+                        <input type="date" x-model="formData.route_create_date"
                             class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                        <p x-show="errors.route_create_date" x-text="errors.route_create_date[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        <p x-show="errors.route_create_date" x-text="errors.route_create_date[0]"
+                            class="text-[10px] font-bold text-red-500 ml-1"></p>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Operational Status</label>
-                        <select x-model="formData.status" class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Operational
+                            Status</label>
+                        <select x-model="formData.status"
+                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                             <option value="1">Active / Operational</option>
                             <option value="0">Inactive / Suspended</option>
                         </select>
@@ -188,17 +297,19 @@
                 <div class="flex flex-col">
                     <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
                     <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                        Changes to this route will automatically update all <span class="text-teal-600 font-bold">bus stops</span> and student transport assignments.
+                        Changes to this route will automatically update all <span class="text-teal-600 font-bold">bus
+                            stops</span> and student transport assignments.
                     </p>
                 </div>
             </div>
         </form>
 
         <x-slot name="footer">
-            <button @click="$dispatch('close-modal', 'route-modal')" class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+            <button @click="$dispatch('close-modal', 'route-modal')"
+                class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
                 Cancel
             </button>
-            <button type="submit" form="routeForm" :disabled="submitting" 
+            <button type="submit" form="routeForm" :disabled="submitting"
                 class="bg-slate-900 hover:bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50">
                 <template x-if="submitting">
                     <i class="fas fa-spinner animate-spin mr-2"></i>
@@ -213,94 +324,94 @@
         confirm-text="Delete" confirm-color="red" />
 
     @push('scripts')
-    <script>
-        function routeForm() {
-            return {
-                editMode: false,
-                submitting: false,
-                vehicles: [],
-                formData: {
-                    route_name: '',
-                    vehicle_id: '',
-                    route_create_date: '{{ date('Y-m-d') }}',
-                    status: 1
-                },
-                errors: {},
+        <script>
+            function routeForm() {
+                return {
+                    editMode: false,
+                    submitting: false,
+                    vehicles: [],
+                    formData: {
+                        route_name: '',
+                        vehicle_id: '',
+                        route_create_date: '{{ date('Y-m-d') }}',
+                        status: 1
+                    },
+                    errors: {},
 
-                async open(route = null) {
-                    this.errors = {};
-                    await this.fetchVehicles();
-                    
-                    if (route) {
-                        this.editMode = true;
-                        this.routeId = route.id;
-                        this.formData = {
-                            route_name: route.route_name,
-                            vehicle_id: route.vehicle_id,
-                            route_create_date: route.raw_date || '',
-                            status: route.status
-                        };
-                    } else {
-                        this.editMode = false;
-                        this.formData = {
-                            route_name: '',
-                            vehicle_id: '',
-                            route_create_date: '{{ date('Y-m-d') }}',
-                            status: 1
-                        };
-                    }
-                    this.$dispatch('open-modal', 'route-modal');
-                },
+                    async open(route = null) {
+                        this.errors = {};
+                        await this.fetchVehicles();
 
-                async fetchVehicles() {
-                    if (this.vehicles.length > 0) return;
-                    try {
-                        const response = await fetch('{{ route('receptionist.routes.vehicles') }}');
-                        if (response.ok) {
-                            this.vehicles = await response.json();
-                        }
-                    } catch (e) {
-                        console.error('Failed to synchronize fleet metadata');
-                    }
-                },
-
-                async save() {
-                    this.submitting = true;
-                    this.errors = {};
-                    const url = this.editMode 
-                        ? `{{ route('receptionist.routes.index') }}/${this.routeId}`
-                        : `{{ route('receptionist.routes.store') }}`;
-                    
-                    try {
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                ...this.formData,
-                                _method: this.editMode ? 'PUT' : 'POST'
-                            })
-                        });
-
-                        const result = await response.json();
-                        if (response.ok) {
-                            window.Toast.fire({ icon: 'success', title: result.message });
-                            this.$dispatch('close-modal', 'route-modal');
-                            this.$dispatch('refresh-table');
+                        if (route) {
+                            this.editMode = true;
+                            this.routeId = route.id;
+                            this.formData = {
+                                route_name: route.route_name,
+                                vehicle_id: route.vehicle_id,
+                                route_create_date: route.raw_date || '',
+                                status: route.status
+                            };
                         } else {
-                            this.errors = result.errors || {};
+                            this.editMode = false;
+                            this.formData = {
+                                route_name: '',
+                                vehicle_id: '',
+                                route_create_date: '{{ date('Y-m-d') }}',
+                                status: 1
+                            };
                         }
-                    } catch (e) {
-                        window.Toast.fire({ icon: 'error', title: 'Failed to save route' });
-                    } finally {
-                        this.submitting = false;
+                        this.$dispatch('open-modal', 'route-modal');
+                    },
+
+                    async fetchVehicles() {
+                        if (this.vehicles.length > 0) return;
+                        try {
+                            const response = await fetch('{{ route('receptionist.routes.vehicles') }}');
+                            if (response.ok) {
+                                this.vehicles = await response.json();
+                            }
+                        } catch (e) {
+                            console.error('Failed to synchronize fleet metadata');
+                        }
+                    },
+
+                    async save() {
+                        this.submitting = true;
+                        this.errors = {};
+                        const url = this.editMode
+                            ? `{{ route('receptionist.routes.index') }}/${this.routeId}`
+                            : `{{ route('receptionist.routes.store') }}`;
+
+                        try {
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    ...this.formData,
+                                    _method: this.editMode ? 'PUT' : 'POST'
+                                })
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'route-modal');
+                                this.$dispatch('refresh-table');
+                            } else {
+                                this.errors = result.errors || {};
+                            }
+                        } catch (e) {
+                            window.Toast.fire({ icon: 'error', title: 'Failed to save route' });
+                        } finally {
+                            this.submitting = false;
+                        }
                     }
                 }
             }
-        }
-    </script>
+        </script>
     @endpush
 @endsection

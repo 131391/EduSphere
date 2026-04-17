@@ -4,140 +4,206 @@
 @section('page-title', 'Vehicle Management')
 
 @section('content')
-    <div class="space-y-6" x-data="ajaxDataTable({
-        endpoint: '{{ route('receptionist.vehicles.fetch') }}',
-        initialData: @js($initialData),
-        initialFilters: { search: '' }
-    })">
+    <div x-data="ajaxDataTable({
+        fetchUrl: '{{ route('receptionist.vehicles.fetch') }}',
+        defaultSort: 'created_at',
+        defaultDirection: 'desc',
+        defaultPerPage: 25,
+        defaultFilters: { search: '' },
+        initialRows: @js($initialData['rows']),
+        initialPagination: @js($initialData['pagination']),
+        initialStats: @js($initialData['stats'])
+    })" class="space-y-6">
+        
         {{-- High-Density Statistics Dashboard --}}
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <x-stat-card title="Total Fleet" value="{{ $stats['total'] }}" icon="fas fa-bus" color="blue" />
-            <x-stat-card title="Diesel Units" value="{{ $stats['diesel'] }}" icon="fas fa-gas-pump" color="slate" />
-            <x-stat-card title="Petrol Units" value="{{ $stats['petrol'] }}" icon="fas fa-gas-pump" color="indigo" />
-            <x-stat-card title="CNG Core" value="{{ $stats['cng'] }}" icon="fas fa-charging-station" color="purple" />
-            <x-stat-card title="Electric EV" value="{{ $stats['electric'] }}" icon="fas fa-bolt" color="teal" />
+            <x-stat-card label="Total Fleet" :value="$stats['total']" icon="fas fa-bus" color="blue" alpine-text="stats.total" />
+            <x-stat-card label="Diesel Units" :value="$stats['diesel']" icon="fas fa-gas-pump" color="slate" alpine-text="stats.diesel" />
+            <x-stat-card label="Petrol Units" :value="$stats['petrol']" icon="fas fa-gas-pump" color="indigo" alpine-text="stats.petrol" />
+            <x-stat-card label="CNG Core" :value="$stats['cng']" icon="fas fa-charging-station" color="purple" alpine-text="stats.cng" />
+            <x-stat-card label="Electric EV" :value="$stats['electric']" icon="fas fa-bolt" color="teal" alpine-text="stats.electric" />
         </div>
 
-        {{-- Action Header --}}
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/50 p-4">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center text-teal-600">
-                        <i class="fas fa-truck-pickup text-xl"></i>
+        <!-- Header Section -->
+        <x-page-header title="Vehicle Fleet" description="Manage school transport vehicles" icon="fas fa-truck-pickup">
+            <button @click="$dispatch('open-vehicle-modal')"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                Register Vehicle
+            </button>
+            <button @click="exportData('csv')" :disabled="exporting"
+                class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
+                <span x-show="exporting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block" x-cloak></span>
+                <i x-show="!exporting" class="fas fa-file-excel mr-2 text-xs"></i>
+                <span x-text="exporting ? 'Exporting...' : 'Excel Export'">Excel Export</span>
+            </button>
+        </x-page-header>
+
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header with Search and Filters -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Left: Title and Search -->
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Vehicle Registry</h2>
+                        <x-table.search placeholder="Search registration, engine..." />
                     </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">Vehicle Fleet</h2>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Manage school transport vehicles</p>
+
+                    <!-- Right: Filters and Actions -->
+                    <div class="flex items-center gap-3">
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <div class="relative group">
-                        <input type="text" x-model.debounce.300ms="filters.search" placeholder="Search registration, engine..." 
-                            class="w-full md:w-72 bg-slate-50 border-none rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-teal-500/20 transition-all font-medium">
-                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    </div>
-                    
-                    <button @click="$dispatch('open-vehicle-modal')" 
-                        class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95">
-                        <i class="fas fa-plus text-[10px]"></i>
-                        Register Vehicle
-                    </button>
-
-                    <button @click="exportData()" 
-                        class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 active:scale-95">
-                        <i class="fas fa-file-csv text-teal-600"></i>
-                        Export
+                <!-- Active Filters Display -->
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <div x-show="value" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
+                            <span x-text="getFilterLabel(key, value)"></span>
+                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <button @click="clearAllFilters()" class="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition-colors">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Clear All</span>
                     </button>
                 </div>
             </div>
-        </div>
 
-        {{-- Registry Table --}}
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-slate-200/50 overflow-hidden min-h-[400px] relative">
-            <div x-show="loading" class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
-                <div class="flex flex-col items-center gap-3">
-                    <div class="w-10 h-10 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
-                    <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Loading...</span>
-                </div>
-            </div>
+            <!-- Table -->
+            <div class="overflow-x-auto relative ajax-table-wrapper">
+                <x-table.loading-overlay />
+                
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <x-table.sort-header column="registration_no" label="Vehicle" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="fuel_type" label="Fuel & Capacity" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="model_no" label="Model & Purchase" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        </tr>
+                    </thead>
 
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50/50 dark:bg-gray-900/50 border-b border-slate-100 dark:border-gray-700">
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Vehicle</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fuel &amp; Capacity</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Model &amp; Purchase</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
-                    <template x-for="vehicle in items" :key="vehicle.id">
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-900/20 transition-colors group">
+                    <!-- Initial Blade Render (Zero Blink) -->
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @if(empty($initialData['rows']))
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <i class="fas fa-bus-alt text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-lg text-gray-500">No vehicles found matching your criteria.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
+                        @foreach($initialData['rows'] as $row)
+                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600">
                                         <i class="fas fa-bus-alt"></i>
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight" x-text="vehicle.registration_no"></span>
-                                        <span class="text-[10px] font-medium text-slate-400 mt-0.5" x-text="'Ref: ' + (vehicle.vehicle_no || 'N/A')"></span>
+                                        <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight">{{ $row['registration_no'] }}</span>
+                                        <span class="text-[10px] font-medium text-slate-400 mt-0.5">Ref: {{ $row['vehicle_no'] ?? 'N/A' }}</span>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col gap-1.5">
                                     <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full" :class="'bg-' + vehicle.fuel_color + '-500'"></span>
-                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="vehicle.fuel_label"></span>
+                                        <span class="w-2 h-2 rounded-full bg-{{ $row['fuel_color'] }}-500"></span>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $row['fuel_label'] }}</span>
                                     </div>
-                                    <span class="text-[10px] font-medium text-slate-500" x-text="'Capacity: ' + vehicle.capacity + ' seats'"></span>
+                                    <span class="text-[10px] font-medium text-slate-500">{{ $row['capacity'] }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
-                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="vehicle.model_no"></span>
-                                    <span class="text-[10px] font-medium text-slate-500 mt-0.5" x-text="'Purchased: ' + vehicle.purchase_date"></span>
+                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $row['model_no'] }}</span>
+                                    <span class="text-[10px] font-medium text-slate-500 mt-0.5">Purchased: {{ $row['purchase_date'] }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button @click="$dispatch('open-vehicle-modal', vehicle)" title="Edit" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
+                                    <button @click="$dispatch('open-vehicle-modal', {{ json_encode($row) }})" title="Edit" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
                                         <i class="fas fa-edit text-xs"></i>
                                     </button>
-                                    <button @click="$dispatch('open-delete-modal', {
-                                        url: '{{ route('receptionist.vehicles.index') }}/' + vehicle.id,
-                                        name: vehicle.registration_no
-                                    })" title="Delete" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
+                                    <button @click="quickAction(`/receptionist/vehicles/{{ $row['id'] }}`, 'Delete Vehicle', 'DELETE')" title="Delete" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
                                         <i class="fas fa-trash-alt text-xs"></i>
                                     </button>
                                 </div>
                             </td>
                         </tr>
-                    </template>
-                </tbody>
-            </table>
+                        @endforeach
+                    </tbody>
 
-            {{-- Empty State --}}
-            <template x-if="!loading && items.length === 0">
-                <div class="py-20 flex flex-col items-center">
-                    <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
-                        <i class="fas fa-bus-alt text-4xl"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800">No Vehicles Found</h3>
-                    <p class="text-sm text-slate-500">No vehicles match your criteria. Add a vehicle to get started.</p>
-                </div>
-            </template>
+                    <!-- Dynamic Table Body (Successive Hydration) -->
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
+                        <template x-for="row in rows" :key="row.id">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600">
+                                            <i class="fas fa-bus-alt"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight" x-text="row.registration_no"></span>
+                                            <span class="text-[10px] font-medium text-slate-400 mt-0.5" x-text="'Ref: ' + (row.vehicle_no || 'N/A')"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1.5">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full" :class="'bg-' + row.fuel_color + '-500'"></span>
+                                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="row.fuel_label"></span>
+                                        </div>
+                                        <span class="text-[10px] font-medium text-slate-500" x-text="row.capacity"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="row.model_no"></span>
+                                        <span class="text-[10px] font-medium text-slate-500 mt-0.5" x-text="'Purchased: ' + row.purchase_date"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button @click="$dispatch('open-vehicle-modal', row)" title="Edit" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
+                                            <i class="fas fa-edit text-xs"></i>
+                                        </button>
+                                        <button @click="quickAction(`/receptionist/vehicles/${row.id}`, 'Delete Vehicle', 'DELETE')" title="Delete" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
 
-            {{-- Load More --}}
-            <div class="p-6 border-t border-slate-50 flex justify-center" x-show="hasMore">
-                <button @click="loadMore()" :disabled="loading" 
-                    class="px-8 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-all disabled:opacity-50">
-                    Load More
-                </button>
+                        <x-table.empty-state :colspan="4" icon="fas fa-bus-alt" message="No vehicles found matching your criteria." />
+                    </tbody>
+                </table>
             </div>
+
+            <!-- Server-rendered pagination: visible instantly, hidden once Alpine takes over -->
+            @if($initialData['pagination']['total'] > 0)
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
+                </div>
+            </div>
+            @endif
+
+            <x-table.pagination />
         </div>
+
+        <x-confirm-modal />
     </div>
+
 
     {{-- Add/Edit Vehicle Modal --}}
     <x-modal name="vehicle-modal" x-data="vehicleForm()" @open-vehicle-modal.window="open($event.detail)" alpineTitle="editMode ? 'Edit Vehicle' : 'Add New Vehicle'" maxWidth="3xl">
