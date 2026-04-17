@@ -282,7 +282,7 @@
 
         <x-modal name="visitor-modal" alpineTitle="editMode ? 'Modify Visitor Information' : 'Register New Visitor'"
             maxWidth="4xl">
-            <form @submit.prevent="submitForm()" id="visitorForm" method="POST" novalidate>
+            <form @submit.prevent="submitForm()" id="visitorForm" method="POST" novalidate class="p-1">
                 @csrf
                 <template x-if="editMode">
                     <input type="hidden" name="_method" value="PUT">
@@ -296,9 +296,10 @@
                         <div class="relative group">
                             <input type="tel" name="mobile" x-model="formData.mobile" @input="clearError('mobile')"
                                 pattern="[0-9]{10,15}" inputmode="numeric"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="modal-input-premium"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
                                 placeholder="Enter contact number"
-                                :class="{'border-red-500 ring-red-500/10': errors.mobile}">
+                                :class="errors.mobile ? 'border-red-500' : 'border-slate-200'">
                         </div>
                         <template x-if="errors.mobile">
                             <p class="modal-error-message" x-text="errors.mobile[0]"></p>
@@ -311,8 +312,8 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
-                                class="modal-input-premium" placeholder="Full name of visitor"
-                                :class="{'border-red-500 ring-red-500/10': errors.name}">
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium" placeholder="Full name of visitor"
+                                :class="errors.name ? 'border-red-500' : 'border-slate-200'">
                         </div>
                         <template x-if="errors.name">
                             <p class="modal-error-message" x-text="errors.name[0]"></p>
@@ -326,8 +327,8 @@
                         <label class="modal-label-premium">Email ID</label>
                         <div class="relative group">
                             <input type="email" name="email" x-model="formData.email" @input="clearError('email')"
-                                class="modal-input-premium" placeholder="visitor@example.com"
-                                :class="{'border-red-500 ring-red-500/10': errors.email}">
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium" placeholder="visitor@example.com"
+                                :class="errors.email ? 'border-red-500' : 'border-slate-200'">
                         </div>
                         <template x-if="errors.email">
                             <p class="modal-error-message" x-text="errors.email[0]"></p>
@@ -339,8 +340,8 @@
                         <label class="modal-label-premium">Address</label>
                         <div class="relative group">
                             <input type="text" name="address" x-model="formData.address" @input="clearError('address')"
-                                class="modal-input-premium" placeholder="City, Area"
-                                :class="{'border-red-500 ring-red-500/10': errors.address}">
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium" placeholder="City, Area"
+                                :class="errors.address ? 'border-red-500' : 'border-slate-200'">
                         </div>
                         <template x-if="errors.address">
                             <p class="modal-error-message" x-text="errors.address[0]"></p>
@@ -355,8 +356,8 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="visitor_type" x-model="formData.visitor_type" @change="clearError('visitor_type')"
-                                class="modal-input-premium"
-                                :class="{'border-red-500 ring-red-500/10': errors.visitor_type}">
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                :class="errors.visitor_type ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Type</option>
                                 @foreach($visitorTypes as $type)
                                      <option value="{{ $type->value }}">{{ $type->label() }}</option>
@@ -374,8 +375,8 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="visit_purpose" x-model="formData.visit_purpose"
-                                @change="clearError('visit_purpose')" class="modal-input-premium"
-                                :class="{'border-red-500 ring-red-500/10': errors.visit_purpose}">
+                                @change="clearError('visit_purpose')" class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                :class="errors.visit_purpose ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Purpose</option>
                                 @foreach($visitPurposes as $purpose)
                                     <option value="{{ $purpose->value }}">{{ $purpose->label() }}</option>
@@ -395,8 +396,8 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="meeting_with" x-model="formData.meeting_with" @change="clearError('meeting_with')"
-                                class="modal-input-premium"
-                                :class="{'border-red-500 ring-red-500/10': errors.meeting_with}">
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                :class="errors.meeting_with ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Person</option>
                                 @foreach($meetingWithCases as $person)
                                     <option value="{{ $person->value }}">{{ $person->label() }}</option>
@@ -413,9 +414,9 @@
                         <label class="modal-label-premium">Meeting Purpose</label>
                         <div class="relative group">
                             <input type="text" name="meeting_purpose" x-model="formData.meeting_purpose"
-                                @input="clearError('meeting_purpose')" class="modal-input-premium"
+                                @input="clearError('meeting_purpose')" class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
                                 placeholder="Specific reason for meeting"
-                                :class="{'border-red-500 ring-red-500/10': errors.meeting_purpose}">
+                                :class="errors.meeting_purpose ? 'border-red-500' : 'border-slate-200'">
                         </div>
                         <template x-if="errors.meeting_purpose">
                             <p class="modal-error-message" x-text="errors.meeting_purpose[0]"></p>
@@ -430,8 +431,8 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="meeting_type" x-model="formData.meeting_type" @change="clearError('meeting_type')"
-                                class="modal-input-premium"
-                                :class="{'border-red-500 ring-red-500/10': errors.meeting_type}">
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                :class="errors.meeting_type ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Meeting Type</option>
                                 @foreach($meetingTypes as $meetingType)
                                     <option value="{{ $meetingType->value }}">{{ $meetingType->label() }}</option>
@@ -448,7 +449,8 @@
                         <label class="modal-label-premium">Priority <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="priority" x-model="formData.priority" @change="clearError('priority')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.priority}">
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                :class="errors.priority ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Priority</option>
                                 @foreach($priorities as $priority)
                                     <option value="{{ $priority->value }}">{{ $priority->label() }}</option>
@@ -465,8 +467,8 @@
                         <label class="modal-label-premium">No. of Guest(s)</label>
                         <div class="relative group">
                             <input type="number" name="no_of_guests" x-model="formData.no_of_guests" min="1"
-                                @input="clearError('no_of_guests')" class="modal-input-premium" placeholder="1"
-                                :class="{'border-red-500 ring-red-500/10': errors.no_of_guests}">
+                                @input="clearError('no_of_guests')" class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                :class="errors.no_of_guests ? 'border-red-500' : 'border-slate-200'">
                         </div>
                         <template x-if="errors.no_of_guests">
                             <p class="modal-error-message" x-text="errors.no_of_guests[0]"></p>
@@ -481,7 +483,7 @@
                         <div class="relative group">
                             <div class="flex items-center gap-4">
                                 <div
-                                    class="w-20 h-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative">
+                                    class="w-20 h-20 bg-white border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative">
                                     <img id="visitor-photo-preview" src="#" alt="Visitor's Photo"
                                         class="hidden w-full h-full object-cover">
                                     <i id="visitor-photo-icon" class="fas fa-camera text-xl text-slate-300"></i>
@@ -513,7 +515,7 @@
                         <div class="relative group">
                             <div class="flex items-center gap-4">
                                 <div
-                                    class="w-20 h-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative">
+                                    class="w-20 h-20 bg-white border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0 relative">
                                     <img id="id-proof-preview" src="#" alt="ID Proof"
                                         class="hidden w-full h-full object-cover">
                                     <i id="id-proof-icon" class="fas fa-id-card text-xl text-slate-300"></i>
@@ -542,7 +544,7 @@
 
                 <!-- Notice Card -->
                 <div
-                    class="mb-8 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                    class="mt-6 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
                     <div class="flex flex-col">
                         <span class="text-sm font-bold text-slate-900 leading-tight">Procedural Notice</span>
                         <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">Visitor
