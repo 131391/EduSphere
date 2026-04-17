@@ -29,17 +29,15 @@
                         <i class="fas fa-network-wired text-xl"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">Institutional Transit
-                            Network</h2>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Manage pickup nodes
-                            and geographic landmarks</p>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">Bus Stops</h2>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Manage pickup points and locations</p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3">
                     <div class="relative group">
                         <input type="text" x-model.debounce.300ms="filters.search"
-                            placeholder="Search stops, routes, codes..."
+                            placeholder="Search stops, routes..."
                             class="w-full md:w-72 bg-slate-50 border-none rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-teal-500/20 transition-all font-medium">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     </div>
@@ -47,7 +45,7 @@
                     <button @click="$dispatch('open-stop-modal')"
                         class="bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95">
                         <i class="fas fa-plus text-[10px]"></i>
-                        Commission Node
+                        Add Bus Stop
                     </button>
 
                     <button @click="exportData()"
@@ -66,21 +64,17 @@
                 class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
                 <div class="flex flex-col items-center gap-3">
                     <div class="w-10 h-10 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
-                    <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Synchronizing Network...</span>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Loading...</span>
                 </div>
             </div>
 
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/50 dark:bg-gray-900/50 border-b border-slate-100 dark:border-gray-700">
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Stop Identifier
-                        </th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Logistics
-                            Mapping</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">GPS & Tariff
-                        </th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">
-                            Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Stop Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Route &amp; Vehicle</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Distance &amp; Charges</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
@@ -95,8 +89,8 @@
                                     <div class="flex flex-col">
                                         <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight"
                                             x-text="stop.bus_stop_name"></span>
-                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tight mt-0.5"
-                                            x-text="'NODE NO: ' + stop.bus_stop_no"></span>
+                                        <span class="text-[10px] font-medium text-slate-400 mt-0.5"
+                                            x-text="'Stop No: ' + stop.bus_stop_no"></span>
                                     </div>
                                 </div>
                             </td>
@@ -109,7 +103,7 @@
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
-                                        <span class="text-[10px] font-bold text-slate-500 uppercase"
+                                        <span class="text-[10px] font-medium text-slate-500"
                                             x-text="stop.vehicle_label"></span>
                                     </div>
                                 </div>
@@ -119,26 +113,26 @@
                                     <div class="flex items-center gap-2">
                                         <span class="text-xs font-bold text-teal-600" x-text="stop.charge"></span>
                                         <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                        <span class="text-[10px] font-bold text-slate-500 uppercase"
+                                        <span class="text-[10px] font-medium text-slate-500"
                                             x-text="stop.distance"></span>
                                     </div>
                                     <div class="flex items-center gap-1.5 opacity-60">
                                         <i class="fas fa-crosshairs text-[8px] text-slate-400"></i>
-                                        <span class="text-[10px] font-bold text-slate-500 tracking-tight"
+                                        <span class="text-[10px] font-medium text-slate-500"
                                             x-text="stop.coords"></span>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2 text-right">
-                                    <button @click="$dispatch('open-stop-modal', stop)"
+                                    <button @click="$dispatch('open-stop-modal', stop)" title="Edit"
                                         class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
                                         <i class="fas fa-edit text-xs"></i>
                                     </button>
                                     <button @click="$dispatch('open-delete-modal', {
                                             url: '{{ route('receptionist.bus-stops.index') }}/' + stop.id,
                                             name: stop.bus_stop_name
-                                        })"
+                                        })" title="Delete"
                                         class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
                                         <i class="fas fa-trash-alt text-xs"></i>
                                     </button>
@@ -155,8 +149,8 @@
                     <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
                         <i class="fas fa-map-marked text-4xl"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">No Network Nodes</h3>
-                    <p class="text-sm text-slate-500">Kickstart coverage by commissioning your first bus stop</p>
+                    <h3 class="text-lg font-bold text-slate-800">No Bus Stops Found</h3>
+                    <p class="text-sm text-slate-500">Get started by adding your first bus stop.</p>
                 </div>
             </template>
 
@@ -164,7 +158,7 @@
             <div class="p-6 border-t border-slate-50 flex justify-center" x-show="hasMore">
                 <button @click="loadMore()" :disabled="loading"
                     class="px-8 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-all disabled:opacity-50">
-                    Expand Coverage
+                    Load More
                 </button>
             </div>
         </div>
@@ -172,7 +166,7 @@
 
     {{-- Add/Edit Stop Modal --}}
     <x-modal name="bus-stop-modal" x-data="stopForm()" @open-stop-modal.window="open($event.detail)"
-        alpineTitle="editMode ? 'Modify Network Node' : 'Commission Pickup Point'" maxWidth="3xl">
+        alpineTitle="editMode ? 'Edit Bus Stop' : 'Add New Bus Stop'" maxWidth="3xl">
         <form @submit.prevent="save" id="busStopForm" class="space-y-6">
             @csrf
             <template x-if="editMode">
@@ -274,11 +268,9 @@
             <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                 <i class="fas fa-satellite-dish text-indigo-600 mt-0.5"></i>
                 <div class="flex flex-col">
-                    <span class="text-xs font-bold text-slate-900 leading-tight">Spatial Accuracy Correlation</span>
-                    <p
-                        class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wider opacity-80 leading-relaxed">
-                        Geocoding this node enables <span class="text-indigo-600 font-bold underline">Institutional GPS
-                            Tracking</span> and automated student proximity alerts.
+                    <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
+                    <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                        Adding GPS coordinates enables <span class="text-indigo-600 font-bold">live tracking</span> and student proximity alerts.
                     </p>
                 </div>
             </div>
@@ -294,14 +286,14 @@
                 <template x-if="submitting">
                     <i class="fas fa-spinner animate-spin mr-2"></i>
                 </template>
-                <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Node' : 'Commission Node')"></span>
+                <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Stop' : 'Save Stop')"></span>
             </button>
         </x-slot>
     </x-modal>
 
-    <x-confirm-modal title="Decommission Network Node?"
-        message="This operation will remove the stop from active manifests. Associated billing cycles will be terminated."
-        confirm-text="Decommission" confirm-color="red" />
+    <x-confirm-modal title="Delete Bus Stop?"
+        message="This will remove the stop from the route. Associated billing for this stop will end."
+        confirm-text="Delete" confirm-color="red" />
 
     @push('scripts')
         <script>
@@ -375,7 +367,7 @@
                                 this.errors = result.errors || {};
                             }
                         } catch (e) {
-                            window.Toast.fire({ icon: 'error', title: 'Network Propagation Failure' });
+                            window.Toast.fire({ icon: 'error', title: 'Failed to save bus stop' });
                         } finally {
                             this.submitting = false;
                         }

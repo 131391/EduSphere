@@ -8,7 +8,7 @@
         defaultSort: 'created_at',
         defaultDirection: 'desc',
         defaultPerPage: 25,
-        defaultFilters: { class_id: '', section_id: '', search: '' },
+        defaultFilters: { class_id: '', section_id: '' },
         initialRows: @js($initialData['rows']),
         initialPagination: @js($initialData['pagination']),
         initialStats: @js($initialData['stats']),
@@ -31,98 +31,83 @@
             <x-stat-card label="Source Leads" :value="$stats['total_enquiry']" icon="fas fa-question-circle" color="purple" alpine-text="stats.total_enquiry" />
         </div>
 
-        <!-- Integrated Table Header -->
-        <x-table.registry-header
-            title="Admission Registry"
-            icon="fas fa-user-graduate"
-            search-placeholder="Search admission records..."
-            :default-per-page="25"
-        >
-            <button @click="exportData()"
-                class="w-9 h-9 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm"
-                title="Export CSV">
-                <i class="fas fa-file-csv text-xs text-amber-500"></i>
-            </button>
-
+        <!-- Header Section -->
+        <x-page-header title="Admission Registry" description="Manage confirmed student admissions and academic cluster assignments." icon="fas fa-user-graduate">
             <a href="{{ route('receptionist.admission.create') }}"
-                class="px-4 h-9 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 flex items-center gap-2">
-                <i class="fas fa-user-plus"></i>
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-user-plus mr-2 text-xs"></i>
                 New Admission
             </a>
+            <button @click="exportData('csv')" :disabled="exporting"
+                class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
+                <span x-show="exporting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block" x-cloak></span>
+                <i x-show="!exporting" class="fas fa-file-excel mr-2 text-xs"></i>
+                <span x-text="exporting ? 'Exporting...' : 'Excel Export'">Excel Export</span>
+            </button>
+        </x-page-header>
 
-            <x-slot name="filters">
-                <div x-show="searchOpen" x-collapse x-cloak>
-                    <div class="p-6 bg-gray-50/30 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- Academic Cluster -->
-                            <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Cluster node</label>
-                                <select x-model="filters.class_id" @change="applyFilter('class_id', $event.target.value)"
-                                    class="no-select2 w-full h-11 px-4 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                                    <option value="">All Classes</option>
-                                    @foreach($classes as $class)
-                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header with Search and Filters -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Left: Title and Search -->
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Admission List</h2>
+                        <x-table.search placeholder="Search admission records..." />
+                    </div>
 
-                            <!-- Section -->
-                            <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Section segment</label>
-                                <select x-model="filters.section_id" @change="applyFilter('section_id', $event.target.value)"
-                                    class="no-select2 w-full h-11 px-4 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                                    <option value="">All Sections</option>
-                                    @foreach($sections as $section)
-                                        <option value="{{ $section->id }}">{{ $section->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                    <!-- Right: Filters and Actions -->
+                    <div class="flex items-center gap-3">
+                        <x-table.filter-select
+                            model="filters.class_id"
+                            action="applyFilter('class_id', $event.target.value)"
+                            placeholder="Class"
+                            :options="$classes->pluck('name', 'id')->toArray()"
+                        />
 
-                            <!-- Actions -->
-                            <div class="flex items-end">
-                                <button type="button" @click="clearAllFilters()"
-                                    x-show="hasActiveFilters() || search !== ''"
-                                    class="w-full sm:w-auto h-11 flex items-center justify-center bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all shadow-sm px-6">
-                                    <i class="fas fa-trash-alt text-[10px] mr-2"></i> 
-                                    <span class="text-[10px] font-bold uppercase tracking-widest">Reset Protocol</span>
-                                </button>
-                            </div>
-                        </div>
+                        <x-table.filter-select
+                            model="filters.section_id"
+                            action="applyFilter('section_id', $event.target.value)"
+                            placeholder="Section"
+                            :options="$sections->pluck('name', 'id')->toArray()"
+                        />
 
-                        <!-- Active Tags -->
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            <div x-show="search !== ''" class="flex items-center gap-1 bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-xs" x-cloak>
-                                <span>Search: <span x-text="search" class="font-semibold"></span></span>
-                                <button @click="search = ''" class="ml-1 hover:text-teal-600"><i class="fas fa-times"></i></button>
-                            </div>
-                            <template x-for="(value, key) in filters" :key="key">
-                                <div x-show="value !== ''" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
-                                    <span x-text="getFilterLabel(key, value)"></span>
-                                    <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600"><i class="fas fa-times"></i></button>
-                                </div>
-                            </template>
-                        </div>
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
                     </div>
                 </div>
-            </x-slot>
-        </x-table.registry-header>
-        </div>
 
-        <!-- AJAX Data Ledger Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden shadow-xl shadow-teal-500/5">
+                <!-- Active Filters Display -->
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <div x-show="value" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
+                            <span x-text="getFilterLabel(key, value)"></span>
+                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <button @click="clearAllFilters()" class="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition-colors">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
             <div class="overflow-x-auto relative ajax-table-wrapper">
                 <x-table.loading-overlay />
                 
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
                         <tr>
-                            <x-table.sort-header column="admission_no" label="Admission ID" sort-var="sort" direction-var="direction" />
-                            <x-table.sort-header column="first_name" label="Student Identity" sort-var="sort" direction-var="direction" />
-                            <th class="px-6 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Academic Cluster</th>
-                            <th class="px-6 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Guardian Entity</th>
-                            <th class="px-6 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Protocol Stance</th>
-                            <x-table.sort-header column="admission_date" label="Logged Date" sort-var="sort" direction-var="direction" />
-                            <th class="px-6 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest w-32">Operations</th>
+                            <x-table.sort-header column="admission_no" label="Admission No" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="first_name" label="Student Name" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Class & Section</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Parent & Contact</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                            <x-table.sort-header column="admission_date" label="Admission Date" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
                         </tr>
                     </thead>
 
@@ -133,7 +118,7 @@
                             <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
                                     <i class="fas fa-user-graduate text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-lg text-gray-500">No student nodes found in the institutional matrix.</p>
+                                    <p class="text-lg text-gray-500">No admissions found matching your criteria.</p>
                                 </div>
                             </td>
                         </tr>
@@ -153,38 +138,44 @@
                                         @endif
                                     </div>
                                     <div>
-                                        <div class="text-xs font-black text-gray-800 dark:text-gray-100 uppercase tracking-tight">{{ $row['full_name'] }}</div>
-                                        <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Primary Student Node</div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['full_name'] }}</div>
+                                        <div class="text-[10px] font-medium text-gray-400">#{{ $row['admission_no'] }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex flex-col">
-                                    <span class="text-xs font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight">{{ $row['class_name'] }}</span>
-                                    <span class="text-[10px] font-bold text-teal-500 uppercase leading-none mt-0.5 tracking-widest">Section {{ $row['section_name'] }}</span>
+                                    <span class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ $row['class_name'] }}</span>
+                                    <span class="text-[10px] font-medium text-teal-500 mt-0.5">Section {{ $row['section_name'] }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="space-y-1">
-                                    <div class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase">{{ $row['father_name'] }}</div>
-                                    <div class="text-[10px] font-black text-gray-400 uppercase tabular-nums tracking-tighter">PH: {{ $row['phone'] }}</div>
+                                    <div class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ $row['father_name'] }}</div>
+                                    <div class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-medium">
+                                        <i class="fas fa-phone-alt text-[8px] text-teal-500"></i>
+                                        {{ $row['phone'] }}
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border bg-emerald-50 text-emerald-700 border-emerald-100 text-[9px] font-black uppercase tracking-widest shadow-sm">
-                                    <i class="fas fa-check-circle text-[8px] animate-pulse"></i>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                                    <i class="fas fa-check-circle text-[8px]"></i>
                                     Confirmed
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-[10px] font-black text-gray-400 uppercase tabular-nums tracking-widest">{{ $row['admission_date'] }}</span>
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300 tabular-nums">
+                                    <i class="far fa-calendar-check mr-1.5 text-teal-500"></i>
+                                    {{ $row['admission_date'] }}
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a href="{{ route('receptionist.admission.pdf', $row['id']) }}" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="PDF Profile"><i class="fas fa-file-pdf text-xs"></i></a>
-                                    <a href="{{ route('receptionist.admission.show', $row['id']) }}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Analyze Identity"><i class="fas fa-eye text-xs"></i></a>
-                                    <a href="{{ route('receptionist.admission.edit', $row['id']) }}" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Modify Index"><i class="fas fa-edit text-xs"></i></a>
-                                    <button @click="quickAction(`/receptionist/admission/${row['id']}`, 'Purge Student Record', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Purge Record"><i class="fas fa-trash-alt text-xs"></i></button>
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ route('receptionist.admission.pdf', $row['id']) }}" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Download PDF"><i class="fas fa-file-pdf text-xs"></i></a>
+                                    <a href="{{ route('receptionist.admission.show', $row['id']) }}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="View"><i class="fas fa-eye text-xs"></i></a>
+                                    <a href="{{ route('receptionist.admission.edit', $row['id']) }}" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                    <button @click="quickAction(`/receptionist/admission/${row['id']}`, 'Delete Admission', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -209,51 +200,64 @@
                                             </template>
                                         </div>
                                         <div>
-                                            <div class="text-xs font-black text-gray-800 dark:text-gray-100 uppercase tracking-tight" x-text="row.full_name"></div>
-                                            <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Primary Student Node</div>
+                                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.full_name"></div>
+                                            <div class="text-[10px] font-medium text-gray-400" x-text="'#' + row.admission_no"></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col">
-                                        <span class="text-xs font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight" x-text="row.class_name"></span>
-                                        <span class="text-[10px] font-bold text-teal-500 uppercase leading-none mt-0.5 tracking-widest" x-text="'Section ' + row.section_name"></span>
+                                        <span class="text-xs font-bold text-gray-700 dark:text-gray-200" x-text="row.class_name"></span>
+                                        <span class="text-[10px] font-medium text-teal-500 mt-0.5" x-text="'Section ' + row.section_name"></span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="space-y-1">
-                                        <div class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase" x-text="row.father_name"></div>
-                                        <div class="text-[10px] font-black text-gray-400 uppercase tabular-nums tracking-tighter" x-text="'PH: ' + row.phone"></div>
+                                        <div class="text-xs font-bold text-gray-700 dark:text-gray-200" x-text="row.father_name"></div>
+                                        <div class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-medium">
+                                            <i class="fas fa-phone-alt text-[8px] text-teal-500"></i>
+                                            <span x-text="row.phone"></span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border bg-emerald-50 text-emerald-700 border-emerald-100 text-[9px] font-black uppercase tracking-widest shadow-sm">
-                                        <i class="fas fa-check-circle text-[8px] animate-pulse"></i>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                                        <i class="fas fa-check-circle text-[8px]"></i>
                                         Confirmed
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-[10px] font-black text-gray-400 uppercase tabular-nums tracking-widest" x-text="row.admission_date"></span>
+                                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300 tabular-nums">
+                                        <i class="far fa-calendar-check mr-1.5 text-teal-500"></i>
+                                        <span x-text="row.admission_date"></span>
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <div class="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <a :href="`/receptionist/admission/${row.id}/pdf`" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="PDF Profile"><i class="fas fa-file-pdf text-xs"></i></a>
-                                        <a :href="`/receptionist/admission/${row.id}`" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Analyze Identity"><i class="fas fa-eye text-xs"></i></a>
-                                        <a :href="`/receptionist/admission/${row.id}/edit`" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Modify Index"><i class="fas fa-edit text-xs"></i></a>
-                                        <button @click="quickAction(`/receptionist/admission/${row.id}`, 'Purge Student Record', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Purge Record"><i class="fas fa-trash-alt text-xs"></i></button>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a :href="`/receptionist/admission/${row.id}/pdf`" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Download PDF"><i class="fas fa-file-pdf text-xs"></i></a>
+                                        <a :href="`/receptionist/admission/${row.id}`" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="View"><i class="fas fa-eye text-xs"></i></a>
+                                        <a :href="`/receptionist/admission/${row.id}/edit`" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                        <button @click="quickAction(`/receptionist/admission/${row.id}`, 'Delete Admission', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
                                     </div>
                                 </td>
                             </tr>
                         </template>
 
-                        <x-table.empty-state :colspan="7" icon="fas fa-user-graduate" message="No student nodes found in the institutional matrix." />
+                        <x-table.empty-state :colspan="7" icon="fas fa-user-graduate" message="No admissions found matching your criteria." />
                     </tbody>
                 </table>
             </div>
 
-            <div class="px-6 py-4 bg-gray-50/50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700">
-                <x-table.pagination />
+            <!-- Server-rendered pagination: visible instantly, hidden once Alpine takes over -->
+            @if($initialData['pagination']['total'] > 0)
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
+                </div>
             </div>
+            @endif
+
+            <x-table.pagination />
         </div>
 
         <x-confirm-modal />

@@ -8,7 +8,7 @@
         defaultSort: 'created_at',
         defaultDirection: 'desc',
         defaultPerPage: 25,
-        defaultFilters: { admission_status: '', class_id: '', search: '' },
+        defaultFilters: { admission_status: '', class_id: '' },
         initialRows: @js($initialData['rows']),
         initialPagination: @js($initialData['pagination']),
         initialStats: @js($initialData['stats']),
@@ -31,104 +31,88 @@
             <x-stat-card label="Source Leads" :value="$stats['total_enquiry']" icon="fas fa-search-dollar" color="purple" alpine-text="stats.total_enquiry" />
         </div>
 
-        <!-- Integrated Table Header -->
-        <x-table.registry-header
-            title="Registration Ledger"
-            icon="fas fa-id-card"
-            search-placeholder="Search registry records..."
-            :default-per-page="25"
-        >
+        <!-- Header Section -->
+        <x-page-header title="Student Registration Registry" description="Manage student registration records and track admission workflow." icon="fas fa-id-card">
             <button type="button" @click="$dispatch('open-modal', 'import-modal')"
-                class="px-4 h-9 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex items-center gap-2">
-                <i class="fas fa-upload"></i>
+                class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-upload mr-2 text-xs"></i>
                 Bulk Import
             </button>
-
-            <button @click="exportData()"
-                class="w-9 h-9 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm"
-                title="Export CSV">
-                <i class="fas fa-file-csv text-xs text-amber-500"></i>
-            </button>
-
             <a href="{{ route('receptionist.student-registrations.create') }}"
-                class="px-4 h-9 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 flex items-center gap-2">
-                <i class="fas fa-plus"></i>
-                New Node
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                New Registration
             </a>
+            <button @click="exportData('csv')" :disabled="exporting"
+                class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
+                <span x-show="exporting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block" x-cloak></span>
+                <i x-show="!exporting" class="fas fa-file-excel mr-2 text-xs"></i>
+                <span x-text="exporting ? 'Exporting...' : 'Excel Export'">Excel Export</span>
+            </button>
+        </x-page-header>
 
-            <x-slot name="filters">
-                <div x-show="searchOpen" x-collapse x-cloak>
-                    <div class="p-6 bg-gray-50/30 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- Admission Status -->
-                            <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Protocol Stance</label>
-                                <select x-model="filters.admission_status" @change="applyFilter('admission_status', $event.target.value)"
-                                    class="no-select2 w-full h-11 px-4 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-[10px] font-bold uppercase tracking-wider text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                                    <option value="">All Statuses</option>
-                                    @foreach(\App\Enums\AdmissionStatus::cases() as $status)
-                                        <option value="{{ $status->value }}">{{ $status->label() }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header with Search and Filters -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Left: Title and Search -->
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Registration List</h2>
+                        <x-table.search placeholder="Search registry records..." />
+                    </div>
 
-                            <!-- Academic Cluster -->
-                            <div>
-                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Cluster</label>
-                                <select x-model="filters.class_id" @change="applyFilter('class_id', $event.target.value)"
-                                    class="no-select2 w-full h-11 px-4 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                                    <option value="">All Classes</option>
-                                    @foreach($classes as $class)
-                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                    <!-- Right: Filters and Actions -->
+                    <div class="flex items-center gap-3">
+                        <x-table.filter-select
+                            model="filters.admission_status"
+                            action="applyFilter('admission_status', $event.target.value)"
+                            placeholder="Status"
+                            :options="collect(\App\Enums\AdmissionStatus::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray()"
+                        />
 
-                            <!-- Actions -->
-                            <div class="flex items-end">
-                                <button type="button" @click="clearAllFilters()"
-                                    x-show="hasActiveFilters() || search !== ''"
-                                    class="w-full sm:w-auto h-11 flex items-center justify-center bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all shadow-sm px-6">
-                                    <i class="fas fa-trash-alt text-[10px] mr-2"></i> 
-                                    <span class="text-[10px] font-bold uppercase tracking-widest">Reset Protocol</span>
-                                </button>
-                            </div>
-                        </div>
+                        <x-table.filter-select
+                            model="filters.class_id"
+                            action="applyFilter('class_id', $event.target.value)"
+                            placeholder="Class"
+                            :options="$classes->pluck('name', 'id')->toArray()"
+                        />
 
-                        <!-- Active Tags -->
-                        <div class="mt-4 flex flex-wrap gap-2">
-                            <div x-show="search !== ''" class="flex items-center gap-1 bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" x-cloak>
-                                <span>Query: <span x-text="search"></span></span>
-                                <button @click="search = ''" class="ml-1 hover:text-teal-600"><i class="fas fa-times"></i></button>
-                            </div>
-                            <template x-for="(value, key) in filters" :key="key">
-                                <div x-show="value !== ''" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                                    <span x-text="getFilterLabel(key, value)"></span>
-                                    <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600"><i class="fas fa-times"></i></button>
-                                </div>
-                            </template>
-                        </div>
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
                     </div>
                 </div>
-            </x-slot>
-        </x-table.registry-header>
-        </div>
 
-        <!-- AJAX Data Ledger Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden shadow-xl shadow-teal-500/5">
+                <!-- Active Filters Display -->
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <div x-show="value" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
+                            <span x-text="getFilterLabel(key, value)"></span>
+                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <button @click="clearAllFilters()" class="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition-colors">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
             <div class="overflow-x-auto relative ajax-table-wrapper">
                 <x-table.loading-overlay />
                 
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
                         <tr>
-                            <x-table.sort-header column="registration_no" label="Registry ID" sort-var="sort" direction-var="direction" />
-                            <x-table.sort-header column="first_name" label="Student Identity" sort-var="sort" direction-var="direction" />
-                            <th class="px-6 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Parent / Contact</th>
-                            <th class="px-6 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Cluster Node</th>
-                            <x-table.sort-header column="admission_status" label="Protocol Stance" sort-var="sort" direction-var="direction" />
-                            <x-table.sort-header column="created_at" label="Logged Dates" sort-var="sort" direction-var="direction" />
-                            <th class="px-6 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest w-32">Operations</th>
+                            <x-table.sort-header column="registration_no" label="Registration No" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="first_name" label="Student Name" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Parent & Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Class</th>
+                            <x-table.sort-header column="admission_status" label="Status" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="created_at" label="Registered On" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
                         </tr>
                     </thead>
 
@@ -139,7 +123,7 @@
                             <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
                                     <i class="fas fa-folder-open text-4xl text-gray-300 mb-4"></i>
-                                    <p class="text-lg text-gray-500">No registration nodes found in the institutional matrix.</p>
+                                    <p class="text-lg text-gray-500">No registrations found matching your criteria.</p>
                                 </div>
                             </td>
                         </tr>
@@ -159,15 +143,15 @@
                                         @endif
                                     </div>
                                     <div>
-                                        <div class="text-xs font-black text-gray-800 dark:text-gray-100 uppercase tracking-tight">{{ $row['full_name'] }}</div>
-                                        <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Primary Node Identity</div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['full_name'] }}</div>
+                                        <div class="text-[10px] font-medium text-gray-400">#{{ $row['registration_no'] }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="space-y-1">
                                     <div class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ $row['father_name'] }}</div>
-                                    <div class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-bold">
+                                    <div class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-medium">
                                         <i class="fas fa-phone-alt text-[8px] text-teal-500"></i>
                                         {{ $row['mobile_no'] }}
                                     </div>
@@ -175,8 +159,8 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="space-y-1">
-                                    <div class="text-xs font-black text-gray-700 dark:text-gray-200 uppercase tracking-tighter">{{ $row['class_name'] }}</div>
-                                    <div class="text-[9px] font-bold text-gray-400 uppercase tabular-nums">AY: {{ $row['academic_year'] }}</div>
+                                    <div class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ $row['class_name'] }}</div>
+                                    <div class="text-[10px] text-gray-400 tabular-nums">AY: {{ $row['academic_year'] }}</div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -188,18 +172,17 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="space-y-1 tabular-nums">
-                                    <div class="text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest">
+                                    <div class="text-xs font-bold text-gray-700 dark:text-gray-300">
                                         <i class="far fa-calendar-check mr-1.5 text-teal-500"></i>
                                         {{ $row['registration_date'] }}
                                     </div>
-                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Logged Instance</div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a href="{{ route('receptionist.student-registrations.pdf', $row['id']) }}" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="PDF Archive"><i class="fas fa-file-pdf text-xs"></i></a>
-                                    <a href="{{ route('receptionist.student-registrations.edit', $row['id']) }}" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Modify Node"><i class="fas fa-edit text-xs"></i></a>
-                                    <button @click="quickAction(`/receptionist/student-registrations/${row['id']}`, 'Purge Registration Node', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ route('receptionist.student-registrations.pdf', $row['id']) }}" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Download PDF"><i class="fas fa-file-pdf text-xs"></i></a>
+                                    <a href="{{ route('receptionist.student-registrations.edit', $row['id']) }}" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                    <button @click="quickAction(`/receptionist/student-registrations/${row['id']}`, 'Delete Registration', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -224,15 +207,15 @@
                                             </template>
                                         </div>
                                         <div>
-                                            <div class="text-xs font-black text-gray-800 dark:text-gray-100 uppercase tracking-tight" x-text="row.full_name"></div>
-                                            <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Primary Node Identity</div>
+                                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.full_name"></div>
+                                            <div class="text-[10px] font-medium text-gray-400" x-text="'#' + row.registration_no"></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="space-y-1">
                                         <div class="text-xs font-bold text-gray-700 dark:text-gray-200" x-text="row.father_name"></div>
-                                        <div class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-bold">
+                                        <div class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-medium">
                                             <i class="fas fa-phone-alt text-[8px] text-teal-500"></i>
                                             <span x-text="row.mobile_no"></span>
                                         </div>
@@ -240,8 +223,8 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="space-y-1">
-                                        <div class="text-xs font-black text-gray-700 dark:text-gray-200 uppercase tracking-tighter" x-text="row.class_name"></div>
-                                        <div class="text-[9px] font-bold text-gray-400 uppercase tabular-nums">AY: <span x-text="row.academic_year"></span></div>
+                                        <div class="text-xs font-bold text-gray-700 dark:text-gray-200" x-text="row.class_name"></div>
+                                        <div class="text-[10px] text-gray-400 tabular-nums">AY: <span x-text="row.academic_year"></span></div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -253,31 +236,37 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="space-y-1 tabular-nums">
-                                        <div class="text-[10px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest">
+                                        <div class="text-xs font-bold text-gray-700 dark:text-gray-300">
                                             <i class="far fa-calendar-check mr-1.5 text-teal-500"></i>
                                             <span x-text="row.registration_date"></span>
                                         </div>
-                                        <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Logged Instance</div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <div class="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <a :href="`/receptionist/student-registrations/${row.id}/pdf`" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="PDF Archive"><i class="fas fa-file-pdf text-xs"></i></a>
-                                        <a :href="`/receptionist/student-registrations/${row.id}/edit`" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Modify Node"><i class="fas fa-edit text-xs"></i></a>
-                                        <button @click="quickAction(`/receptionist/student-registrations/${row.id}`, 'Purge Registration Node', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a :href="`/receptionist/student-registrations/${row.id}/pdf`" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Download PDF"><i class="fas fa-file-pdf text-xs"></i></a>
+                                        <a :href="`/receptionist/student-registrations/${row.id}/edit`" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                        <button @click="quickAction(`/receptionist/student-registrations/${row.id}`, 'Delete Registration', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
                                     </div>
                                 </td>
                             </tr>
                         </template>
 
-                        <x-table.empty-state :colspan="7" icon="fas fa-folder-open" message="No registration nodes found in the institutional matrix." />
+                        <x-table.empty-state :colspan="7" icon="fas fa-folder-open" message="No registrations found matching your criteria." />
                     </tbody>
                 </table>
             </div>
 
-            <div class="px-6 py-4 bg-gray-50/50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700">
-                <x-table.pagination />
+            <!-- Server-rendered pagination: visible instantly, hidden once Alpine takes over -->
+            @if($initialData['pagination']['total'] > 0)
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
+                </div>
             </div>
+            @endif
+
+            <x-table.pagination />
         </div>
 
         <x-confirm-modal />

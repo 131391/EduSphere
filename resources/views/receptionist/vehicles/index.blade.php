@@ -26,8 +26,8 @@
                         <i class="fas fa-truck-pickup text-xl"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">Institutional Fleet Registry</h2>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Coordinate and monitor logistics assets</p>
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-white leading-tight">Vehicle Fleet</h2>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Manage school transport vehicles</p>
                     </div>
                 </div>
 
@@ -58,17 +58,17 @@
             <div x-show="loading" class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-[1px] z-10 flex items-center justify-center">
                 <div class="flex flex-col items-center gap-3">
                     <div class="w-10 h-10 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
-                    <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Synchronizing...</span>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Loading...</span>
                 </div>
             </div>
 
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/50 dark:bg-gray-900/50 border-b border-slate-100 dark:border-gray-700">
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Vehicle Identity</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Propulsion Specs</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Configuration</th>
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Operational Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Vehicle</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fuel &amp; Capacity</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Model &amp; Purchase</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50 dark:divide-gray-700">
@@ -81,7 +81,7 @@
                                     </div>
                                     <div class="flex flex-col">
                                         <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight" x-text="vehicle.registration_no"></span>
-                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tight mt-0.5" x-text="'Ref: ' + (vehicle.vehicle_no || 'N/A')"></span>
+                                        <span class="text-[10px] font-medium text-slate-400 mt-0.5" x-text="'Ref: ' + (vehicle.vehicle_no || 'N/A')"></span>
                                     </div>
                                 </div>
                             </td>
@@ -91,24 +91,24 @@
                                         <span class="w-2 h-2 rounded-full" :class="'bg-' + vehicle.fuel_color + '-500'"></span>
                                         <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="vehicle.fuel_label"></span>
                                     </div>
-                                    <span class="text-[10px] font-bold text-slate-500 uppercase" x-text="'Capacity: ' + vehicle.capacity"></span>
+                                    <span class="text-[10px] font-medium text-slate-500" x-text="'Capacity: ' + vehicle.capacity + ' seats'"></span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
                                     <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="vehicle.model_no"></span>
-                                    <span class="text-[10px] font-bold text-slate-500 uppercase mt-0.5" x-text="'Purchased: ' + vehicle.purchase_date"></span>
+                                    <span class="text-[10px] font-medium text-slate-500 mt-0.5" x-text="'Purchased: ' + vehicle.purchase_date"></span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button @click="$dispatch('open-vehicle-modal', vehicle)" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
+                                    <button @click="$dispatch('open-vehicle-modal', vehicle)" title="Edit" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
                                         <i class="fas fa-edit text-xs"></i>
                                     </button>
                                     <button @click="$dispatch('open-delete-modal', {
                                         url: '{{ route('receptionist.vehicles.index') }}/' + vehicle.id,
                                         name: vehicle.registration_no
-                                    })" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
+                                    })" title="Delete" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
                                         <i class="fas fa-trash-alt text-xs"></i>
                                     </button>
                                 </div>
@@ -124,8 +124,8 @@
                     <div class="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
                         <i class="fas fa-bus-alt text-4xl"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">Fleet Registry Empty</h3>
-                    <p class="text-sm text-slate-500">No vehicles found matching your criteria</p>
+                    <h3 class="text-lg font-bold text-slate-800">No Vehicles Found</h3>
+                    <p class="text-sm text-slate-500">No vehicles match your criteria. Add a vehicle to get started.</p>
                 </div>
             </template>
 
@@ -133,14 +133,14 @@
             <div class="p-6 border-t border-slate-50 flex justify-center" x-show="hasMore">
                 <button @click="loadMore()" :disabled="loading" 
                     class="px-8 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest rounded-xl transition-all disabled:opacity-50">
-                    Discover More Assets
+                    Load More
                 </button>
             </div>
         </div>
     </div>
 
     {{-- Add/Edit Vehicle Modal --}}
-    <x-modal name="vehicle-modal" x-data="vehicleForm()" @open-vehicle-modal.window="open($event.detail)" alpineTitle="editMode ? 'Edit Vehicle Specification' : 'Register New Vehicle'" maxWidth="3xl">
+    <x-modal name="vehicle-modal" x-data="vehicleForm()" @open-vehicle-modal.window="open($event.detail)" alpineTitle="editMode ? 'Edit Vehicle' : 'Add New Vehicle'" maxWidth="3xl">
         <form @submit.prevent="save" id="vehicleForm" class="space-y-6">
             @csrf
             <template x-if="editMode">
@@ -218,9 +218,9 @@
             <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                 <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
                 <div class="flex flex-col">
-                    <span class="text-xs font-bold text-slate-900 leading-tight">Asset Synchronization Notice</span>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wider opacity-80 leading-relaxed">
-                        Changes to vehicle specifications will automatically propagate to all <span class="text-indigo-600 font-bold underline">Route Manifests</span> and <span class="text-indigo-600 font-bold underline">Historical Transit Logs</span>.
+                    <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
+                    <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                        Changes to vehicle details will automatically update all <span class="text-indigo-600 font-bold">routes</span> and <span class="text-indigo-600 font-bold">transport history</span>.
                     </p>
                 </div>
             </div>
@@ -235,14 +235,14 @@
                 <template x-if="submitting">
                     <i class="fas fa-spinner animate-spin mr-2"></i>
                 </template>
-                <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Metadata' : 'Create Record')"></span>
+                <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Vehicle' : 'Save Vehicle')"></span>
             </button>
         </x-slot>
     </x-modal>
 
-    <x-confirm-modal title="Strike Vehicle from Registry?" 
-        message="This action will permanently decommissioning the vehicle asset. This operation is irreversible." 
-        confirm-text="Strike Record" confirm-color="red" />
+    <x-confirm-modal title="Delete Vehicle?"
+        message="This will permanently delete the vehicle. This action cannot be undone."
+        confirm-text="Delete" confirm-color="red" />
 
     @push('scripts')
     <script>
@@ -349,7 +349,7 @@
                             this.errors = result.errors || {};
                         }
                     } catch (e) {
-                        window.Toast.fire({ icon: 'error', title: 'System Propagation Failure' });
+                        window.Toast.fire({ icon: 'error', title: 'Failed to save vehicle' });
                     } finally {
                         this.submitting = false;
                     }

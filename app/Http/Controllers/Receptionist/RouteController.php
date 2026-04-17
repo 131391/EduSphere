@@ -44,11 +44,11 @@ class RouteController extends TenantController
 
         // Core AJAX Data Handler
         if ($request->expectsJson() || $request->ajax()) {
-            return $this->getDataTableResponse($query, $request);
+            return $this->handleAjaxTable($query, [$this, 'transformRow']);
         }
 
         // Initial hydration for zero-blink loading
-        $initialData = $this->getDataTableResponse($query, $request)->getData(true);
+        $initialData = $this->getHydrationData($query, [$this, 'transformRow']);
 
         // Statistics for the premium dashboard
         $stats = [
