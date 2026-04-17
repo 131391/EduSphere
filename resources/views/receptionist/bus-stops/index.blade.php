@@ -4,7 +4,7 @@
 @section('page-title', 'Bus Stop Management')
 
 @section('content')
-    <div x-data="ajaxDataTable({
+    <div x-data="Object.assign(ajaxDataTable({
             fetchUrl: '{{ route('receptionist.bus-stops.fetch') }}',
             defaultSort: 'created_at',
             defaultDirection: 'desc',
@@ -13,7 +13,7 @@
             initialRows: @js($initialData['rows']),
             initialPagination: @js($initialData['pagination']),
             initialStats: @js($stats)
-        })" class="space-y-6">
+        }), stopForm())" class="space-y-6" @close-modal.window="if($event.detail === 'bus-stop-modal') resetForm()">
 
         {{-- High-Density Statistics Dashboard --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -29,7 +29,7 @@
 
         <!-- Header Section -->
         <x-page-header title="Bus Stops" description="Manage pickup points and locations" icon="fas fa-network-wired">
-            <button @click="$dispatch('open-stop-modal')"
+            <button @click="open()"
                 class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2 text-xs"></i>
                 Add Bus Stop
@@ -221,7 +221,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2 text-right">
-                                        <button @click="$dispatch('open-stop-modal', row)" title="Edit"
+                                        <button @click="open(row)" title="Edit"
                                             class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
@@ -255,139 +255,176 @@
 
             <x-table.pagination />
         </div>
-    </div>
 
-    {{-- Add/Edit Stop Modal --}}
-    <x-modal name="bus-stop-modal" x-data="stopForm()" @open-stop-modal.window="open($event.detail)"
-        alpineTitle="editMode ? 'Edit Bus Stop' : 'Add New Bus Stop'" maxWidth="3xl">
-        <form @submit.prevent="save" id="busStopForm" class="space-y-6">
-            @csrf
-            <template x-if="editMode">
-                <input type="hidden" name="_method" value="PUT">
-            </template>
+        <x-confirm-modal title="Delete Bus Stop?"
+            message="This will remove the stop from the route. Associated billing for this stop will end." confirm-text="Delete"
+            confirm-color="red" />
 
-            {{-- Logistics Section --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation
-                        <span class="text-red-500">*</span></label>
-                    <select x-model="formData.route_id"
-                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                        <option value="">Select Primary Route</option>
-                        @foreach($routes as $route)
-                            <option value="{{ $route->id }}">{{ $route->route_name }}</option>
-                        @endforeach
-                    </select>
-                    <p x-show="errors.route_id" x-text="errors.route_id[0]" class="text-[10px] font-bold text-red-500 ml-1">
-                    </p>
-                </div>
+        {{-- Add/Edit Stop Modal --}}
+        <x-modal name="bus-stop-modal" alpineTitle="editMode ? 'Edit Bus Stop' : 'Add New Bus Stop'" maxWidth="3xl">
+            <form @submit.prevent="save" id="stopForm" class="p-1">
+                @csrf
+                <template x-if="editMode">
+                    <input type="hidden" name="_method" value="PUT">
+                </template>
 
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Node Identifier (Stop
-                        No) <span class="text-red-500">*</span></label>
-                    <input type="text" x-model="formData.bus_stop_no" placeholder="e.g. ST-001"
-                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium">
-                    <p x-show="errors.bus_stop_no" x-text="errors.bus_stop_no[0]"
-                        class="text-[10px] font-bold text-red-500 ml-1"></p>
-                </div>
+                {{-- Logistics Section --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation
+                            <span class="text-red-500">*</span></label>
+                        <select x-model="formData.route_id" @change="clearError('route_id')"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.route_id ? 'border-red-500' : 'border-slate-200'">
+                            <option value="">Select Primary Route</option>
+                            @foreach($routes as $route)
+                                <option value="{{ $route->id }}">{{ $route->route_name }}</option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.route_id">
+                            <p x-text="errors.route_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
 
-                <div class="md:col-span-2 space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Geographic Landmark
-                        Name <span class="text-red-500">*</span></label>
-                    <input type="text" x-model="formData.bus_stop_name" placeholder="e.g. Central Square Park Entrance"
-                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium">
-                    <p x-show="errors.bus_stop_name" x-text="errors.bus_stop_name[0]"
-                        class="text-[10px] font-bold text-red-500 ml-1"></p>
-                </div>
-            </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Node Identifier (Stop
+                            No) <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="formData.bus_stop_no" placeholder="e.g. ST-001"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.bus_stop_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('bus_stop_no')">
+                        <template x-if="errors.bus_stop_no">
+                            <p x-text="errors.bus_stop_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
 
-            <hr class="border-slate-100/50">
-
-            {{-- GPS & Tariff Section --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Latitude</label>
-                    <input type="number" step="0.00000001" x-model="formData.latitude" placeholder="0.00000000"
-                        class="w-full bg-slate-100/50 border-none rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Longitude</label>
-                    <input type="number" step="0.00000001" x-model="formData.longitude" placeholder="0.00000000"
-                        class="w-full bg-slate-100/50 border-none rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">PIN Code</label>
-                    <input type="text" x-model="formData.area_pin_code" placeholder="110001"
-                        class="w-full bg-slate-100/50 border-none rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Distance & Tariff
-                        Mapping</label>
-                    <div class="flex items-center gap-2">
-                        <div class="relative flex-1 group">
-                            <input type="number" step="0.01" x-model="formData.distance_from_institute"
-                                placeholder="Distance (KM)"
-                                class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                            <span
-                                class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">KM</span>
-                        </div>
-                        <div class="relative flex-1 group">
-                            <input type="number" step="0.01" x-model="formData.charge_per_month" placeholder="Tariff (MT)"
-                                class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                            <span
-                                class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-teal-600">₹</span>
-                        </div>
+                    <div class="md:col-span-2 space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Geographic Landmark
+                            Name <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="formData.bus_stop_name" placeholder="e.g. Central Square Park Entrance"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.bus_stop_name ? 'border-red-500' : 'border-slate-200'" @input="clearError('bus_stop_name')">
+                        <template x-if="errors.bus_stop_name">
+                            <p x-text="errors.bus_stop_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Fleet Assignment
-                        Override</label>
-                    <select x-model="formData.vehicle_id"
-                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                        <option value="">Allocated via Route</option>
-                        @foreach($vehicles as $vehicle)
-                            <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
-                            </option>
-                        @endforeach
-                    </select>
+                <hr class="border-slate-100/50">
+
+                {{-- GPS & Tariff Section --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Latitude</label>
+                        <input type="number" step="0.00000001" x-model="formData.latitude" placeholder="0.00000000"
+                            class="w-full bg-white border rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.latitude ? 'border-red-500' : 'border-slate-200'"
+                            @input="clearError('latitude')">
+                        <template x-if="errors.latitude">
+                            <p x-text="errors.latitude[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Longitude</label>
+                        <input type="number" step="0.00000001" x-model="formData.longitude" placeholder="0.00000000"
+                            class="w-full bg-white border rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.longitude ? 'border-red-500' : 'border-slate-200'"
+                            @input="clearError('longitude')">
+                        <template x-if="errors.longitude">
+                            <p x-text="errors.longitude[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">PIN Code</label>
+                        <input type="text" x-model="formData.area_pin_code" placeholder="110001"
+                            class="w-full bg-white border rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.area_pin_code ? 'border-red-500' : 'border-slate-200'"
+                            @input="clearError('area_pin_code')">
+                        <template x-if="errors.area_pin_code">
+                            <p x-text="errors.area_pin_code[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
                 </div>
-            </div>
 
-            {{-- Instructional Notice --}}
-            <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
-                <i class="fas fa-satellite-dish text-indigo-600 mt-0.5"></i>
-                <div class="flex flex-col">
-                    <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
-                    <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                        Adding GPS coordinates enables <span class="text-indigo-600 font-bold">live tracking</span> and
-                        student proximity alerts.
-                    </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Distance & Tariff
+                            Mapping</label>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1 group">
+                                <input type="number" step="0.01" x-model="formData.distance_from_institute"
+                                    placeholder="Distance (KM)"
+                                    class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                    :class="errors.distance_from_institute ? 'border-red-500' : 'border-slate-200'"
+                                    @input="clearError('distance_from_institute')">
+                                <template x-if="errors.distance_from_institute">
+                                    <p x-text="errors.distance_from_institute[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                                </template>
+                                <span
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">KM</span>
+                            </div>
+                            <div class="relative flex-1 group">
+                                <input type="number" step="0.01" x-model="formData.charge_per_month" placeholder="Tariff (MT)"
+                                    class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                                    :class="errors.charge_per_month ? 'border-red-500' : 'border-slate-200'"
+                                    @input="clearError('charge_per_month')">
+                                <template x-if="errors.charge_per_month">
+                                    <p x-text="errors.charge_per_month[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                                </template>
+                                <span
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-teal-600">₹</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Fleet Assignment
+                            Override</label>
+                        <select x-model="formData.vehicle_id"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.vehicle_id ? 'border-red-500' : 'border-slate-200'"
+                            @change="clearError('vehicle_id')">
+                            <option value="">Allocated via Route</option>
+                            @foreach($vehicles as $vehicle)
+                                <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.vehicle_id">
+                            <p x-text="errors.vehicle_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
                 </div>
-            </div>
-        </form>
 
-        <x-slot name="footer">
-            <button @click="$dispatch('close-modal', 'bus-stop-modal')"
-                class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
-                Cancel
-            </button>
-            <button type="submit" form="busStopForm" :disabled="submitting"
-                class="bg-slate-900 hover:bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50">
-                <template x-if="submitting">
-                    <i class="fas fa-spinner animate-spin mr-2"></i>
-                </template>
-                <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Stop' : 'Save Stop')"></span>
-            </button>
-        </x-slot>
-    </x-modal>
+                </div>
 
-    <x-confirm-modal title="Delete Bus Stop?"
-        message="This will remove the stop from the route. Associated billing for this stop will end." confirm-text="Delete"
-        confirm-color="red" />
+                {{-- Instructional Notice --}}
+                <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
+                    <i class="fas fa-satellite-dish text-indigo-600 mt-0.5"></i>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
+                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                            Adding GPS coordinates enables <span class="text-indigo-600 font-bold">live tracking</span> and
+                            student proximity alerts.
+                        </p>
+                    </div>
+                </div>
+            </form>
+
+            <x-slot name="footer">
+                <button @click="$dispatch('close-modal', 'bus-stop-modal')"
+                    class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" form="stopForm" :disabled="submitting"
+                    class="bg-slate-900 hover:bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50">
+                    <template x-if="submitting">
+                        <i class="fas fa-spinner animate-spin mr-2"></i>
+                    </template>
+                    <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Stop' : 'Save Stop')"></span>
+                </button>
+            </x-slot>
+        </x-modal>
+    </div>
 
     @push('scripts')
         <script>
@@ -407,6 +444,40 @@
                         area_pin_code: ''
                     },
                     errors: {},
+
+                    clearError(field) {
+                        if (this.errors[field]) {
+                            delete this.errors[field];
+                        }
+                    },
+
+                    init() {
+                        this.$nextTick(() => {
+                            if (typeof $ !== 'undefined') {
+                                $('select[x-model="formData.route_id"], select[x-model="formData.vehicle_id"]').on('change', (e) => {
+                                    const field = e.target.getAttribute('x-model').split('.').pop();
+                                    this.formData[field] = e.target.value;
+                                    this.clearError(field);
+                                });
+                            }
+                        });
+                    },
+
+                    resetForm() {
+                        this.editMode = false;
+                        this.formData = {
+                            route_id: '',
+                            vehicle_id: '',
+                            bus_stop_no: '',
+                            bus_stop_name: '',
+                            latitude: '',
+                            longitude: '',
+                            distance_from_institute: '',
+                            charge_per_month: '',
+                            area_pin_code: ''
+                        };
+                        this.errors = {};
+                    },
 
                     async open(stop = null) {
                         this.errors = {};
@@ -456,7 +527,7 @@
                             if (response.ok) {
                                 window.Toast.fire({ icon: 'success', title: result.message });
                                 this.$dispatch('close-modal', 'bus-stop-modal');
-                                this.$dispatch('refresh-table');
+                                this.fetchData();
                             } else {
                                 this.errors = result.errors || {};
                             }

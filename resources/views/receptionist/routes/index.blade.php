@@ -4,7 +4,7 @@
 @section('page-title', 'Route Management')
 
 @section('content')
-    <div x-data="ajaxDataTable({
+    <div x-data="Object.assign(ajaxDataTable({
             fetchUrl: '{{ route('receptionist.routes.fetch') }}',
             defaultSort: 'created_at',
             defaultDirection: 'desc',
@@ -13,7 +13,7 @@
             initialRows: @js($initialData['rows']),
             initialPagination: @js($initialData['pagination']),
             initialStats: @js($stats)
-        })" class="space-y-6">
+        }), routeForm())" class="space-y-6" @close-modal.window="if($event.detail === 'route-modal') resetForm()">
 
         {{-- High-Density Statistics Dashboard --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -30,7 +30,7 @@
         <!-- Header Section -->
         <x-page-header title="Transport Routes" description="Manage routes and vehicle assignments"
             icon="fas fa-network-wired">
-            <button @click="$dispatch('open-route-modal')"
+            <button @click="open()"
                 class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2 text-xs"></i>
                 Add Route
@@ -146,7 +146,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2 text-right">
-                                        <button @click="$dispatch('open-route-modal', {{ json_encode($row) }})" title="Edit"
+                                        <button @click="open(row)" title="Edit"
                                             class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
@@ -233,95 +233,101 @@
 
             <x-table.pagination />
         </div>
-    </div>
 
-    {{-- Add/Edit Route Modal --}}
-    <x-modal name="route-modal" x-data="routeForm()" @open-route-modal.window="open($event.detail)"
-        alpineTitle="editMode ? 'Edit Route' : 'Add New Route'" maxWidth="2xl">
-        <form @submit.prevent="save" id="routeForm" class="space-y-6">
-            @csrf
-            <template x-if="editMode">
-                <input type="hidden" name="_method" value="PUT">
-            </template>
+        <x-confirm-modal title="Delete Route?"
+            message="This will remove the route from active service. Linked student assignments will be unassigned."
+            confirm-text="Delete" confirm-color="red" />
 
-            <div class="space-y-4">
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation /
-                        Name <span class="text-red-500">*</span></label>
-                    <input type="text" x-model="formData.route_name" placeholder="e.g. North Sector Express"
-                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
-                        :class="errors.route_name ? 'ring-2 ring-red-500/20' : ''">
-                    <p x-show="errors.route_name" x-text="errors.route_name[0]"
-                        class="text-[10px] font-bold text-red-500 ml-1"></p>
-                </div>
-
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assigned Fleet Asset
-                        <span class="text-red-500">*</span></label>
-                    <select x-model="formData.vehicle_id"
-                        class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                        <option value="">Select Primary Vehicle</option>
-                        <template x-for="vehicle in vehicles" :key="vehicle.id">
-                            <option :value="vehicle.id"
-                                x-text="`${vehicle.registration_no} (${vehicle.vehicle_no || 'N/A'})`"></option>
-                        </template>
-                    </select>
-                    <p x-show="errors.vehicle_id" x-text="errors.vehicle_id[0]"
-                        class="text-[10px] font-bold text-red-500 ml-1"></p>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Activation Date
-                            <span class="text-red-500">*</span></label>
-                        <input type="date" x-model="formData.route_create_date"
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                        <p x-show="errors.route_create_date" x-text="errors.route_create_date[0]"
-                            class="text-[10px] font-bold text-red-500 ml-1"></p>
-                    </div>
-
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Operational
-                            Status</label>
-                        <select x-model="formData.status"
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
-                            <option value="1">Active / Operational</option>
-                            <option value="0">Inactive / Suspended</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-teal-50 border border-teal-100 p-4 rounded-2xl flex items-start gap-3">
-                <i class="fas fa-network-wired text-teal-600 mt-0.5"></i>
-                <div class="flex flex-col">
-                    <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
-                    <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                        Changes to this route will automatically update all <span class="text-teal-600 font-bold">bus
-                            stops</span> and student transport assignments.
-                    </p>
-                </div>
-            </div>
-        </form>
-
-        <x-slot name="footer">
-            <button @click="$dispatch('close-modal', 'route-modal')"
-                class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
-                Cancel
-            </button>
-            <button type="submit" form="routeForm" :disabled="submitting"
-                class="bg-slate-900 hover:bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50">
-                <template x-if="submitting">
-                    <i class="fas fa-spinner animate-spin mr-2"></i>
+        {{-- Add/Edit Route Modal --}}
+        <x-modal name="route-modal" alpineTitle="editMode ? 'Edit Route' : 'Add New Route'" maxWidth="2xl">
+            <form @submit.prevent="save" id="routeForm" class="p-1">
+                @csrf
+                <template x-if="editMode">
+                    <input type="hidden" name="_method" value="PUT">
                 </template>
-                <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Route' : 'Save Route')"></span>
-            </button>
-        </x-slot>
-    </x-modal>
 
-    <x-confirm-modal title="Delete Route?"
-        message="This will remove the route from active service. Linked student assignments will be unassigned."
-        confirm-text="Delete" confirm-color="red" />
+                <div class="space-y-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation /
+                            Name <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="formData.route_name" placeholder="e.g. North Sector Express"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.route_name ? 'border-red-500' : 'border-slate-200'" @input="clearError('route_name')">
+                        <template x-if="errors.route_name">
+                            <p x-text="errors.route_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assigned Fleet Asset
+                            <span class="text-red-500">*</span></label>
+                        <select x-model="formData.vehicle_id"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.vehicle_id ? 'border-red-500' : 'border-slate-200'"
+                            @change="clearError('vehicle_id')">
+                            <option value="">Select Primary Vehicle</option>
+                            <template x-for="vehicle in vehicles" :key="vehicle.id">
+                                <option :value="vehicle.id"
+                                    x-text="`${vehicle.registration_no} (${vehicle.vehicle_no || 'N/A'})`"></option>
+                            </template>
+                        </select>
+                        <template x-if="errors.vehicle_id">
+                            <p x-text="errors.vehicle_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Activation Date
+                                <span class="text-red-500">*</span></label>
+                            <input type="date" x-model="formData.route_create_date"
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                :class="errors.route_create_date ? 'border-red-500' : 'border-slate-200'"
+                                @change="clearError('route_create_date')">
+                            <template x-if="errors.route_create_date">
+                                <p x-text="errors.route_create_date[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            </template>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Operational
+                                Status</label>
+                            <select x-model="formData.status"
+                                class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                                <option value="1">Active / Operational</option>
+                                <option value="0">Inactive / Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 bg-teal-50 border border-teal-100 p-4 rounded-2xl flex items-start gap-3">
+                    <i class="fas fa-network-wired text-teal-600 mt-0.5"></i>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
+                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                            Changes to this route will automatically update all <span class="text-teal-600 font-bold">bus
+                                stops</span> and student transport assignments.
+                        </p>
+                    </div>
+                </div>
+            </form>
+
+            <x-slot name="footer">
+                <button @click="$dispatch('close-modal', 'route-modal')"
+                    class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" form="routeForm" :disabled="submitting"
+                    class="bg-slate-900 hover:bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50">
+                    <template x-if="submitting">
+                        <i class="fas fa-spinner animate-spin mr-2"></i>
+                    </template>
+                    <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Route' : 'Save Route')"></span>
+                </button>
+            </x-slot>
+        </x-modal>
+    </div>
 
     @push('scripts')
         <script>
@@ -337,6 +343,34 @@
                         status: 1
                     },
                     errors: {},
+
+                    clearError(field) {
+                        if (this.errors[field]) {
+                            delete this.errors[field];
+                        }
+                    },
+
+                    init() {
+                        this.$nextTick(() => {
+                            if (typeof $ !== 'undefined') {
+                                $('select[x-model="formData.vehicle_id"]').on('change', (e) => {
+                                    this.formData.vehicle_id = e.target.value;
+                                    this.clearError('vehicle_id');
+                                });
+                            }
+                        });
+                    },
+
+                    resetForm() {
+                        this.editMode = false;
+                        this.formData = {
+                            route_name: '',
+                            vehicle_id: '',
+                            route_create_date: '{{ date('Y-m-d') }}',
+                            status: 1
+                        };
+                        this.errors = {};
+                    },
 
                     async open(route = null) {
                         this.errors = {};
@@ -400,7 +434,7 @@
                             if (response.ok) {
                                 window.Toast.fire({ icon: 'success', title: result.message });
                                 this.$dispatch('close-modal', 'route-modal');
-                                this.$dispatch('refresh-table');
+                                this.fetchData();
                             } else {
                                 this.errors = result.errors || {};
                             }

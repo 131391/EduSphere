@@ -4,7 +4,7 @@
 @section('page-title', 'Vehicle Management')
 
 @section('content')
-    <div x-data="ajaxDataTable({
+    <div x-data="Object.assign(ajaxDataTable({
         fetchUrl: '{{ route('receptionist.vehicles.fetch') }}',
         defaultSort: 'created_at',
         defaultDirection: 'desc',
@@ -13,7 +13,7 @@
         initialRows: @js($initialData['rows']),
         initialPagination: @js($initialData['pagination']),
         initialStats: @js($initialData['stats'])
-    })" class="space-y-6">
+    }), vehicleForm())" class="space-y-6" @close-modal.window="if($event.detail === 'vehicle-modal') resetForm()">
         
         {{-- High-Density Statistics Dashboard --}}
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -26,7 +26,7 @@
 
         <!-- Header Section -->
         <x-page-header title="Vehicle Fleet" description="Manage school transport vehicles" icon="fas fa-truck-pickup">
-            <button @click="$dispatch('open-vehicle-modal')"
+            <button @click="open()"
                 class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2 text-xs"></i>
                 Register Vehicle
@@ -173,7 +173,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button @click="$dispatch('open-vehicle-modal', row)" title="Edit" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
+                                        <button @click="open(row)" title="Edit" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <button @click="quickAction(`/receptionist/vehicles/${row.id}`, 'Delete Vehicle', 'DELETE')" title="Delete" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
@@ -202,16 +202,14 @@
         </div>
 
         <x-confirm-modal />
-    </div>
 
-
-    {{-- Add/Edit Vehicle Modal --}}
-    <x-modal name="vehicle-modal" x-data="vehicleForm()" @open-vehicle-modal.window="open($event.detail)" alpineTitle="editMode ? 'Edit Vehicle' : 'Add New Vehicle'" maxWidth="3xl">
-        <form @submit.prevent="save" id="vehicleForm" class="space-y-6">
-            @csrf
-            <template x-if="editMode">
-                <input type="hidden" name="_method" value="PUT">
-            </template>
+        {{-- Add/Edit Vehicle Modal --}}
+        <x-modal name="vehicle-modal" alpineTitle="editMode ? 'Edit Vehicle' : 'Add New Vehicle'" maxWidth="3xl">
+            <form @submit.prevent="save" id="vehicleForm" class="p-1">
+                @csrf
+                <template x-if="editMode">
+                    <input type="hidden" name="_method" value="PUT">
+                </template>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {{-- Column 1 --}}
@@ -219,32 +217,47 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Registration Number <span class="text-red-500">*</span></label>
                         <input type="text" x-model="formData.registration_no" placeholder="e.g., DL 1C AB 1234"
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.registration_no ? 'ring-2 ring-red-500/20' : ''">
-                        <p x-show="errors.registration_no" x-text="errors.registration_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.registration_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('registration_no')">
+                        <template x-if="errors.registration_no">
+                            <p x-text="errors.registration_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Propulsion / Fuel Type <span class="text-red-500">*</span></label>
-                        <select x-model="formData.fuel_type" class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                        <select x-model="formData.fuel_type" 
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.fuel_type ? 'border-red-500' : 'border-slate-200'"
+                            @change="clearError('fuel_type')">
                             <option value="">Select Propulsion</option>
                             @foreach(\App\Enums\FuelType::cases() as $fuel)
                                 <option value="{{ $fuel->value }}">{{ $fuel->name }}</option>
                             @endforeach
                         </select>
-                        <p x-show="errors.fuel_type" x-text="errors.fuel_type[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        <template x-if="errors.fuel_type">
+                            <p x-text="errors.fuel_type[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Seating Capacity</label>
                         <input type="number" x-model="formData.capacity" placeholder="0" 
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.capacity ? 'border-red-500' : 'border-slate-200'" @input="clearError('capacity')">
+                        <template x-if="errors.capacity">
+                            <p x-text="errors.capacity[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Engine Serial</label>
                         <input type="text" x-model="formData.engine_no" placeholder="SN-XXXX" 
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.engine_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('engine_no')">
+                        <template x-if="errors.engine_no">
+                            <p x-text="errors.engine_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
                 </div>
 
@@ -253,35 +266,53 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Internal Reference No</label>
                         <input type="text" x-model="formData.vehicle_no" placeholder="e.g. BUS-01" 
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.vehicle_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('vehicle_no')">
+                        <template x-if="errors.vehicle_no">
+                            <p x-text="errors.vehicle_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Vehicle Variant</label>
-                        <select x-model="formData.vehicle_type" class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                        <select x-model="formData.vehicle_type" 
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.vehicle_type ? 'border-red-500' : 'border-slate-200'"
+                            @change="clearError('vehicle_type')">
                             <option value="">Select Configuration</option>
                             <option value="bus">School Bus</option>
                             <option value="van">Transport Van</option>
                             <option value="car">Staff Car</option>
                             <option value="truck">Utility Truck</option>
                         </select>
+                        <template x-if="errors.vehicle_type">
+                            <p x-text="errors.vehicle_type[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Model / Year</label>
                         <input type="text" x-model="formData.model_no" placeholder="e.g. 2024 Turbo" 
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.model_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('model_no')">
+                        <template x-if="errors.model_no">
+                            <p x-text="errors.model_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Purchase Date</label>
                         <input type="date" x-model="formData.date_of_purchase" 
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.date_of_purchase ? 'ring-2 ring-red-500/20' : ''" @change="clearError('date_of_purchase')">
+                        <template x-if="errors.date_of_purchase">
+                            <p x-text="errors.date_of_purchase[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
+            <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                 <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
                 <div class="flex flex-col">
                     <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
@@ -303,8 +334,9 @@
                 </template>
                 <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Vehicle' : 'Save Vehicle')"></span>
             </button>
-        </x-slot>
-    </x-modal>
+            </x-slot>
+        </x-modal>
+    </div>
 
     <x-confirm-modal title="Delete Vehicle?"
         message="This will permanently delete the vehicle. This action cannot be undone."
@@ -327,6 +359,39 @@
                     date_of_purchase: '',
                 },
                 errors: {},
+
+                clearError(field) {
+                    if (this.errors[field]) {
+                        delete this.errors[field];
+                    }
+                },
+
+                init() {
+                    // Placeholder for future Select2 sync if needed
+                    this.$nextTick(() => {
+                        if (typeof $ !== 'undefined') {
+                            $('select[x-model="formData.fuel_type"]').on('change', (e) => {
+                                this.formData.fuel_type = e.target.value;
+                                this.clearError('fuel_type');
+                            });
+                        }
+                    });
+                },
+
+                resetForm() {
+                    this.editMode = false;
+                    this.formData = {
+                        registration_no: '',
+                        fuel_type: '',
+                        capacity: '',
+                        engine_no: '',
+                        vehicle_no: '',
+                        vehicle_type: '',
+                        model_no: '',
+                        date_of_purchase: '',
+                    };
+                    this.errors = {};
+                },
 
                 open(vehicle = null) {
                     this.errors = {};
@@ -410,7 +475,7 @@
                         if (response.ok) {
                             window.Toast.fire({ icon: 'success', title: result.message });
                             this.$dispatch('close-modal', 'vehicle-modal');
-                            this.$dispatch('refresh-table');
+                            this.fetchData();
                         } else {
                             this.errors = result.errors || {};
                         }

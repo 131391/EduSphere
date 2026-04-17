@@ -16,6 +16,9 @@
         'gray'   => ['border' => 'border-gray-400',   'bg' => 'bg-gray-100 dark:bg-gray-700',     'icon' => 'text-gray-600 dark:text-gray-400',   'value' => 'text-gray-500'],
         'rose'   => ['border' => 'border-rose-500',   'bg' => 'bg-rose-100 dark:bg-rose-900/20',   'icon' => 'text-rose-600 dark:text-rose-400',   'value' => 'text-rose-600'],
         'indigo' => ['border' => 'border-indigo-500', 'bg' => 'bg-indigo-100 dark:bg-indigo-900/20', 'icon' => 'text-indigo-600 dark:text-indigo-400', 'value' => 'text-indigo-600'],
+        'teal'   => ['border' => 'border-teal-500',   'bg' => 'bg-teal-100 dark:bg-teal-900/20',   'icon' => 'text-teal-600 dark:text-teal-400',   'value' => 'text-teal-600'],
+        'purple' => ['border' => 'border-purple-500', 'bg' => 'bg-purple-100 dark:bg-purple-900/20', 'icon' => 'text-purple-600 dark:text-purple-400', 'value' => 'text-purple-600'],
+        'slate'  => ['border' => 'border-slate-500',  'bg' => 'bg-slate-100 dark:bg-slate-900/20',  'icon' => 'text-slate-600 dark:text-slate-400',  'value' => 'text-slate-600'],
     ];
     $c = $colorMap[$color] ?? $colorMap['blue'];
 @endphp
