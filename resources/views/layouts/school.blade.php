@@ -160,7 +160,7 @@
                     </li>
 
                     <!-- Fee Operations -->
-                    <li class="pt-2" x-show="!sidebarCollapsed">
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Operations</p>
                     </li>
                     <li>
@@ -189,7 +189,7 @@
                     </li>
 
                     <!-- Academic Setup -->
-                    <li class="pt-2" x-show="!sidebarCollapsed">
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Academic Setup</p>
                     </li>
                     <li>
@@ -226,7 +226,7 @@
                     </li>
 
                     <!-- Fee Masters -->
-                    <li class="pt-2" x-show="!sidebarCollapsed">
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Masters</p>
                     </li>
                     <li>
@@ -271,7 +271,7 @@
                     </li>
 
                     <!-- Student -->
-                    <li class="pt-2" x-show="!sidebarCollapsed">
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Student</p>
                     </li>
                     <li x-data="{ open: {{ $studentOpen ? 'true' : 'false' }} }" class="relative group">
@@ -286,7 +286,7 @@
                                 :class="{ 'transform rotate-180': open }" x-show="!sidebarCollapsed"></i>
                         </button>
                         <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && open" x-collapse x-cloak class="pl-4 mt-1 space-y-1">
+                        <ul x-show="!sidebarCollapsed && open" x-collapse class="pl-4 mt-1 space-y-1 sidebar-submenu" @if(!$studentOpen) x-cloak @endif>
                             <li>
                                 <a href="{{ route('school.student-enquiries.index') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -341,7 +341,7 @@
                     </li>
 
                     <!-- Student Masters -->
-                    <li class="pt-2" x-show="!sidebarCollapsed">
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Student Masters</p>
                     </li>
                     <li>
@@ -402,7 +402,7 @@
                     </li>
 
                     <!-- Admission & News -->
-                    <li class="pt-2" x-show="!sidebarCollapsed">
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Admission & News</p>
                     </li>
                     <li>
@@ -431,7 +431,7 @@
                     </li>
 
                     <!-- Examination -->
-                    <li class="pt-2" x-show="!sidebarCollapsed">
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Examination</p>
                     </li>
                     <li x-data="{ open: {{ $examinationOpen ? 'true' : 'false' }} }" class="relative group">
@@ -446,7 +446,7 @@
                                 :class="{ 'transform rotate-180': open }" x-show="!sidebarCollapsed"></i>
                         </button>
                         <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && open" x-collapse x-cloak class="pl-4 mt-1 space-y-1">
+                        <ul x-show="!sidebarCollapsed && open" x-collapse class="pl-4 mt-1 space-y-1 sidebar-submenu" @if(!$examinationOpen) x-cloak @endif>
                             <li>
                                 <a href="{{ route('school.examination.subjects.index') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.subjects.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -529,7 +529,7 @@
                     </li>
 
                     <!-- System -->
-                    <li class="pt-2" x-show="!sidebarCollapsed">
+                    <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">System</p>
                     </li>
                     <li>
@@ -552,7 +552,7 @@
                                 :class="{ 'transform rotate-180': open }" x-show="!sidebarCollapsed"></i>
                         </button>
                         <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && open" x-collapse x-cloak class="pl-4 mt-1 space-y-1">
+                        <ul x-show="!sidebarCollapsed && open" x-collapse class="pl-4 mt-1 space-y-1 sidebar-submenu" @if(!$settingOpen) x-cloak @endif>
                             <li>
                                 <a href="{{ route('school.settings.logo') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.settings.logo') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -715,15 +715,16 @@
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
                             :class="isFavorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-500 hover:text-gray-700'"
                             title="Add to Favorites">
-                            <i class="text-xl far fa-star"
-                                :class="isFavorite ? 'fas fa-star text-xl' : 'far fa-star text-xl'"></i>
+                            <i class="text-xl" :class="isFavorite ? 'fas fa-star' : 'far fa-star'" x-cloak></i>
+                            <i class="text-xl far fa-star ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Bookmark (Saved List) -->
                         <div class="relative hidden md:block">
                             <button @click="showFavorites = !showFavorites"
                                 class="text-gray-500 hover:text-gray-700 transition-colors" title="Saved Pages">
-                                <i class="far fa-bookmark text-xl"></i>
+                                <i class="far fa-bookmark text-xl" x-cloak></i>
+                                <i class="text-xl far fa-bookmark ssr-icon-fallback"></i>
                             </button>
 
                             <!-- Favorites Dropdown -->
@@ -764,14 +765,16 @@
                         <button @click="toggleFullscreen()"
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
                             title="Toggle Fullscreen">
-                            <i class="fas text-xl" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+                            <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
+                            <i class="text-xl fas fa-expand ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Dark Mode -->
                         <button @click="toggleDarkMode()"
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
                             title="Toggle Dark Mode">
-                            <i class="far fa-moon text-xl" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+                            <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
+                            <i class="text-xl far fa-moon ssr-icon-fallback"></i>
                         </button>
 
                         <!-- User Dropdown -->
@@ -941,6 +944,7 @@
                 showFavorites: false,
 
                 init() {
+                    this.$el.querySelectorAll('.ssr-icon-fallback').forEach(el => el.remove());
                     this.checkFavorite();
                     this.loadFavorites();
 

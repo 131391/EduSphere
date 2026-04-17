@@ -4,11 +4,11 @@
 
 @section('content')
     <div x-data="ajaxDataTable({
-        fetchUrl: '{{ route('receptionist.student-enquiries.index') }}',
+        fetchUrl: '{{ route('receptionist.student-enquiries.fetch') }}',
         defaultSort: 'created_at',
         defaultDirection: 'desc',
         defaultPerPage: 25,
-        defaultFilters: { status: '', class_id: '', academic_year_id: '', search: '' },
+        defaultFilters: { status: '', class_id: '', academic_year_id: '' },
         initialRows: @js($initialData['rows']),
         initialPagination: @js($initialData['pagination']),
         initialStats: @js($initialData['stats']),
@@ -17,10 +17,10 @@
                 @foreach(\App\Enums\EnquiryStatus::cases() as $s) '{{ $s->value }}': '{{ $s->label() }}', @endforeach
             },
             class_id: {
-                @foreach($classes as $c) '{{ $c->id }}': '{{ $c->class_name }}', @endforeach
+                @foreach($classes as $c) '{{ $c->id }}': '{{ $c->name }}', @endforeach
             },
             academic_year_id: {
-                @foreach($academicYears as $y) '{{ $y->id }}': '{{ $y->year_name }}', @endforeach
+                @foreach($academicYears as $y) '{{ $y->id }}': '{{ $y->name }}', @endforeach
             }
         }
     })" class="space-y-6">
@@ -34,111 +34,78 @@
             <x-stat-card label="Admitted" :value="$stats['admitted']" icon="fas fa-graduation-cap" color="emerald" alpine-text="stats.admitted" />
         </div>
 
-        <!-- Page Header & Filters -->
-        <div x-data="{ searchOpen: true }">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-teal-100/50 dark:border-gray-700 mb-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                            <i class="fas fa-user-graduate text-xs"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Enquiry Registry</h2>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5" x-text="'Managing ' + stats.total + ' enquiries in the registry'">Managing {{ number_format($stats['total']) }} enquiries in the registry</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" @click="searchOpen = !searchOpen"
-                            class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-                            <i class="fas fa-filter mr-2 text-teal-500"></i>
-                            Advanced Filters
-                        </button>
-                        <a href="{{ route('receptionist.student-enquiries.create') }}"
-                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                            <i class="fas fa-plus mr-2"></i>
-                            New Enquiry
-                        </a>
-                        <button @click="exportData()"
-                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                            <i class="fas fa-file-excel mr-2 text-xs"></i>
-                            Export CSV
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filters Section -->
-            <div x-show="searchOpen" x-collapse x-cloak
-                class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                    <!-- Search -->
-                    <div class="lg:col-span-2">
-                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5">Search Enquiries</label>
-                        <div class="relative group">
-                            <input type="text" x-model="search" placeholder="Name, Father, Enquiry No..."
-                                class="w-full h-11 pl-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors">
-                                <i class="fas fa-search text-xs"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Status Filter -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5">Form Status</label>
-                        <select x-model="filters.status" @change="applyFilter('status', $event.target.value)"
-                            class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                            <option value="">All Statuses</option>
-                            @foreach(\App\Enums\EnquiryStatus::cases() as $status)
-                                <option value="{{ $status->value }}">{{ $status->label() }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Class Filter -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5">Class</label>
-                        <select x-model="filters.class_id" @change="applyFilter('class_id', $event.target.value)"
-                            class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                            <option value="">All Classes</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->class_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex items-end gap-2 lg:col-span-2">
-                        <button type="button" @click="clearAllFilters()"
-                            x-show="hasActiveFilters() || search !== ''"
-                            class="flex-1 h-11 flex items-center justify-center bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all shadow-sm font-semibold text-xs px-4">
-                            <i class="fas fa-trash-alt text-[10px] mr-2"></i> Reset
-                        </button>
-                        <div class="w-24">
-                            <x-table.per-page model="perPage" action="changePerPage($event.target.value)" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Active Tags -->
-                <div class="mt-4 flex flex-wrap gap-2" x-show="hasActiveFilters() || search !== ''" x-cloak>
-                    <div x-show="search !== ''" class="flex items-center gap-1 bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-xs">
-                        <span>Search: <span x-text="search" class="font-semibold"></span></span>
-                        <button @click="search = ''" class="ml-1 hover:text-teal-600"><i class="fas fa-times"></i></button>
-                    </div>
-                    <template x-for="(value, key) in filters" :key="key">
-                        <div x-show="value !== ''" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
-                            <span x-text="getFilterLabel(key, value)"></span>
-                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600"><i class="fas fa-times"></i></button>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </div>
+        <!-- Header Section -->
+        <x-page-header title="Student Enquiry Registry" description="Manage and track all student enquiries and follow-ups." icon="fas fa-clipboard-list">
+            <a href="{{ route('receptionist.student-enquiries.create') }}"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                New Enquiry
+            </a>
+            <button @click="exportData('csv')" :disabled="exporting"
+                class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
+                <span x-show="exporting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block" x-cloak></span>
+                <i x-show="!exporting" class="fas fa-file-excel mr-2 text-xs"></i>
+                <span x-text="exporting ? 'Exporting...' : 'Excel Export'">Excel Export</span>
+            </button>
+        </x-page-header>
 
         <!-- AJAX Data Table -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div class="overflow-x-auto relative min-h-[400px]">
+            <!-- Table Header with Search and Filters -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Left: Title and Search -->
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Enquiry List</h2>
+                        <x-table.search placeholder="Search enquiries..." />
+                    </div>
+
+                    <!-- Right: Filters and Actions -->
+                    <div class="flex items-center gap-3">
+                        <x-table.filter-select
+                            model="filters.status"
+                            action="applyFilter('status', $event.target.value)"
+                            placeholder="Status"
+                            :options="collect(\App\Enums\EnquiryStatus::cases())->mapWithKeys(fn($s) => [$s->value => $s->label()])->toArray()"
+                        />
+
+                        <x-table.filter-select
+                            model="filters.class_id"
+                            action="applyFilter('class_id', $event.target.value)"
+                            placeholder="Class"
+                            :options="$classes->pluck('name', 'id')->toArray()"
+                        />
+
+                        <x-table.filter-select
+                            model="filters.academic_year_id"
+                            action="applyFilter('academic_year_id', $event.target.value)"
+                            placeholder="Academic Year"
+                            :options="$academicYears->pluck('name', 'id')->toArray()"
+                        />
+
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
+                    </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <div x-show="value" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
+                            <span x-text="getFilterLabel(key, value)"></span>
+                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <button @click="clearAllFilters()" class="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition-colors">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto relative ajax-table-wrapper">
                 <x-table.loading-overlay />
                 
                 <table class="w-full text-left border-collapse">
@@ -155,7 +122,17 @@
                     </thead>
 
                     <!-- Initial Blade Render (Zero Blink) -->
-                    <tbody x-show="!rows.length || (initialLoad && rows.length && initialRows.length === rows.length)" class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @if(empty($initialData['rows']))
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-lg text-gray-500">No enquiries found matching your criteria.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
                         @foreach($initialData['rows'] as $row)
                         <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -212,7 +189,7 @@
                     </tbody>
 
                     <!-- Dynamic Table Body -->
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="rows.length && !initialLoad" x-cloak>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-teal-600">
@@ -272,10 +249,19 @@
                 </table>
             </div>
 
-            <div class="px-6 py-4 bg-gray-50/50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700">
-                <x-table.pagination />
+            <!-- Server-rendered pagination: visible instantly, hidden once Alpine takes over -->
+            @if($initialData['pagination']['total'] > 0)
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
+                </div>
             </div>
+            @endif
+
+            <x-table.pagination />
         </div>
+
+        <x-confirm-modal />
     </div>
 @endsection
 

@@ -76,6 +76,12 @@
     html.sidebar-collapsed aside .sidebar-text {
         display: none !important;
     }
+    html.sidebar-collapsed aside .sidebar-submenu {
+        display: none !important;
+    }
+    html.sidebar-collapsed aside .fa-chevron-down {
+        display: none !important;
+    }
     html.sidebar-collapsed aside .fa-chevron-left {
         display: none !important;
     }

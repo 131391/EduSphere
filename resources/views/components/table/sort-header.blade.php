@@ -10,9 +10,9 @@
     <div class="flex items-center gap-2 group">
         <span>{{ $label }}</span>
         <div class="flex flex-col items-center justify-center w-3 h-4 opacity-50 group-hover:opacity-100 transition-opacity">
-            <i class="fas fa-sort-up text-[10px] leading-[0] mb-0.5"
+            <i class="fas fa-sort-up text-[10px] leading-[0] mb-0.5 text-gray-300"
                :class="{{ $sortVar }} === '{{ $column }}' && {{ $directionVar }} === 'asc' ? 'text-blue-600 !opacity-100' : 'text-gray-300'"></i>
-            <i class="fas fa-sort-down text-[10px] leading-[0]"
+            <i class="fas fa-sort-down text-[10px] leading-[0] text-gray-300"
                :class="{{ $sortVar }} === '{{ $column }}' && {{ $directionVar }} === 'desc' ? 'text-blue-600 !opacity-100' : 'text-gray-300'"></i>
         </div>
     </div>

@@ -44,17 +44,20 @@ class StudentRegistrationController extends TenantController
 
     public function index(Request $request)
     {
-        $school = Auth::user()->school;
+        $schoolId = $this->getSchoolId();
 
         // 1. Row Transformer (Gold Standard UI consistency)
         $transformer = function ($reg) {
             $status = $reg->admission_status;
 
             // Map Tailwind-style config for badges
+            // Defensively handle null or non-enum status to prevent 500 errors
+            $color = ($status instanceof AdmissionStatus) ? $status->color() : 'gray';
+
             $statusConfig = [
-                'bg' => 'bg-' . $status?->color() . '-50',
-                'text' => 'text-' . $status?->color() . '-700',
-                'border' => 'border-' . $status?->color() . '-100',
+                'bg' => "bg-{$color}-50",
+                'text' => "text-{$color}-700",
+                'border' => "border-{$color}-100",
                 'icon' => match ($status) {
                     AdmissionStatus::Pending => 'fa-clock',
                     AdmissionStatus::Admitted => 'fa-user-check',
@@ -71,18 +74,18 @@ class StudentRegistrationController extends TenantController
                 'mobile_no' => $reg->mobile_no,
                 'email' => $reg->email ?? 'N/A',
                 'father_name' => $reg->father_first_name . ' ' . $reg->father_last_name,
-                'class_name' => $reg->class?->class_name ?? 'N/A',
-                'academic_year' => $reg->academicYear?->year_name ?? 'N/A',
+                'class_name' => $reg->class?->name ?? 'N/A',
+                'academic_year' => $reg->academicYear?->name ?? 'N/A',
                 'registration_fee' => number_format($reg->registration_fee, 2),
                 'registration_date' => $reg->registration_date->format('d M, Y'),
-                'status_label' => $status?->label() ?? 'Pending',
+                'status_label' => ($status instanceof AdmissionStatus) ? $status->label() : 'Pending',
                 'status_config' => $statusConfig,
                 'student_photo' => $reg->student_photo ? asset('storage/' . $reg->student_photo) : null,
             ];
         };
 
         // 2. Build Query
-        $query = StudentRegistration::where('school_id', $school->id)
+        $query = StudentRegistration::where('school_id', $schoolId)
             ->with(['class', 'academicYear']);
 
         // Apply filters
@@ -106,7 +109,7 @@ class StudentRegistrationController extends TenantController
 
         // 3. Handle AJAX or CSV Export vs Blade Hydration
         if ($request->expectsJson() || $request->ajax()) {
-            return $this->handleAjaxTable($query, $transformer);
+            return $this->handleAjaxTable($query, $transformer, $this->getStats($schoolId));
         }
 
         if ($request->has('export')) {
@@ -115,16 +118,10 @@ class StudentRegistrationController extends TenantController
 
         // 4. Blade Hydration
         $initialData = $this->getHydrationData($query, $transformer, [
-            'stats' => [
-                'total' => StudentRegistration::where('school_id', $school->id)->count(),
-                'admitted' => StudentRegistration::where('school_id', $school->id)->admitted()->count(),
-                'pending' => StudentRegistration::where('school_id', $school->id)->pending()->count(),
-                'cancelled' => StudentRegistration::where('school_id', $school->id)->cancelled()->count(),
-                'total_enquiry' => StudentEnquiry::where('school_id', $school->id)->count(),
-            ]
+            'stats' => $this->getStats($schoolId)
         ]);
 
-        $classes = ClassModel::where('school_id', $school->id)->get();
+        $classes = ClassModel::where('school_id', $schoolId)->get();
 
         return view('receptionist.student-registrations.index', [
             'initialData' => $initialData,
@@ -132,6 +129,21 @@ class StudentRegistrationController extends TenantController
             'classes' => $classes,
         ]);
     }
+
+    /**
+     * Get aggregate statistics for the registry
+     */
+    private function getStats(int $schoolId): array
+    {
+        return [
+            'total' => StudentRegistration::where('school_id', $schoolId)->count(),
+            'admitted' => StudentRegistration::where('school_id', $schoolId)->admitted()->count(),
+            'pending' => StudentRegistration::where('school_id', $schoolId)->pending()->count(),
+            'cancelled' => StudentRegistration::where('school_id', $schoolId)->cancelled()->count(),
+            'total_enquiry' => StudentEnquiry::where('school_id', $schoolId)->count(),
+        ];
+    }
+
 
     private function exportToCsv($query)
     {
@@ -148,7 +160,7 @@ class StudentRegistrationController extends TenantController
                 fputcsv($file, [
                     $reg->registration_no,
                     $reg->full_name,
-                    $reg->class?->class_name ?? 'N/A',
+                    $reg->class?->name ?? 'N/A',
                     $reg->father_first_name . ' ' . $reg->father_last_name,
                     $reg->mobile_no,
                     $reg->registration_fee,

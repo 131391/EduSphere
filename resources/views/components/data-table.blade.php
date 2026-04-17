@@ -48,11 +48,11 @@
                 @if($filterable && count($filters) > 0)
                 <div class="flex items-center gap-2">
                     @foreach($filters as $filter)
-                    <select 
+                    <select
                         data-table-select
                         x-model="filters['{{ $filter['name'] }}']"
                         @change="applyFilters()"
-                        class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        class="no-select2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     >
                         <option value="">{{ $filter['label'] ?? ucfirst($filter['name']) }}</option>
                         @foreach($filter['options'] as $value => $label)
@@ -66,11 +66,11 @@
                 @endif
 
                 <!-- Per Page Selector -->
-                <select 
+                <select
                     data-table-select
                     x-model="perPage"
                     @change="changePerPage()"
-                    class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    class="no-select2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                     <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
                     <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15</option>

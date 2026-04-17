@@ -4,7 +4,7 @@
 
 @section('content')
     <div x-data="ajaxDataTable({
-        fetchUrl: '{{ route('receptionist.student-registrations.index') }}',
+        fetchUrl: '{{ route('receptionist.student-registrations.fetch') }}',
         defaultSort: 'created_at',
         defaultDirection: 'desc',
         defaultPerPage: 25,
@@ -17,7 +17,7 @@
                 @foreach(\App\Enums\AdmissionStatus::cases() as $s) '{{ $s->value }}': '{{ $s->label() }}', @endforeach
             },
             class_id: {
-                @foreach($classes as $c) '{{ $c->id }}': '{{ $c->class_name }}', @endforeach
+                @foreach($classes as $c) '{{ $c->id }}': '{{ $c->name }}', @endforeach
             }
         }
     })" class="space-y-6">
@@ -31,117 +31,92 @@
             <x-stat-card label="Source Leads" :value="$stats['total_enquiry']" icon="fas fa-search-dollar" color="purple" alpine-text="stats.total_enquiry" />
         </div>
 
-        <!-- Page Header & Action Bar -->
-        <div x-data="{ searchOpen: true }">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-teal-100/50 dark:border-gray-700 mb-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600 shadow-sm">
-                            <i class="fas fa-id-card text-xs"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Registration Ledger</h2>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 uppercase font-bold tracking-widest leading-tight">Institutional Enrollment Registry</p>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" @click="$dispatch('open-modal', 'import-modal')"
-                            class="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30 text-xs font-semibold rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                            <i class="fas fa-upload mr-2 text-[10px]"></i>
-                            Bulk Import
-                        </button>
-                        <button type="button" @click="searchOpen = !searchOpen"
-                            class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-sm border-dashed">
-                            <i class="fas fa-filter mr-2 text-teal-500"></i>
-                            Protocol Filters
-                        </button>
-                        <a href="{{ route('receptionist.student-registrations.create') }}"
-                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                            <i class="fas fa-plus mr-2"></i>
-                            New Node
-                        </a>
-                        <button @click="exportData()"
-                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 border border-slate-600/50">
-                            <i class="fas fa-file-csv mr-2 text-xs text-amber-500"></i>
-                            Export CSV
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <!-- Integrated Table Header -->
+        <x-table.registry-header
+            title="Registration Ledger"
+            icon="fas fa-id-card"
+            search-placeholder="Search registry records..."
+            :default-per-page="25"
+        >
+            <button type="button" @click="$dispatch('open-modal', 'import-modal')"
+                class="px-4 h-9 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex items-center gap-2">
+                <i class="fas fa-upload"></i>
+                Bulk Import
+            </button>
 
-            <!-- Advanced Filter Grid -->
-            <div x-show="searchOpen" x-collapse x-cloak
-                class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                    <!-- Global Search -->
-                    <div class="lg:col-span-2">
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Registry Search</label>
-                        <div class="relative group">
-                            <input type="text" x-model="search" placeholder="Name, ID, Mobile No..."
-                                class="w-full h-11 pl-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors">
-                                <i class="fas fa-search text-xs"></i>
+            <button @click="exportData()"
+                class="w-9 h-9 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm"
+                title="Export CSV">
+                <i class="fas fa-file-csv text-xs text-amber-500"></i>
+            </button>
+
+            <a href="{{ route('receptionist.student-registrations.create') }}"
+                class="px-4 h-9 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 flex items-center gap-2">
+                <i class="fas fa-plus"></i>
+                New Node
+            </a>
+
+            <x-slot name="filters">
+                <div x-show="searchOpen" x-collapse x-cloak>
+                    <div class="p-6 bg-gray-50/30 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Admission Status -->
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Protocol Stance</label>
+                                <select x-model="filters.admission_status" @change="applyFilter('admission_status', $event.target.value)"
+                                    class="no-select2 w-full h-11 px-4 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-[10px] font-bold uppercase tracking-wider text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
+                                    <option value="">All Statuses</option>
+                                    @foreach(\App\Enums\AdmissionStatus::cases() as $status)
+                                        <option value="{{ $status->value }}">{{ $status->label() }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Academic Cluster -->
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Cluster</label>
+                                <select x-model="filters.class_id" @change="applyFilter('class_id', $event.target.value)"
+                                    class="no-select2 w-full h-11 px-4 bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
+                                    <option value="">All Classes</option>
+                                    @foreach($classes as $class)
+                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex items-end">
+                                <button type="button" @click="clearAllFilters()"
+                                    x-show="hasActiveFilters() || search !== ''"
+                                    class="w-full sm:w-auto h-11 flex items-center justify-center bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all shadow-sm px-6">
+                                    <i class="fas fa-trash-alt text-[10px] mr-2"></i> 
+                                    <span class="text-[10px] font-bold uppercase tracking-widest">Reset Protocol</span>
+                                </button>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Admission Status -->
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Protocol Stance</label>
-                        <select x-model="filters.admission_status" @change="applyFilter('admission_status', $event.target.value)"
-                            class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none font-bold uppercase tracking-wider text-[10px]">
-                            <option value="">All Statuses</option>
-                            @foreach(\App\Enums\AdmissionStatus::cases() as $status)
-                                <option value="{{ $status->value }}">{{ $status->label() }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Academic Cluster -->
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 px-1">Cluster</label>
-                        <select x-model="filters.class_id" @change="applyFilter('class_id', $event.target.value)"
-                            class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none">
-                            <option value="">All Classes</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->id }} text-xs font-bold">{{ $class->class_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex items-end gap-2 lg:col-span-2">
-                        <button type="button" @click="clearAllFilters()"
-                            x-show="hasActiveFilters() || search !== ''"
-                            class="flex-1 h-11 flex items-center justify-center bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all shadow-sm px-4">
-                            <i class="fas fa-trash-alt text-[10px] mr-2"></i> 
-                            <span class="text-[10px] font-black uppercase tracking-widest">Reset Protocol</span>
-                        </button>
-                        <div class="w-24">
-                            <x-table.per-page model="perPage" action="changePerPage($event.target.value)" />
+                        <!-- Active Tags -->
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <div x-show="search !== ''" class="flex items-center gap-1 bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider" x-cloak>
+                                <span>Query: <span x-text="search"></span></span>
+                                <button @click="search = ''" class="ml-1 hover:text-teal-600"><i class="fas fa-times"></i></button>
+                            </div>
+                            <template x-for="(value, key) in filters" :key="key">
+                                <div x-show="value !== ''" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                    <span x-text="getFilterLabel(key, value)"></span>
+                                    <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600"><i class="fas fa-times"></i></button>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
-
-                <!-- Active Filter Tags -->
-                <div class="mt-4 flex flex-wrap gap-2" x-show="hasActiveFilters() || search !== ''" x-cloak>
-                    <div x-show="search !== ''" class="flex items-center gap-1 bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                        <span>Query: <span x-text="search"></span></span>
-                        <button @click="search = ''" class="ml-1 hover:text-teal-600"><i class="fas fa-times"></i></button>
-                    </div>
-                    <template x-for="(value, key) in filters" :key="key">
-                        <div x-show="value !== ''" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                            <span x-text="getFilterLabel(key, value)"></span>
-                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600"><i class="fas fa-times"></i></button>
-                        </div>
-                    </template>
-                </div>
-            </div>
+            </x-slot>
+        </x-table.registry-header>
         </div>
 
         <!-- AJAX Data Ledger Table -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden shadow-xl shadow-teal-500/5">
-            <div class="overflow-x-auto relative min-h-[400px]">
+            <div class="overflow-x-auto relative ajax-table-wrapper">
                 <x-table.loading-overlay />
                 
                 <table class="w-full text-left border-collapse">
@@ -158,7 +133,17 @@
                     </thead>
 
                     <!-- Initial Blade Render (Zero Blink) -->
-                    <tbody x-show="!rows.length || (initialLoad && rows.length && initialRows.length === rows.length)" class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @if(empty($initialData['rows']))
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <i class="fas fa-folder-open text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-lg text-gray-500">No registration nodes found in the institutional matrix.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
                         @foreach($initialData['rows'] as $row)
                         <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -222,7 +207,7 @@
                     </tbody>
 
                     <!-- Dynamic Table Body (Successive Hydration) -->
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="rows.length && !initialLoad" x-cloak>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -294,6 +279,8 @@
                 <x-table.pagination />
             </div>
         </div>
+
+        <x-confirm-modal />
 
         <!-- Import Modal (Preserved Protocol) -->
         <x-modal name="import-modal" title="Bulk Registration Interface" max-width="lg">

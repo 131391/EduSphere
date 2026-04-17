@@ -21,17 +21,20 @@ class StudentEnquiryController extends TenantController
 
     public function index(Request $request)
     {
-        $school = auth()->user()->school;
+        $schoolId = $this->getSchoolId();
 
         // 1. Row Transformer (Crucial for Gold Standard UI consistency)
         $transformer = function ($enquiry) {
             $status = $enquiry->form_status;
-
+            
             // Map Tailwind-style config for badges
+            // Defensively handle null or non-enum status to prevent 500 errors
+            $color = ($status instanceof EnquiryStatus) ? $status->color() : 'gray';
+            
             $statusConfig = [
-                'bg' => 'bg-' . $status?->color() . '-50',
-                'text' => 'text-' . $status?->color() . '-700',
-                'border' => 'border-' . $status?->color() . '-100',
+                'bg' => "bg-{$color}-50",
+                'text' => "text-{$color}-700",
+                'border' => "border-{$color}-100",
                 'icon' => match ($status) {
                     EnquiryStatus::Pending => 'fa-clock',
                     EnquiryStatus::Completed => 'fa-check-circle',
@@ -48,9 +51,9 @@ class StudentEnquiryController extends TenantController
                 'initials' => collect(explode(' ', $enquiry->student_name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
                 'father_name' => $enquiry->father_name,
                 'contact_no' => $enquiry->contact_no,
-                'class_name' => $enquiry->class?->class_name ?? 'N/A',
-                'academic_year' => $enquiry->academicYear?->year_name ?? 'N/A',
-                'status_label' => $status?->label() ?? 'Pending',
+                'class_name' => $enquiry->class?->name ?? 'N/A',
+                'academic_year' => $enquiry->academicYear?->name ?? 'N/A',
+                'status_label' => ($status instanceof EnquiryStatus) ? $status->label() : 'Pending',
                 'status_config' => $statusConfig,
                 'enquiry_date' => $enquiry->created_at->format('d M, Y'),
                 'follow_up' => $enquiry->follow_up_date ? $enquiry->follow_up_date->format('d M, Y') : '--',
@@ -59,7 +62,7 @@ class StudentEnquiryController extends TenantController
         };
 
         // 2. Build Query
-        $query = StudentEnquiry::where('school_id', $school->id)
+        $query = StudentEnquiry::where('school_id', $schoolId)
             ->with(['academicYear', 'class']);
 
         // Apply filters
@@ -87,7 +90,7 @@ class StudentEnquiryController extends TenantController
 
         // 3. Handle AJAX or CSV Export vs Blade Hydration
         if ($request->expectsJson() || $request->ajax()) {
-            return $this->handleAjaxTable($query, $transformer);
+            return $this->handleAjaxTable($query, $transformer, $this->getStats($schoolId));
         }
 
         if ($request->has('export')) {
@@ -96,17 +99,11 @@ class StudentEnquiryController extends TenantController
 
         // 4. Blade Hydration
         $initialData = $this->getHydrationData($query, $transformer, [
-            'stats' => [
-                'total' => StudentEnquiry::where('school_id', $school->id)->count(),
-                'pending' => StudentEnquiry::where('school_id', $school->id)->pending()->count(),
-                'cancelled' => StudentEnquiry::where('school_id', $school->id)->cancelled()->count(),
-                'registration' => StudentEnquiry::where('school_id', $school->id)->completed()->count(),
-                'admitted' => StudentEnquiry::where('school_id', $school->id)->admitted()->count(),
-            ]
+            'stats' => $this->getStats($schoolId)
         ]);
 
-        $academicYears = AcademicYear::where('school_id', $school->id)->get();
-        $classes = ClassModel::where('school_id', $school->id)->get();
+        $academicYears = AcademicYear::where('school_id', $schoolId)->get();
+        $classes = ClassModel::where('school_id', $schoolId)->get();
 
         return view('receptionist.student-enquiries.index', [
             'initialData' => $initialData,
@@ -115,6 +112,21 @@ class StudentEnquiryController extends TenantController
             'classes' => $classes,
         ]);
     }
+
+    /**
+     * Get aggregate statistics for the registry
+     */
+    private function getStats(int $schoolId): array
+    {
+        return [
+            'total' => StudentEnquiry::where('school_id', $schoolId)->count(),
+            'pending' => StudentEnquiry::where('school_id', $schoolId)->pending()->count(),
+            'cancelled' => StudentEnquiry::where('school_id', $schoolId)->cancelled()->count(),
+            'registration' => StudentEnquiry::where('school_id', $schoolId)->completed()->count(),
+            'admitted' => StudentEnquiry::where('school_id', $schoolId)->admitted()->count(),
+        ];
+    }
+
 
     private function exportToCsv($query)
     {
@@ -133,7 +145,7 @@ class StudentEnquiryController extends TenantController
                     $enq->student_name,
                     $enq->father_name,
                     $enq->contact_no,
-                    $enq->class?->class_name ?? 'N/A',
+                    $enq->class?->name ?? 'N/A',
                     $enq->form_status?->label() ?? 'Pending',
                     $enq->created_at->format('Y-m-d')
                 ]);

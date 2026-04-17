@@ -24,6 +24,7 @@ document.addEventListener('alpine:init', () => {
 
         // ─── State ──────────────────────────────────────────────────────
         rows: config.initialRows || [],
+        initialRows: config.initialRows || [],
         loading: config.initialRows ? false : true,
         search: '',
         filters: config.defaultFilters ? { ...config.defaultFilters } : {},
@@ -42,6 +43,9 @@ document.addEventListener('alpine:init', () => {
         stats: config.initialStats || {},
         filterLabels: config.filterLabels || {},
         exporting: false,
+
+        // Track whether we're still showing the initial server-rendered content
+        initialLoad: true,
 
         // Debounce timer
         _searchTimer: null,
@@ -100,6 +104,7 @@ document.addEventListener('alpine:init', () => {
                 }
             } finally {
                 this.loading = false;
+                this.initialLoad = false;
                 clearTimeout(this._loadingTimer);
                 this.showSpinner = false;
                 // Release the fixed height after a short delay to allow new content to render
@@ -262,6 +267,45 @@ document.addEventListener('alpine:init', () => {
             } finally {
                 this.exporting = false;
             }
+        },
+
+        // ─── Refresh (alias for external callers) ────────────────────────
+        refreshTable() {
+            return this.fetchData();
+        },
+
+        // ─── Quick Action (POST/DELETE + refresh) ─────────────────────────
+        quickAction(url, label = 'Action', method = 'POST') {
+            const self = this;
+            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                detail: {
+                    title: label,
+                    message: `Are you sure you want to perform: ${label}? This action cannot be undone.`,
+                    callback: async () => {
+                        try {
+                            const payload = method.toUpperCase() === 'DELETE' ? { _method: 'DELETE' } : {};
+                            const response = await axios.post(url, payload, {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                                },
+                            });
+
+                            const result = response.data;
+                            if (window.Toast) {
+                                window.Toast.fire({ icon: 'success', title: result.message || `${label} successful` });
+                            }
+                            self.fetchData();
+                        } catch (error) {
+                            const msg = error.response?.data?.message || `${label} failed. Please try again.`;
+                            if (window.Toast) {
+                                window.Toast.fire({ icon: 'error', title: msg });
+                            }
+                            console.error('Quick action error:', error);
+                        }
+                    }
+                }
+            }));
         },
 
         // ─── Internal ────────────────────────────────────────────────────

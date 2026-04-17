@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="space-y-6" x-data="ajaxDataTable({
-            endpoint: '{{ route('receptionist.bus-stops.index') }}',
+            endpoint: '{{ route('receptionist.bus-stops.fetch') }}',
             initialData: @js($initialData),
             initialFilters: { search: '' }
         })">

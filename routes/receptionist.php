@@ -32,18 +32,21 @@ use App\Http\Controllers\Receptionist\StaffController;
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // Visitor Management
-Route::match(['get', 'post'], 'visitors', [VisitorController::class, 'index'])->name('visitors.index');
+Route::get('visitors', [VisitorController::class, 'index'])->name('visitors.index');
+Route::post('visitors/fetch', [VisitorController::class, 'index'])->name('visitors.fetch');
 Route::resource('visitors', VisitorController::class)->except(['index']);
 Route::post('visitors/{visitor}/check-in', [VisitorController::class, 'checkIn'])->name('visitors.check-in');
 Route::post('visitors/{visitor}/check-out', [VisitorController::class, 'checkOut'])->name('visitors.check-out');
 Route::get('visitors-export', [VisitorController::class, 'export'])->name('visitors.export');
 
 // Student Enquiry Management
-Route::match(['get', 'post'], 'student-enquiries', [StudentEnquiryController::class, 'index'])->name('student-enquiries.index');
+Route::get('student-enquiries', [StudentEnquiryController::class, 'index'])->name('student-enquiries.index');
+Route::post('student-enquiries/fetch', [StudentEnquiryController::class, 'index'])->name('student-enquiries.fetch');
 Route::resource('student-enquiries', StudentEnquiryController::class)->except(['index']);
 
 // Student Registration Management
-Route::match(['get', 'post'], 'student-registrations', [StudentRegistrationController::class, 'index'])->name('student-registrations.index');
+Route::get('student-registrations', [StudentRegistrationController::class, 'index'])->name('student-registrations.index');
+Route::post('student-registrations/fetch', [StudentRegistrationController::class, 'index'])->name('student-registrations.fetch');
 Route::get('student-registrations/enquiry/{id}', [StudentRegistrationController::class, 'getEnquiryData'])->name('student-registrations.enquiry-data');
 Route::get('student-registrations/registration-fee/{classId}', [StudentRegistrationController::class, 'getRegistrationFee'])->name('student-registrations.registration-fee');
 Route::get('student-registrations/download-template', [StudentRegistrationController::class, 'downloadTemplate'])->name('registrations.download-template');
@@ -52,7 +55,8 @@ Route::get('student-registrations/{id}/pdf', [StudentRegistrationController::cla
 Route::resource('student-registrations', StudentRegistrationController::class)->except(['index']);
 
 // Student Admission
-Route::match(['get', 'post'], 'admission', [AdmissionController::class, 'index'])->name('admission.index');
+Route::get('admission', [AdmissionController::class, 'index'])->name('admission.index');
+Route::post('admission/fetch', [AdmissionController::class, 'index'])->name('admission.fetch');
 Route::get('admission/class-data/{classId}', [AdmissionController::class, 'getClassData'])->name('admission.class-data');
 Route::get('admission/registration/{id}', [AdmissionController::class, 'getRegistrationData'])->name('admission.getRegistrationData');
 Route::get('admission/{id}/pdf', [AdmissionController::class, 'downloadPdf'])->name('admission.pdf');
@@ -61,18 +65,21 @@ Route::resource('admission', AdmissionController::class)->parameters([
 ])->except(['index']);
 
 // Vehicle Management
-Route::match(['get', 'post'], 'vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+Route::get('vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+Route::post('vehicles/fetch', [VehicleController::class, 'index'])->name('vehicles.fetch');
 Route::resource('vehicles', VehicleController::class)->except(['index']);
 Route::get('vehicles-export', [VehicleController::class, 'export'])->name('vehicles.export');
 
 // Route Management
-Route::match(['get', 'post'], 'routes', [RouteController::class, 'index'])->name('routes.index');
+Route::get('routes', [RouteController::class, 'index'])->name('routes.index');
+Route::post('routes/fetch', [RouteController::class, 'index'])->name('routes.fetch');
 Route::get('routes/vehicles', [RouteController::class, 'getVehicles'])->name('routes.vehicles');
 Route::resource('routes', RouteController::class)->except(['index']);
 Route::get('routes-export', [RouteController::class, 'export'])->name('routes.export');
 
 // Bus Stop Management
-Route::match(['get', 'post'], 'bus-stops', [BusStopController::class, 'index'])->name('bus-stops.index');
+Route::get('bus-stops', [BusStopController::class, 'index'])->name('bus-stops.index');
+Route::post('bus-stops/fetch', [BusStopController::class, 'index'])->name('bus-stops.fetch');
 Route::resource('bus-stops', BusStopController::class)->except(['index']);
 Route::get('bus-stops-export', [BusStopController::class, 'export'])->name('bus-stops.export');
 

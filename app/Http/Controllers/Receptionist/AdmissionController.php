@@ -49,8 +49,8 @@ class AdmissionController extends TenantController
                 'phone' => $student->phone,
                 'email' => $student->email ?? 'N/A',
                 'father_name' => $student->father_name,
-                'class_name' => $student->class?->class_name ?? 'N/A',
-                'section_name' => $student->section?->section_name ?? 'A',
+                'class_name' => $student->class?->name ?? 'N/A',
+                'section_name' => $student->section?->name ?? 'A',
                 'admission_date' => $student->admission_date ? $student->admission_date->format('d M, Y') : 'N/A',
                 'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
                 'status_label' => $student->status?->label() ?? 'Active',
@@ -83,7 +83,7 @@ class AdmissionController extends TenantController
 
         // 3. Handle AJAX or CSV Export vs Blade Hydration
         if ($request->expectsJson() || $request->ajax()) {
-            return $this->handleAjaxTable($query, $transformer);
+            return $this->handleAjaxTable($query, $transformer, $this->getStats($schoolId));
         }
 
         if ($request->has('export')) {
@@ -92,13 +92,7 @@ class AdmissionController extends TenantController
 
         // 4. Blade Hydration
         $initialData = $this->getHydrationData($query, $transformer, [
-            'stats' => [
-                'total_registration' => StudentRegistration::where('school_id', $schoolId)->count(),
-                'admission_done' => Student::where('school_id', $schoolId)->count(),
-                'pending_registration' => StudentRegistration::where('school_id', $schoolId)->pending()->count(),
-                'cancelled_registration' => StudentRegistration::where('school_id', $schoolId)->cancelled()->count(),
-                'total_enquiry' => StudentEnquiry::where('school_id', $schoolId)->count(),
-            ]
+            'stats' => $this->getStats($schoolId)
         ]);
 
         $classes = ClassModel::where('school_id', $schoolId)->get();
@@ -111,6 +105,21 @@ class AdmissionController extends TenantController
             'sections' => $sections,
         ]);
     }
+
+    /**
+     * Get aggregate statistics for the registry
+     */
+    private function getStats(int $schoolId): array
+    {
+        return [
+            'total_registration' => StudentRegistration::where('school_id', $schoolId)->count(),
+            'admission_done' => Student::where('school_id', $schoolId)->count(),
+            'pending_registration' => StudentRegistration::where('school_id', $schoolId)->pending()->count(),
+            'cancelled_registration' => StudentRegistration::where('school_id', $schoolId)->cancelled()->count(),
+            'total_enquiry' => StudentEnquiry::where('school_id', $schoolId)->count(),
+        ];
+    }
+
 
     private function exportToCsv($query)
     {
@@ -128,8 +137,8 @@ class AdmissionController extends TenantController
                     $student->admission_no,
                     $student->full_name,
                     $student->father_name,
-                    $student->class?->class_name ?? 'N/A',
-                    $student->section?->section_name ?? 'N/A',
+                    $student->class?->name ?? 'N/A',
+                    $student->section?->name ?? 'N/A',
                     $student->phone,
                     $student->admission_date ? $student->admission_date->format('Y-m-d') : 'N/A'
                 ]);

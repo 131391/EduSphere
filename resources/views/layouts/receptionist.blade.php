@@ -160,7 +160,7 @@
                                 :class="{ 'rotate-180': frontDeskOpen }" x-show="!sidebarCollapsed"></i>
                         </button>
                         <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && frontDeskOpen" x-collapse x-cloak class="ml-4 mt-1 space-y-1">
+                        <ul x-show="!sidebarCollapsed && frontDeskOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$frontDeskOpen) x-cloak @endif>
                             <li>
                                 <a href="{{ route('receptionist.visitors.index') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -241,7 +241,7 @@
                                 :class="{ 'rotate-180': transportOpen }" x-show="!sidebarCollapsed"></i>
                         </button>
                         <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && transportOpen" x-collapse x-cloak class="ml-4 mt-1 space-y-1">
+                        <ul x-show="!sidebarCollapsed && transportOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$transportOpen) x-cloak @endif>
                             <li>
                                 <a href="{{ route('receptionist.routes.index') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -308,7 +308,7 @@
                                 :class="{ 'rotate-180': hostelOpen }" x-show="!sidebarCollapsed"></i>
                         </button>
                         <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && hostelOpen" x-collapse x-cloak class="ml-4 mt-1 space-y-1">
+                        <ul x-show="!sidebarCollapsed && hostelOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$hostelOpen) x-cloak @endif>
                             <li>
                                 <a href="{{ route('receptionist.hostels.index') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostels.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -403,7 +403,7 @@
                                 :class="{ 'rotate-180': reportOpen }" x-show="!sidebarCollapsed"></i>
                         </button>
                         <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && reportOpen" x-collapse x-cloak class="ml-4 mt-1 space-y-1">
+                        <ul x-show="!sidebarCollapsed && reportOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$reportOpen) x-cloak @endif>
                             <li>
                                 <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -456,7 +456,7 @@
                                 :class="{ 'rotate-180': staffOpen }" x-show="!sidebarCollapsed"></i>
                         </button>
                         <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && staffOpen" x-collapse x-cloak class="ml-4 mt-1 space-y-1">
+                        <ul x-show="!sidebarCollapsed && staffOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$staffOpen) x-cloak @endif>
                             <li>
                                 <a href="{{ route('receptionist.staff.index') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
@@ -529,15 +529,16 @@
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
                             :class="isFavorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-500 hover:text-gray-700'"
                             title="Add to Favorites">
-                            <i class="text-xl far fa-star"
-                                :class="isFavorite ? 'fas fa-star text-xl' : 'far fa-star text-xl'"></i>
+                            <i class="text-xl" :class="isFavorite ? 'fas fa-star' : 'far fa-star'" x-cloak></i>
+                            <i class="text-xl far fa-star ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Bookmark (Saved List) -->
                         <div class="relative hidden md:block">
                             <button @click="showFavorites = !showFavorites"
                                 class="text-gray-500 hover:text-gray-700 transition-colors" title="Saved Pages">
-                                <i class="far fa-bookmark text-xl"></i>
+                                <i class="far fa-bookmark text-xl" x-cloak></i>
+                                <i class="text-xl far fa-bookmark ssr-icon-fallback"></i>
                             </button>
 
                             <!-- Favorites Dropdown -->
@@ -578,14 +579,16 @@
                         <button @click="toggleFullscreen()"
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
                             title="Toggle Fullscreen">
-                            <i class="fas text-xl" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+                            <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
+                            <i class="text-xl fas fa-expand ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Dark Mode -->
                         <button @click="toggleDarkMode()"
                             class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
                             title="Toggle Dark Mode">
-                            <i class="far fa-moon text-xl" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+                            <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
+                            <i class="text-xl far fa-moon ssr-icon-fallback"></i>
                         </button>
 
                         <!-- User Dropdown -->
@@ -769,6 +772,7 @@
                 showFavorites: false,
 
                 init() {
+                    this.$el.querySelectorAll('.ssr-icon-fallback').forEach(el => el.remove());
                     this.checkFavorite();
                     this.loadFavorites();
 
