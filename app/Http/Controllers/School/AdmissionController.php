@@ -33,23 +33,45 @@ use App\Models\StudentEnquiry;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Traits\HasAjaxDataTable;
 
 class AdmissionController extends TenantController
 {
-    use HandlesFileCopies, \App\Traits\HandlesFinancialNumbers;
+    use HandlesFileCopies, HasAjaxDataTable, \App\Traits\HandlesFinancialNumbers;
+
     public function index(Request $request)
     {
-        $query = Student::query()
-            ->with(['class', 'section'])
-            ->where('school_id', $this->getSchoolId());
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($student) {
+            return [
+                'id' => $student->id,
+                'admission_no' => $student->admission_no,
+                'registration_no' => $student->registration_no ?? 'N/A',
+                'full_name' => $student->full_name,
+                'initials' => collect(explode(' ', $student->full_name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
+                'phone' => $student->phone,
+                'email' => $student->email ?? 'N/A',
+                'father_name' => $student->father_name,
+                'class_name' => $student->class?->name ?? 'N/A',
+                'section_name' => $student->section?->name ?? 'A',
+                'admission_date' => $student->admission_date ? $student->admission_date->format('d M, Y') : 'N/A',
+                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                'status_label' => $student->status?->label() ?? 'Active',
+                'status_color' => 'teal',
+            ];
+        };
+
+        $query = Student::where('school_id', $schoolId)
+            ->with(['class', 'section']);
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('admission_no', 'like', "%{$search}%")
-                  ->orWhere('father_name', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('admission_no', 'like', "%{$search}%")
+                    ->orWhere('father_name', 'like', "%{$search}%");
             });
         }
 
@@ -57,26 +79,71 @@ class AdmissionController extends TenantController
             $query->where('class_id', $request->class_id);
         }
 
-        $students = $query->latest()->paginate(10);
-        
-        // Stats
-        $totalRegistration = StudentRegistration::where('school_id', $this->getSchoolId())->count();
-        $admissionDone = Student::where('school_id', $this->getSchoolId())->count();
-        $pendingRegistration = StudentRegistration::where('school_id', $this->getSchoolId())->pending()->count();
-        $cancelledRegistration = StudentRegistration::where('school_id', $this->getSchoolId())->cancelled()->count();
-        $totalEnquiry = StudentEnquiry::where('school_id', $this->getSchoolId())->count();
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->section_id);
+        }
 
-        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $this->getStats($schoolId));
+        }
 
-        return view('school.admission.index', compact(
-            'students', 
-            'totalRegistration', 
-            'admissionDone', 
-            'pendingRegistration', 
-            'cancelledRegistration',
-            'totalEnquiry',
-            'classes'
-        ));
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $this->getStats($schoolId)
+        ]);
+
+        $classes = ClassModel::where('school_id', $schoolId)->get();
+        $sections = Section::where('school_id', $schoolId)->get();
+
+        return view('school.admission.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+            'classes' => $classes,
+            'sections' => $sections,
+        ]);
+    }
+
+    private function getStats(int $schoolId): array
+    {
+        return [
+            'total_registration' => StudentRegistration::where('school_id', $schoolId)->count(),
+            'admission_done' => Student::where('school_id', $schoolId)->count(),
+            'pending_registration' => StudentRegistration::where('school_id', $schoolId)->pending()->count(),
+            'cancelled_registration' => StudentRegistration::where('school_id', $schoolId)->cancelled()->count(),
+            'total_enquiry' => StudentEnquiry::where('school_id', $schoolId)->count(),
+        ];
+    }
+
+    private function exportToCsv($query)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="student_admission_registry_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Admission No', 'Student Name', 'Father Name', 'Class', 'Section', 'Phone', 'Date']);
+
+            $query->orderBy('created_at', 'desc')->cursor()->each(function ($student) use ($file) {
+                fputcsv($file, [
+                    $student->admission_no,
+                    $student->full_name,
+                    $student->father_name,
+                    $student->class?->name ?? 'N/A',
+                    $student->section?->name ?? 'N/A',
+                    $student->phone,
+                    $student->admission_date ? $student->admission_date->format('Y-m-d') : 'N/A'
+                ]);
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function create()

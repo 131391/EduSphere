@@ -83,7 +83,7 @@ $(document).ready(function() {
             width: '100%'
         });
     }
-
+    
     // Auto-fill form when registration is selected
     $('#registration_select').on('change', function(e) {
         // Skip if this change event was NOT triggered by a real user interaction on the Edit page

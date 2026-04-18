@@ -180,8 +180,9 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('receptionist.student-registrations.pdf', $row['id']) }}" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Download PDF"><i class="fas fa-file-pdf text-xs"></i></a>
-                                    <a href="{{ route('receptionist.student-registrations.edit', $row['id']) }}" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                    <a href="{{ route('receptionist.student-registrations.show', $row['id']) }}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors" title="View"><i class="fas fa-eye text-xs"></i></a>
+                                    <a href="{{ route('receptionist.student-registrations.pdf', $row['id']) }}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Download PDF"><i class="fas fa-file-pdf text-xs"></i></a>
+                                    <a href="{{ route('receptionist.student-registrations.edit', $row['id']) }}" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
                                     <button @click="quickAction(`/receptionist/student-registrations/${row['id']}`, 'Delete Registration', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
                                 </div>
                             </td>
@@ -244,8 +245,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <a :href="`/receptionist/student-registrations/${row.id}/pdf`" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Download PDF"><i class="fas fa-file-pdf text-xs"></i></a>
-                                        <a :href="`/receptionist/student-registrations/${row.id}/edit`" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                        <a :href="`/receptionist/student-registrations/${row.id}`" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors" title="View"><i class="fas fa-eye text-xs"></i></a>
+                                        <a :href="`/receptionist/student-registrations/${row.id}/pdf`" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Download PDF"><i class="fas fa-file-pdf text-xs"></i></a>
+                                        <a :href="`/receptionist/student-registrations/${row.id}/edit`" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
                                         <button @click="quickAction(`/receptionist/student-registrations/${row.id}`, 'Delete Registration', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
                                     </div>
                                 </td>

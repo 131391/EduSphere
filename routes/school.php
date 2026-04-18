@@ -207,19 +207,27 @@ Route::resource('subjects', SubjectController::class)->only(['index', 'store', '
 Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Student Enquiry Management
-Route::resource('student-enquiries', \App\Http\Controllers\School\StudentEnquiryController::class);
+Route::get('student-enquiries', [\App\Http\Controllers\School\StudentEnquiryController::class, 'index'])->name('student-enquiries.index');
+Route::post('student-enquiries/fetch', [\App\Http\Controllers\School\StudentEnquiryController::class, 'index'])->name('student-enquiries.fetch');
+Route::resource('student-enquiries', \App\Http\Controllers\School\StudentEnquiryController::class)->except(['index']);
 
 // Student Registration Management
+Route::get('student-registrations', [\App\Http\Controllers\School\StudentRegistrationController::class, 'index'])->name('student-registrations.index');
+Route::post('student-registrations/fetch', [\App\Http\Controllers\School\StudentRegistrationController::class, 'index'])->name('student-registrations.fetch');
 Route::get('student-registrations/enquiry/{id}', [\App\Http\Controllers\School\StudentRegistrationController::class, 'getEnquiryData'])->name('student-registrations.enquiry-data');
 Route::get('student-registrations/registration-fee/{classId}', [\App\Http\Controllers\School\StudentRegistrationController::class, 'getRegistrationFee'])->name('student-registrations.registration-fee');
+Route::get('student-registrations/download-template', [\App\Http\Controllers\School\StudentRegistrationController::class, 'downloadTemplate'])->name('registrations.download-template');
+Route::post('student-registrations/import', [\App\Http\Controllers\School\StudentRegistrationController::class, 'import'])->name('registrations.import');
 Route::get('student-registrations/{id}/pdf', [\App\Http\Controllers\School\StudentRegistrationController::class, 'downloadPdf'])->name('student-registrations.pdf');
-Route::resource('student-registrations', \App\Http\Controllers\School\StudentRegistrationController::class);
+Route::resource('student-registrations', \App\Http\Controllers\School\StudentRegistrationController::class)->except(['index']);
 
 // Admission Management
+Route::get('admission', [\App\Http\Controllers\School\AdmissionController::class, 'index'])->name('admission.index');
+Route::post('admission/fetch', [\App\Http\Controllers\School\AdmissionController::class, 'index'])->name('admission.fetch');
 Route::get('admission/registration/{id}', [\App\Http\Controllers\School\AdmissionController::class, 'getRegistrationData'])->name('admission.getRegistrationData');
 Route::get('admission/{id}/pdf', [\App\Http\Controllers\School\AdmissionController::class, 'downloadPdf'])->name('admission.pdf');
 Route::get('admission/class-data/{classId}', [\App\Http\Controllers\School\AdmissionController::class, 'getClassData'])->name('admission.class-data');
-Route::resource('admission', \App\Http\Controllers\School\AdmissionController::class)->parameters([
+Route::resource('admission', \App\Http\Controllers\School\AdmissionController::class)->except(['index'])->parameters([
     'admission' => 'student'
 ]);
 

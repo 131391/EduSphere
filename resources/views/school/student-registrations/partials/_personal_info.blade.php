@@ -1,3 +1,6 @@
+@php
+    use App\Enums\Gender;
+@endphp
 {{-- Personal Information --}}
 <div class="mb-6">
     <div class="bg-teal-500 text-white px-4 py-3 rounded-t-lg font-semibold">
@@ -9,311 +12,344 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     First Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="first_name" value="{{ old('first_name', $studentRegistration->first_name ?? '') }}"  placeholder="Enter First Name"
-                       class="w-full px-4 py-2 border @error('first_name') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('first_name')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="first_name" x-model="formData.first_name" placeholder="Enter First Name"
+                       @input="clearError('first_name')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.first_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.first_name">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.first_name[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Middle Name
                 </label>
-                <input type="text" name="middle_name" value="{{ old('middle_name', $studentRegistration->middle_name ?? '') }}" placeholder="Enter Middle Name"
-                       class="w-full px-4 py-2 border @error('middle_name') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('middle_name')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="middle_name" x-model="formData.middle_name" placeholder="Enter Middle Name"
+                       @input="clearError('middle_name')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.middle_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.middle_name">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.middle_name[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Last Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="last_name" value="{{ old('last_name', $studentRegistration->last_name ?? '') }}"  placeholder="Enter Last Name"
-                       class="w-full px-4 py-2 border @error('last_name') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('last_name')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="last_name" x-model="formData.last_name" placeholder="Enter Last Name"
+                       @input="clearError('last_name')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.last_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.last_name">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.last_name[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Gender <span class="text-red-500">*</span>
                 </label>
-                <select name="gender"  
-                        class="w-full px-4 py-2 border @error('gender') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="gender" x-model="formData.gender" @change="clearError('gender')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.gender ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Gender</option>
                     @foreach(\App\Constants\Gender::getOptions() as $value => $label)
-                        @php
-                            $currentGender = old('gender', $studentRegistration->gender ?? '');
-                            $currentValue = $currentGender instanceof \App\Enums\Gender ? $currentGender->value : $currentGender;
-                        @endphp
-                        <option value="{{ $value }}" {{ $currentValue == $value ? 'selected' : '' }}>{{ $label }}</option>
+                        <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
                 </select>
-                @error('gender')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.gender">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.gender[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Date of Birth
                 </label>
-                <input type="date" name="dob" value="{{ old('dob', isset($studentRegistration->dob) ? $studentRegistration->dob->format('Y-m-d') : '') }}"
-                       class="w-full px-4 py-2 border @error('dob') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('dob')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="date" name="dob" x-model="formData.dob"
+                       @change="clearError('dob')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.dob ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.dob">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.dob[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Email Id
                 </label>
-                <input type="email" name="email" value="{{ old('email', $studentRegistration->email ?? '') }}" placeholder="Enter Email Id"
-                       class="w-full px-4 py-2 border @error('email') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('email')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="email" name="email" x-model="formData.email" placeholder="Enter Email Id"
+                       @input="clearError('email')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.email">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.email[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mobile No <span class="text-red-500">*</span>
                 </label>
-                <input type="tel" name="mobile_no" value="{{ old('mobile_no', $studentRegistration->mobile_no ?? '') }}"  placeholder="Enter Mobile No" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       class="w-full px-4 py-2 border @error('mobile_no') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('mobile_no')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="tel" name="mobile_no" x-model="formData.mobile_no" placeholder="Enter Mobile No" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                       @input="clearError('mobile_no')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.mobile_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.mobile_no">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.mobile_no[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Student Type
                 </label>
-                <select name="student_type" 
-                        class="w-full px-4 py-2 border @error('student_type') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="student_type" x-model="formData.student_type" @change="clearError('student_type')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.student_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Student Type</option>
                     @foreach($studentTypes as $type)
-                        <option value="{{ $type->name }}" {{ (old('student_type', $studentRegistration->student_type ?? '') == $type->name) ? 'selected' : '' }}>{{ $type->name }}</option>
+                        <option value="{{ $type->name }}">{{ $type->name }}</option>
                     @endforeach
                 </select>
-                @error('student_type')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.student_type">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.student_type[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Aadhar No
                 </label>
-                <input type="text" name="aadhar_no" value="{{ old('aadhar_no', $studentRegistration->aadhar_no ?? '') }}" placeholder="Enter Aadhaar No"
-                       class="w-full px-4 py-2 border @error('aadhar_no') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('aadhar_no')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="aadhar_no" x-model="formData.aadhar_no" placeholder="Enter Aadhaar No"
+                       @input="clearError('aadhar_no')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.aadhar_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.aadhar_no">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.aadhar_no[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Place of Birth
                 </label>
-                <input type="text" name="place_of_birth" value="{{ old('place_of_birth', $studentRegistration->place_of_birth ?? '') }}" placeholder="Enter Place of Birth"
-                       class="w-full px-4 py-2 border @error('place_of_birth') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('place_of_birth')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="place_of_birth" x-model="formData.place_of_birth" placeholder="Enter Place of Birth"
+                       @input="clearError('place_of_birth')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.place_of_birth ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.place_of_birth">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.place_of_birth[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nationality
                 </label>
-                <select name="nationality"  
-                        class="w-full px-4 py-2 border @error('nationality') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    <option value="Indian" {{ (old('nationality', $studentRegistration->nationality ?? 'Indian') == 'Indian') ? 'selected' : '' }}>Indian</option>
-                    <option value="Nepal" {{ (old('nationality', $studentRegistration->nationality ?? '') == 'Nepal') ? 'selected' : '' }}>Nepal</option>
-                    <option value="Pakistan" {{ (old('nationality', $studentRegistration->nationality ?? '') == 'Pakistan') ? 'selected' : '' }}>Pakistan</option>
+                <select name="nationality" x-model="formData.nationality" @change="clearError('nationality')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.nationality ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                    <option value="Indian">Indian</option>
+                    <option value="Nepal">Nepal</option>
+                    <option value="Pakistan">Pakistan</option>
                 </select>
-                @error('nationality')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.nationality">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.nationality[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Religion
                 </label>
-                <select name="religion" 
-                        class="w-full px-4 py-2 border @error('religion') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="religion" x-model="formData.religion" @change="clearError('religion')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.religion ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Religion</option>
                     @foreach($religions as $rel)
-                        <option value="{{ $rel->name }}" {{ (old('religion', $studentRegistration->religion ?? '') == $rel->name) ? 'selected' : '' }}>{{ $rel->name }}</option>
+                        <option value="{{ $rel->name }}">{{ $rel->name }}</option>
                     @endforeach
                 </select>
-                @error('religion')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.religion">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.religion[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Category
                 </label>
-                <select name="category" 
-                        class="w-full px-4 py-2 border @error('category') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="category" x-model="formData.category" @change="clearError('category')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.category ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Category</option>
                     @foreach($categories as $cat)
-                        <option value="{{ $cat->name }}" {{ (old('category', $studentRegistration->category ?? '') == $cat->name) ? 'selected' : '' }}>{{ $cat->name }}</option>
+                        <option value="{{ $cat->name }}">{{ $cat->name }}</option>
                     @endforeach
                 </select>
-                @error('category')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.category">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.category[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Special Needs If any
                 </label>
-                <input type="text" name="special_needs" value="{{ old('special_needs', $studentRegistration->special_needs ?? '') }}" placeholder="Enter Special Needs if any"
-                       class="w-full px-4 py-2 border @error('special_needs') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('special_needs')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="special_needs" x-model="formData.special_needs" placeholder="Enter Special Needs if any"
+                       @input="clearError('special_needs')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.special_needs ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.special_needs">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.special_needs[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mother Tongue
                 </label>
-                <input type="text" name="mother_tongue" value="{{ old('mother_tongue', $studentRegistration->mother_tongue ?? '') }}" placeholder="Enter Mother Tongue"
-                       class="w-full px-4 py-2 border @error('mother_tongue') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('mother_tongue')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="mother_tongue" x-model="formData.mother_tongue" placeholder="Enter Mother Tongue"
+                       @input="clearError('mother_tongue')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.mother_tongue ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.mother_tongue">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.mother_tongue[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Remarks
                 </label>
-                <input type="text" name="remarks" value="{{ old('remarks', $studentRegistration->remarks ?? '') }}" placeholder="Enter Remarks"
-                       class="w-full px-4 py-2 border @error('remarks') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('remarks')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="remarks" x-model="formData.remarks" placeholder="Enter Remarks"
+                       @input="clearError('remarks')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.remarks ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.remarks">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.remarks[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Number of Brothers
                 </label>
-                <input type="number" step="0.01" name="number_of_brothers" value="{{ old('number_of_brothers', $studentRegistration->number_of_brothers ?? 0) }}"
-                       class="w-full px-4 py-2 border @error('number_of_brothers') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('number_of_brothers')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="number" step="0.01" name="number_of_brothers" x-model="formData.number_of_brothers"
+                       @input="clearError('number_of_brothers')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.number_of_brothers ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.number_of_brothers">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.number_of_brothers[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Number of Sisters
                 </label>
-                <input type="number" step="0.01" name="number_of_sisters" value="{{ old('number_of_sisters', $studentRegistration->number_of_sisters ?? 0) }}"
-                       class="w-full px-4 py-2 border @error('number_of_sisters') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('number_of_sisters')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="number" step="0.01" name="number_of_sisters" x-model="formData.number_of_sisters"
+                       @input="clearError('number_of_sisters')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.number_of_sisters ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.number_of_sisters">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.number_of_sisters[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Is Single Parent
                 </label>
-                <select name="is_single_parent" 
-                        class="w-full px-4 py-2 border @error('is_single_parent') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    <option value="0" {{ old('is_single_parent', $studentRegistration->is_single_parent ?? 0) == 0 ? 'selected' : '' }}>No</option>
-                    <option value="1" {{ old('is_single_parent', $studentRegistration->is_single_parent ?? 0) == 1 ? 'selected' : '' }}>Yes</option>
+                <select name="is_single_parent" x-model="formData.is_single_parent" @change="clearError('is_single_parent')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.is_single_parent ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
                 </select>
-                @error('is_single_parent')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.is_single_parent">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.is_single_parent[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Corresponding Relative
                 </label>
-                <select name="corresponding_relative" 
-                        class="w-full px-4 py-2 border @error('corresponding_relative') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="corresponding_relative" x-model="formData.corresponding_relative" @change="clearError('corresponding_relative')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.corresponding_relative ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Corresponding Relative</option>
                     @foreach($correspondingRelatives as $rel)
-                        <option value="{{ $rel->name }}" {{ (old('corresponding_relative', $studentRegistration->corresponding_relative ?? '') == $rel->name) ? 'selected' : '' }}>{{ $rel->name }}</option>
+                        <option value="{{ $rel->name }}">{{ $rel->name }}</option>
                     @endforeach
                 </select>
-                @error('corresponding_relative')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.corresponding_relative">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.corresponding_relative[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Is Transport Required
                 </label>
-                <select name="is_transport_required" 
-                        class="w-full px-4 py-2 border @error('is_transport_required') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                    <option value="0" {{ old('is_transport_required', $studentRegistration->is_transport_required ?? 0) == 0 ? 'selected' : '' }}>No</option>
-                    <option value="1" {{ old('is_transport_required', $studentRegistration->is_transport_required ?? 0) == 1 ? 'selected' : '' }}>Yes</option>
+                <select name="is_transport_required" x-model="formData.is_transport_required" @change="clearError('is_transport_required')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.is_transport_required ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
                 </select>
-                @error('is_transport_required')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.is_transport_required">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.is_transport_required[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Bus / Van Req.
                 </label>
-                <select name="bus_stop" 
-                        class="w-full px-4 py-2 border @error('bus_stop') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="bus_stop" x-model="formData.bus_stop" @change="clearError('bus_stop')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.bus_stop ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Bus Stop</option>
-                    {{-- This would normally be populated from a transport module --}}
                 </select>
-                @error('bus_stop')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.bus_stop">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.bus_stop[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Other Stop
                 </label>
-                <input type="text" name="other_stop" value="{{ old('other_stop', $studentRegistration->other_stop ?? '') }}" placeholder="Enter Other Stop"
-                       class="w-full px-4 py-2 border @error('other_stop') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                @error('other_stop')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <input type="text" name="other_stop" x-model="formData.other_stop" placeholder="Enter Other Stop"
+                       @input="clearError('other_stop')"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                       :class="errors.other_stop ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.other_stop">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.other_stop[0]"></p>
+                </template>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Boarding Type
                 </label>
-                <select name="boarding_type" 
-                        class="w-full px-4 py-2 border @error('boarding_type') border-red-500 @else border-gray-300 dark:border-gray-600 @enderror rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                <select name="boarding_type" x-model="formData.boarding_type" @change="clearError('boarding_type')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                        :class="errors.boarding_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Boarding Type</option>
                     @foreach($boardingTypes as $type)
-                        <option value="{{ $type->name }}" {{ (old('boarding_type', $studentRegistration->boarding_type ?? '') == $type->name) ? 'selected' : '' }}>{{ $type->name }}</option>
+                        <option value="{{ $type->name }}">{{ $type->name }}</option>
                     @endforeach
                 </select>
-                @error('boarding_type')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+                <template x-if="errors.boarding_type">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.boarding_type[0]"></p>
+                </template>
             </div>
         </div>
     </div>

@@ -15,7 +15,7 @@
             <i class="fas fa-file-pdf mr-2 text-xs"></i> Download PDF
         </a>
         <a href="{{ route('school.admission.edit', $student->id) }}"
-            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
             <i class="fas fa-edit mr-2 text-xs"></i> Edit
         </a>
         <a href="{{ route('school.admission.index') }}"
@@ -26,7 +26,9 @@
 
     {{-- ── Hero Profile Card ── --}}
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div class="h-2 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+        {{-- Coloured top strip --}}
+        <div class="h-2 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
+
         <div class="p-6">
             <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
 
@@ -34,7 +36,9 @@
                 <div class="shrink-0">
                     <div class="w-28 h-28 rounded-2xl border-4 border-white dark:border-gray-700 shadow-md overflow-hidden bg-gray-100 dark:bg-gray-700">
                         @if($student->photo)
-                            <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->full_name }}" class="w-full h-full object-cover">
+                            <img src="{{ asset('storage/' . $student->photo) }}"
+                                 alt="{{ $student->full_name }}"
+                                 class="w-full h-full object-cover">
                         @else
                             <div class="w-full h-full flex items-center justify-center">
                                 <i class="fas fa-user text-gray-400 text-4xl"></i>
@@ -46,7 +50,9 @@
                 {{-- Core info --}}
                 <div class="flex-1 text-center sm:text-left min-w-0">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white truncate">{{ $student->full_name }}</h2>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white truncate">
+                            {{ $student->full_name }}
+                        </h2>
                         @php
                             $statusColor = match($student->status?->value ?? 1) {
                                 1 => 'bg-emerald-100 text-emerald-700',
@@ -61,34 +67,54 @@
                         </span>
                     </div>
 
+                    {{-- Key badges --}}
                     <div class="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-semibold border border-indigo-100 dark:border-indigo-800/40">
-                            <i class="fas fa-id-card text-[10px]"></i> {{ $student->admission_no }}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 rounded-lg text-xs font-semibold border border-teal-100 dark:border-teal-800/40">
+                            <i class="fas fa-id-card text-[10px]"></i>
+                            {{ $student->admission_no }}
                         </span>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-semibold border border-blue-100 dark:border-blue-800/40">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-semibold border border-indigo-100 dark:border-indigo-800/40">
                             <i class="fas fa-graduation-cap text-[10px]"></i>
                             {{ $student->class->name ?? 'N/A' }} — {{ $student->section->name ?? 'N/A' }}
                         </span>
                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-lg text-xs font-semibold border border-purple-100 dark:border-purple-800/40">
-                            <i class="fas fa-calendar-alt text-[10px]"></i> {{ $student->academicYear->name ?? 'N/A' }}
+                            <i class="fas fa-calendar-alt text-[10px]"></i>
+                            {{ $student->academicYear->name ?? 'N/A' }}
                         </span>
                         @if($student->roll_no)
                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-lg text-xs font-semibold border border-amber-100 dark:border-amber-800/40">
-                            <i class="fas fa-hashtag text-[10px]"></i> Roll {{ $student->roll_no }}
+                            <i class="fas fa-hashtag text-[10px]"></i>
+                            Roll {{ $student->roll_no }}
                         </span>
                         @endif
                     </div>
 
+                    {{-- Quick stats row --}}
                     <div class="flex flex-wrap justify-center sm:justify-start gap-6 text-sm text-gray-500 dark:text-gray-400">
-                        <span class="flex items-center gap-1.5"><i class="fas fa-birthday-cake text-gray-400 text-xs"></i> {{ $student->date_of_birth?->format('d M Y') ?? 'N/A' }}</span>
-                        <span class="flex items-center gap-1.5"><i class="fas fa-venus-mars text-gray-400 text-xs"></i> {{ $student->gender_label }}</span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-birthday-cake text-gray-400 text-xs"></i>
+                            {{ $student->date_of_birth?->format('d M Y') ?? 'N/A' }}
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-venus-mars text-gray-400 text-xs"></i>
+                            {{ $student->gender_label }}
+                        </span>
                         @if($student->blood_group)
-                        <span class="flex items-center gap-1.5"><i class="fas fa-tint text-rose-400 text-xs"></i> {{ $student->blood_group }}</span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-tint text-rose-400 text-xs"></i>
+                            {{ $student->blood_group }}
+                        </span>
                         @endif
                         @if($student->phone)
-                        <span class="flex items-center gap-1.5"><i class="fas fa-phone text-gray-400 text-xs"></i> {{ $student->phone }}</span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-phone text-gray-400 text-xs"></i>
+                            {{ $student->phone }}
+                        </span>
                         @endif
-                        <span class="flex items-center gap-1.5"><i class="fas fa-calendar-check text-gray-400 text-xs"></i> Admitted {{ $student->admission_date?->format('d M Y') ?? 'N/A' }}</span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-calendar-check text-gray-400 text-xs"></i>
+                            Admitted {{ $student->admission_date?->format('d M Y') ?? 'N/A' }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -98,14 +124,8 @@
     {{-- ── Main Content Grid ── --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {{-- LEFT COLUMN --}}
+        {{-- ── LEFT COLUMN (2/3) ── --}}
         <div class="lg:col-span-2 space-y-6">
-
-            @php
-                $detailCard = function(string $color, string $icon, string $title) {
-                    return compact('color', 'icon', 'title');
-                };
-            @endphp
 
             {{-- Personal Information --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -116,16 +136,16 @@
                     <h3 class="text-sm font-bold text-gray-800 dark:text-white">Personal Information</h3>
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-user',         'label' => 'Full Name',      'value' => $student->full_name])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-birthday-cake','label' => 'Date of Birth',  'value' => $student->date_of_birth?->format('d F Y') ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-venus-mars',   'label' => 'Gender',         'value' => $student->gender_label])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-tint',         'label' => 'Blood Group',    'value' => $student->blood_group ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',        'label' => 'Mobile',         'value' => $student->phone ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',     'label' => 'Email',          'value' => $student->email ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-pray',         'label' => 'Religion',       'value' => $student->religion ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-layer-group',  'label' => 'Category',       'value' => $student->category ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-id-badge',     'label' => 'Aadhaar No',     'value' => $student->aadhaar_no ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-globe',        'label' => 'Nationality',    'value' => $student->nationality ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-user',        'label' => 'Full Name',            'value' => $student->full_name])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-birthday-cake','label' => 'Date of Birth',       'value' => $student->date_of_birth?->format('d F Y') ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-venus-mars',  'label' => 'Gender',               'value' => $student->gender_label])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-tint',        'label' => 'Blood Group',          'value' => $student->blood_group ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',               'value' => $student->phone ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',                'value' => $student->email ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-pray',        'label' => 'Religion',             'value' => $student->religion ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-layer-group', 'label' => 'Category',             'value' => $student->category ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-id-badge',    'label' => 'Aadhaar No',           'value' => $student->aadhaar_no ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-globe',       'label' => 'Nationality',          'value' => $student->nationality ?? 'N/A'])
                 </div>
             </div>
 
@@ -138,11 +158,11 @@
                     <h3 class="text-sm font-bold text-gray-800 dark:text-white">Father's Details</h3>
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-user',          'label' => 'Name',          'value' => $student->father_name])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',         'label' => 'Mobile',        'value' => $student->father_mobile ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',      'label' => 'Email',         'value' => $student->father_email ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-briefcase',     'label' => 'Occupation',    'value' => $student->father_occupation ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification', 'value' => $student->father_qualification ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-user',        'label' => 'Name',          'value' => $student->father_name])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',        'value' => $student->father_mobile ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',         'value' => $student->father_email ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-briefcase',   'label' => 'Occupation',    'value' => $student->father_occupation ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification','value' => $student->father_qualification ?? 'N/A'])
                 </div>
             </div>
 
@@ -155,11 +175,11 @@
                     <h3 class="text-sm font-bold text-gray-800 dark:text-white">Mother's Details</h3>
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-user',          'label' => 'Name',          'value' => $student->mother_name])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',         'label' => 'Mobile',        'value' => $student->mother_mobile ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',      'label' => 'Email',         'value' => $student->mother_email ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-briefcase',     'label' => 'Occupation',    'value' => $student->mother_occupation ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification', 'value' => $student->mother_qualification ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-user',        'label' => 'Name',          'value' => $student->mother_name])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',        'value' => $student->mother_mobile ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',         'value' => $student->mother_email ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-briefcase',   'label' => 'Occupation',    'value' => $student->mother_occupation ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification','value' => $student->mother_qualification ?? 'N/A'])
                 </div>
             </div>
 
@@ -172,9 +192,10 @@
                     <h3 class="text-sm font-bold text-gray-800 dark:text-white">Address</h3>
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {{-- Permanent --}}
                     <div>
                         <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Permanent Address
+                            <span class="w-2 h-2 rounded-full bg-teal-500"></span> Permanent Address
                         </p>
                         <div class="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                             <p>{{ $student->permanent_address ?? '—' }}</p>
@@ -186,6 +207,7 @@
                             @endif
                         </div>
                     </div>
+                    {{-- Correspondence --}}
                     <div>
                         <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-purple-500"></span> Correspondence Address
@@ -203,9 +225,9 @@
                 </div>
             </div>
 
-        </div>{{-- end left --}}
+        </div>{{-- end left column --}}
 
-        {{-- RIGHT COLUMN --}}
+        {{-- ── RIGHT COLUMN (1/3) ── --}}
         <div class="space-y-6">
 
             {{-- Admission Info --}}
@@ -217,12 +239,12 @@
                     <h3 class="text-sm font-bold text-gray-800 dark:text-white">Admission Info</h3>
                 </div>
                 <div class="p-5 space-y-4">
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-id-card',        'label' => 'Admission No',    'value' => $student->admission_no])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-file-alt',       'label' => 'Registration No', 'value' => $student->registration_no ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-hashtag',        'label' => 'Roll No',         'value' => $student->roll_no ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-calendar-check', 'label' => 'Admission Date',  'value' => $student->admission_date?->format('d M Y') ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-chalkboard',     'label' => 'Class',           'value' => ($student->class->name ?? 'N/A') . ' — ' . ($student->section->name ?? 'N/A')])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-calendar-alt',   'label' => 'Academic Year',   'value' => $student->academicYear->name ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-id-card',       'label' => 'Admission No',    'value' => $student->admission_no])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-file-alt',      'label' => 'Registration No', 'value' => $student->registration_no ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-hashtag',       'label' => 'Roll No',         'value' => $student->roll_no ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-calendar-check','label' => 'Admission Date',  'value' => $student->admission_date?->format('d M Y') ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-chalkboard',    'label' => 'Class',           'value' => ($student->class->name ?? 'N/A') . ' — ' . ($student->section->name ?? 'N/A')])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-calendar-alt',  'label' => 'Academic Year',   'value' => $student->academicYear->name ?? 'N/A'])
                 </div>
             </div>
 
@@ -243,7 +265,9 @@
                     <div class="text-center">
                         <div class="w-full aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 mb-1.5">
                             @if($item['photo'])
-                                <img src="{{ asset('storage/' . $item['photo']) }}" alt="{{ $item['label'] }}" class="w-full h-full object-cover">
+                                <img src="{{ asset('storage/' . $item['photo']) }}"
+                                     alt="{{ $item['label'] }}"
+                                     class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full flex items-center justify-center">
                                     <i class="fas fa-user text-gray-300 text-2xl"></i>
@@ -274,7 +298,9 @@
                         <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">{{ $item['label'] }}</p>
                         @if($item['sig'])
                             <div class="bg-gray-50 dark:bg-gray-700/50 border border-dashed border-gray-200 dark:border-gray-600 rounded-xl p-3 flex items-center justify-center">
-                                <img src="{{ asset('storage/' . $item['sig']) }}" alt="{{ $item['label'] }} Signature" class="h-12 object-contain">
+                                <img src="{{ asset('storage/' . $item['sig']) }}"
+                                     alt="{{ $item['label'] }} Signature"
+                                     class="h-12 object-contain">
                             </div>
                         @else
                             <div class="bg-gray-50 dark:bg-gray-700/50 border border-dashed border-gray-200 dark:border-gray-600 rounded-xl p-3 text-center">
@@ -286,8 +312,8 @@
                 </div>
             </div>
 
-        </div>{{-- end right --}}
-    </div>
+        </div>{{-- end right column --}}
+    </div>{{-- end grid --}}
 
 </div>
 @endsection
