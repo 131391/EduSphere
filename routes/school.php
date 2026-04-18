@@ -205,6 +205,7 @@ Route::resource('subjects', SubjectController::class)->only(['index', 'store', '
 
 // User Management
 Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
+Route::post('users/fetch', [UserController::class, 'index'])->name('users.fetch');
 
 // Student Enquiry Management
 Route::get('student-enquiries', [\App\Http\Controllers\School\StudentEnquiryController::class, 'index'])->name('student-enquiries.index');
