@@ -12,7 +12,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Latitude
                     </label>
-                    <input type="text" name="latitude" value="{{ old('latitude', isset($student) ? $student->latitude : '') }}" placeholder="Enter Latitude"
+                    <input type="text" name="latitude" x-model="formData.latitude" placeholder="Enter Latitude"
                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 </div>
 
@@ -20,7 +20,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Longitude
                     </label>
-                    <input type="text" name="longitude" value="{{ old('longitude', isset($student) ? $student->longitude : '') }}" placeholder="Enter Longitude"
+                    <input type="text" name="longitude" x-model="formData.longitude" placeholder="Enter Longitude"
                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                 </div>
             </div>
@@ -34,11 +34,12 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Address <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="permanent_address" value="{{ old('permanent_address', isset($student) ? $student->permanent_address : '') }}" placeholder="Enter Address"
-                               class="w-full px-4 py-2 border {{ $errors->has('permanent_address') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
-                        @error('permanent_address')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="text" name="permanent_address" x-model="formData.permanent_address" @input="clearError('permanent_address')" placeholder="Enter Address"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                               :class="errors.permanent_address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.permanent_address">
+                            <p class="text-red-500 text-xs mt-1" x-text="errors.permanent_address[0]"></p>
+                        </template>
                     </div>
 
                     <div>
@@ -46,7 +47,10 @@
                             Country <span class="text-red-500">*</span>
                         </label>
                         <select name="permanent_country_id"
-                                class="w-full px-4 py-2 border {{ $errors->has('permanent_country_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                x-model="formData.permanent_country_id"
+                                @change="clearError('permanent_country_id')"
+                                class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                :class="errors.permanent_country_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                                 data-location-cascade="true"
                                 data-country-select="true"
                                 data-selected="{{ old('permanent_country_id', isset($student) ? $student->permanent_country_id : '') }}">
@@ -57,9 +61,9 @@
                                 <option value="{{ old('permanent_country_id') }}" selected>Selected Country</option>
                             @endif
                         </select>
-                        @error('permanent_country_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <template x-if="errors.permanent_country_id">
+                            <p class="text-red-500 text-xs mt-1" x-text="errors.permanent_country_id[0]"></p>
+                        </template>
                     </div>
 
                     <div>
@@ -67,7 +71,10 @@
                             State <span class="text-red-500">*</span>
                         </label>
                         <select name="permanent_state_id"
-                                class="w-full px-4 py-2 border {{ $errors->has('permanent_state_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                x-model="formData.permanent_state_id"
+                                @change="clearError('permanent_state_id')"
+                                class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                :class="errors.permanent_state_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                                 data-state-select="true"
                                 data-selected="{{ old('permanent_state_id', isset($student) ? $student->permanent_state_id : '') }}">
                             <option value="">Select State</option>
@@ -77,9 +84,9 @@
                                 <option value="{{ old('permanent_state_id') }}" selected>Selected State</option>
                             @endif
                         </select>
-                        @error('permanent_state_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <template x-if="errors.permanent_state_id">
+                            <p class="text-red-500 text-xs mt-1" x-text="errors.permanent_state_id[0]"></p>
+                        </template>
                     </div>
 
                     <div>
@@ -87,7 +94,10 @@
                             City <span class="text-red-500">*</span>
                         </label>
                         <select name="permanent_city_id"
-                                class="w-full px-4 py-2 border {{ $errors->has('permanent_city_id') ? 'border-red-500' : 'border-gray-300 dark:border-gray-600' }} rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                x-model="formData.permanent_city_id"
+                                @change="clearError('permanent_city_id')"
+                                class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
+                                :class="errors.permanent_city_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                                 data-city-select="true"
                                 data-selected="{{ old('permanent_city_id', isset($student) ? $student->permanent_city_id : '') }}">
                             <option value="">Select City</option>
@@ -97,16 +107,16 @@
                                 <option value="{{ old('permanent_city_id') }}" selected>Selected City</option>
                             @endif
                         </select>
-                        @error('permanent_city_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <template x-if="errors.permanent_city_id">
+                            <p class="text-red-500 text-xs mt-1" x-text="errors.permanent_city_id[0]"></p>
+                        </template>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Pin
                         </label>
-                        <input type="text" name="permanent_pin" value="{{ old('permanent_pin', isset($student) ? $student->permanent_pin : '') }}" placeholder="Enter Pin"
+                        <input type="text" name="permanent_pin" x-model="formData.permanent_pin" placeholder="Enter Pin"
                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     </div>
 

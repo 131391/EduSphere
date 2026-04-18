@@ -227,7 +227,7 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Propulsion / Fuel Type <span class="text-red-500">*</span></label>
                         <select x-model="formData.fuel_type" 
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.fuel_type ? 'border-red-500' : 'border-slate-200'"
                             @change="clearError('fuel_type')">
                             <option value="">Select Propulsion</option>
@@ -276,7 +276,7 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Vehicle Variant</label>
                         <select x-model="formData.vehicle_type" 
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.vehicle_type ? 'border-red-500' : 'border-slate-200'"
                             @change="clearError('vehicle_type')">
                             <option value="">Select Configuration</option>
@@ -364,15 +364,7 @@
                 },
 
                 init() {
-                    // Placeholder for future Select2 sync if needed
-                    this.$nextTick(() => {
-                        if (typeof $ !== 'undefined') {
-                            $('select[x-model="formData.fuel_type"]').on('change', (e) => {
-                                this.formData.fuel_type = e.target.value;
-                                this.clearError('fuel_type');
-                            });
-                        }
-                    });
+                    // Standardized initialization
                 },
 
                 resetForm() {

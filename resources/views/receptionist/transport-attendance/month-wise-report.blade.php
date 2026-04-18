@@ -1,287 +1,272 @@
 @extends('layouts.receptionist')
 
-@section('title', 'Transport Attendance Month Wise Report')
+@section('title', 'Transport Attendance Report - Receptionist')
+@section('page-title', 'Monthly Attendance Report')
+@section('page-description', 'View transport attendance by vehicle, route and month')
 
 @section('content')
 <div class="space-y-6" x-data="transportAttendanceReport()" x-init="init()">
+
     {{-- Page Header --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                        <i class="fas fa-file-invoice text-xs"></i>
-                    </div>
-                    Transit Analytics
-                </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Consolidated boarding audit & manifest telemetry.</p>
+    <x-page-header title="Monthly Attendance Report" description="Select a vehicle, route and month to view the attendance calendar" icon="fas fa-calendar-alt">
+        <a href="{{ route('receptionist.transport-attendance.index') }}"
+            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+            <i class="fas fa-arrow-left mr-2 text-xs"></i>
+            Back to Attendance
+        </a>
+    </x-page-header>
+
+    {{-- ── Filter Bar ── --}}
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+
+            {{-- Vehicle --}}
+            <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-bus mr-1 text-teal-500"></i> Vehicle <span class="text-red-500">*</span>
+                </label>
+                <select id="vehicle_id" x-model="formData.vehicle_id"
+                    class="no-select2 w-full h-11 px-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
+                    :class="errors.vehicle_id ? 'border-red-400' : ''">
+                    <option value="">— Select Vehicle —</option>
+                    @foreach($vehicles as $vehicle)
+                        <option value="{{ $vehicle->id }}" {{ old('vehicle_id', $selectedVehicle?->id) == $vehicle->id ? 'selected' : '' }}>
+                            {{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
+                        </option>
+                    @endforeach
+                </select>
+                <p x-show="errors.vehicle_id" x-text="errors.vehicle_id?.[0]" class="text-xs text-red-500 font-medium" x-cloak></p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="{{ route('receptionist.transport-attendance.index') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-arrow-left mr-2 text-xs"></i>
-                    Back to Verification
-                </a>
+
+            {{-- Route --}}
+            <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-route mr-1 text-teal-500"></i> Route <span class="text-red-500">*</span>
+                </label>
+                <select id="route_id" x-model="formData.route_id"
+                    :disabled="!formData.vehicle_id"
+                    class="no-select2 w-full h-11 px-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none disabled:opacity-50"
+                    :class="errors.route_id ? 'border-red-400' : ''">
+                    <option value="">— Select Route —</option>
+                    <template x-for="route in routes" :key="route.id">
+                        <option :value="route.id" x-text="route.route_name"></option>
+                    </template>
+                </select>
+                <p x-show="errors.route_id" x-text="errors.route_id?.[0]" class="text-xs text-red-500 font-medium" x-cloak></p>
+            </div>
+
+            {{-- Month --}}
+            <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-calendar mr-1 text-teal-500"></i> Month <span class="text-red-500">*</span>
+                </label>
+                <input type="month" x-model="formData.month" @input="delete errors.month"
+                    value="{{ old('month', $selectedMonth) }}"
+                    class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
+                    :class="errors.month ? 'border-red-400' : ''">
+                <p x-show="errors.month" x-text="errors.month?.[0]" class="text-xs text-red-500 font-medium" x-cloak></p>
+            </div>
+
+            {{-- Search --}}
+            <div>
+                <button @click="searchReport()"
+                    class="w-full h-11 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+                    <i class="fas fa-search text-xs"></i>
+                    Generate Report
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Audit Parameters Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-slate-100 mb-6">
-        <div class="mb-6 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100 shadow-sm">
-                <i class="fas fa-sliders-h text-xs"></i>
-            </div>
-            <div>
-                <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Audit Parameters</h4>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Define temporal & operational scope</p>
-            </div>
-        </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <!-- Vehicle Select -->
-                <div class="space-y-2">
-                    <label class="modal-label-premium">Institutional Fleet <span class="text-red-500 font-bold">*</span></label>
-                    <div class="relative group">
-                        <select id="vehicle_id" name="vehicle_id"
-                                x-model="formData.vehicle_id"
-                                class="modal-input-premium pl-10"
-                                :class="errors.vehicle_id ? 'border-red-500 ring-red-500/10' : ''">
-                            <option value="">Select Vehicle</option>
-                            @foreach($vehicles as $vehicle)
-                                <option value="{{ $vehicle->id }}" {{ old('vehicle_id', $selectedVehicle?->id) == $vehicle->id ? 'selected' : '' }}>
-                                    {{ $vehicle->vehicle_no }} ({{ $vehicle->registration_no }})
-                                </option>
-                            @endforeach
-                        </select>
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
-                            <i class="fas fa-bus text-xs"></i>
-                        </div>
-                    </div>
-                    <template x-if="errors.vehicle_id">
-                        <p class="modal-error-message" x-text="errors.vehicle_id[0]"></p>
-                    </template>
-                </div>
-
-                <!-- Route Select -->
-                <div class="space-y-2">
-                    <label class="modal-label-premium">Active Transit Channel <span class="text-red-500 font-bold">*</span></label>
-                    <div class="relative group">
-                        <select id="route_id" name="route_id"
-                                x-model="formData.route_id"
-                                x-ref="routeSelect"
-                                class="modal-input-premium pl-10"
-                                :class="errors.route_id ? 'border-red-500 ring-red-500/10' : ''">
-                            <option value="">Select Route</option>
-                            <template x-for="route in routes" :key="route.id">
-                                <option :value="route.id" x-text="route.route_name"></option>
-                            </template>
-                        </select>
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-teal-500 transition-colors">
-                            <i class="fas fa-route text-xs"></i>
-                        </div>
-                    </div>
-                    <template x-if="errors.route_id">
-                        <p class="modal-error-message" x-text="errors.route_id[0]"></p>
-                    </template>
-                </div>
-
-                <!-- Month Select -->
-                <div class="space-y-2">
-                    <label class="modal-label-premium">Audit / Billing Month <span class="text-red-500 font-bold">*</span></label>
-                    <input type="month" id="month" x-model="formData.month"
-                            @input="delete errors.month"
-                            value="{{ old('month', $selectedMonth) }}"
-                            class="modal-input-premium"
-                            :class="errors.month ? 'border-red-500 ring-red-500/10' : ''">
-                    <template x-if="errors.month">
-                        <p class="modal-error-message" x-text="errors.month[0]"></p>
-                    </template>
-                </div>
-
-                <!-- Search Button -->
-                <div class="flex items-end">
-                    <button @click="searchReport()" 
-                            class="w-full h-[54px] bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-black rounded-2xl transition-all shadow-lg shadow-purple-100/50 flex items-center justify-center gap-3 uppercase text-xs tracking-widest group">
-                        <i class="fas fa-analytics group-hover:scale-110 transition-transform"></i>
-                        Execute Audit
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Audit Context & Legend -->
+    {{-- ── Summary Cards (shown when results exist) ── --}}
     @if($selectedVehicle && $selectedRoute)
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 transition-all hover:shadow-md">
-            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-4 shadow-sm">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shrink-0">
                 <i class="fas fa-bus text-lg"></i>
             </div>
             <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fleet Asset</p>
-                <p class="text-sm font-black text-slate-800">{{ $selectedVehicle->vehicle_no }}</p>
-                <p class="text-[10px] text-blue-500 font-bold uppercase tracking-tighter mt-0.5">{{ $selectedVehicle->registration_no }}</p>
+                <p class="text-xs font-semibold text-gray-400 mb-0.5">Vehicle</p>
+                <p class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $selectedVehicle->vehicle_no }}</p>
+                <p class="text-[11px] text-blue-500 font-medium">{{ $selectedVehicle->registration_no }}</p>
             </div>
         </div>
 
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 transition-all hover:shadow-md">
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-4 shadow-sm">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shrink-0">
                 <i class="fas fa-route text-lg"></i>
             </div>
             <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Transit Channel</p>
-                <p class="text-sm font-black text-slate-800">{{ $selectedRoute->route_name }}</p>
-                <p class="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter mt-0.5">Active Network</p>
+                <p class="text-xs font-semibold text-gray-400 mb-0.5">Route</p>
+                <p class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $selectedRoute->route_name }}</p>
+                <p class="text-[11px] text-emerald-500 font-medium">Active</p>
             </div>
         </div>
 
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 transition-all hover:shadow-md">
-            <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100 shadow-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-4 shadow-sm">
+            <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100 shrink-0">
                 <i class="fas fa-calendar-check text-lg"></i>
             </div>
             <div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Audit Period</p>
-                <p class="text-sm font-black text-slate-800">{{ \Carbon\Carbon::createFromFormat('Y-m', $selectedMonth)->format('F Y') }}</p>
-                <p class="text-[10px] text-purple-500 font-bold uppercase tracking-tighter mt-0.5">Billing Cycle</p>
-            </div>
-        </div>
-
-        <div class="bg-slate-900 rounded-2xl p-5 shadow-lg border border-slate-800 relative overflow-hidden group">
-            <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
-                <i class="fas fa-key text-white text-6xl"></i>
-            </div>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 relative z-10">Telemetry Legend</p>
-            <div class="grid grid-cols-2 gap-x-3 gap-y-2 relative z-10">
-                <div class="flex items-center gap-2">
-                    <span class="w-5 h-4 bg-teal-500 rounded flex items-center justify-center text-[8px] font-black text-white">PBS</span>
-                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Pickup (B)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-5 h-4 bg-teal-500 rounded flex items-center justify-center text-[8px] font-black text-white">DSC</span>
-                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Drop (S)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-5 h-4 bg-indigo-500 rounded flex items-center justify-center text-[8px] font-black text-white">PSC</span>
-                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Pickup (S)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-5 h-4 bg-indigo-500 rounded flex items-center justify-center text-[8px] font-black text-white">DBS</span>
-                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Drop (B)</span>
-                </div>
+                <p class="text-xs font-semibold text-gray-400 mb-0.5">Period</p>
+                <p class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ \Carbon\Carbon::createFromFormat('Y-m', $selectedMonth)->format('F Y') }}</p>
+                <p class="text-[11px] text-purple-500 font-medium">{{ count($students) }} students</p>
             </div>
         </div>
     </div>
     @endif
 
-    {{-- Consolidated Audit Trail --}}
+    {{-- ── Attendance Calendar Table ── --}}
     @if($selectedVehicle && $selectedRoute && count($students) > 0)
-    <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-12">
-        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/50 sticky left-0 z-30">
+    @php
+        $year       = (int) substr($selectedMonth, 0, 4);
+        $monthNum   = (int) substr($selectedMonth, 5, 2);
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $monthNum, $year);
+    @endphp
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+
+        {{-- Table header --}}
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/60 dark:bg-gray-800/60">
             <div>
-                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Consolidated Audit Trail</h3>
-                <p class="text-xs text-slate-500 font-medium mt-0.5">Manifest tracking for <span class="font-bold text-indigo-600">{{ count($students) }}</span> pupil profiles</p>
+                <h3 class="text-sm font-bold text-gray-800 dark:text-white">Attendance Calendar</h3>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    {{ count($students) }} students &nbsp;·&nbsp; {{ $daysInMonth }} days
+                </p>
             </div>
-            <div class="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cycle Duration</span>
-                <span class="px-3 py-1 bg-white border border-slate-200 text-indigo-600 rounded-lg text-xs font-black tracking-widest">
-                    @php
-                        $year = (int)substr($selectedMonth, 0, 4);
-                        $monthNum = (int)substr($selectedMonth, 5, 2);
-                        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $monthNum, $year);
-                    @endphp
-                    {{ $daysInMonth }} Days
+            {{-- Legend --}}
+            <div class="hidden sm:flex items-center gap-4 text-xs font-semibold text-gray-500">
+                <span class="flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded bg-teal-500 flex items-center justify-center text-white text-[9px] font-bold">P</span>
+                    Pickup (Before School)
+                </span>
+                <span class="flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded bg-indigo-500 flex items-center justify-center text-white text-[9px] font-bold">D</span>
+                    Drop (After School)
                 </span>
             </div>
         </div>
 
-        <div class="overflow-x-auto custom-scrollbar relative">
-            <table class="min-w-full divide-y divide-slate-100 border-collapse">
-                <thead class="bg-slate-50/80 sticky top-0 z-20">
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse text-xs">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 sticky top-0 z-10">
                     <tr>
-                        <th class="px-8 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-30 border-r border-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                            Boarder Registry
+                        {{-- Sticky student column --}}
+                        <th class="sticky left-0 z-20 bg-gray-50 dark:bg-gray-700/50 px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 min-w-[180px]">
+                            Student
                         </th>
                         @for($day = 1; $day <= $daysInMonth; $day++)
-                            <th class="px-4 py-6 text-center min-w-[70px] border-l border-slate-100/50">
-                                <span class="block text-[9px] font-black text-slate-300 uppercase tracking-tighter mb-1">D-{{ sprintf('%02d', $day) }}</span>
-                                <span class="block text-[11px] font-black text-slate-700 uppercase leading-none">
-                                    {{ \Carbon\Carbon::createFromDate($year, $monthNum, $day)->format('D') }}
-                                </span>
+                            @php
+                                $date      = \Carbon\Carbon::createFromDate($year, $monthNum, $day);
+                                $isWeekend = $date->isWeekend();
+                            @endphp
+                            <th class="px-2 py-3 text-center min-w-[52px] border-l border-gray-100 dark:border-gray-700 {{ $isWeekend ? 'bg-gray-100/60 dark:bg-gray-700/80' : '' }}">
+                                <span class="block text-[9px] font-bold text-gray-400 uppercase">{{ $date->format('D') }}</span>
+                                <span class="block text-[11px] font-bold {{ $isWeekend ? 'text-gray-400' : 'text-gray-700 dark:text-gray-200' }}">{{ $day }}</span>
                             </th>
                         @endfor
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-slate-50">
+                <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
                     @foreach($students as $student)
-                        <tr class="hover:bg-indigo-50/20 transition-all group">
-                            <td class="px-8 py-5 sticky left-0 bg-white group-hover:bg-indigo-50/40 transition-all z-20 border-r border-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 shadow-inner group-hover:scale-110 transition-transform">
-                                        <i class="fas fa-user text-[10px] text-slate-300"></i>
-                                    </div>
-                                    <div class="flex flex-col min-w-[140px]">
-                                        <span class="text-xs font-black text-slate-800 leading-tight">{{ $student['name'] }}</span>
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{{ $student['admission_no'] }}</span>
-                                    </div>
+                    <tr class="hover:bg-teal-50/20 dark:hover:bg-teal-900/10 transition-colors group">
+                        {{-- Sticky student cell --}}
+                        <td class="sticky left-0 z-10 bg-white dark:bg-gray-800 group-hover:bg-teal-50/20 dark:group-hover:bg-teal-900/10 px-5 py-3 border-r border-gray-100 dark:border-gray-700 transition-colors">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-500 dark:text-gray-400 shrink-0">
+                                    {{ strtoupper(substr($student['name'], 0, 1)) }}
                                 </div>
+                                <div>
+                                    <div class="font-semibold text-gray-800 dark:text-gray-100 leading-tight">{{ $student['name'] }}</div>
+                                    <div class="text-[10px] text-gray-400 font-medium">{{ $student['admission_no'] }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        @for($day = 1; $day <= $daysInMonth; $day++)
+                            @php
+                                $isWeekend = \Carbon\Carbon::createFromDate($year, $monthNum, $day)->isWeekend();
+                                $dayCodes  = $student['days'][$day] ?? [];
+                            @endphp
+                            <td class="px-1.5 py-3 text-center align-middle border-l border-gray-50 dark:border-gray-700/50 {{ $isWeekend ? 'bg-gray-50/60 dark:bg-gray-700/30' : '' }}">
+                                @if(count($dayCodes) > 0)
+                                    <div class="flex flex-col gap-1 items-center">
+                                        @foreach($dayCodes as $code)
+                                            @php
+                                                $isTeal = in_array($code, ['PBS', 'DSC']);
+                                            @endphp
+                                            <span class="inline-flex items-center justify-center w-9 h-5 rounded text-[8px] font-bold uppercase tracking-tight {{ $isTeal ? 'bg-teal-500 text-white' : 'bg-indigo-500 text-white' }}">
+                                                {{ $code }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-gray-200 dark:text-gray-600 font-bold">—</span>
+                                @endif
                             </td>
-                            @for($day = 1; $day <= $daysInMonth; $day++)
-                                @php
-                                    $isWeekend = in_array(\Carbon\Carbon::createFromDate($year, $monthNum, $day)->format('l'), ['Saturday', 'Sunday']);
-                                @endphp
-                                <td class="px-3 py-5 text-center align-middle border-l border-slate-50 group-hover:bg-indigo-50/10 transition-all {{ $isWeekend ? 'bg-slate-50/30' : '' }}">
-                                    @if(isset($student['days'][$day]) && count($student['days'][$day]) > 0)
-                                        <div class="flex flex-col gap-1.5 items-center justify-center">
-                                            @foreach($student['days'][$day] as $code)
-                                                <span class="inline-flex items-center justify-center w-10 h-6 rounded-lg font-black text-[9px] uppercase tracking-tighter border shadow-sm transition-all hover:scale-110"
-                                                    class="{{ in_array($code, ['PBS', 'DSC']) ? 'bg-teal-500 text-white border-teal-600' : 'bg-indigo-500 text-white border-indigo-600' }}"
-                                                    :style="`background-color: ${'{{ in_array($code, ['PBS', 'DSC']) ? '#10b981' : '#6366f1' }}'}; color: white; border-color: ${'{{ in_array($code, ['PBS', 'DSC']) ? '#059669' : '#4f46e5' }}'}`">
-                                                    {{ $code }}
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <span class="text-slate-200 font-black">-</span>
-                                    @endif
-                                </td>
-                            @endfor
-                        </tr>
+                        @endfor
+                    </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
+
+        {{-- Legend (mobile) --}}
+        <div class="sm:hidden px-5 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/60 flex flex-wrap gap-3 text-xs font-semibold text-gray-500">
+            <span class="flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded bg-teal-500 flex items-center justify-center text-white text-[9px] font-bold">PBS</span>
+                Pickup Before School
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded bg-teal-500 flex items-center justify-center text-white text-[9px] font-bold">DSC</span>
+                Drop After School
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded bg-indigo-500 flex items-center justify-center text-white text-[9px] font-bold">PSC</span>
+                Pickup After School
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded bg-indigo-500 flex items-center justify-center text-white text-[9px] font-bold">DBS</span>
+                Drop Before School
+            </span>
+        </div>
     </div>
+
+    {{-- No records for selected filters --}}
     @elseif($selectedVehicle && $selectedRoute && count($students) == 0)
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 p-20 text-center">
-        <div class="max-w-md mx-auto">
-            <div class="w-24 h-24 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-8 border border-gray-100">
-                <i class="fas fa-users text-gray-300 text-4xl"></i>
-            </div>
-            <h3 class="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight">No Temporal Data</h3>
-            <p class="text-xs text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">No boarding records synchronized for the chosen route and audit period.</p>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 py-20 text-center">
+        <div class="w-16 h-16 bg-gray-50 dark:bg-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-100 dark:border-gray-600">
+            <i class="fas fa-calendar-times text-2xl text-gray-300"></i>
         </div>
+        <h3 class="text-base font-bold text-gray-700 dark:text-white mb-1">No Records Found</h3>
+        <p class="text-sm text-gray-400 max-w-xs mx-auto">
+            No attendance records found for this route and month. Try a different month or route.
+        </p>
     </div>
+
+    {{-- Initial state --}}
     @else
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 p-20 text-center">
-        <div class="max-w-md mx-auto">
-            <div class="w-24 h-24 bg-teal-50 dark:bg-teal-900 rounded-full flex items-center justify-center mx-auto mb-8 border border-teal-100">
-                <i class="fas fa-chart-line text-teal-600 dark:text-teal-300 text-4xl"></i>
-            </div>
-            <h3 class="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight">Awaiting Audit Selection</h3>
-            <p class="text-xs text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">Select institutional fleet, transit channel, and billing period to generate the manifest audit trail.</p>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 py-20 text-center">
+        <div class="w-16 h-16 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-teal-100 dark:border-teal-800/40">
+            <i class="fas fa-calendar-alt text-2xl text-teal-300"></i>
         </div>
+        <h3 class="text-base font-bold text-gray-700 dark:text-white mb-1">Select Filters Above</h3>
+        <p class="text-sm text-gray-400 max-w-xs mx-auto">
+            Choose a vehicle, route and month, then click Generate Report.
+        </p>
     </div>
     @endif
+
 </div>
 
+@push('scripts')
 <script>
 function transportAttendanceReport() {
     return {
         formData: {
             vehicle_id: '{{ old('vehicle_id', $selectedVehicle?->id ?? '') }}',
-            route_id: '{{ old('route_id', $selectedRoute?->id ?? '') }}',
-            month: '{{ old('month', $selectedMonth) }}',
+            route_id:   '{{ old('route_id',   $selectedRoute?->id   ?? '') }}',
+            month:      '{{ old('month',       $selectedMonth) }}',
         },
         routes: [],
         errors: {},
@@ -289,108 +274,67 @@ function transportAttendanceReport() {
         init() {
             this.$nextTick(() => {
                 if (typeof $ !== 'undefined') {
-                    // Handle vehicle change
                     $('#vehicle_id').on('change', (e) => {
                         this.formData.vehicle_id = e.target.value;
-                        if (this.errors.vehicle_id) delete this.errors.vehicle_id;
+                        delete this.errors.vehicle_id;
                         this.loadRoutes(true);
                     });
-
-                    // Handle route change
                     $('#route_id').on('change', (e) => {
                         this.formData.route_id = e.target.value;
-                        if (this.errors.route_id) delete this.errors.route_id;
+                        delete this.errors.route_id;
                     });
                 }
-                
-                // If vehicle is already selected, load routes (preserve route_id if set)
-                if (this.formData.vehicle_id) {
-                    this.loadRoutes(false);
-                }
+                if (this.formData.vehicle_id) this.loadRoutes(false);
             });
         },
 
         async loadRoutes(clearRoute = false) {
-            if (!this.formData.vehicle_id) {
-                this.routes = [];
-                this.formData.route_id = '';
-                this.updateRouteOptions();
-                return;
-            }
+            this.routes = [];
+            if (clearRoute) this.formData.route_id = '';
+            this.updateRouteOptions();
+            if (!this.formData.vehicle_id) return;
 
             try {
-                const response = await fetch('{{ route('receptionist.transport-attendance.get-routes-for-report') }}', {
+                const res = await fetch('{{ route('receptionist.transport-attendance.get-routes-for-report') }}', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: JSON.stringify({ vehicle_id: this.formData.vehicle_id }),
                 });
-
-                const data = await response.json();
-                
-                if (response.ok && data.success) {
-                    this.routes = data.routes;
-                    this.updateRouteOptions();
-                    if (clearRoute) this.formData.route_id = '';
-                } else {
-                    this.routes = [];
-                    this.updateRouteOptions();
-                    if (clearRoute) this.formData.route_id = '';
-                }
-            } catch (error) {
-                console.error('Error loading routes:', error);
-                this.routes = [];
-                this.updateRouteOptions();
-                if (clearRoute) this.formData.route_id = '';
-            }
+                const data = await res.json();
+                if (res.ok && data.success) { this.routes = data.routes; this.updateRouteOptions(); }
+            } catch (e) { console.error('Route load failed', e); }
         },
 
         updateRouteOptions() {
             this.$nextTick(() => {
-                const select = document.getElementById('route_id');
-                if (!select) return;
-
-                // Clear and add placeholder
-                while (select.options.length > 1) select.remove(1);
-
-                this.routes.forEach(route => {
-                    const option = document.createElement('option');
-                    option.value = route.id;
-                    option.textContent = route.route_name;
-                    select.appendChild(option);
+                const sel = document.getElementById('route_id');
+                if (!sel) return;
+                while (sel.options.length > 1) sel.remove(1);
+                this.routes.forEach(r => {
+                    const o = document.createElement('option');
+                    o.value = r.id; o.textContent = r.route_name;
+                    sel.appendChild(o);
                 });
-
-                if (typeof $ !== 'undefined') {
-                    $(select).val(this.formData.route_id).trigger('change');
-                }
+                if (typeof $ !== 'undefined') $(sel).val(this.formData.route_id).trigger('change');
             });
         },
 
         searchReport() {
             this.errors = {};
-            let localErrors = {};
-            if (!this.formData.vehicle_id) localErrors.vehicle_id = ['Vehicle selection required'];
-            if (!this.formData.route_id) localErrors.route_id = ['Route selection required'];
-            if (!this.formData.month) localErrors.month = ['Month selection required'];
+            if (!this.formData.vehicle_id) this.errors.vehicle_id = ['Please select a vehicle.'];
+            if (!this.formData.route_id)   this.errors.route_id   = ['Please select a route.'];
+            if (!this.formData.month)      this.errors.month      = ['Please select a month.'];
+            if (Object.keys(this.errors).length) return;
 
-            if (Object.keys(localErrors).length > 0) {
-                this.errors = localErrors;
-                return;
-            }
-
-            // Build query string
             const params = new URLSearchParams({
                 vehicle_id: this.formData.vehicle_id,
-                route_id: this.formData.route_id,
-                month: this.formData.month,
+                route_id:   this.formData.route_id,
+                month:      this.formData.month,
             });
-
             window.location.href = '{{ route('receptionist.transport-attendance.month-wise-report') }}?' + params.toString();
         },
     };
 }
 </script>
+@endpush
 @endsection

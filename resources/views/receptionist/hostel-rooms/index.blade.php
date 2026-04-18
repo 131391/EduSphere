@@ -96,16 +96,11 @@
                     {{-- Server-rendered rows (Hidden once Alpine initializes) --}}
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
                         @if(empty($initialData['rows']))
-                        <tr class="transition-all duration-300">
-                            <td colspan="5" class="px-6 py-24 text-center">
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-20 h-20 bg-slate-50 dark:bg-gray-700 rounded-3xl flex items-center justify-center mb-6 border border-slate-100 dark:border-gray-600">
-                                        <i class="fas fa-door-open text-3xl text-gray-300"></i>
-                                    </div>
-                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Room Inventory Uninitialized</h3>
-                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest max-w-sm mx-auto mt-2 leading-relaxed">
-                                        No residential units have been registered in the institutional blocks yet.
-                                    </p>
+                                    <i class="fas fa-door-open text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-lg text-gray-500">No rooms found matching your criteria.</p>
                                 </div>
                             </td>
                         </tr>
@@ -232,7 +227,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium">Hostel Block <span class="text-red-600 font-bold">*</span></label>
                         <select x-model="formData.hostel_id" @change="loadFloors(); clearError('hostel_id')"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select Hostel</option>
                             @foreach($hostels as $hostel)
@@ -248,7 +243,7 @@
                         <label class="modal-label-premium">Floor Level <span class="text-red-600 font-bold">*</span></label>
                         <select x-model="formData.hostel_floor_id" :disabled="!formData.hostel_id"
                             @change="clearError('hostel_floor_id')"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all disabled:opacity-50"
+                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all disabled:opacity-50"
                             :class="errors.hostel_floor_id ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select Floor</option>
                             <template x-for="floor in floors" :key="floor.id">
@@ -274,7 +269,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium text-emerald-600">Air Conditioning</label>
                         <select x-model="formData.ac"
-                            class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="no-select2 w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -284,7 +279,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium text-indigo-600">Cooler</label>
                         <select x-model="formData.cooler"
-                            class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="no-select2 w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -294,7 +289,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium text-amber-600">Fan</label>
                         <select x-model="formData.fan"
-                            class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="no-select2 w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -364,15 +359,27 @@
                         try {
                             const response = await fetch('{{ route('receptionist.hostel-rooms.get-floors') }}', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                                body: JSON.stringify({ hostel_id: this.formData.hostel_id })
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    hostel_id: this.formData.hostel_id
+                                })
                             });
                             const data = await response.json();
                             if (data.success) {
                                 this.floors = data.floors;
-                                this.formData.hostel_floor_id = targetFloorId ? String(targetFloorId) : '';
+                                if (targetFloorId) {
+                                    this.$nextTick(() => {
+                                        this.formData.hostel_floor_id = String(targetFloorId);
+                                    });
+                                }
                             }
-                        } catch (e) { console.error(e); }
+                        } catch (e) {
+                            console.error(e);
+                        }
                     },
 
                     resetForm() {
@@ -398,14 +405,14 @@
                             this.roomId = room.id;
                             this.formData = {
                                 hostel_id: String(room.raw.hostel_id),
-                                hostel_floor_id: String(room.raw.hostel_floor_id),
+                                hostel_floor_id: '', // Will be set by loadFloors after options render
                                 room_name: room.raw.room_name,
                                 ac: String(room.raw.ac),
                                 cooler: String(room.raw.cooler),
                                 fan: String(room.raw.fan),
                                 room_create_date: room.raw.room_create_date || '',
                             };
-                            await this.loadFloors(room.raw.hostel_floor_id);
+                            this.loadFloors(room.raw.hostel_floor_id);
                         } else {
                             this.editMode = false;
                             this.roomId = null;

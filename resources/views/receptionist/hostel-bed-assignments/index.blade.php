@@ -1,8 +1,8 @@
 @extends('layouts.receptionist')
 
-@section('title', 'Residential Mapping - Receptionist')
-@section('page-title', 'Residential Mapping')
-@section('page-description', 'Manage student-to-residential mapping and room assignments')
+@section('title', 'Hostel Bed Assignments - Receptionist')
+@section('page-title', 'Bed Assignments')
+@section('page-description', 'Assign students to hostel rooms and beds')
 
 @section('content')
     <div x-data="Object.assign(ajaxDataTable({
@@ -23,18 +23,18 @@
         
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <x-stat-card label="Active Mappings" :value="$stats['total_assignments']" icon="fas fa-link" color="blue" alpine-text="stats.total_assignments" />
+            <x-stat-card label="Total Assignments" :value="$stats['total_assignments']" icon="fas fa-link" color="blue" alpine-text="stats.total_assignments" />
             <x-stat-card label="Hostel Blocks" :value="$stats['total_hostels']" icon="fas fa-building" color="emerald" alpine-text="stats.total_hostels" />
             <x-stat-card label="Total Rooms" :value="$stats['total_rooms']" icon="fas fa-bed" color="amber" alpine-text="stats.total_rooms" />
             <x-stat-card label="Revenue (Monthly)" :value="'₹' . number_format($stats['total_rent'], 0)" icon="fas fa-wallet" color="indigo" alpine-text="stats.total_rent" is-currency="true" />
         </div>
 
         <!-- Header Section -->
-        <x-page-header title="Mapping Registry" description="Synchronize student profiles with available residential units" icon="fas fa-link">
+        <x-page-header title="Bed Assignments" description="Assign students to hostel rooms and beds" icon="fas fa-link">
             <button @click="openAddModal()"
                 class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                 <i class="fas fa-plus mr-2 text-xs"></i>
-                Initialize Mapping
+                Add Assignment
             </button>
             <button @click="exportData('csv')" :disabled="exporting"
                 class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
@@ -51,7 +51,7 @@
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <!-- Left: Title and Search -->
                     <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
-                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Mapping List</h2>
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Bed Assignment List</h2>
                         <x-table.search placeholder="Search by student, admission or bed..." />
                     </div>
 
@@ -93,8 +93,8 @@
                     <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-16">SR NO</th>
-                            <x-table.sort-header column="student_name" label="Student Identification" sort-var="sort" direction-var="direction" />
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Residential Details</th>
+                            <x-table.sort-header column="student_name" label="Student" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Room Details</th>
                             <x-table.sort-header column="rent" label="Financials" sort-var="sort" direction-var="direction" />
                             <x-table.sort-header column="created_at" label="Assigned On" sort-var="sort" direction-var="direction" />
                             <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
@@ -104,16 +104,11 @@
                     {{-- Server-rendered rows (Hidden once Alpine initializes) --}}
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
                         @if(empty($initialData['rows']))
-                        <tr class="transition-all duration-300">
-                            <td colspan="6" class="px-6 py-24 text-center">
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-20 h-20 bg-slate-50 dark:bg-gray-700 rounded-3xl flex items-center justify-center mb-6 border border-slate-100 dark:border-gray-600">
-                                        <i class="fas fa-link-slash text-3xl text-gray-300"></i>
-                                    </div>
-                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Mapping Registry Empty</h3>
-                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest max-w-sm mx-auto mt-2 leading-relaxed">
-                                        No residential mappings have been initialized in the institutional registry yet.
-                                    </p>
+                                    <i class="fas fa-link-slash text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-lg text-gray-500">No bed assignments found.</p>
                                 </div>
                             </td>
                         </tr>
@@ -149,7 +144,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-xs font-bold text-gray-900 dark:text-gray-100">{{ $row['rent_label'] }}</div>
-                                <div class="text-[9px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">Monthly Cycle</div>
+                                <div class="text-[9px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">Per Month</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-xs font-bold text-gray-700 dark:text-gray-300">
@@ -160,7 +155,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <button @click="openEditModal(@js($row))" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
-                                    <button @click="quickAction('{{ route('receptionist.hostel-bed-assignments.destroy', $row['id']) }}', 'Delete', 'DELETE', 'Strike residency record?')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
+                                    <button @click="quickAction('{{ route('receptionist.hostel-bed-assignments.destroy', $row['id']) }}', 'Delete', 'DELETE', 'Are you sure you want to remove this assignment?')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash-alt text-xs"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -198,7 +193,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-xs font-bold text-gray-900 dark:text-gray-100" x-text="row.rent_label"></div>
-                                    <div class="text-[9px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">Monthly Cycle</div>
+                                    <div class="text-[9px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">Per Month</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-xs font-bold text-gray-700 dark:text-gray-300">
@@ -209,13 +204,13 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <button @click="openEditModal(row)" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors"><i class="fas fa-edit text-xs"></i></button>
-                                        <button @click="quickAction(`/receptionist/hostel-bed-assignments/${row.id}`, 'Delete', 'DELETE', 'Strike residency record?')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors"><i class="fas fa-trash-alt text-xs"></i></button>
+                                        <button @click="quickAction(`/receptionist/hostel-bed-assignments/${row.id}`, 'Delete', 'DELETE', 'Are you sure you want to remove this assignment?')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors"><i class="fas fa-trash-alt text-xs"></i></button>
                                     </div>
                                 </td>
                             </tr>
                         </template>
 
-                        <x-table.empty-state :colspan="6" icon="fas fa-link-slash" message="No residential mappings found matching your criteria." />
+                        <x-table.empty-state :colspan="6" icon="fas fa-link-slash" message="No bed assignments found." />
                     </tbody>
                 </table>
             </div>
@@ -224,7 +219,7 @@
         </div>
 
         <!-- Add/Edit Mapping Modal -->
-        <x-modal name="assignment-modal" alpineTitle="editMode ? 'Synchronize Residential Revision' : 'Initialize Residential Mapping'"
+        <x-modal name="assignment-modal" alpineTitle="editMode ? 'Edit Bed Assignment' : 'Add Bed Assignment'"
             maxWidth="3xl">
             <form @submit.prevent="submitForm()" id="assignmentForm" method="POST" novalidate class="p-1">
                 @csrf
@@ -237,12 +232,12 @@
                     <div class="bg-gray-50/50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-6">
                         <h4 class="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
                             <i class="fas fa-user-graduate"></i>
-                            Student Identification
+                            Select Student
                         </h4>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2 relative">
-                                <label class="modal-label-premium">Admission No / Search <span class="text-red-500 font-bold">*</span></label>
+                                <label class="modal-label-premium">Search Student <span class="text-red-500 font-bold">*</span></label>
                                 <input type="text" x-model="admissionSearch"
                                     @input="searchStudents(); clearError('student_id')"
                                     @focus="showStudentDropdown = true" placeholder="Type student name or ID..."
@@ -273,11 +268,11 @@
                             </div>
 
                             <div class="space-y-2">
-                                <label class="modal-label-premium">Authenticated Profile</label>
+                                <label class="modal-label-premium">Selected Student</label>
                                 <div class="px-4 py-2.5 bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100/50 dark:border-indigo-800 rounded-xl flex items-center justify-between min-h-[46px] shadow-sm">
                                     <div>
                                         <span class="block text-sm font-bold text-gray-800 dark:text-gray-200 leading-tight"
-                                            x-text="formData.student_name || 'No selection'"></span>
+                                            x-text="formData.student_name || 'No student selected'"></span>
                                         <span class="block text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mt-0.5"
                                             x-text="formData.class_name"></span>
                                     </div>
@@ -289,18 +284,18 @@
                         </div>
                     </div>
 
-                    {{-- Residential Mapping --}}
+                    {{-- Room Selection --}}
                     <div class="space-y-6">
                         <h4 class="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                             <i class="fas fa-map-location-dot"></i>
-                            Residential Hierarchy
+                            Room Selection
                         </h4>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="space-y-2">
                                 <label class="modal-label-premium">Hostel Block <span class="text-red-500 font-bold">*</span></label>
                                 <select name="hostel_id" x-model="formData.hostel_id" @change="loadFloors(); clearError('hostel_id')"
-                                    class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
+                                    class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
                                     :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200'">
                                     <option value="">Select Block</option>
                                     @foreach($hostels as $hostel)
@@ -316,7 +311,7 @@
                                 <label class="modal-label-premium">Floor Level <span class="text-red-500 font-bold">*</span></label>
                                 <select name="hostel_floor_id" x-model="formData.hostel_floor_id"
                                     @change="loadRooms(); clearError('hostel_floor_id')" :disabled="!formData.hostel_id"
-                                    class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-50"
+                                    class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-50"
                                     :class="errors.hostel_floor_id ? 'border-red-500' : 'border-slate-200'">
                                     <option value="">Select Floor</option>
                                     <template x-for="floor in floors" :key="floor.id">
@@ -329,10 +324,10 @@
                             </div>
 
                             <div class="space-y-2">
-                                <label class="modal-label-premium">Residential Unit <span class="text-red-500 font-bold">*</span></label>
+                                <label class="modal-label-premium">Room <span class="text-red-500 font-bold">*</span></label>
                                 <select name="hostel_room_id" x-model="formData.hostel_room_id" @change="clearError('hostel_room_id')"
                                     :disabled="!formData.hostel_floor_id"
-                                    class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-50"
+                                    class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-50"
                                     :class="errors.hostel_room_id ? 'border-red-500' : 'border-slate-200'">
                                     <option value="">Select Room</option>
                                     <template x-for="room in rooms" :key="room.id">
@@ -349,7 +344,7 @@
                     {{-- Financial & Scheduling --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Financial Specifications</label>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fee Details</label>
                             <div class="grid grid-cols-2 gap-4 bg-slate-50/50 p-5 rounded-2xl border border-slate-100 shadow-inner">
                                 <div class="space-y-2">
                                     <label class="modal-label-premium">Bed No</label>
@@ -362,7 +357,7 @@
                                     </template>
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="modal-label-premium">Fee Structure</label>
+                                    <label class="modal-label-premium">Monthly Fee</label>
                                     <input type="number" name="rent" step="0.01" x-model="formData.rent" @input="clearError('rent')"
                                         placeholder="0.00"
                                         class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
@@ -375,10 +370,10 @@
                         </div>
 
                         <div class="space-y-4">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Schedule & Lifecycle</label>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dates</label>
                             <div class="grid grid-cols-2 gap-4 bg-slate-50/50 p-5 rounded-2xl border border-slate-100 shadow-inner">
                                 <div class="space-y-2">
-                                    <label class="modal-label-premium">Effective Date</label>
+                                    <label class="modal-label-premium">Start Date</label>
                                     <input type="date" name="hostel_assign_date" x-model="formData.hostel_assign_date"
                                         @input="clearError('hostel_assign_date')"
                                         class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
@@ -388,11 +383,11 @@
                                     </template>
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="modal-label-premium">Billing Cycle <span class="text-red-500 font-bold">*</span></label>
+                                    <label class="modal-label-premium">Billing Month <span class="text-red-500 font-bold">*</span></label>
                                     <select name="starting_month" x-model="formData.starting_month" @change="clearError('starting_month')"
-                                        class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
+                                        class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
                                         :class="errors.starting_month ? 'border-red-500' : 'border-slate-200'">
-                                        <option value="">Choose Cycle</option>
+                                        <option value="">Select Month</option>
                                         <template x-for="month in months" :key="month.value">
                                             <option :value="String(month.value)" x-text="month.label"></option>
                                         </template>
@@ -409,8 +404,8 @@
                 <!-- notice card -->
                 <div class="mt-6 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
                     <div class="flex flex-col">
-                        <span class="text-sm font-bold text-slate-900 leading-tight">Procedural Notice</span>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">Residential mappings are linked to financial ledger cycles. Ensure student identification is validated before confirming the mapping.</span>
+                        <span class="text-sm font-bold text-slate-900 leading-tight">Note</span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">The assignment is linked to the student's fee account. Make sure the student and room details are correct before saving.</span>
                     </div>
                     <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
                         <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
@@ -428,7 +423,7 @@
                         <template x-if="submitting">
                             <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                         </template>
-                        <span x-text="editMode ? 'Synchronize Record' : 'Initialize Mapping'"></span>
+                        <span x-text="editMode ? 'Update Assignment' : 'Save Assignment'"></span>
                     </button>
                 </x-slot>
             </form>
@@ -474,21 +469,6 @@
 
                     async init() {
                         this.loadMonths();
-
-                        // Sync with Select2 if used, or standard select
-                        this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('select[name="hostel_id"], select[name="hostel_floor_id"], select[name="hostel_room_id"], select[name="starting_month"]').on('change', (e) => {
-                                    const field = e.target.getAttribute('name');
-                                    if (field && this.formData.hasOwnProperty(field)) {
-                                        this.formData[field] = e.target.value;
-                                        if (field === 'hostel_id') this.loadFloors();
-                                        if (field === 'hostel_floor_id') this.loadRooms();
-                                        this.clearError(field);
-                                    }
-                                });
-                            }
-                        });
                     },
 
                     async loadMonths() {
@@ -562,8 +542,10 @@
                             if (data.success) {
                                 this.floors = data.floors;
                                 if (targetFloorId) {
-                                    this.formData.hostel_floor_id = String(targetFloorId);
-                                    this.loadRooms(this.formData.tempRoomId);
+                                    this.$nextTick(() => {
+                                        this.formData.hostel_floor_id = String(targetFloorId);
+                                        this.loadRooms(this.formData.tempRoomId);
+                                    });
                                 } else {
                                     this.formData.hostel_floor_id = '';
                                 }
@@ -594,7 +576,9 @@
                             if (data.success) {
                                 this.rooms = data.rooms;
                                 if (targetRoomId) {
-                                    this.formData.hostel_room_id = String(targetRoomId);
+                                    this.$nextTick(() => {
+                                        this.formData.hostel_room_id = String(targetRoomId);
+                                    });
                                 } else {
                                     this.formData.hostel_room_id = '';
                                 }
@@ -624,10 +608,6 @@
                             hostel_assign_date: '{{ date('Y-m-d') }}',
                             starting_month: '',
                         };
-
-                        if (typeof $ !== 'undefined') {
-                            $('select[name="hostel_id"], select[name="hostel_floor_id"], select[name="hostel_room_id"], select[name="starting_month"]').val(null).trigger('change');
-                        }
                     },
 
                     openAddModal() {
@@ -645,8 +625,8 @@
                             student_name: row.student_name,
                             class_name: row.class_name,
                             hostel_id: String(row.hostel_id),
-                            hostel_floor_id: String(row.hostel_floor_id),
-                            hostel_room_id: String(row.hostel_room_id),
+                            hostel_floor_id: '',
+                            hostel_room_id: '',
                             bed_no: row.bed_no !== 'N/A' ? row.bed_no : '',
                             rent: row.rent || '',
                             hostel_assign_date: row.hostel_assign_date ? row.hostel_assign_date : '{{ date('Y-m-d') }}',
@@ -655,21 +635,9 @@
                         };
                         this.admissionSearch = row.admission_no;
 
-                        await this.loadFloors(row.hostel_floor_id);
+                        this.loadFloors(row.hostel_floor_id);
 
                         this.$dispatch('open-modal', 'assignment-modal');
-
-                        this.$nextTick(() => {
-                            setTimeout(() => {
-                                if (typeof $ !== 'undefined') {
-                                    ['hostel_id', 'starting_month'].forEach(name => {
-                                        if (this.formData[name]) {
-                                            $(`select[name="${name}"]`).val(this.formData[name]).trigger('change');
-                                        }
-                                    });
-                                }
-                            }, 150);
-                        });
                     },
 
                     async submitForm() {

@@ -60,7 +60,7 @@ class BusStopController extends TenantController
     /**
      * Standard row transformer for high-performance datatables.
      */
-    protected function transformRow($stop): array
+    public function transformRow($stop): array
     {
         return [
             'id' => $stop->id,

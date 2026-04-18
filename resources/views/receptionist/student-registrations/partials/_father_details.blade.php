@@ -10,8 +10,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Father Name (If Staff)
                 </label>
-                <select name="father_staff_id" @change="delete errors.father_staff_id"
-                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                <select name="father_staff_id" x-model="formData.father_staff_id" @change="clearError('father_staff_id')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                         :class="errors.father_staff_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Father Name (If Staff)</option>
                     {{-- Populate from staff table if needed --}}
@@ -25,12 +25,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Initial
                 </label>
-                <select name="father_name_prefix" @change="delete errors.father_name_prefix"
-                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                <select name="father_name_prefix" x-model="formData.father_name_prefix" @change="clearError('father_name_prefix')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                         :class="errors.father_name_prefix ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                    <option value="Mr" {{ (old('father_name_prefix', $studentRegistration->father_name_prefix ?? '') == 'Mr') ? 'selected' : '' }}>Mr</option>
-                    <option value="Dr" {{ (old('father_name_prefix', $studentRegistration->father_name_prefix ?? '') == 'Dr') ? 'selected' : '' }}>Dr</option>
-                    <option value="Late" {{ (old('father_name_prefix', $studentRegistration->father_name_prefix ?? '') == 'Late') ? 'selected' : '' }}>Late</option>
+                    <option value="Mr">Mr</option>
+                    <option value="Dr">Dr</option>
+                    <option value="Late">Late</option>
                 </select>
                 <template x-if="errors.father_name_prefix">
                     <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.father_name_prefix[0]"></p>
@@ -41,8 +41,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     First Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="father_first_name" value="{{ old('father_first_name', $studentRegistration->father_first_name ?? '') }}"  placeholder="Enter First Name"
-                       @input="delete errors.father_first_name"
+                <input type="text" name="father_first_name" x-model="formData.father_first_name" placeholder="Enter First Name"
+                       @input="clearError('father_first_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_first_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_first_name">
@@ -54,8 +54,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Middle Name
                 </label>
-                <input type="text" name="father_middle_name" value="{{ old('father_middle_name', $studentRegistration->father_middle_name ?? '') }}" placeholder="Enter Middle Name"
-                       @input="delete errors.father_middle_name"
+                <input type="text" name="father_middle_name" x-model="formData.father_middle_name" placeholder="Enter Middle Name"
+                       @input="clearError('father_middle_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_middle_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_middle_name">
@@ -67,8 +67,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Last Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="father_last_name" value="{{ old('father_last_name', $studentRegistration->father_last_name ?? '') }}"  placeholder="Enter Last Name"
-                       @input="delete errors.father_last_name"
+                <input type="text" name="father_last_name" x-model="formData.father_last_name" placeholder="Enter Last Name"
+                       @input="clearError('father_last_name')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_last_name ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_last_name">
@@ -80,8 +80,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Email Id
                 </label>
-                <input type="email" name="father_email" value="{{ old('father_email', $studentRegistration->father_email ?? '') }}" placeholder="Enter Email Id"
-                       @input="delete errors.father_email"
+                <input type="email" name="father_email" x-model="formData.father_email" placeholder="Enter Email Id"
+                       @input="clearError('father_email')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_email ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_email">
@@ -93,8 +93,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Mobile Number <span class="text-red-500">*</span>
                 </label>
-                <input type="tel" name="father_mobile_no" value="{{ old('father_mobile_no', $studentRegistration->father_mobile_no ?? '') }}" placeholder="Enter Mobile Number" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       @input="delete errors.father_mobile_no"
+                <input type="tel" name="father_mobile_no" x-model="formData.father_mobile_no" placeholder="Enter Mobile Number" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                       @input="clearError('father_mobile_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_mobile_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_mobile_no">
@@ -106,8 +106,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Landline Number
                 </label>
-                <input type="text" name="father_landline_no" value="{{ old('father_landline_no', $studentRegistration->father_landline_no ?? '') }}" placeholder="Enter Landline Number"
-                       @input="delete errors.father_landline_no"
+                <input type="text" name="father_landline_no" x-model="formData.father_landline_no" placeholder="Enter Landline Number"
+                       @input="clearError('father_landline_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_landline_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_landline_no">
@@ -119,8 +119,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Occupation/Profession
                 </label>
-                <input type="text" name="father_occupation" value="{{ old('father_occupation', $studentRegistration->father_occupation ?? '') }}" placeholder="Enter Occupation/Profession"
-                       @input="delete errors.father_occupation"
+                <input type="text" name="father_occupation" x-model="formData.father_occupation" placeholder="Enter Occupation/Profession"
+                       @input="clearError('father_occupation')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_occupation ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_occupation">
@@ -132,8 +132,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Organization
                 </label>
-                <input type="text" name="father_organization" value="{{ old('father_organization', $studentRegistration->father_organization ?? '') }}" placeholder="Enter Organization"
-                       @input="delete errors.father_organization"
+                <input type="text" name="father_organization" x-model="formData.father_organization" placeholder="Enter Organization"
+                       @input="clearError('father_organization')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_organization ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_organization">
@@ -145,8 +145,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Office Address
                 </label>
-                <input type="text" name="father_office_address" value="{{ old('father_office_address', $studentRegistration->father_office_address ?? '') }}" placeholder="Enter Office Address"
-                       @input="delete errors.father_office_address"
+                <input type="text" name="father_office_address" x-model="formData.father_office_address" placeholder="Enter Office Address"
+                       @input="clearError('father_office_address')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_office_address ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_office_address">
@@ -158,12 +158,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Qualification
                 </label>
-                <select name="father_qualification" @change="delete errors.father_qualification"
-                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
+                <select name="father_qualification" x-model="formData.father_qualification" @change="clearError('father_qualification')"
+                        class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                         :class="errors.father_qualification ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Qualification</option>
                     @foreach($qualifications as $qual)
-                        <option value="{{ $qual->name }}" {{ (old('father_qualification', $studentRegistration->father_qualification ?? '') == $qual->name) ? 'selected' : '' }}>{{ $qual->name }}</option>
+                        <option value="{{ $qual->name }}">{{ $qual->name }}</option>
                     @endforeach
                 </select>
                 <template x-if="errors.father_qualification">
@@ -175,8 +175,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Department
                 </label>
-                <input type="text" name="father_department" value="{{ old('father_department', $studentRegistration->father_department ?? '') }}" placeholder="Enter Department"
-                       @input="delete errors.father_department"
+                <input type="text" name="father_department" x-model="formData.father_department" placeholder="Enter Department"
+                       @input="clearError('father_department')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_department ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_department">
@@ -188,8 +188,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Designation
                 </label>
-                <input type="text" name="father_designation" value="{{ old('father_designation', $studentRegistration->father_designation ?? '') }}" placeholder="Enter Designation"
-                       @input="delete errors.father_designation"
+                <input type="text" name="father_designation" x-model="formData.father_designation" placeholder="Enter Designation"
+                       @input="clearError('father_designation')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_designation ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_designation">
@@ -201,8 +201,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Father Aadhar No
                 </label>
-                <input type="text" name="father_aadhar_no" value="{{ old('father_aadhar_no', $studentRegistration->father_aadhar_no ?? '') }}" placeholder="Enter Father Aadhar No"
-                       @input="delete errors.father_aadhar_no"
+                <input type="text" name="father_aadhar_no" x-model="formData.father_aadhar_no" placeholder="Enter Father Aadhar No"
+                       @input="clearError('father_aadhar_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_aadhar_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_aadhar_no">
@@ -214,8 +214,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Annual Income
                 </label>
-                <input type="number" step="0.01" name="father_annual_income" value="{{ old('father_annual_income', $studentRegistration->father_annual_income ?? '') }}" placeholder="Enter Annual Income"
-                       @input="delete errors.father_annual_income"
+                <input type="number" step="0.01" name="father_annual_income" x-model="formData.father_annual_income" placeholder="Enter Annual Income"
+                       @input="clearError('father_annual_income')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_annual_income ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_annual_income">
@@ -227,8 +227,8 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Father Age
                 </label>
-                <input type="number" step="0.01" name="father_age" value="{{ old('father_age', $studentRegistration->father_age ?? '') }}" placeholder="Enter Father Age"
-                       @input="delete errors.father_age"
+                <input type="number" step="0.01" name="father_age" x-model="formData.father_age" placeholder="Enter Father Age"
+                       @input="clearError('father_age')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
                        :class="errors.father_age ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                 <template x-if="errors.father_age">

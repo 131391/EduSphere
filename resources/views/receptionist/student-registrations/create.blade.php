@@ -63,16 +63,241 @@
             return {
                 submitting: false,
                 errors: {},
+                selectedClassId: '{{ old('class_id') }}',
+                registrationFees: {
+                    @foreach($classes as $class)
+                        '{{ $class->id }}': '{{ $class->registrationFee->amount ?? 0 }}',
+                    @endforeach
+                },
                 
-                init() {
-                    this.$nextTick(() => {
-                        $(this.$el).find('select').on('change', (e) => {
-                            const fieldName = e.target.getAttribute('name');
-                            if (fieldName && this.errors[fieldName]) {
-                                delete this.errors[fieldName];
+                formData: {
+                    enquiry_id: '{{ old('enquiry_id') }}',
+                    academic_year_id: '{{ old('academic_year_id') }}',
+                    class_id: '{{ old('class_id') }}',
+                    registration_fee: '{{ old('registration_fee') }}',
+                    
+                    // Personal Information
+                    first_name: '{{ old('first_name') }}',
+                    middle_name: '{{ old('middle_name') }}',
+                    last_name: '{{ old('last_name') }}',
+                    gender: '{{ old('gender') }}',
+                    dob: '{{ old('dob') }}',
+                    email: '{{ old('email') }}',
+                    mobile_no: '{{ old('mobile_no') }}',
+                    student_type: '{{ old('student_type') }}',
+                    aadhar_no: '{{ old('aadhar_no') }}',
+                    place_of_birth: '{{ old('place_of_birth') }}',
+                    nationality: '{{ old('nationality', 'Indian') }}',
+                    religion: '{{ old('religion') }}',
+                    category: '{{ old('category') }}',
+                    special_needs: '{{ old('special_needs') }}',
+                    mother_tongue: '{{ old('mother_tongue') }}',
+                    remarks: '{{ old('remarks') }}',
+                    number_of_brothers: '{{ old('number_of_brothers', 0) }}',
+                    number_of_sisters: '{{ old('number_of_sisters', 0) }}',
+                    is_single_parent: '{{ old('is_single_parent', 0) }}',
+                    corresponding_relative: '{{ old('corresponding_relative') }}',
+                    is_transport_required: '{{ old('is_transport_required', 0) }}',
+                    bus_stop: '{{ old('bus_stop') }}',
+                    other_stop: '{{ old('other_stop') }}',
+                    boarding_type: '{{ old('boarding_type') }}',
+
+                    // Father Details
+                    father_first_name: '{{ old('father_first_name') }}',
+                    father_middle_name: '{{ old('father_middle_name') }}',
+                    father_last_name: '{{ old('father_last_name') }}',
+                    father_mobile_no: '{{ old('father_mobile_no') }}',
+                    father_occupation: '{{ old('father_occupation') }}',
+                    father_email: '{{ old('father_email') }}',
+                    father_qualification: '{{ old('father_qualification') }}',
+                    father_organization: '{{ old('father_organization') }}',
+                    father_office_address: '{{ old('father_office_address') }}',
+                    father_department: '{{ old('father_department') }}',
+                    father_designation: '{{ old('father_designation') }}',
+                    father_annual_income: '{{ old('father_annual_income') }}',
+
+                    // Mother Details
+                    mother_first_name: '{{ old('mother_first_name') }}',
+                    mother_middle_name: '{{ old('mother_middle_name') }}',
+                    mother_last_name: '{{ old('mother_last_name') }}',
+                    mother_mobile_no: '{{ old('mother_mobile_no') }}',
+                    mother_occupation: '{{ old('mother_occupation') }}',
+                    mother_email: '{{ old('mother_email') }}',
+                    mother_qualification: '{{ old('mother_qualification') }}',
+                    mother_organization: '{{ old('mother_organization') }}',
+                    mother_office_address: '{{ old('mother_office_address') }}',
+                    mother_department: '{{ old('mother_department') }}',
+                    mother_designation: '{{ old('mother_designation') }}',
+                    mother_annual_income: '{{ old('mother_annual_income') }}',
+
+                    // Address
+                    permanent_latitude: '{{ old('permanent_latitude') }}',
+                    permanent_longitude: '{{ old('permanent_longitude') }}',
+                    permanent_address: '{{ old('permanent_address') }}',
+                    permanent_country_id: '{{ old('permanent_country_id', 102) }}',
+                    permanent_state_id: '{{ old('permanent_state_id') }}',
+                    permanent_city_id: '{{ old('permanent_city_id') }}',
+                    permanent_pin: '{{ old('permanent_pin') }}',
+                    permanent_state_of_domicile: '{{ old('permanent_state_of_domicile') }}',
+                    permanent_railway_airport: '{{ old('permanent_railway_airport') }}',
+                    permanent_correspondence_address: '{{ old('permanent_correspondence_address') }}',
+                    
+                    correspondence_latitude: '{{ old('correspondence_latitude') }}',
+                    correspondence_longitude: '{{ old('correspondence_longitude') }}',
+                    correspondence_address: '{{ old('correspondence_address') }}',
+                    correspondence_country_id: '{{ old('correspondence_country_id', 102) }}',
+                    correspondence_state_id: '{{ old('correspondence_state_id') }}',
+                    correspondence_city_id: '{{ old('correspondence_city_id') }}',
+                    correspondence_pin: '{{ old('correspondence_pin') }}',
+
+                    // Hidden/Session fields for photos carry-over from enquiry
+                    enquiry_father_photo: '',
+                    enquiry_mother_photo: '',
+                    enquiry_student_photo: '',
+                    enquiry_father_signature: '',
+                    enquiry_mother_signature: '',
+                    enquiry_student_signature: ''
+                },
+
+                updateFee() {
+                    const classId = this.formData.class_id;
+                    if (classId && this.registrationFees[classId]) {
+                        this.formData.registration_fee = this.registrationFees[classId];
+                    } else {
+                        this.formData.registration_fee = '';
+                    }
+                },
+
+                async fetchEnquiryData() {
+                    const enquiryId = this.formData.enquiry_id;
+                    if (!enquiryId) {
+                        this.clearPhotos();
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/school/student-registrations/enquiry/${enquiryId}`);
+                        const result = await response.json();
+
+                        if (result.success) {
+                            const enquiry = result.data;
+                            
+                            // Map enquiry fields to formData
+                            if (enquiry.academic_year_id) this.formData.academic_year_id = enquiry.academic_year_id;
+                            if (enquiry.class_id) {
+                                this.formData.class_id = enquiry.class_id;
+                                this.updateFee();
                             }
-                        });
+
+                            // Personal Name
+                            const nameParts = (enquiry.student_name || '').split(' ');
+                            this.formData.first_name = nameParts[0] || '';
+                            this.formData.middle_name = nameParts.slice(1, -1).join(' ') || '';
+                            this.formData.last_name = nameParts[nameParts.length - 1] || '';
+                            
+                            if (enquiry.gender) this.formData.gender = enquiry.gender;
+                            
+                            if (enquiry.dob) {
+                                let dobValue = enquiry.dob;
+                                if (typeof dobValue === 'object' && dobValue.date) {
+                                    dobValue = dobValue.date.split(' ')[0];
+                                }
+                                if (dobValue && dobValue.length >= 10) {
+                                    this.formData.dob = dobValue.substring(0, 10);
+                                }
+                            }
+
+                            this.formData.email = enquiry.email_id || '';
+                            this.formData.mobile_no = enquiry.contact_no || '';
+                            if (enquiry.religion) this.formData.religion = enquiry.religion;
+                            if (enquiry.category) this.formData.category = enquiry.category;
+
+                            // Father
+                            const fNameParts = (enquiry.father_name || '').split(' ');
+                            this.formData.father_first_name = fNameParts[0] || '';
+                            this.formData.father_middle_name = fNameParts.slice(1, -1).join(' ') || '';
+                            this.formData.father_last_name = fNameParts[fNameParts.length - 1] || '';
+                            this.formData.father_mobile_no = enquiry.father_contact || '';
+                            this.formData.father_occupation = enquiry.father_occupation || '';
+                            this.formData.father_email = enquiry.father_email || '';
+
+                            // Mother
+                            const mNameParts = (enquiry.mother_name || '').split(' ');
+                            this.formData.mother_first_name = mNameParts[0] || '';
+                            this.formData.mother_middle_name = mNameParts.slice(1, -1).join(' ') || '';
+                            this.formData.mother_last_name = mNameParts[mNameParts.length - 1] || '';
+                            this.formData.mother_mobile_no = enquiry.mother_contact || '';
+                            this.formData.mother_occupation = enquiry.mother_occupation || '';
+                            this.formData.mother_email = enquiry.mother_email || '';
+
+                            // Address
+                            this.formData.permanent_address = enquiry.permanent_address || '';
+                            if (enquiry.country_id) this.formData.permanent_country_id = enquiry.country_id;
+
+                            // Photos from Enquiry
+                            this.loadEnquiryPhotos(enquiry);
+                            
+                            if (window.Toast) {
+                                window.Toast.fire({ icon: 'success', title: 'Form auto-filled from enquiry' });
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error fetching enquiry:', error);
+                    }
+                },
+
+                loadEnquiryPhotos(enquiry) {
+                    const mappings = [
+                        { field: 'father_photo', previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeId: 'father-photo-remove' },
+                        { field: 'mother_photo', previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeId: 'mother-photo-remove' },
+                        { field: 'student_photo', previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeId: 'student-photo-remove' },
+                        { field: 'father_signature', previewId: 'father-signature-preview', iconId: 'father-signature-icon', removeId: 'father-signature-remove' },
+                        { field: 'mother_signature', previewId: 'mother-signature-preview', iconId: 'mother-signature-icon', removeId: 'mother-signature-remove' },
+                        { field: 'student_signature', previewId: 'student-signature-preview', iconId: 'student-signature-icon', removeId: 'student-signature-remove' }
+                    ];
+
+                    mappings.forEach(m => {
+                        if (enquiry[m.field]) {
+                            this.formData[`enquiry_${m.field}`] = enquiry[m.field];
+                            this.setPreview(m.previewId, m.iconId, m.removeId, `/storage/${enquiry[m.field]}`);
+                        }
                     });
+                },
+
+                clearPhotos() {
+                    const mappings = ['father-photo', 'mother-photo', 'student-photo', 'father-signature', 'mother-signature', 'student-signature'];
+                    mappings.forEach(m => {
+                        this.setPreview(`${m}-preview`, `${m}-icon`, `${m}-remove`, '#', true);
+                        this.formData[`enquiry_${m.replace('-', '_')}`] = '';
+                    });
+                },
+
+                setPreview(previewId, iconId, removeId, src, hide = false) {
+                    const preview = document.getElementById(previewId);
+                    const icon = document.getElementById(iconId);
+                    const removeBtn = document.getElementById(removeId);
+                    if (preview) {
+                        preview.src = src;
+                        hide ? preview.classList.add('hidden') : preview.classList.remove('hidden');
+                    }
+                    if (icon) hide ? icon.classList.remove('hidden') : icon.classList.add('hidden');
+                    if (removeBtn) hide ? removeBtn.classList.add('hidden') : removeBtn.classList.remove('hidden');
+                },
+
+                previewPhoto(event, previewId, iconId, removeId) {
+                    const input = event.target;
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => this.setPreview(previewId, iconId, removeId, e.target.result);
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                },
+
+                removePhoto(inputName, previewId, iconId, removeId) {
+                    const input = document.querySelector(`input[name="${inputName}"]`);
+                    if (input) input.value = '';
+                    this.setPreview(previewId, iconId, removeId, '#', true);
+                    this.formData[`enquiry_${inputName}`] = '';
                 },
 
                 async submitForm() {
@@ -80,7 +305,7 @@
                     this.errors = {};
 
                     const form = document.getElementById('registrationForm');
-                    const formData = new FormData(form);
+                    const fd = new FormData(form);
 
                     try {
                         const response = await fetch("{{ route('receptionist.student-registrations.store') }}", {
@@ -89,24 +314,14 @@
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'Accept': 'application/json'
                             },
-                            body: formData
+                            body: fd
                         });
 
                         const result = await response.json();
 
                         if (response.status === 422) {
                             this.errors = result.errors;
-                            if (window.Toast) {
-                                window.Toast.fire({
-                                    icon: 'error',
-                                    title: 'Please check the form for errors'
-                                });
-                            }
-                            // Scroll to the first error or the summary
-                            this.$nextTick(() => {
-                                const firstError = document.querySelector('.border-red-500, .bg-red-50');
-                                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            });
+                            this.handleValidationErrors(result.errors);
                         } else if (response.ok) {
                             if (window.Toast) {
                                 await window.Toast.fire({
@@ -131,270 +346,20 @@
                     } finally {
                         this.submitting = false;
                     }
+                },
+
+                handleValidationErrors(errors) {
+                    if (window.Toast) {
+                        window.Toast.fire({ icon: 'error', title: 'Please check the form for errors' });
+                    }
+                    this.$nextTick(() => {
+                        const firstError = document.querySelector('.border-red-500, .bg-red-50');
+                        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
                 }
             }
         }
 
-        $(document).ready(function () {
-            // ... the rest of the existing script ...
-            // Restore photos from sessionStorage if validation errors occurred
-            @if($errors->any())
-                const photoFields = [
-                    { field: 'father_photo', previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeBtnId: 'father-photo-remove', hiddenId: 'enquiry_father_photo' },
-                    { field: 'mother_photo', previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeBtnId: 'mother-photo-remove', hiddenId: 'enquiry_mother_photo' },
-                    { field: 'student_photo', previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeBtnId: 'student-photo-remove', hiddenId: 'enquiry_student_photo' },
-                    { field: 'father_signature', previewId: 'father-signature-preview', iconId: 'father-signature-icon', removeBtnId: 'father-signature-remove', hiddenId: 'enquiry_father_signature' },
-                    { field: 'mother_signature', previewId: 'mother-signature-preview', iconId: 'mother-signature-icon', removeBtnId: 'mother-signature-remove', hiddenId: 'enquiry_mother_signature' },
-                    { field: 'student_signature', previewId: 'student-signature-preview', iconId: 'student-signature-icon', removeBtnId: 'student-signature-remove', hiddenId: 'enquiry_student_signature' }
-                ];
-
-                photoFields.forEach(photo => {
-                    const storedPath = sessionStorage.getItem(`registration_${photo.field}`);
-                    if (storedPath) {
-                        loadImagePreview(storedPath, photo.previewId, photo.iconId, photo.removeBtnId);
-                        $(`#${photo.hiddenId}`).val(storedPath);
-                    }
-                });
-            @endif
-
-            // Initialize Select2 on enquiry dropdown (only if not already initialized)
-            const $enquirySelect = $('#enquiry_id');
-            if ($enquirySelect.length && !$enquirySelect.hasClass('select2-hidden-accessible')) {
-                $enquirySelect.select2({
-                    placeholder: 'Search Enquiry by No or Student Name',
-                    allowClear: false,
-                    width: '100%'
-                });
-            }
-
-            // Update registration fee when class is manually changed
-            $('select[name="class_id"]').on('change', function () {
-                const classId = $(this).val();
-
-                if (classId) {
-                    fetch(`/school/student-registrations/registration-fee/${classId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                $('input[name="registration_fee"]').val(data.fee);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching registration fee:', error);
-                        });
-                } else {
-                    $('input[name="registration_fee"]').val('');
-                }
-            });
-
-            // Auto-fill form when enquiry is selected
-            $('#enquiry_id').on('change', function () {
-                const enquiryId = $(this).val();
-
-                // Clear previous enquiry photos from sessionStorage if enquiry is cleared
-                if (!enquiryId) {
-                    const photoFields = [
-                        { field: 'father_photo', previewId: 'father-photo-preview', iconId: 'father-photo-icon', removeBtnId: 'father-photo-remove' },
-                        { field: 'mother_photo', previewId: 'mother-photo-preview', iconId: 'mother-photo-icon', removeBtnId: 'mother-photo-remove' },
-                        { field: 'student_photo', previewId: 'student-photo-preview', iconId: 'student-photo-icon', removeBtnId: 'student-photo-remove' },
-                        { field: 'father_signature', previewId: 'father-signature-preview', iconId: 'father-signature-icon', removeBtnId: 'father-signature-remove' },
-                        { field: 'mother_signature', previewId: 'mother-signature-preview', iconId: 'mother-signature-icon', removeBtnId: 'mother-signature-remove' },
-                        { field: 'student_signature', previewId: 'student-signature-preview', iconId: 'student-signature-icon', removeBtnId: 'student-signature-remove' }
-                    ];
-                    photoFields.forEach(photo => {
-                        sessionStorage.removeItem(`registration_${photo.field}`);
-                        // Clear previews
-                        const preview = document.getElementById(photo.previewId);
-                        const icon = document.getElementById(photo.iconId);
-                        const removeBtn = document.getElementById(photo.removeBtnId);
-                        if (preview) {
-                            preview.src = '#';
-                            preview.classList.add('hidden');
-                        }
-                        if (icon) {
-                            icon.classList.remove('hidden');
-                        }
-                        if (removeBtn) {
-                            removeBtn.classList.add('hidden');
-                        }
-                        // Clear hidden fields
-                        $(`#enquiry_${photo.field}`).val('');
-                    });
-                    return;
-                }
-
-                if (enquiryId) {
-                    // Show loading indicator (optional)
-                    const originalText = $(this).next('.select2').find('.select2-selection__rendered').text();
-
-                    fetch(`/school/student-registrations/enquiry/${enquiryId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                const enquiry = data.data;
-
-                                // Academic Year (if available)
-                                if (enquiry.academic_year_id) {
-                                    $('select[name="academic_year_id"]').val(enquiry.academic_year_id).trigger('change');
-                                }
-
-                                // Personal Information
-                                const nameParts = (enquiry.student_name || '').split(' ');
-                                $('input[name="first_name"]').val(nameParts[0] || '');
-                                $('input[name="middle_name"]').val(nameParts.slice(1, -1).join(' ') || '');
-                                $('input[name="last_name"]').val(nameParts[nameParts.length - 1] || '');
-
-                                if (enquiry.gender) {
-                                    $('select[name="gender"]').val(enquiry.gender).trigger('change');
-                                }
-
-                                // Format DOB to YYYY-MM-DD if it exists
-                                if (enquiry.dob) {
-                                    let dobValue = enquiry.dob;
-                                    // If it's an object with date property (Laravel date format)
-                                    if (typeof dobValue === 'object' && dobValue.date) {
-                                        dobValue = dobValue.date.split(' ')[0];
-                                    }
-                                    // Ensure it's in YYYY-MM-DD format
-                                    if (dobValue && dobValue.length >= 10) {
-                                        dobValue = dobValue.substring(0, 10);
-                                    }
-                                    console.log('Setting DOB:', dobValue);
-                                    $('input[name="dob"]').val(dobValue);
-                                }
-
-                                $('input[name="email"]').val(enquiry.email_id || '');
-                                $('input[name="mobile_no"]').val(enquiry.contact_no || '');
-
-                                // Religion and Category
-                                if (enquiry.religion) {
-                                    $('select[name="religion"]').val(enquiry.religion).trigger('change');
-                                }
-                                if (enquiry.category) {
-                                    $('select[name="category"]').val(enquiry.category).trigger('change');
-                                }
-
-                                // Father's Details
-                                const fatherNameParts = (enquiry.father_name || '').split(' ');
-                                $('input[name="father_first_name"]').val(fatherNameParts[0] || '');
-                                $('input[name="father_middle_name"]').val(fatherNameParts.slice(1, -1).join(' ') || '');
-                                $('input[name="father_last_name"]').val(fatherNameParts[fatherNameParts.length - 1] || '');
-                                $('input[name="father_mobile_no"]').val(enquiry.father_contact || '');
-                                $('input[name="father_occupation"]').val(enquiry.father_occupation || '');
-                                $('input[name="father_email"]').val(enquiry.father_email || '');
-
-                                // Mother's Details
-                                const motherNameParts = (enquiry.mother_name || '').split(' ');
-                                $('input[name="mother_first_name"]').val(motherNameParts[0] || '');
-                                $('input[name="mother_middle_name"]').val(motherNameParts.slice(1, -1).join(' ') || '');
-                                $('input[name="mother_last_name"]').val(motherNameParts[motherNameParts.length - 1] || '');
-                                $('input[name="mother_mobile_no"]').val(enquiry.mother_contact || '');
-                                $('input[name="mother_occupation"]').val(enquiry.mother_occupation || '');
-                                $('input[name="mother_email"]').val(enquiry.mother_email || '');
-
-                                // Mother's Additional Details
-                                if (enquiry.mother_qualification) {
-                                    $('select[name="mother_qualification"]').val(enquiry.mother_qualification).trigger('change');
-                                }
-                                if (enquiry.mother_organization) {
-                                    $('input[name="mother_organization"]').val(enquiry.mother_organization);
-                                }
-                                if (enquiry.mother_office_address) {
-                                    $('input[name="mother_office_address"]').val(enquiry.mother_office_address);
-                                }
-                                if (enquiry.mother_department) {
-                                    $('input[name="mother_department"]').val(enquiry.mother_department);
-                                }
-                                if (enquiry.mother_designation) {
-                                    $('input[name="mother_designation"]').val(enquiry.mother_designation);
-                                }
-                                if (enquiry.mother_annual_income !== undefined && enquiry.mother_annual_income !== null) {
-                                    $('input[name="mother_annual_income"]').val(enquiry.mother_annual_income);
-                                }
-
-                                // Address
-                                if (enquiry.permanent_address) {
-                                    $('input[name="permanent_address"]').val(enquiry.permanent_address);
-                                }
-                                if (enquiry.country_id) {
-                                    $('select[name="permanent_country_id"]').val(enquiry.country_id).trigger('change');
-                                }
-
-                                // Note: Enquiry model doesn't have separate city, state, pincode fields
-                                // They would need to be parsed from permanent_address if needed
-
-                                // Class (if available)
-                                if (enquiry.class_id) {
-                                    $('select[name="class_id"]').val(enquiry.class_id).trigger('change');
-
-                                    // Fetch and fill registration fee for the selected class
-                                    fetch(`/school/student-registrations/registration-fee/${enquiry.class_id}`)
-                                        .then(response => response.json())
-                                        .then(feeData => {
-                                            if (feeData.success) {
-                                                $('input[name="registration_fee"]').val(feeData.fee);
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error fetching registration fee:', error);
-                                        });
-                                }
-
-                                // Photos - Load from enquiry if available
-                                if (enquiry.father_photo) {
-                                    loadImagePreview(enquiry.father_photo, 'father-photo-preview', 'father-photo-icon', 'father-photo-remove');
-                                    // Store the photo path in hidden field for form submission
-                                    $('#enquiry_father_photo').val(enquiry.father_photo);
-                                    // Store in sessionStorage for persistence across page reloads
-                                    sessionStorage.setItem('registration_father_photo', enquiry.father_photo);
-                                }
-                                if (enquiry.mother_photo) {
-                                    loadImagePreview(enquiry.mother_photo, 'mother-photo-preview', 'mother-photo-icon', 'mother-photo-remove');
-                                    // Store the photo path in hidden field for form submission
-                                    $('#enquiry_mother_photo').val(enquiry.mother_photo);
-                                    // Store in sessionStorage for persistence across page reloads
-                                    sessionStorage.setItem('registration_mother_photo', enquiry.mother_photo);
-                                }
-                                if (enquiry.student_photo) {
-                                    loadImagePreview(enquiry.student_photo, 'student-photo-preview', 'student-photo-icon', 'student-photo-remove');
-                                    // Store the photo path in hidden field for form submission
-                                    $('#enquiry_student_photo').val(enquiry.student_photo);
-                                    // Store in sessionStorage for persistence across page reloads
-                                    sessionStorage.setItem('registration_student_photo', enquiry.student_photo);
-                                }
-
-                                // Signatures - Load from enquiry if available
-                                if (enquiry.father_signature) {
-                                    loadImagePreview(enquiry.father_signature, 'father-signature-preview', 'father-signature-icon', 'father-signature-remove');
-                                    // Store the signature path in hidden field for form submission
-                                    $('#enquiry_father_signature').val(enquiry.father_signature);
-                                    // Store in sessionStorage for persistence across page reloads
-                                    sessionStorage.setItem('registration_father_signature', enquiry.father_signature);
-                                }
-                                if (enquiry.mother_signature) {
-                                    loadImagePreview(enquiry.mother_signature, 'mother-signature-preview', 'mother-signature-icon', 'mother-signature-remove');
-                                    // Store the signature path in hidden field for form submission
-                                    $('#enquiry_mother_signature').val(enquiry.mother_signature);
-                                    // Store in sessionStorage for persistence across page reloads
-                                    sessionStorage.setItem('registration_mother_signature', enquiry.mother_signature);
-                                }
-                                if (enquiry.student_signature) {
-                                    loadImagePreview(enquiry.student_signature, 'student-signature-preview', 'student-signature-icon', 'student-signature-remove');
-                                    // Store the signature path in hidden field for form submission
-                                    $('#enquiry_student_signature').val(enquiry.student_signature);
-                                    // Store in sessionStorage for persistence across page reloads
-                                    sessionStorage.setItem('registration_student_signature', enquiry.student_signature);
-                                }
-
-                                console.log('Form auto-filled successfully from enquiry #' + enquiry.enquiry_no);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching enquiry data:', error);
-                            alert('Failed to load enquiry data. Please try again.');
-                        });
-                }
-            });
-        });
+@endpush
     </script>
 @endpush

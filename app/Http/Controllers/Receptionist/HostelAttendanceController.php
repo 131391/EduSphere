@@ -115,94 +115,76 @@ class HostelAttendanceController extends TenantController
     public function store(Request $request)
     {
         $schoolId = $this->getSchoolId();
-        
+
+        // Validate — ValidationException is automatically converted to a 422 JSON response
+        // by Laravel when the request expects JSON (Accept: application/json).
+        $validated = $request->validate([
+            'hostel_id'                    => [
+                'required',
+                \Illuminate\Validation\Rule::exists('hostels', 'id')->where('school_id', $schoolId),
+            ],
+            'attendance_date'              => 'required|date|before_or_equal:today',
+            'students'                     => 'required|array|min:1',
+            'students.*.student_id'        => [
+                'required',
+                \Illuminate\Validation\Rule::exists('students', 'id')->where('school_id', $schoolId),
+            ],
+            'students.*.is_present'        => 'required|boolean',
+            'students.*.remarks'           => 'nullable|string|max:500',
+        ]);
+
+        // Verify all submitted students are actually assigned to this hostel.
+        // Cast to int on both sides — pluck() returns integers from DB, submitted
+        // values may arrive as strings depending on JSON encoding.
+        $studentIds       = array_map('intval', collect($validated['students'])->pluck('student_id')->toArray());
+        $validAssignments = array_map('intval', HostelBedAssignment::where('school_id', $schoolId)
+            ->where('hostel_id', $validated['hostel_id'])
+            ->whereIn('student_id', $studentIds)
+            ->pluck('student_id')
+            ->toArray());
+
+        $invalidStudents = array_diff($studentIds, $validAssignments);
+        if (!empty($invalidStudents)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Some students are not assigned to the selected hostel.',
+                'errors'  => ['students' => ['Student residency mismatch detected.']],
+            ], 422);
+        }
+
+        DB::beginTransaction();
         try {
-            $validated = $request->validate([
-                'hostel_id' => 'required|exists:hostels,id',
-                'attendance_date' => 'required|date',
-                'students' => 'required|array',
-                'students.*.student_id' => 'required|exists:students,id',
-                'students.*.is_present' => 'required|boolean',
-                'students.*.remarks' => 'nullable|string|max:500',
-            ]);
-
-            // Verify hostel belongs to school
-            $hostel = Hostel::where('id', $validated['hostel_id'])->where('school_id', $schoolId)->first();
-            if (!$hostel) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized block',
-                    'errors' => ['hostel_id' => ['Unauthorized hostel block selection.']]
-                ], 422);
-            }
-
-            // Verify all students belong to the selected hostel (multi-tenant boundary check)
-            $studentIds = collect($validated['students'])->pluck('student_id')->toArray();
-            $validAssignments = HostelBedAssignment::where('school_id', $schoolId)
-                ->where('hostel_id', $validated['hostel_id'])
-                ->whereIn('student_id', $studentIds)
-                ->pluck('student_id')
-                ->toArray();
-
-            $invalidStudents = array_diff($studentIds, $validAssignments);
-            if (!empty($invalidStudents)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Residency mismatch',
-                    'errors' => ['students' => ['Some student nodes are not mapped to the selected block hierarchy.']]
-                ], 422);
-            }
-
-            // Process attendance in a transaction
-            DB::beginTransaction();
             foreach ($validated['students'] as $studentData) {
-                $studentId = $studentData['student_id'];
-                $isPresent = $studentData['is_present'];
-                $remarks = $studentData['remarks'] ?? null;
-
-                // Check if attendance already exists for this student and date
-                $existingAttendance = HostelAttendance::where('school_id', $schoolId)
-                    ->where('student_id', $studentId)
-                    ->where('attendance_date', $validated['attendance_date'])
-                    ->first();
-
-                if ($existingAttendance) {
-                    $existingAttendance->update([
-                        'hostel_id' => $validated['hostel_id'], // Ensure hostel is consistent
-                        'is_present' => $isPresent,
-                        'remarks' => $remarks,
-                        'marked_by' => Auth::id(),
-                    ]);
-                } else {
-                    HostelAttendance::create([
-                        'school_id' => $schoolId,
-                        'student_id' => $studentId,
-                        'hostel_id' => $validated['hostel_id'],
+                HostelAttendance::updateOrCreate(
+                    [
+                        'school_id'       => $schoolId,
+                        'student_id'      => $studentData['student_id'],
                         'attendance_date' => $validated['attendance_date'],
-                        'is_present' => $isPresent,
-                        'remarks' => $remarks,
-                        'marked_by' => Auth::id(),
-                    ]);
-                }
+                    ],
+                    [
+                        'hostel_id'  => $validated['hostel_id'],
+                        'is_present' => $studentData['is_present'],
+                        'remarks'    => $studentData['remarks'] ?? null,
+                        'marked_by'  => Auth::id(),
+                    ]
+                );
             }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Hostel attendance metrics synchronized successfully for ' . count($validated['students']) . ' student nodes.'
+                'message' => 'Attendance saved for ' . count($validated['students']) . ' residents.',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
-            if (DB::transactionLevel() > 0) DB::rollBack();
+            DB::rollBack();
+            Log::error('Hostel attendance store failed', [
+                'school_id' => $schoolId,
+                'error'     => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'System exception during batch synchronization: ' . $e->getMessage()
+                'message' => 'Failed to save attendance: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -266,8 +248,8 @@ class HostelAttendanceController extends TenantController
             $stats['compliance_percentage'] = round(($stats['compliance_present'] / $stats['total_logs']) * 100);
         }
 
-        // Sorting - use joins but ensure we select the primary key to preserve model hydration
-        $sortColumn = $request->input('sort', 'attendance_date');
+        // Sorting
+        $sortColumn   = $request->input('sort', 'attendance_date');
         $sortDirection = $request->input('direction', 'desc');
         $allowedSortColumns = ['attendance_date', 'admission_no', 'hostel_name'];
         if (in_array($sortColumn, $allowedSortColumns)) {
@@ -285,10 +267,6 @@ class HostelAttendanceController extends TenantController
         } else {
             $query->orderBy('hostel_attendances.attendance_date', 'desc');
         }
-        
-        // Debug: Log query before pagination
-        Log::info('Hostel Attendance Report - Query SQL: ' . $query->toSql());
-        Log::info('Hostel Attendance Report - Query Bindings: ' . json_encode($query->getBindings()));
 
         // Export functionality
         if ($request->has('export') && $request->export === 'excel') {
@@ -298,74 +276,33 @@ class HostelAttendanceController extends TenantController
         }
 
         // Pagination
-        $perPage = $request->input('per_page', 15);
+        $perPage     = $request->input('per_page', 15);
         $attendances = $query->paginate($perPage)->withQueryString();
 
-        // Debug logging
-        Log::info('Hostel Attendance Report - Total records: ' . $attendances->total());
-        Log::info('Hostel Attendance Report - Current page records: ' . $attendances->count());
-        
-        // Reload relationships after pagination to ensure they're available
         $attendances->load([
-            'student' => function($q) {
-                $q->with(['class', 'section']);
-            },
-            'hostel'
+            'student' => fn($q) => $q->with(['class', 'section']),
+            'hostel',
         ]);
-        
-        // Load bed assignments for all students in the current page
+
+        // Attach bed assignment data (floor, room, bed) to each attendance record
         $studentIds = $attendances->pluck('student_id')->unique();
-        $hostelIds = $attendances->pluck('hostel_id')->unique();
-        
-        Log::info('Hostel Attendance Report - Student IDs: ' . $studentIds->implode(', '));
-        Log::info('Hostel Attendance Report - Hostel IDs: ' . $hostelIds->implode(', '));
-        
+        $hostelIds  = $attendances->pluck('hostel_id')->unique();
+
         $bedAssignments = HostelBedAssignment::where('school_id', $schoolId)
             ->whereIn('student_id', $studentIds)
             ->whereIn('hostel_id', $hostelIds)
             ->whereNull('deleted_at')
             ->with(['floor', 'room'])
             ->get()
-            ->keyBy(function($assignment) {
-                return $assignment->student_id . '_' . $assignment->hostel_id;
-            });
+            ->keyBy(fn($a) => $a->student_id . '_' . $a->hostel_id);
 
-        Log::info('Hostel Attendance Report - Bed assignments found: ' . $bedAssignments->count());
-
-        // Attach bed assignments to attendance records and debug class loading
-        $attendances->getCollection()->transform(function($attendance) use ($bedAssignments) {
-            $key = $attendance->student_id . '_' . $attendance->hostel_id;
-            $assignment = $bedAssignments->get($key);
+        $attendances->getCollection()->transform(function ($attendance) use ($bedAssignments) {
+            $assignment = $bedAssignments->get($attendance->student_id . '_' . $attendance->hostel_id);
             if ($assignment) {
-                $attendance->bed_assignment = $assignment;
-                $attendance->bed_no = $assignment->bed_no;
-                $attendance->floor_name = $assignment->floor ? $assignment->floor->floor_name : null;
-                $attendance->room_name = $assignment->room ? $assignment->room->room_name : null;
+                $attendance->bed_no     = $assignment->bed_no;
+                $attendance->floor_name = $assignment->floor?->floor_name;
+                $attendance->room_name  = $assignment->room?->room_name;
             }
-            
-            // Debug class loading
-            Log::info('Hostel Attendance Report - Attendance ID: ' . $attendance->id);
-            Log::info('Hostel Attendance Report - Student ID: ' . $attendance->student_id);
-            if ($attendance->student) {
-                Log::info('Hostel Attendance Report - Student exists: ' . $attendance->student->admission_no);
-                Log::info('Hostel Attendance Report - Student class_id: ' . ($attendance->student->class_id ?? 'NULL'));
-                if ($attendance->student->class) {
-                    // ClassModel uses 'name' attribute, not 'class_name'
-                    Log::info('Hostel Attendance Report - Class loaded: ' . $attendance->student->class->name);
-                } else {
-                    Log::warning('Hostel Attendance Report - Class NOT loaded for student: ' . $attendance->student_id . ', class_id: ' . ($attendance->student->class_id ?? 'NULL'));
-                    // Try to reload the relationship
-                    $attendance->student->load('class', 'section');
-                    if ($attendance->student->class) {
-                        Log::info('Hostel Attendance Report - Class reloaded: ' . $attendance->student->class->name);
-                    } else {
-                        Log::error('Hostel Attendance Report - Class still not loaded after reload attempt');
-                    }
-                }
-            } else {
-                Log::warning('Hostel Attendance Report - Student NOT loaded for attendance: ' . $attendance->id);
-            }
-            
             return $attendance;
         });
 

@@ -1,31 +1,31 @@
 @extends('layouts.receptionist')
 
-@section('title', 'Historical Index - Hostel Attendance')
-@section('page-title', 'Historical Index')
-@section('page-description', 'Audit and export long-term residential attendance metrics')
+@section('title', 'Hostel Attendance Report')
+@section('page-title', 'Attendance Report')
+@section('page-description', 'View and export hostel attendance history')
 
 @section('content')
 <div class="space-y-6">
     {{-- Statistics Overview --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <x-stat-card label="Audited Records" :value="$stats['total_logs']" icon="fas fa-file-invoice" color="blue" />
-        <x-stat-card label="Target Blocks" :value="$hostels->count()" icon="fas fa-building-circle-check" color="emerald" />
-        <x-stat-card label="Compliance Rate" :value="$stats['compliance_percentage'] . '%'" icon="fas fa-chart-line" color="teal" />
-        <x-stat-card label="Data Integrity" value="High" icon="fas fa-shield-halved" color="indigo" />
+        <x-stat-card label="Total Records" :value="$stats['total_logs']" icon="fas fa-file-invoice" color="blue" />
+        <x-stat-card label="Hostels" :value="$hostels->count()" icon="fas fa-building-circle-check" color="emerald" />
+        <x-stat-card label="Present Rate" :value="$stats['compliance_percentage'] . '%'" icon="fas fa-chart-line" color="teal" />
+        <x-stat-card label="Data Status" value="Up to Date" icon="fas fa-shield-halved" color="indigo" />
     </div>
 
     {{-- Page Header --}}
-    <x-page-header title="Historical Index" description="Generate multi-dimensional occupancy reports" icon="fas fa-history">
+    <x-page-header title="Attendance Report" description="View hostel attendance history by date and hostel" icon="fas fa-history">
         <a href="{{ route('receptionist.hostel-attendance.index') }}" 
            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
             <i class="fas fa-arrow-left mr-2 text-xs"></i>
-            Back to Census
+            Back to Attendance
         </a>
         @if($attendances->total() > 0)
         <a href="{{ route('receptionist.hostel-attendance.report', array_merge(request()->all(), ['export' => 'excel'])) }}" 
            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
             <i class="fas fa-file-excel mr-2 text-xs"></i>
-            Export Audit (CSV)
+            Export CSV
         </a>
         @endif
     </x-page-header>
@@ -36,9 +36,9 @@
             <form method="GET" action="{{ route('receptionist.hostel-attendance.report') }}">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Residential Block</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hostel</label>
                         <select name="hostel_id" class="w-full h-11 px-4 bg-slate-50 border-slate-200 dark:bg-gray-700/50 dark:border-gray-600 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all appearance-none outline-none shadow-sm cursor-pointer">
-                            <option value="">All Segments</option>
+                            <option value="">All Hostels</option>
                             @foreach($hostels as $hostel)
                                 <option value="{{ $hostel->id }}" {{ request('hostel_id') == $hostel->id ? 'selected' : '' }}>
                                     {{ $hostel->hostel_name }}
@@ -48,12 +48,12 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Temporal Start</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">From Date</label>
                         <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full h-11 px-4 bg-slate-50 border-slate-200 dark:bg-gray-700/50 dark:border-gray-600 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none shadow-sm cursor-pointer">
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Temporal End</label>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">To Date</label>
                         <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full h-11 px-4 bg-slate-50 border-slate-200 dark:bg-gray-700/50 dark:border-gray-600 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none shadow-sm cursor-pointer">
                     </div>
 
@@ -61,7 +61,7 @@
                         <button type="submit" 
                                 class="w-full h-11 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-teal-500/20 flex items-center justify-center gap-3 active:scale-95">
                             <i class="fas fa-search text-sm"></i>
-                            Synthesize Audit
+                            Search
                         </button>
                     </div>
                 </div>
@@ -83,11 +83,11 @@
                     <thead>
                         <tr class="bg-gray-50/50 dark:bg-gray-700/10 border-b border-slate-100 dark:border-gray-700">
                             <th class="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">ID</th>
-                            <th class="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Resident Identity</th>
-                            <th class="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Residency Context</th>
-                            <th class="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Presence State</th>
-                            <th class="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Log Date</th>
-                            <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Verified By</th>
+                            <th class="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Student</th>
+                            <th class="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Hostel / Room</th>
+                            <th class="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                            <th class="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
+                            <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Marked By</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -142,9 +142,9 @@
                                     <div class="w-20 h-20 bg-slate-50 dark:bg-gray-700 rounded-3xl flex items-center justify-center mb-6 border border-slate-100 dark:border-gray-600">
                                         <i class="fas fa-folder-open text-3xl text-gray-300"></i>
                                     </div>
-                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Archives Exhausted</h3>
+                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">No Records Found</h3>
                                     <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest max-w-sm mx-auto mt-2 leading-relaxed">
-                                        No historical records matched your query parameters. Refine your temporal or segmental selection to synthesize the audit.
+                                        No attendance records match your filters. Try adjusting the date range or hostel selection.
                                     </p>
                                 </div>
                             </td>

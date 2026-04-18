@@ -91,16 +91,11 @@
                     {{-- Server-rendered rows (Hidden once Alpine initializes) --}}
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
                         @if(empty($initialData['rows']))
-                        <tr class="transition-all duration-300">
-                            <td colspan="5" class="px-6 py-24 text-center">
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-20 h-20 bg-slate-50 dark:bg-gray-700 rounded-3xl flex items-center justify-center mb-6 border border-slate-100 dark:border-gray-600">
-                                        <i class="fas fa-bed text-3xl text-gray-300"></i>
-                                    </div>
-                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Hostel Matrix Uninitialized</h3>
-                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest max-w-sm mx-auto mt-2 leading-relaxed">
-                                        No hostel blocks have been defined in the institutional registry yet.
-                                    </p>
+                                    <i class="fas fa-bed text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-lg text-gray-500">No hostels found matching your criteria.</p>
                                 </div>
                             </td>
                         </tr>

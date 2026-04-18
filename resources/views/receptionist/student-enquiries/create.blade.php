@@ -53,18 +53,70 @@
                 fatherExpanded: false,
                 motherExpanded: false,
                 contactExpanded: false,
-
-                init() {
-                    this.$nextTick(() => {
-                        if (typeof $ !== 'undefined') {
-                            $(this.$el).find('select').on('change', (e) => {
-                                const fieldName = e.target.getAttribute('name');
-                                if (fieldName && this.errors[fieldName]) {
-                                    delete this.errors[fieldName];
-                                }
-                            });
-                        }
-                    });
+                
+                formData: {
+                    academic_year_id: '{{ old('academic_year_id') }}',
+                    class_id: '{{ old('class_id') }}',
+                    subject_name: '{{ old('subject_name') }}',
+                    student_name: '{{ old('student_name') }}',
+                    gender: '{{ old('gender') }}',
+                    follow_up_date: '{{ old('follow_up_date', date('Y-m-d')) }}',
+                    
+                    // Father Details
+                    father_name: '{{ old('father_name') }}',
+                    father_contact: '{{ old('father_contact') }}',
+                    father_email: '{{ old('father_email') }}',
+                    father_qualification: '{{ old('father_qualification') }}',
+                    father_occupation: '{{ old('father_occupation') }}',
+                    father_annual_income: '{{ old('father_annual_income') }}',
+                    father_organization: '{{ old('father_organization') }}',
+                    father_office_address: '{{ old('father_office_address') }}',
+                    father_department: '{{ old('father_department') }}',
+                    father_designation: '{{ old('father_designation') }}',
+                    
+                    // Mother Details
+                    mother_name: '{{ old('mother_name') }}',
+                    mother_contact: '{{ old('mother_contact') }}',
+                    mother_email: '{{ old('mother_email') }}',
+                    mother_qualification: '{{ old('mother_qualification') }}',
+                    mother_occupation: '{{ old('mother_occupation') }}',
+                    mother_annual_income: '{{ old('mother_annual_income') }}',
+                    mother_organization: '{{ old('mother_organization') }}',
+                    mother_office_address: '{{ old('mother_office_address') }}',
+                    mother_department: '{{ old('mother_department') }}',
+                    mother_designation: '{{ old('mother_designation') }}',
+                    
+                    // Contact Details
+                    contact_no: '{{ old('contact_no') }}',
+                    whatsapp_no: '{{ old('whatsapp_no') }}',
+                    facebook_id: '{{ old('facebook_id') }}',
+                    email_id: '{{ old('email_id') }}',
+                    sms_no: '{{ old('sms_no') }}',
+                    twitter_id: '{{ old('twitter_id') }}',
+                    emergency_contact_no: '{{ old('emergency_contact_no') }}',
+                    
+                    // Personal details
+                    dob: '{{ old('dob') }}',
+                    aadhar_no: '{{ old('aadhar_no') }}',
+                    grand_father_name: '{{ old('grand_father_name') }}',
+                    annual_income: '{{ old('annual_income') }}',
+                    no_of_brothers: '{{ old('no_of_brothers', 0) }}',
+                    no_of_sisters: '{{ old('no_of_sisters', 0) }}',
+                    category: '{{ old('category') }}',
+                    minority: '{{ old('minority') }}',
+                    religion: '{{ old('religion') }}',
+                    transport_facility: '{{ old('transport_facility') }}',
+                    hostel_facility: '{{ old('hostel_facility') }}',
+                    previous_class: '{{ old('previous_class') }}',
+                    identity_marks: '{{ old('identity_marks') }}',
+                    permanent_address: '{{ old('permanent_address') }}',
+                    country_id: '{{ old('country_id', 102) }}',
+                    previous_school_name: '{{ old('previous_school_name') }}',
+                    student_roll_no: '{{ old('student_roll_no') }}',
+                    passing_year: '{{ old('passing_year') }}',
+                    exam_name: '{{ old('exam_name') }}',
+                    board_university: '{{ old('board_university') }}',
+                    only_child: '{{ old('only_child') ? true : false }}'
                 },
 
                 async submitForm() {
@@ -72,7 +124,7 @@
                     this.errors = {};
 
                     const form = document.getElementById('enquiryForm');
-                    const formData = new FormData(form);
+                    const fd = new FormData(form);
 
                     try {
                         const response = await fetch("{{ route('receptionist.student-enquiries.store') }}", {
@@ -82,14 +134,14 @@
                                 'Accept': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
-                            body: formData
+                            body: fd
                         });
 
                         const result = await response.json();
 
                         if (response.status === 422) {
                             this.errors = result.errors;
-                            this.displayErrors(result.errors);
+                            this.handleValidationErrors(result.errors);
                         } else if (response.ok) {
                             if (window.Toast) {
                                 await window.Toast.fire({
@@ -116,7 +168,7 @@
                     }
                 },
 
-                displayErrors(errors) {
+                handleValidationErrors(errors) {
                     if (window.Toast) {
                         window.Toast.fire({ icon: "error", title: "Please check the form for errors" });
                     }
@@ -125,47 +177,57 @@
                     Object.keys(errors).forEach(field => {
                         if (field.startsWith("father_")) this.fatherExpanded = true;
                         if (field.startsWith("mother_")) this.motherExpanded = true;
-                        if (["contact_no", "whatsapp_no", "facebook_id", "email_id", "sms_no", "twitter_id", "emergency_contact_no"].includes(field)) {
+                        if (["contact_no", "whatsapp_no", "email_id", "sms_no", "facebook_id", "twitter_id", "emergency_contact_no"].includes(field)) {
                             this.contactExpanded = true;
                         }
                     });
 
                     this.$nextTick(() => {
-                        const firstError = document.querySelector(".border-red-500, .bg-red-50");
+                        const firstError = document.querySelector(".border-red-500");
                         if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
                     });
-                }
-            }
-        }
+                },
 
-        // Global preview handlers for photos (used in partials/form.blade.php)
-        function previewImage(event, previewId, iconId, removeBtnId) {
-            const input = event.target;
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+                clearError(field) {
+                    if (this.errors[field]) {
+                        delete this.errors[field];
+                    }
+                },
+
+                previewPhoto(event, previewId, iconId, removeBtnId) {
+                    const input = event.target;
+                    if (input.files && input.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const preview = document.getElementById(previewId);
+                            const icon = document.getElementById(iconId);
+                            const removeBtn = document.getElementById(removeBtnId);
+                            if (preview) {
+                                preview.src = e.target.result;
+                                preview.classList.remove('hidden');
+                            }
+                            if (icon) icon.classList.add('hidden');
+                            if (removeBtn) removeBtn.classList.remove('hidden');
+                        };
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                },
+
+                removePhoto(inputName, previewId, iconId, removeBtnId) {
+                    const input = document.querySelector(`input[name="${inputName}"]`);
+                    if (input) input.value = '';
+
                     const preview = document.getElementById(previewId);
                     const icon = document.getElementById(iconId);
                     const removeBtn = document.getElementById(removeBtnId);
-                    if (preview) { preview.src = e.target.result; preview.classList.remove('hidden'); }
-                    if (icon) icon.classList.add('hidden');
-                    if (removeBtn) removeBtn.classList.remove('hidden');
-                };
-                reader.readAsDataURL(input.files[0]);
+                    if (preview) {
+                        preview.src = '#';
+                        preview.classList.add('hidden');
+                    }
+                    if (icon) icon.classList.remove('hidden');
+                    if (removeBtn) removeBtn.classList.add('hidden');
+                }
             }
-        }
-
-        function removeImage(event, inputName, previewId, iconId, removeBtnId) {
-            event.preventDefault();
-            const input = document.querySelector(`input[name="${inputName}"]`);
-            if (input) input.value = '';
-            
-            const preview = document.getElementById(previewId);
-            const icon = document.getElementById(iconId);
-            const removeBtn = document.getElementById(removeBtnId);
-            if (preview) { preview.src = '#'; preview.classList.add('hidden'); }
-            if (icon) icon.classList.remove('hidden');
-            if (removeBtn) removeBtn.classList.add('hidden');
         }
     </script>
 @endpush

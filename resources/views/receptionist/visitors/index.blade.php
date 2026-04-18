@@ -356,7 +356,7 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="visitor_type" x-model="formData.visitor_type" @change="clearError('visitor_type')"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all no-select2"
                                 :class="errors.visitor_type ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Type</option>
                                 @foreach($visitorTypes as $type)
@@ -375,7 +375,7 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="visit_purpose" x-model="formData.visit_purpose"
-                                @change="clearError('visit_purpose')" class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                @change="clearError('visit_purpose')" class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all no-select2"
                                 :class="errors.visit_purpose ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Purpose</option>
                                 @foreach($visitPurposes as $purpose)
@@ -396,7 +396,7 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="meeting_with" x-model="formData.meeting_with" @change="clearError('meeting_with')"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all no-select2"
                                 :class="errors.meeting_with ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Person</option>
                                 @foreach($meetingWithCases as $person)
@@ -431,7 +431,7 @@
                                 class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="meeting_type" x-model="formData.meeting_type" @change="clearError('meeting_type')"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all no-select2"
                                 :class="errors.meeting_type ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Meeting Type</option>
                                 @foreach($meetingTypes as $meetingType)
@@ -449,7 +449,7 @@
                         <label class="modal-label-premium">Priority <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="priority" x-model="formData.priority" @change="clearError('priority')"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all no-select2"
                                 :class="errors.priority ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Priority</option>
                                 @foreach($priorities as $priority)
@@ -616,17 +616,9 @@
                             }
                         });
 
-                        // Robust sync for all selects (including Select2)
+                        // Standard selects with no-select2 don't need jQuery listeners
                         this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('select[name="visit_purpose"], select[name="visitor_type"], select[name="meeting_with"], select[name="priority"], select[name="meeting_type"]').on('change', (e) => {
-                                    const field = e.target.getAttribute('name');
-                                    if (field && this.formData.hasOwnProperty(field)) {
-                                        this.formData[field] = e.target.value;
-                                        this.clearError(field);
-                                    }
-                                });
-                            }
+                            // Any additional initialization if required
                         });
                     },
 
@@ -650,14 +642,7 @@
                             meeting_scheduled: '',
                         };
 
-                        if (typeof $ !== 'undefined') {
-                            $('select[name="visit_purpose"]').val(null).trigger('change');
-                            $('select[name="visitor_type"]').val(null).trigger('change');
-                            $('select[name="meeting_with"]').val(null).trigger('change');
-                            $('select[name="priority"]').val('{{ VisitorPriority::Medium->value }}').trigger('change');
-                            $('select[name="meeting_type"]').val('{{ VisitorMode::Offline->value }}').trigger('change');
-                        }
-
+                        // Select2 triggers removed
                         this.resetImagePreviews();
                     },
 
@@ -701,15 +686,7 @@
                         this.$dispatch('open-modal', 'visitor-modal');
 
                         this.$nextTick(() => {
-                            setTimeout(() => {
-                                if (typeof $ !== 'undefined') {
-                                    ['priority', 'visit_purpose', 'visitor_type', 'meeting_with', 'meeting_type'].forEach(name => {
-                                        if (this.formData[name]) {
-                                            $(`select[name="${name}"]`).val(this.formData[name]).trigger('change');
-                                        }
-                                    });
-                                }
-                            }, 150);
+                            // Standard selects will update via x-model
                         });
                     },
 

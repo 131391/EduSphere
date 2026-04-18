@@ -93,16 +93,11 @@
                     {{-- Server-rendered rows (Hidden once Alpine initializes) --}}
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
                         @if(empty($initialData['rows']))
-                        <tr class="transition-all duration-300">
-                            <td colspan="5" class="px-6 py-24 text-center">
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-20 h-20 bg-slate-50 dark:bg-gray-700 rounded-3xl flex items-center justify-center mb-6 border border-slate-100 dark:border-gray-600">
-                                        <i class="fas fa-layer-group text-3xl text-gray-300"></i>
-                                    </div>
-                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Floor Matrix Uninitialized</h3>
-                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest max-w-sm mx-auto mt-2 leading-relaxed">
-                                        No residential floors have been mapped in the institutional blocks yet.
-                                    </p>
+                                    <i class="fas fa-layer-group text-4xl text-gray-300 mb-4"></i>
+                                    <p class="text-lg text-gray-500">No floors found matching your criteria.</p>
                                 </div>
                             </td>
                         </tr>
@@ -213,7 +208,8 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium">Hostel <span class="text-red-600 font-bold">*</span></label>
                         <select x-model="formData.hostel_id" @change="clearError('hostel_id')"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            name="hostel_id"
+                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select Hostel</option>
                             @foreach($hostels as $hostel)
@@ -293,6 +289,7 @@
                         floor_create_date: '',
                     },
                     errors: {},
+                    
 
                     clearError(field) {
                         if (this.errors[field]) delete this.errors[field];
@@ -330,6 +327,11 @@
                     },
 
                     async save() {
+                        if (!this.formData.hostel_id) {
+                            this.errors.hostel_id = ['The hostel id field is required.'];
+                            return;
+                        }
+
                         this.submitting = true;
                         this.errors = {};
                         const url = this.editMode

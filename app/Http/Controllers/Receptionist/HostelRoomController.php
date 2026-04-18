@@ -22,9 +22,9 @@ class HostelRoomController extends TenantController
 
         $transformer = function ($room) {
             $amenities = [];
-            if ((int) $room->ac === YesNo::Yes->value) $amenities[] = 'AC';
-            if ((int) $room->cooler === YesNo::Yes->value) $amenities[] = 'Cooler';
-            if ((int) $room->fan === YesNo::Yes->value) $amenities[] = 'Fan';
+            if ($room->ac?->value === YesNo::Yes->value) $amenities[] = 'AC';
+            if ($room->cooler?->value === YesNo::Yes->value) $amenities[] = 'Cooler';
+            if ($room->fan?->value === YesNo::Yes->value) $amenities[] = 'Fan';
 
             return [
                 'id'                => $room->id,
@@ -33,9 +33,9 @@ class HostelRoomController extends TenantController
                 'hostel_floor_id'   => $room->hostel_floor_id,
                 'hostel_name'       => $room->hostel->hostel_name ?? 'N/A',
                 'floor_name'        => $room->floor->floor_name ?? 'N/A',
-                'ac'                => (int) ($room->ac ?? YesNo::No->value),
-                'cooler'            => (int) ($room->cooler ?? YesNo::No->value),
-                'fan'               => (int) ($room->fan ?? YesNo::No->value),
+                'ac'                => $room->ac?->value ?? YesNo::No->value,
+                'cooler'            => $room->cooler?->value ?? YesNo::No->value,
+                'fan'               => $room->fan?->value ?? YesNo::No->value,
                 'amenities'         => $amenities,
                 'amenities_label'   => empty($amenities) ? 'None' : implode(', ', $amenities),
                 'room_create_date'  => $room->room_create_date ? $room->room_create_date->format('d M, Y') : 'N/A',
@@ -43,9 +43,9 @@ class HostelRoomController extends TenantController
                     'hostel_id'        => $room->hostel_id,
                     'hostel_floor_id'  => $room->hostel_floor_id,
                     'room_name'        => $room->room_name,
-                    'ac'               => (int) ($room->ac ?? YesNo::No->value),
-                    'cooler'           => (int) ($room->cooler ?? YesNo::No->value),
-                    'fan'              => (int) ($room->fan ?? YesNo::No->value),
+                    'ac'               => $room->ac?->value ?? YesNo::No->value,
+                    'cooler'           => $room->cooler?->value ?? YesNo::No->value,
+                    'fan'              => $room->fan?->value ?? YesNo::No->value,
                     'room_create_date' => $room->room_create_date ? $room->room_create_date->format('Y-m-d') : '',
                 ],
             ];
@@ -113,9 +113,9 @@ class HostelRoomController extends TenantController
                     $room->hostel->hostel_name ?? '',
                     $room->floor->floor_name ?? '',
                     $room->room_name,
-                    (int) $room->ac === YesNo::Yes->value ? 'Yes' : 'No',
-                    (int) $room->cooler === YesNo::Yes->value ? 'Yes' : 'No',
-                    (int) $room->fan === YesNo::Yes->value ? 'Yes' : 'No',
+                    $room->ac === YesNo::Yes ? 'Yes' : 'No',
+                    $room->cooler === YesNo::Yes ? 'Yes' : 'No',
+                    $room->fan === YesNo::Yes ? 'Yes' : 'No',
                     $room->room_create_date ? $room->room_create_date->format('Y-m-d') : '',
                 ]);
             });

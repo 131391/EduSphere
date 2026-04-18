@@ -100,10 +100,10 @@
             </div>
 
             <!-- Table Content -->
-            <div class="relative min-h-[400px]">
+            <div class="overflow-x-auto relative ajax-table-wrapper min-h-[400px]">
                 <x-table.loading-overlay />
 
-                <div class="overflow-x-auto">
+                <div>
                     <table class="w-full text-left border-collapse whitespace-nowrap">
                         <thead>
                             <tr class="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
@@ -123,7 +123,83 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        {{-- Server-rendered rows (Hidden once Alpine initializes, prevents FOUC flash) --}}
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                            @forelse($initialData['rows'] as $index => $row)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-400">{{ ($initialData['pagination']['current_page'] - 1) * $initialData['pagination']['per_page'] + $index + 1 }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-{{ $row['post_color'] ?? 'slate' }}-500 to-{{ $row['post_color'] ?? 'slate' }}-600 flex items-center justify-center text-sm font-bold text-white shadow-sm shrink-0 overflow-hidden">
+                                                @if(!empty($row['staff_image']))
+                                                    <img src="{{ $row['staff_image'] }}" class="w-full h-full object-cover">
+                                                @else
+                                                    <span>{{ $row['initials'] }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-[13px] font-bold text-gray-800 dark:text-white group-hover:text-teal-600 transition-colors">{{ $row['name'] }}</span>
+                                                <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">ID: #{{ $row['id'] }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border bg-{{ $row['post_color'] }}-50 text-{{ $row['post_color'] }}-700 border-{{ $row['post_color'] }}-100">
+                                            {{ $row['post_label'] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="text-[12px] font-semibold text-gray-700 dark:text-gray-300">{{ $row['class_name'] }}</span>
+                                            <span class="text-[11px] text-gray-400">{{ $row['section_name'] }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center gap-1.5">
+                                                <i class="fas fa-phone text-[10px] text-gray-300"></i>
+                                                <span class="text-[12px] font-semibold text-gray-700 dark:text-gray-300">{{ $row['mobile'] }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <i class="fas fa-envelope text-[10px] text-gray-300"></i>
+                                                <span class="text-[11px] text-gray-400">{{ $row['email'] }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">{{ $row['joining_date'] }}</span>
+                                            <span class="text-[10px] text-gray-400 uppercase font-medium">Joined Staff</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col text-right pr-4">
+                                            <span class="text-[13px] font-black text-slate-800 dark:text-white">₹{{ number_format((float) $row['current_salary']) }}</span>
+                                            <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Active Roll</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600"><i class="fas fa-edit text-xs"></i></span>
+                                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600"><i class="fas fa-trash text-xs"></i></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <i class="fas fa-users-slash text-4xl text-gray-300 mb-4"></i>
+                                            <p class="text-lg text-gray-500">No staff records match your current search or filter criteria.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+
+                        {{-- Alpine-managed rows --}}
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak
+                            :class="loading ? 'opacity-50' : 'opacity-100'">
                             <template x-for="(row, index) in rows" :key="row.id">
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
                                     <td class="px-6 py-4 text-sm font-medium text-gray-400" x-text="(pagination.current_page - 1) * pagination.per_page + index + 1"></td>
@@ -190,38 +266,25 @@
                             </template>
 
                             <!-- Empty State -->
-                            <x-table.empty-state 
-                                model="rows" 
+                            <x-table.empty-state
                                 colspan="8"
-                                icon="fas fa-users-slash" 
-                                title="No Staff Records Found" 
-                                message="We couldn't find any staff matching your current search or filter criteria."
+                                icon="fas fa-users-slash"
+                                message="No staff records match your current search or filter criteria."
                             />
-
-                            <!-- Loading State (Skeleton) -->
-                            <template x-if="loading">
-                                <tr>
-                                    <td colspan="8" class="p-0">
-                                        <div class="p-6 space-y-4">
-                                            <template x-for="i in 5" :key="i">
-                                                <div class="flex items-center gap-4 animate-pulse">
-                                                    <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                                                    <div class="flex-1 space-y-2">
-                                                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-                                                        <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded w-1/6"></div>
-                                                    </div>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <!-- Table Footer/Pagination -->
+            @if($initialData['pagination']['total'] > 0)
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
+                </div>
+            </div>
+            @endif
+
             <x-table.pagination />
         </div>
 
@@ -238,7 +301,7 @@
                     <label class="modal-label-premium">Designated Post <span class="text-red-600 font-bold">*</span></label>
                     <div class="relative group">
                         <select name="post" x-model="formData.post" @change="clearError('post')"
-                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.post}">
+                            class="modal-input-premium no-select2" :class="{'border-red-500 ring-red-500/10': errors.post}">
                             <option value="">Select Designation</option>
                             @foreach(StaffPost::cases() as $post)
                                 <option value="{{ $post->value }}">{{ $post->label() }}</option>
@@ -297,7 +360,7 @@
                         <label class="modal-label-premium">Gender <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="gender" x-model="formData.gender" @change="clearError('gender')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.gender}">
+                                class="modal-input-premium no-select2" :class="{'border-red-500 ring-red-500/10': errors.gender}">
                                 <option value="">Select Gender</option>
                                 @foreach(Gender::cases() as $gender)
                                     <option value="{{ $gender->value }}">{{ $gender->label() }}</option>
@@ -334,7 +397,7 @@
                         <div class="relative group">
                             <select name="higher_qualification_id" x-model="formData.higher_qualification_id"
                                 @change="clearError('higher_qualification_id')"
-                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.higher_qualification_id}">
+                                class="modal-input-premium no-select2" :class="{'border-red-500 ring-red-500/10': errors.higher_qualification_id}">
                                 <option value="">Select Qualification</option>
                                 @foreach($qualifications as $qualification)
                                     <option value="{{ $qualification->id }}">{{ $qualification->name }}</option>
@@ -356,7 +419,7 @@
                             <div class="relative group">
                                 <select name="class_id" id="class_id" x-model="formData.class_id"
                                     @change="loadSections(); clearError('class_id')"
-                                    class="modal-input-premium" :disabled="!canSelectClass"
+                                    class="modal-input-premium no-select2" :disabled="!canSelectClass"
                                     :class="{'border-red-500 ring-red-500/10': errors.class_id}">
                                     <option value="">Select Class</option>
                                     @foreach($classes as $class)
@@ -375,7 +438,7 @@
                             <div class="relative group">
                                 <select name="section_id" id="section_id" x-model="formData.section_id"
                                     @change="clearError('section_id')"
-                                    class="modal-input-premium" :disabled="!canSelectSection"
+                                    class="modal-input-premium no-select2" :disabled="!canSelectSection"
                                     :class="{'border-red-500 ring-red-500/10': errors.section_id}">
                                     <option value="">Select Section</option>
                                     <template x-for="section in sections" :key="section.id">
@@ -454,7 +517,7 @@
                         <label class="modal-label-premium">Country</label>
                         <div class="relative group">
                             <select name="country_id" x-model="formData.country_id" @change="clearError('country_id')"
-                                class="modal-input-premium" data-location-cascade="true" data-country-select="true"
+                                class="modal-input-premium no-select2" data-location-cascade="true" data-country-select="true"
                                 :class="{'border-red-500 ring-red-500/10': errors.country_id}">
                                 <option value="">Select Country</option>
                                 @foreach($countries as $country)
@@ -472,7 +535,7 @@
                         <label class="modal-label-premium">State</label>
                         <div class="relative group">
                             <select name="state_id" x-model="formData.state_id" @change="clearError('state_id')"
-                                class="modal-input-premium" data-state-select="true"
+                                class="modal-input-premium no-select2" data-state-select="true"
                                 :class="{'border-red-500 ring-red-500/10': errors.state_id}">
                                 <option value="">Select State</option>
                             </select>
@@ -487,7 +550,7 @@
                         <label class="modal-label-premium">City</label>
                         <div class="relative group">
                             <select name="city_id" x-model="formData.city_id" @change="clearError('city_id')"
-                                class="modal-input-premium" data-city-select="true"
+                                class="modal-input-premium no-select2" data-city-select="true"
                                 :class="{'border-red-500 ring-red-500/10': errors.city_id}">
                                 <option value="">Select City</option>
                             </select>
@@ -590,8 +653,8 @@
                 <!-- Notice Card (same style as Academic Year toggle card) -->
                 <div class="mb-8 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
                     <div class="flex flex-col">
-                        <span class="text-sm font-bold text-slate-900 leading-tight">Procedural Audit Compliance</span>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">Ensure all salary and qualification data is verified against physical documentation.</span>
+                        <span class="text-sm font-bold text-slate-900 leading-tight">Note</span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">Ensure salary and qualification details are verified before saving.</span>
                     </div>
                     <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
                         <i class="fas fa-shield-check text-indigo-600 text-sm"></i>
@@ -670,29 +733,17 @@ document.addEventListener('alpine:init', () => {
                     this.formData.section_id = '';
                     this.sections = [];
                 }
-                this.$nextTick(() => this.updateSelect2DisabledState());
             });
 
             this.$watch('formData.class_id', (newValue, oldValue) => {
                 if (newValue !== oldValue) {
                     this.formData.section_id = '';
                 }
-                this.$nextTick(() => this.updateSelect2DisabledState());
             });
             
-            // Sync Select2 with Alpine.js
+            // Re-initialization not needed for no-select2 fields
             this.$nextTick(() => {
-                if (typeof $ !== 'undefined') {
-                    const selectors = 'select[name="post"], select[name="class_id"], select[name="section_id"], select[name="gender"], select[name="country_id"], select[name="state_id"], select[name="city_id"], select[name="higher_qualification_id"]';
-                    $(selectors).on('change', (e) => {
-                        const field = e.target.getAttribute('name');
-                        if (field && this.formData.hasOwnProperty(field)) {
-                            this.formData[field] = e.target.value;
-                            this.clearError(field);
-                            if (field === 'class_id') this.loadSections();
-                        }
-                    });
-                }
+                // Any additional initialization if required
             });
         },
 
@@ -754,7 +805,6 @@ document.addEventListener('alpine:init', () => {
             this.staffId = null;
             this.resetForm();
             this.$nextTick(() => {
-                this.updateSelect2DisabledState();
                 this.$dispatch('open-modal', 'staff-modal');
             });
         },
@@ -763,28 +813,38 @@ document.addEventListener('alpine:init', () => {
             this.editMode = true;
             this.staffId = row.id;
             this.errors = {};
-            this.formData = { ...row }; // row already contains formatted and raw values
+            this.formData = { ...row };
             
-            if (this.formData.class_id && this.isTeacher) this.loadSections();
-
+            // Fix joining date format for HTML5 date input (ensure YYYY-MM-DD)
+            this.formData.joining_date = row.joining_date_raw || '';
+            
             this.$nextTick(() => {
                 this.$dispatch('open-modal', 'staff-modal');
-                setTimeout(() => {
-                    if (typeof $ !== 'undefined') {
-                        const selectFields = ['post', 'class_id', 'gender', 'country_id', 'higher_qualification_id'];
-                        selectFields.forEach(f => $(`select[name="${f}"]`).val(this.formData[f]).trigger('change'));
-                        
-                        // Location Logic
-                        if (window.locationCascade && this.formData.country_id) {
-                            window.locationCascade.loadStates(document.querySelector('select[name="state_id"]'), this.formData.country_id, this.formData.state_id);
-                            setTimeout(() => {
-                                if (this.formData.state_id) {
-                                    window.locationCascade.loadCities(document.querySelector('select[name="city_id"]'), this.formData.state_id, this.formData.city_id);
-                                }
-                            }, 300);
+                
+                // Handle teacher assignments cascading
+                if (this.formData.class_id && this.isTeacher) {
+                    this.loadSections();
+                    // Let segments load before setting the section value again to be safe
+                    setTimeout(() => {
+                        this.formData.section_id = row.section_id;
+                    }, 300);
+                }
+
+                // Location Logic - Cascading selects
+                if (window.locationCascade && this.formData.country_id) {
+                    const countrySelect = document.querySelector('select[name="country_id"]');
+                    const stateSelect = document.querySelector('select[name="state_id"]');
+                    const citySelect = document.querySelector('select[name="city_id"]');
+
+                    window.locationCascade.loadStates(stateSelect, this.formData.country_id, this.formData.state_id);
+                    
+                    // Use a slightly longer timeout for city to ensure state options are rendered
+                    setTimeout(() => {
+                        if (this.formData.state_id) {
+                            window.locationCascade.loadCities(citySelect, this.formData.state_id, this.formData.city_id);
                         }
-                    }
-                }, 100);
+                    }, 500);
+                }
             });
         },
         
@@ -847,10 +907,6 @@ document.addEventListener('alpine:init', () => {
             reader.readAsDataURL(file);
         },
 
-        updateSelect2DisabledState() {
-            if (typeof $ === 'undefined') return;
-            $('#class_id, #section_id').prop('disabled', !this.isTeacher).trigger('change.select2');
-        },
 
         clearError(field) { delete this.errors[field]; },
 
@@ -866,7 +922,6 @@ document.addEventListener('alpine:init', () => {
             this.errors = {};
             if (this.$refs.aadharCardInput) this.$refs.aadharCardInput.value = '';
             if (this.$refs.staffImageInput) this.$refs.staffImageInput.value = '';
-            if (typeof $ !== 'undefined') $('select').val('').trigger('change');
         }
     }));
 });

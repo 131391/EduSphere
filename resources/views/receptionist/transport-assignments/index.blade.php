@@ -9,7 +9,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Assigned Registry</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Assigned</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_assigned'] }}</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -21,7 +21,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Network Utilization</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Active Routes</p>
                         <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ $stats['active_routes'] }} <span class="text-sm text-gray-400 font-medium tracking-tight">Routes</span></p>
                     </div>
                     <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
@@ -33,7 +33,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-amber-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Revenue Stream</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Revenue</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">₹{{ number_format($stats['total_fees'], 0) }}</p>
                     </div>
                     <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
@@ -45,7 +45,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Operational Fleet</p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Available Vehicles</p>
                         <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['available_vehicles'] }}</p>
                     </div>
                     <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -63,9 +63,9 @@
                         <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
                             <i class="fas fa-link text-xs"></i>
                         </div>
-                        Transit Assignments
+                        Transport Assignments
                     </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Map student profiles to institutional network nodes.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Assign students to transport routes and bus stops.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <button @click="openAddModal()"
@@ -215,10 +215,10 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
-                                <label class="modal-label-premium">Target Student Profile <span class="text-red-600 font-bold">*</span></label>
+                                <label class="modal-label-premium">Student <span class="text-red-600 font-bold">*</span></label>
                                 <select name="student_id" x-model="formData.student_id" id="student_id"
                                     @change="clearError('student_id')"
-                                    class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.student_id}">
+                                    class="modal-input-premium no-select2" :class="{'border-red-500 ring-red-500/10': errors.student_id}">
                                     <option value="">Select Student</option>
                                     @foreach($students as $student)
                                         <option value="{{ $student->id }}">
@@ -233,10 +233,10 @@
                             </div>
 
                             <div class="space-y-2">
-                                <label class="modal-label-premium">Operational Transit Route <span class="text-red-600 font-bold">*</span></label>
+                                <label class="modal-label-premium">Route <span class="text-red-600 font-bold">*</span></label>
                                 <select name="route_id" x-model="formData.route_id" id="route_id"
                                     @change="clearError('route_id'); loadBusStops()"
-                                    class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.route_id}">
+                                    class="modal-input-premium no-select2" :class="{'border-red-500 ring-red-500/10': errors.route_id}">
                                     <option value="">Select Route</option>
                                     @foreach($routes as $route)
                                         <option value="{{ $route->id }}">{{ $route->route_name }}</option>
@@ -253,10 +253,10 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
-                                <label class="modal-label-premium">Designated Stoppage (Node) <span class="text-red-600 font-bold">*</span></label>
+                                <label class="modal-label-premium">Bus Stop <span class="text-red-600 font-bold">*</span></label>
                                 <select name="bus_stop_id" x-model="formData.bus_stop_id" id="bus_stop_id"
                                     @change="clearError('bus_stop_id'); updateFee()"
-                                    class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.bus_stop_id}">
+                                    class="modal-input-premium no-select2" :class="{'border-red-500 ring-red-500/10': errors.bus_stop_id}">
                                     <option value="">Select Bus Stop</option>
                                 </select>
                                 <template x-if="errors.bus_stop_id">
@@ -265,10 +265,10 @@
                             </div>
 
                             <div class="space-y-2">
-                                <label class="modal-label-premium">Assigned Fleet Asset</label>
+                                <label class="modal-label-premium">Vehicle</label>
                                 <select name="vehicle_id" x-model="formData.vehicle_id" id="vehicle_id"
                                     @change="clearError('vehicle_id')"
-                                    class="modal-input-premium">
+                                    class="modal-input-premium no-select2">
                                     <option value="">Select Vehicle</option>
                                     @foreach($vehicles as $vehicle)
                                         <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_no }} ({{ $vehicle->vehicle_type }})</option>
@@ -279,7 +279,7 @@
                     </div>
 
                     <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex flex-col gap-3 shadow-sm">
-                        <label class="modal-label-premium !mb-0">Computed Monthly Tariff</label>
+                        <label class="modal-label-premium !mb-0">Monthly Fee</label>
                         <div class="relative">
                             <span class="absolute right-5 top-1/2 -translate-y-1/2 text-teal-600 font-black text-xl">₹</span>
                             <input type="number" name="fee_per_month" x-model="formData.fee_per_month" step="0.01" readonly
@@ -293,7 +293,7 @@
                             <i class="fas fa-exclamation-triangle text-amber-500 text-sm"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-900 leading-tight">Registry Notice</span>
+                            <span class="text-sm font-bold text-slate-900 leading-tight">Note</span>
                             <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
                                 Assignment will be mapped to the <span class="text-indigo-600 font-bold underline decoration-indigo-200">current academic session</span>. Any modifications will reflect in the next billing cycle.
                             </p>
@@ -310,7 +310,7 @@
                     <template x-if="submitting">
                         <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                     </template>
-                    <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Assign Student')"></span>
+                    <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Assignment' : 'Assign Student')"></span>
                 </button>
             </x-slot>
         </x-modal>
@@ -351,21 +351,6 @@
                         window.addEventListener('open-add-transport-assignment', () => this.openAddModal());
                         window.addEventListener('open-edit-transport-assignment', (e) => this.openEditModal(e.detail));
                         window.addEventListener('open-delete-transport-assignment', (e) => this.confirmDelete(e.detail));
-
-                        this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                // Initialize Select2 Sync
-                                $('select[name="student_id"], select[name="route_id"], select[name="bus_stop_id"], select[name="vehicle_id"]').on('change', (e) => {
-                                    const field = e.target.getAttribute('name');
-                                    if (field && this.formData.hasOwnProperty(field)) {
-                                        this.formData[field] = e.target.value;
-                                        if (field === 'route_id') this.loadBusStops();
-                                        if (field === 'bus_stop_id') this.updateFee();
-                                        this.clearError(field);
-                                    }
-                                });
-                            }
-                        });
                     },
 
                     async save() {
@@ -398,7 +383,7 @@
                                 if (window.Toast) {
                                     window.Toast.fire({
                                         icon: 'success',
-                                        title: result.message || 'Assignment state synchronized'
+                                        title: result.message || 'Assignment saved'
                                     });
                                 }
                                 setTimeout(() => window.location.reload(), 1000);
@@ -406,7 +391,7 @@
                                 if (response.status === 422) {
                                     this.errors = result.errors || {};
                                 } else {
-                                    throw new Error(result.message || 'Transmission failed');
+                                    throw new Error(result.message || 'Save failed');
                                 }
                             }
                         } catch (error) {
@@ -421,7 +406,7 @@
                     confirmDelete(detail) {
                         window.dispatchEvent(new CustomEvent('open-confirm-modal', {
                             detail: {
-                                message: `Strike transport facility record for "${detail.name}"?`,
+                                message: `Remove transport assignment for "${detail.name}"?`,
                                 onConfirm: () => this.deleteAssignment(detail.url)
                             }
                         }));
@@ -441,11 +426,11 @@
 
                             if (response.ok) {
                                 if (window.Toast) {
-                                    window.Toast.fire({ icon: 'success', title: result.message || 'Assignment terminated' });
+                                    window.Toast.fire({ icon: 'success', title: result.message || 'Assignment removed' });
                                 }
                                 setTimeout(() => window.location.reload(), 1000);
                             } else {
-                                throw new Error(result.message || 'Severing record failed');
+                                throw new Error(result.message || 'Delete failed');
                             }
                         } catch (error) {
                             if (window.Toast) {
@@ -467,11 +452,6 @@
                         };
                         this.busStops = [];
                         this.$dispatch('open-modal', 'assignment-modal');
-                        this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('select[name="student_id"], select[name="route_id"], select[name="bus_stop_id"], select[name="vehicle_id"]').val('').trigger('change');
-                            }
-                        });
                     },
 
                     openEditModal(assignment) {
@@ -492,20 +472,6 @@
                         }
 
                         this.$dispatch('open-modal', 'assignment-modal');
-                        this.$nextTick(() => {
-                            setTimeout(() => {
-                                if (typeof $ !== 'undefined') {
-                                    $('select[name="student_id"]').val(this.formData.student_id).trigger('change');
-                                    $('select[name="route_id"]').val(this.formData.route_id).trigger('change');
-                                    $('select[name="vehicle_id"]').val(this.formData.vehicle_id).trigger('change');
-
-                                    // Specific timing for bus stop because it's dynamic
-                                    setTimeout(() => {
-                                        $('select[name="bus_stop_id"]').val(this.formData.bus_stop_id).trigger('change');
-                                    }, 200);
-                                }
-                            }, 150);
-                        });
                     },
 
                     loadBusStops(isInitial = false) {
@@ -528,8 +494,7 @@
                             // Preselect the route's default vehicle if present
                             const route = this.allRoutes.find(r => Number(r.id) === routeId);
                             if (route && route.vehicle_id) {
-                                this.formData.vehicle_id = route.vehicle_id;
-                                if (typeof $ !== 'undefined') $('select[name="vehicle_id"]').val(route.vehicle_id).trigger('change');
+                                this.formData.vehicle_id = String(route.vehicle_id);
                             }
                         }
                     },
@@ -544,13 +509,11 @@
 
                             this.busStops.forEach(stop => {
                                 const option = document.createElement('option');
-                                option.value = stop.id;
+                                option.value = String(stop.id);
                                 option.textContent = `${stop.bus_stop_no || ''} - ${stop.bus_stop_name || ''}`;
                                 option.setAttribute('data-fee', stop.charge_per_month || '');
                                 select.appendChild(option);
                             });
-
-                            if (typeof $ !== 'undefined') $(select).trigger('change');
                         });
                     },
 
@@ -566,8 +529,7 @@
 
                             // If stop has a specific vehicle, we could pre-select it, but usually route-level vehicle is primary.
                             if (selectedStop.vehicle_id) {
-                                this.formData.vehicle_id = selectedStop.vehicle_id;
-                                if (typeof $ !== 'undefined') $('select[name="vehicle_id"]').val(selectedStop.vehicle_id).trigger('change');
+                                this.formData.vehicle_id = String(selectedStop.vehicle_id);
                             }
                         }
                     },

@@ -274,7 +274,7 @@
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation
                             <span class="text-red-500">*</span></label>
                         <select x-model="formData.route_id" @change="clearError('route_id')"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
                             :class="errors.route_id ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select Primary Route</option>
                             @foreach($routes as $route)
@@ -380,7 +380,7 @@
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Fleet Assignment
                             Override</label>
                         <select x-model="formData.vehicle_id"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
                             :class="errors.vehicle_id ? 'border-red-500' : 'border-slate-200'"
                             @change="clearError('vehicle_id')">
                             <option value="">Allocated via Route</option>
@@ -394,9 +394,7 @@
                         </template>
                     </div>
                 </div>
-
-                </div>
-
+                
                 {{-- Instructional Notice --}}
                 <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                     <i class="fas fa-satellite-dish text-indigo-600 mt-0.5"></i>
@@ -452,15 +450,7 @@
                     },
 
                     init() {
-                        this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('select[x-model="formData.route_id"], select[x-model="formData.vehicle_id"]').on('change', (e) => {
-                                    const field = e.target.getAttribute('x-model').split('.').pop();
-                                    this.formData[field] = e.target.value;
-                                    this.clearError(field);
-                                });
-                            }
-                        });
+                        // Using no-select2 on select elements to ensure standard Alpine binding
                     },
 
                     resetForm() {

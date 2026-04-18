@@ -66,7 +66,7 @@ class RouteController extends TenantController
     /**
      * Standard row transformer for high-performance datatables.
      */
-    protected function transformRow($route): array
+    public function transformRow($route): array
     {
         return [
             'id' => $route->id,
