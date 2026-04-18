@@ -10,10 +10,15 @@
             defaultSort: 'created_at',
             defaultDirection: 'desc',
             defaultPerPage: 25,
-            defaultFilters: { search: '', hostel_id: '' },
+            defaultFilters: { hostel_id: '' },
             initialRows: @js($initialData['rows']),
             initialPagination: @js($initialData['pagination']),
-            initialStats: @js($stats)
+            initialStats: @js($stats),
+            filterLabels: {
+                hostel_id: {
+                    @foreach($hostels as $h) '{{ $h->id }}': '{{ $h->hostel_name }}', @endforeach
+                }
+            }
         }), floorForm())" class="space-y-6" @close-modal.window="if($event.detail === 'floor-modal') resetForm()">
 
         {{-- Statistics --}}
@@ -48,14 +53,14 @@
                     <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
                         <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Floor List</h2>
                         <x-table.search placeholder="Search floors or hostels..." />
-                        <x-table.filter-select model="filters.hostel_id" action="applyFilter('hostel_id', $event.target.value)">
-                            <option value="">All Hostels</option>
-                            @foreach($hostels as $hostel)
-                                <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
-                            @endforeach
-                        </x-table.filter-select>
                     </div>
                     <div class="flex items-center gap-3">
+                        <x-table.filter-select
+                            model="filters.hostel_id"
+                            action="applyFilter('hostel_id', $event.target.value)"
+                            placeholder="All Hostels"
+                            :options="collect($hostels)->mapWithKeys(fn($h) => [$h->id => $h->hostel_name])->toArray()"
+                        />
                         <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
                     </div>
                 </div>

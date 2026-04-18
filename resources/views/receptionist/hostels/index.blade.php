@@ -10,7 +10,7 @@
             defaultSort: 'created_at',
             defaultDirection: 'desc',
             defaultPerPage: 25,
-            defaultFilters: { search: '' },
+            defaultFilters: {},
             initialRows: @js($initialData['rows']),
             initialPagination: @js($initialData['pagination']),
             initialStats: @js($stats)
