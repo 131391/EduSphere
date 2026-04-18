@@ -16,7 +16,7 @@ class LibraryService
     public function issueBook(array $data)
     {
         return DB::transaction(function () use ($data) {
-            $book = Book::findOrFail($data['book_id']);
+            $book = Book::where('school_id', $data['school_id'])->findOrFail($data['book_id']);
 
             if ($book->available_quantity <= 0) {
                 return ['success' => false, 'message' => 'Book not available in stock.'];
@@ -50,12 +50,13 @@ class LibraryService
 
             $returnDate = $returnDate ? Carbon::parse($returnDate) : now();
             $issue->return_date = $returnDate;
-            
-            // Calculate fine if overdue
+
+            // Calculate fine if overdue — rate is configurable via school settings
             if ($returnDate->gt($issue->due_date)) {
                 $daysOverdue = $returnDate->diffInDays($issue->due_date);
-                // Implementation assumption: 5 units per day fine. Can be made dynamic later.
-                $issue->fine_amount = $daysOverdue * 5; 
+                $school = \App\Models\School::find($issue->school_id);
+                $finePerDay = $school?->settings['library_fine_per_day'] ?? 5;
+                $issue->fine_amount = $daysOverdue * $finePerDay;
             }
 
             $issue->status = 'returned';
@@ -74,13 +75,17 @@ class LibraryService
     {
         return DB::transaction(function () use ($issue) {
             $issue->status = 'lost';
-            // Fine could be the price of the book
             $issue->fine_amount = $issue->book->price ?? 0;
             $issue->save();
 
-            // Book quantity is not incremented back because it's lost
-            // We should decrement the total quantity of the book
-            $issue->book->decrement('quantity');
+            // Atomically decrement only if quantity > 0
+            $decremented = \App\Models\Book::where('id', $issue->book_id)
+                ->where('quantity', '>', 0)
+                ->decrement('quantity');
+
+            if (!$decremented) {
+                throw new \Exception('Book quantity is already zero and cannot be decremented.');
+            }
 
             return ['success' => true, 'message' => 'Book marked as lost. Fine applied.'];
         });

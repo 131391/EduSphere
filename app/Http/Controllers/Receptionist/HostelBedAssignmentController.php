@@ -9,52 +9,126 @@ use App\Models\Hostel;
 use App\Models\HostelFloor;
 use App\Models\HostelRoom;
 use App\Models\FeeName;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class HostelBedAssignmentController extends TenantController
 {
+    use HasAjaxDataTable;
+
     /**
      * Display a listing of hostel bed assignments.
      */
     public function index(Request $request)
     {
         $schoolId = $this->getSchoolId();
-        
-        $query = HostelBedAssignment::where('school_id', $schoolId)
-            ->with(['student.class', 'student.section', 'hostel', 'floor', 'room']);
 
-        // Search functionality
+        $transformer = function ($row) {
+            $student = $row->student;
+            $name = $student ? trim(($student->first_name ?? '') . ' ' . ($student->middle_name ?? '') . ' ' . ($student->last_name ?? '')) : 'N/A';
+            return [
+                'id'                 => $row->id,
+                'student_id'         => $row->student_id,
+                'student_name'       => $name,
+                'initials'           => collect(explode(' ', $name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
+                'admission_no'       => $student->admission_no ?? 'N/A',
+                'class_name'         => $student->class->name ?? 'N/A',
+                'hostel_id'          => $row->hostel_id,
+                'hostel_name'        => $row->hostel->hostel_name ?? 'N/A',
+                'hostel_floor_id'    => $row->hostel_floor_id,
+                'floor_name'         => $row->floor->floor_name ?? 'N/A',
+                'hostel_room_id'     => $row->hostel_room_id,
+                'room_name'          => $row->room->room_name ?? 'N/A',
+                'bed_no'             => $row->bed_no ?? 'N/A',
+                'rent'               => $row->rent ?? 0,
+                'rent_label'         => '₹' . number_format($row->rent ?? 0, 2),
+                'hostel_assign_date' => $row->hostel_assign_date ? $row->hostel_assign_date->format('d M, Y') : 'N/A',
+                'starting_month'     => $row->starting_month ?? '',
+            ];
+        };
+
+        $query = HostelBedAssignment::where('school_id', $schoolId)
+            ->with(['student.class', 'hostel', 'floor', 'room']);
+
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('bed_no', 'like', "%{$search}%")
-                  ->orWhereHas('student', function($studentQuery) use ($search) {
-                      $studentQuery->where('admission_no', 'like', "%{$search}%")
-                                   ->orWhere('first_name', 'like', "%{$search}%")
-                                   ->orWhere('middle_name', 'like', "%{$search}%")
-                                   ->orWhere('last_name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('hostel', function($hostelQuery) use ($search) {
-                      $hostelQuery->where('hostel_name', 'like', "%{$search}%");
-                  });
+                  ->orWhereHas('student', fn($sq) => $sq->where('admission_no', 'like', "%{$search}%")
+                      ->orWhere('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%"))
+                  ->orWhereHas('hostel', fn($hq) => $hq->where('hostel_name', 'like', "%{$search}%"));
             });
         }
 
-        // Sorting
-        $sortColumn = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
-        $query->orderBy($sortColumn, $sortDirection);
+        if ($request->filled('hostel_id')) {
+            $query->where('hostel_id', $request->hostel_id);
+        }
 
-        // Pagination
-        $perPage = $request->input('per_page', 15);
-        $assignments = $query->paginate($perPage)->withQueryString();
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer);
+        }
 
-        // Get hostels for the dropdown
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
+
         $hostels = Hostel::where('school_id', $schoolId)->orderBy('hostel_name')->get();
 
-        return view('receptionist.hostel-bed-assignments.index', compact('assignments', 'hostels'));
+        $stats = [
+            'total_assignments' => HostelBedAssignment::where('school_id', $schoolId)->whereNull('deleted_at')->count(),
+            'total_hostels'     => Hostel::where('school_id', $schoolId)->count(),
+            'total_rooms'       => HostelRoom::where('school_id', $schoolId)->count(),
+            'total_rent'        => (float) HostelBedAssignment::where('school_id', $schoolId)->whereNull('deleted_at')->sum('rent'),
+        ];
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('receptionist.hostel-bed-assignments.index', [
+            'initialData' => $initialData,
+            'stats'       => $stats,
+            'hostels'     => $hostels,
+        ]);
+    }
+
+    private function exportToCsv($query)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="hostel_assignments_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Student', 'Admission No', 'Class', 'Hostel', 'Floor', 'Room', 'Bed No', 'Rent', 'Assigned On']);
+            $query->orderBy('created_at', 'desc')->cursor()->each(function ($row) use ($file) {
+                $student = $row->student;
+                $name = $student ? trim(($student->first_name ?? '') . ' ' . ($student->middle_name ?? '') . ' ' . ($student->last_name ?? '')) : 'N/A';
+                fputcsv($file, [
+                    $name,
+                    $student->admission_no ?? 'N/A',
+                    $student->class->name ?? 'N/A',
+                    $row->hostel->hostel_name ?? 'N/A',
+                    $row->floor->floor_name ?? 'N/A',
+                    $row->room->room_name ?? 'N/A',
+                    $row->bed_no ?? '',
+                    $row->rent ?? 0,
+                    $row->hostel_assign_date ? $row->hostel_assign_date->format('Y-m-d') : '',
+                ]);
+            });
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function export()
+    {
+        return redirect()->route('receptionist.hostel-bed-assignments.index', ['export' => 'csv']);
     }
 
     /**

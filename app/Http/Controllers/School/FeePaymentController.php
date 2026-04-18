@@ -62,7 +62,7 @@ class FeePaymentController extends TenantController
 
         $pendingFees = $this->paymentService->getStudentPendingFees($student);
         $paymentMethods = PaymentMethod::where('school_id', $this->getSchoolId())->active()->get();
-        $academicYear = AcademicYear::where('school_id', $this->getSchoolId())->where('is_active', true)->first();
+        $academicYear = AcademicYear::where('school_id', $this->getSchoolId())->where('is_current', true)->first();
 
         return view('school.fee-payments.collect', compact('student', 'pendingFees', 'paymentMethods', 'academicYear'));
     }
@@ -76,14 +76,14 @@ class FeePaymentController extends TenantController
         $this->ensureSchoolActive();
 
         $validated = $request->validate([
-            'payment_date' => 'required|date',
-            'payment_method_id' => 'required|exists:payment_methods,id',
-            'transaction_id' => 'nullable|string|max:100',
-            'remarks' => 'nullable|string|max:500',
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'payments' => 'required|array|min:1',
-            'payments.*.fee_id' => 'required|exists:fees,id',
-            'payments.*.amount' => 'required|numeric|min:0.01',
+            'payment_date'       => 'required|date',
+            'payment_method_id'  => ['required', \Illuminate\Validation\Rule::exists('payment_methods', 'id')->where('school_id', $this->getSchoolId())],
+            'transaction_id'     => 'nullable|string|max:100',
+            'remarks'            => 'nullable|string|max:500',
+            'academic_year_id'   => ['required', \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())],
+            'payments'           => 'required|array|min:1',
+            'payments.*.fee_id'  => ['required', \Illuminate\Validation\Rule::exists('fees', 'id')->where('school_id', $this->getSchoolId())],
+            'payments.*.amount'  => 'required|numeric|min:0.01',
         ]);
 
         $data = $validated;

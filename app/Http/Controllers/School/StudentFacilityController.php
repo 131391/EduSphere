@@ -29,22 +29,23 @@ class StudentFacilityController extends TenantController
         $this->authorizeTenant($student);
 
         $validated = $request->validate([
-            'transport_route_id' => 'required|exists:transport_routes,id',
-            'pickup_point' => 'nullable|string',
-            'start_date' => 'required|date',
+            'transport_route_id' => ['required', \Illuminate\Validation\Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId())],
+            'pickup_point'       => 'nullable|string',
+            'start_date'         => 'required|date',
         ]);
 
         DB::transaction(function () use ($student, $validated) {
-            // Deactivate old assignment if exists
             StudentTransportAssignment::where('student_id', $student->id)
                 ->where('status', GeneralStatus::Active)
                 ->update(['status' => GeneralStatus::Inactive, 'end_date' => now()]);
 
-            StudentTransportAssignment::create(array_merge($validated, [
-                'school_id' => $this->getSchoolId(),
+            StudentTransportAssignment::create([
+                'school_id'  => $this->getSchoolId(),
                 'student_id' => $student->id,
-                'status' => GeneralStatus::Active,
-            ]));
+                'route_id'   => $validated['transport_route_id'],
+                'start_date' => $validated['start_date'],
+                'status'     => GeneralStatus::Active,
+            ]);
         });
 
         return back()->with('success', 'Transport assigned successfully.');
@@ -55,21 +56,20 @@ class StudentFacilityController extends TenantController
         $this->authorizeTenant($student);
 
         $validated = $request->validate([
-            'hostel_id' => 'required|exists:hostels,id',
-            'hostel_room_id' => 'nullable|exists:hostel_rooms,id',
-            'start_date' => 'required|date',
+            'hostel_id'      => ['required', \Illuminate\Validation\Rule::exists('hostels', 'id')->where('school_id', $this->getSchoolId())],
+            'hostel_room_id' => ['nullable', \Illuminate\Validation\Rule::exists('hostel_rooms', 'id')->where('school_id', $this->getSchoolId())],
+            'start_date'     => 'required|date',
         ]);
 
         DB::transaction(function () use ($student, $validated) {
-            // Deactivate old assignment if exists
             HostelBedAssignment::where('student_id', $student->id)
                 ->where('status', GeneralStatus::Active)
                 ->update(['status' => GeneralStatus::Inactive, 'end_date' => now()]);
 
             HostelBedAssignment::create(array_merge($validated, [
-                'school_id' => $this->getSchoolId(),
+                'school_id'  => $this->getSchoolId(),
                 'student_id' => $student->id,
-                'status' => GeneralStatus::Active,
+                'status'     => GeneralStatus::Active,
             ]));
         });
 

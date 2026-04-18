@@ -26,12 +26,14 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
+use App\Enums\FeeStatus;
+use App\Enums\EnquiryStatus;
 use App\Traits\HandlesFileCopies;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class StudentRegistrationController extends TenantController
 {
-    use HandlesFileCopies;
+    use HandlesFileCopies, \App\Traits\HandlesFinancialNumbers;
     protected $locationService;
 
     public function __construct(LocationService $locationService)
@@ -119,9 +121,9 @@ class StudentRegistrationController extends TenantController
 
         $validated = $request->validate([
             // Registration Form Information
-            'enquiry_id' => 'nullable|exists:student_enquiries,id',
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'class_id' => 'required|exists:classes,id',
+            'enquiry_id' => ['nullable', Rule::exists('student_enquiries', 'id')->where('school_id', $school->id)],
+            'academic_year_id' => ['required', Rule::exists('academic_years', 'id')->where('school_id', $school->id)],
+            'class_id' => ['required', Rule::exists('classes', 'id')->where('school_id', $school->id)],
             'registration_fee' => 'nullable|numeric',
             
             // Personal Information
@@ -176,18 +178,19 @@ class StudentRegistrationController extends TenantController
 
         DB::beginTransaction();
         try {
-            $data = $request->all();
-            $data['school_id'] = $school->id;
+            $registration = StudentRegistration::create(array_merge(
+                $request->except(['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature']),
+                ['school_id' => $school->id]
+            ));
 
-            // Handle File Uploads or Copies using Trait
-            $data['father_photo'] = $this->storeTenantFile($request->file('father_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_father_photo'));
-            $data['mother_photo'] = $this->storeTenantFile($request->file('mother_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_mother_photo'));
-            $data['student_photo'] = $this->storeTenantFile($request->file('student_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_student_photo'));
-            $data['father_signature'] = $this->storeTenantFile($request->file('father_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_father_signature'));
-            $data['mother_signature'] = $this->storeTenantFile($request->file('mother_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_mother_signature'));
-            $data['student_signature'] = $this->storeTenantFile($request->file('student_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_student_signature'));
-
-            $registration = StudentRegistration::create($data);
+            // Handle Photo/Signature uploads using Trait
+            $registration->father_photo = $this->storeTenantFile($request->file('father_photo'), "registrations/{$school->id}/photos");
+            $registration->mother_photo = $this->storeTenantFile($request->file('mother_photo'), "registrations/{$school->id}/photos");
+            $registration->student_photo = $this->storeTenantFile($request->file('student_photo'), "registrations/{$school->id}/photos");
+            $registration->father_signature = $this->storeTenantFile($request->file('father_signature'), "registrations/{$school->id}/signatures");
+            $registration->mother_signature = $this->storeTenantFile($request->file('mother_signature'), "registrations/{$school->id}/signatures");
+            $registration->student_signature = $this->storeTenantFile($request->file('student_signature'), "registrations/{$school->id}/signatures");
+            $registration->save();
 
             // Update Enquiry Status if linked
             if ($request->filled('enquiry_id')) {
@@ -195,7 +198,7 @@ class StudentRegistrationController extends TenantController
                     ->where('id', $request->enquiry_id)
                     ->first();
                 if ($enquiry) {
-                    $enquiry->update(['form_status' => \App\Enums\EnquiryStatus::Completed]);
+                    $enquiry->update(['form_status' => EnquiryStatus::Completed]);
                 }
             }
 
@@ -209,19 +212,25 @@ class StudentRegistrationController extends TenantController
                     'fee_type_id' => $regFeeName->fee_type_id,
                     'fee_name_id' => $regFeeName->id,
                     'class_id' => $registration->class_id,
-                    'bill_no' => 'REG-' . time(),
+                    'bill_no' => $this->generateBillNumber($school->id),
                     'fee_period' => 'One-time',
                     'payable_amount' => $request->registration_fee,
                     'paid_amount' => $request->registration_fee,
                     'due_amount' => 0,
                     'due_date' => now(),
                     'payment_date' => now(),
-                    'payment_status' => \App\Enums\FeeStatus::Paid,
+                    'payment_status' => FeeStatus::Paid,
                     'payment_mode' => 'Cash',
                     'remarks' => 'Registration Fee for No: ' . $registration->registration_no
                 ]);
 
-                $cashPaymentMethod = \App\Models\PaymentMethod::where('name', 'Cash')->first();
+                $cashPaymentMethod = \App\Models\PaymentMethod::where('school_id', $school->id)
+                    ->where('name', 'Cash')
+                    ->first();
+
+                if (!$cashPaymentMethod) {
+                    throw new \Exception('No Cash payment method configured for this school.');
+                }
 
                 FeePayment::create([
                     'school_id' => $school->id,
@@ -229,8 +238,8 @@ class StudentRegistrationController extends TenantController
                     'academic_year_id' => $registration->academic_year_id,
                     'amount' => $request->registration_fee,
                     'payment_date' => now(),
-                    'payment_method_id' => $cashPaymentMethod->id ?? 1,
-                    'receipt_no' => 'R-' . time(),
+                    'payment_method_id' => $cashPaymentMethod->id,
+                    'receipt_no' => $this->generateReceiptNumber($school->id),
                     'created_by' => Auth::id(),
                 ]);
             }
@@ -300,8 +309,8 @@ class StudentRegistrationController extends TenantController
         $school = $this->getSchool();
 
         $validated = $request->validate([
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'class_id' => 'required|exists:classes,id',
+            'academic_year_id' => ['required', Rule::exists('academic_years', 'id')->where('school_id', $school->id)],
+            'class_id' => ['required', Rule::exists('classes', 'id')->where('school_id', $school->id)],
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'mobile_no' => 'required|string|max:20',

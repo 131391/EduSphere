@@ -13,6 +13,7 @@ use App\Enums\RouteStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class TransportAttendanceController extends TenantController
 {
@@ -45,9 +46,9 @@ class TransportAttendanceController extends TenantController
         // Calculate Global Stats for today
         $today = now()->toDateString();
         $stats = [
-            'total_students' => StudentTransportAssignment::where('school_id', $schoolId)
+            'total_students' => $currentAcademicYear ? StudentTransportAssignment::where('school_id', $schoolId)
                 ->where('academic_year_id', $currentAcademicYear->id)
-                ->count(),
+                ->count() : 0,
             'boarded_today' => TransportAttendance::where('school_id', $schoolId)
                 ->where('attendance_date', $today)
                 ->where('is_present', true)

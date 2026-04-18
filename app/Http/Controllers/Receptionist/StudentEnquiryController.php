@@ -268,9 +268,13 @@ class StudentEnquiryController extends TenantController
     {
         $this->authorizeTenant($studentEnquiry);
 
-        // Delete associated files
-        $this->deleteFiles($studentEnquiry);
+        // Block deletion if enquiry has progressed to registration or admission
+        if (in_array($studentEnquiry->form_status, [EnquiryStatus::Completed, EnquiryStatus::Admitted])) {
+            return redirect()->route('receptionist.student-enquiries.index')
+                ->with('error', 'Cannot delete an enquiry that has been converted to a registration or admission.');
+        }
 
+        $this->deleteFiles($studentEnquiry);
         $studentEnquiry->delete();
 
         return redirect()->route('receptionist.student-enquiries.index')

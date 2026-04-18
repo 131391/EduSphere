@@ -237,6 +237,20 @@ class StudentTransportAssignmentController extends TenantController
             $validated['school_id'] = $schoolId;
             $validated['academic_year_id'] = $currentAcademicYear->id;
 
+            // Prevent duplicate: one active assignment per student per academic year
+            $duplicate = StudentTransportAssignment::where('school_id', $schoolId)
+                ->where('student_id', $validated['student_id'])
+                ->where('academic_year_id', $currentAcademicYear->id)
+                ->whereNull('deleted_at')
+                ->exists();
+            if ($duplicate) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Duplicate assignment',
+                    'errors' => ['student_id' => ['This student already has an active transport assignment for the current academic year.']]
+                ], 422);
+            }
+
             $assignment = StudentTransportAssignment::create($validated);
 
             if ($request->expectsJson() || $request->ajax()) {

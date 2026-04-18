@@ -11,6 +11,7 @@ use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
@@ -21,8 +22,22 @@ use App\Models\FeeName;
 use App\Models\FeePayment;
 use App\Models\StudentTransportAssignment;
 use App\Models\HostelBedAssignment;
+use App\Models\BloodGroup;
+use App\Models\Religion;
+use App\Models\Category;
+use App\Models\StudentType;
+use App\Models\CorrespondingRelative;
+use App\Models\Qualification;
+use App\Models\TransportRoute;
+use App\Models\Hostel;
+use App\Models\Role;
+use App\Models\User;
+use App\Models\PaymentMethod;
+use App\Models\AdmissionFee;
 use App\Traits\HandlesFileCopies;
 use App\Enums\GeneralStatus;
+use App\Enums\UserStatus;
+use Illuminate\Support\Facades\Hash;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 use App\Models\StudentEnquiry;
@@ -32,7 +47,7 @@ use App\Traits\HasAjaxDataTable;
 
 class AdmissionController extends TenantController
 {
-    use HandlesFileCopies, HasAjaxDataTable;
+    use HandlesFileCopies, HasAjaxDataTable, \App\Traits\HandlesFinancialNumbers;
 
     public function index(Request $request)
     {
@@ -162,14 +177,14 @@ class AdmissionController extends TenantController
             ->get();
 
         // Fetch master data
-        $bloodGroups = \App\Models\BloodGroup::where('school_id', $this->getSchoolId())->get();
-        $religions = \App\Models\Religion::where('school_id', $this->getSchoolId())->get();
-        $categories = \App\Models\Category::where('school_id', $this->getSchoolId())->get();
-        $studentTypes = \App\Models\StudentType::where('school_id', $this->getSchoolId())->get();
-        $correspondingRelatives = \App\Models\CorrespondingRelative::where('school_id', $this->getSchoolId())->get();
-        $qualifications = \App\Models\Qualification::where('school_id', $this->getSchoolId())->get();
-        $transportRoutes = \App\Models\TransportRoute::where('school_id', $this->getSchoolId())->get();
-        $hostels = \App\Models\Hostel::where('school_id', $this->getSchoolId())->get();
+        $bloodGroups = BloodGroup::where('school_id', $this->getSchoolId())->get();
+        $religions = Religion::where('school_id', $this->getSchoolId())->get();
+        $categories = Category::where('school_id', $this->getSchoolId())->get();
+        $studentTypes = StudentType::where('school_id', $this->getSchoolId())->get();
+        $correspondingRelatives = CorrespondingRelative::where('school_id', $this->getSchoolId())->get();
+        $qualifications = Qualification::where('school_id', $this->getSchoolId())->get();
+        $transportRoutes = TransportRoute::where('school_id', $this->getSchoolId())->get();
+        $hostels = Hostel::where('school_id', $this->getSchoolId())->get();
 
         // Generate next admission number
         $lastStudent = Student::where('school_id', $this->getSchoolId())->latest()->first();
@@ -203,26 +218,34 @@ class AdmissionController extends TenantController
             $student = new Student();
             $student->school_id = $school->id;
 
-            // Generate Admission No early if not provided to use for User generation
+            // Generate Admission No with uniqueness guarantee using atomic cache lock
             $admissionNo = $request->admission_no;
             if (!$admissionNo) {
-                $lastStudent = Student::where('school_id', $school->id)->latest()->first();
-                $admissionNo = $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
+                $admissionNo = Cache::lock('admission_no_generation_' . $school->id, 10)->block(5, function () use ($school) {
+                    $lastStudent = Student::where('school_id', $school->id)->lockForUpdate()->latest()->first();
+                    return $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
+                });
+            }
+
+            // Ensure uniqueness within school
+            if (Student::where('school_id', $school->id)->where('admission_no', $admissionNo)->exists()) {
+                DB::rollBack();
+                return back()->with('error', "The admission number [{$admissionNo}] is already allocated. Please refresh and try again.")->withInput();
             }
             $student->admission_no = $admissionNo;
 
             // Create Student User Account
-            $studentRole = \App\Models\Role::where('slug', \App\Models\Role::STUDENT)->first();
+            $studentRole = Role::where('slug', Role::STUDENT)->first();
             $userEmail = $request->email ?: 'student.' . $admissionNo . '@edusphere.local';
 
-            $user = \App\Models\User::create([
+            $user = User::create([
                 'name' => trim($request->first_name . ' ' . $request->last_name),
                 'email' => $userEmail,
-                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'password' => Hash::make('password'),
                 'role_id' => $studentRole ? $studentRole->id : null,
                 'school_id' => $school->id,
                 'phone' => $request->phone,
-                'status' => \App\Enums\UserStatus::Active,
+                'status' => UserStatus::Active,
             ]);
 
             $student->user_id = $user->id;
@@ -273,7 +296,9 @@ class AdmissionController extends TenantController
                 ->first();
 
             if ($admissionFeeName) {
-                // 2. Create the Fee Record (Ledger)
+                // 2. Create the Fee Record (Ledger) with sequential bill numbering
+                $billNo = $this->generateBillNumber($school->id);
+                
                 $fee = Fee::create([
                     'school_id' => $school->id,
                     'student_id' => $student->id,
@@ -281,7 +306,7 @@ class AdmissionController extends TenantController
                     'fee_type_id' => $admissionFeeName->fee_type_id,
                     'fee_name_id' => $admissionFeeName->id,
                     'class_id' => $student->class_id,
-                    'bill_no' => 'ADM-' . time(),
+                    'bill_no' => $billNo,
                     'fee_period' => 'Admission',
                     'payable_amount' => $request->admission_fee,
                     'paid_amount' => $request->admission_fee,
@@ -289,12 +314,15 @@ class AdmissionController extends TenantController
                     'due_date' => now(),
                     'payment_date' => now(),
                     'payment_status' => \App\Enums\FeeStatus::Paid,
-                    'payment_mode' => 'Cash', // Default for now
-                    'remarks' => 'Admission Fee paid during intake'
+                    'payment_mode' => $request->payment_mode ?? 'Cash',
+                    'remarks' => 'Admission Fee collected during intake'
                 ]);
 
                 // 3. Create the Fee Payment Record (Transaction)
-                $cashPaymentMethod = \App\Models\PaymentMethod::where('name', 'Cash')->first();
+                $paymentMethodName = $request->payment_mode ?? 'Cash';
+                $paymentMethod = PaymentMethod::where('school_id', $school->id)
+                    ->where('name', $paymentMethodName)
+                    ->first() ?? PaymentMethod::where('name', 'Cash')->first();
 
                 FeePayment::create([
                     'school_id' => $school->id,
@@ -303,32 +331,25 @@ class AdmissionController extends TenantController
                     'academic_year_id' => $student->academic_year_id,
                     'amount' => $request->admission_fee,
                     'payment_date' => now(),
-                    'payment_method_id' => $cashPaymentMethod->id ?? 1,
+                    'payment_method_id' => $paymentMethod->id ?? 1,
                     'receipt_no' => $request->receipt_no,
                     'created_by' => Auth::id(),
                 ]);
             }
 
-            // --- FACILITY INTEGRATION (PHASE 2 PREP) ---
+            // --- FACILITY INTEGRATION ---
             if ($request->transport_route_id) {
-                StudentTransportAssignment::create([
-                    'school_id' => $school->id,
-                    'student_id' => $student->id,
-                    'transport_route_id' => $request->transport_route_id,
-                    'status' => GeneralStatus::Active,
-                    'start_date' => now()
-                ]);
-            }
-
-            if ($request->hostel_id) {
-                // Simplified assignment - Phase 2 will handle floor/room selection
-                HostelBedAssignment::create([
-                    'school_id' => $school->id,
-                    'student_id' => $student->id,
-                    'hostel_id' => $request->hostel_id,
-                    'status' => GeneralStatus::Active,
-                    'start_date' => now()
-                ]);
+                $currentAcademicYear = AcademicYear::where('school_id', $school->id)
+                    ->where('is_current', true)->first();
+                if ($currentAcademicYear) {
+                    StudentTransportAssignment::create([
+                        'school_id'        => $school->id,
+                        'student_id'       => $student->id,
+                        'route_id'         => $request->transport_route_id,
+                        'academic_year_id' => $currentAcademicYear->id,
+                        'fee_per_month'    => 0,
+                    ]);
+                }
             }
 
             // If linked to a registration, update its status and the underlying Enquiry
@@ -392,14 +413,14 @@ class AdmissionController extends TenantController
             ->get();
 
         // Fetch master data
-        $bloodGroups = \App\Models\BloodGroup::where('school_id', $this->getSchoolId())->get();
-        $religions = \App\Models\Religion::where('school_id', $this->getSchoolId())->get();
-        $categories = \App\Models\Category::where('school_id', $this->getSchoolId())->get();
-        $studentTypes = \App\Models\StudentType::where('school_id', $this->getSchoolId())->get();
-        $correspondingRelatives = \App\Models\CorrespondingRelative::where('school_id', $this->getSchoolId())->get();
-        $qualifications = \App\Models\Qualification::where('school_id', $this->getSchoolId())->get();
-        $transportRoutes = \App\Models\TransportRoute::where('school_id', $this->getSchoolId())->get();
-        $hostels = \App\Models\Hostel::where('school_id', $this->getSchoolId())->get();
+        $bloodGroups = BloodGroup::where('school_id', $this->getSchoolId())->get();
+        $religions = Religion::where('school_id', $this->getSchoolId())->get();
+        $categories = Category::where('school_id', $this->getSchoolId())->get();
+        $studentTypes = StudentType::where('school_id', $this->getSchoolId())->get();
+        $correspondingRelatives = CorrespondingRelative::where('school_id', $this->getSchoolId())->get();
+        $qualifications = Qualification::where('school_id', $this->getSchoolId())->get();
+        $transportRoutes = TransportRoute::where('school_id', $this->getSchoolId())->get();
+        $hostels = Hostel::where('school_id', $this->getSchoolId())->get();
 
         return view('receptionist.admission.edit', compact(
             'student',
@@ -604,8 +625,10 @@ class AdmissionController extends TenantController
 
     public function destroy(Student $student)
     {
-        $student->forceDelete();
-        return redirect()->route('receptionist.admission.index')->with('success', 'Student record deleted successfully.');
+        $this->authorizeTenant($student);
+        // Soft-delete preserves fee, attendance, and assignment history
+        $student->delete();
+        return redirect()->route('receptionist.admission.index')->with('success', 'Student record archived successfully.');
     }
 
     public function getClassData($classId)
@@ -614,7 +637,7 @@ class AdmissionController extends TenantController
             ->where('class_id', $classId)
             ->get(['id', 'name']);
 
-        $admissionFee = \App\Models\AdmissionFee::where('school_id', $this->getSchoolId())
+        $admissionFee = AdmissionFee::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
             ->first();
 
@@ -652,13 +675,31 @@ class AdmissionController extends TenantController
     public function downloadPdf($id)
     {
         $school = $this->getSchool();
-
         $student = Student::with(['class', 'section', 'academicYear'])
             ->where('school_id', $this->getSchoolId())
             ->findOrFail($id);
 
         $pdf = Pdf::loadView('pdf.student-admission', compact('student', 'school'));
-
         return $pdf->download('student-admission-' . $student->admission_no . '.pdf');
+    }
+
+    /**
+     * Generate a sequential bill number with an atomic lock
+     */
+    private function generateBillNumber(int $schoolId): string
+    {
+        return Cache::lock("bill_no_generation_{$schoolId}", 10)->block(5, function () use ($schoolId) {
+            $lastFee = Fee::where('school_id', $schoolId)
+                ->where('bill_no', 'like', 'BILL-%')
+                ->latest()
+                ->first();
+
+            $nextNumber = 1;
+            if ($lastFee && preg_match('/BILL-(\d+)/', $lastFee->bill_no, $matches)) {
+                $nextNumber = intval($matches[1]) + 1;
+            }
+
+            return 'BILL-' . str_pad($nextNumber, 8, '0', STR_PAD_LEFT);
+        });
     }
 }

@@ -1,6 +1,4 @@
-@php
-    use App\Enums\YesNo;
-@endphp
+@php use App\Enums\YesNo; @endphp
 @extends('layouts.receptionist')
 
 @section('title', 'Room Inventory - Receptionist')
@@ -8,541 +6,456 @@
 @section('page-description', 'Manage residential units and amenities across hostel blocks')
 
 @section('content')
-<div class="space-y-6" x-data="hostelRoomManagement" x-init="init()">
-    {{-- Statistics Overview --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-blue-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Managed Units</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_room'] }}</p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-door-open text-blue-600 text-xl"></i>
-                </div>
-            </div>
+    <div x-data="Object.assign(ajaxDataTable({
+            fetchUrl: '{{ route('receptionist.hostel-rooms.fetch') }}',
+            defaultSort: 'created_at',
+            defaultDirection: 'desc',
+            defaultPerPage: 25,
+            defaultFilters: { hostel_id: '' },
+            initialRows: @js($initialData['rows']),
+            initialPagination: @js($initialData['pagination']),
+            initialStats: @js($stats)
+        }), hostelRoomForm())" class="space-y-6" @close-modal.window="if($event.detail === 'room-modal') resetForm()">
+
+        {{-- Statistics --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <x-stat-card label="Total Rooms" :value="$stats['total_rooms']" icon="fas fa-door-open" color="blue"
+                alpine-text="stats.total_rooms" />
+            <x-stat-card label="AC Rooms" :value="$stats['ac_rooms']" icon="fas fa-snowflake" color="emerald"
+                alpine-text="stats.ac_rooms" />
+            <x-stat-card label="Fan Rooms" :value="$stats['fan_rooms']" icon="fas fa-fan" color="amber"
+                alpine-text="stats.fan_rooms" />
+            <x-stat-card label="Residents" :value="$stats['total_beds']" icon="fas fa-user-graduate" color="purple"
+                alpine-text="stats.total_beds" />
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-emerald-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Climate Controlled</p>
-                    <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{{ $stats['ac_rooms'] }}</p>
-                </div>
-                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-snowflake text-emerald-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
+        {{-- Header --}}
+        <x-page-header title="Room Inventory" description="Configure residential units and amenities" icon="fas fa-door-open">
+            <button @click="open()"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                Add Room
+            </button>
+            <button @click="exportData('csv')" :disabled="exporting"
+                class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
+                <span x-show="exporting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block" x-cloak></span>
+                <i x-show="!exporting" class="fas fa-file-excel mr-2 text-xs"></i>
+                <span x-text="exporting ? 'Exporting...' : 'Excel Export'">Excel Export</span>
+            </button>
+        </x-page-header>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-t-4 border-purple-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Occupancy Nodes</p>
-                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $stats['total_beds'] }}</p>
-                </div>
-                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-bed text-purple-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Page Header --}}
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-teal-100/50">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
-                        <i class="fas fa-door-open text-xs"></i>
+        {{-- AJAX Data Table --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Room List</h2>
+                        <x-table.search placeholder="Search rooms, hostels..." />
+                        <x-table.filter-select model="filters.hostel_id" action="applyFilter('hostel_id', $event.target.value)">
+                            <option value="">All Hostels</option>
+                            @foreach($hostels as $hostel)
+                                <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
+                            @endforeach
+                        </x-table.filter-select>
                     </div>
-                    Room Inventory
-                </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure residential specifications and unit amenities.</p>
+                    <div class="flex items-center gap-3">
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
+                    </div>
+                </div>
+
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <div x-show="value" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
+                            <span x-text="getFilterLabel(key, value)"></span>
+                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <button @click="clearAllFilters()" class="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition-colors">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Clear All</span>
+                    </button>
+                </div>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <button @click="$dispatch('open-add-hostel-room')"
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-plus mr-2"></i>
-                    Initialize Unit
-                </button>
-                <a href="{{ route('receptionist.hostel-rooms.export') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-file-excel mr-2 text-xs"></i>
-                    Export Records
-                </a>
+
+            <div class="overflow-x-auto relative ajax-table-wrapper min-h-[400px]">
+                <x-table.loading-overlay />
+
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <x-table.sort-header column="room_name" label="Room Name" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Hostel / Floor</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Amenities</th>
+                            <x-table.sort-header column="room_create_date" label="Established" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        </tr>
+                    </thead>
+
+                    {{-- Server-rendered rows (Hidden once Alpine initializes) --}}
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @if(empty($initialData['rows']))
+                        <tr class="transition-all duration-300">
+                            <td colspan="5" class="px-6 py-24 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-20 h-20 bg-slate-50 dark:bg-gray-700 rounded-3xl flex items-center justify-center mb-6 border border-slate-100 dark:border-gray-600">
+                                        <i class="fas fa-door-open text-3xl text-gray-300"></i>
+                                    </div>
+                                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Room Inventory Uninitialized</h3>
+                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest max-w-sm mx-auto mt-2 leading-relaxed">
+                                        No residential units have been registered in the institutional blocks yet.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endif
+                        @foreach($initialData['rows'] as $row)
+                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-500 group-hover:bg-teal-100">
+                                        <i class="fas fa-door-open"></i>
+                                    </div>
+                                    <span class="font-bold text-gray-800 dark:text-gray-100">{{ $row['room_name'] }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">
+                                        <i class="fas fa-building text-[10px] text-gray-400"></i>
+                                        {{ $row['hostel_name'] }}
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-[10px] text-gray-400">
+                                        <i class="fas fa-layer-group text-[9px]"></i>
+                                        {{ $row['floor_name'] }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 {{ $row['amenities_label'] !== 'None' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500' }} rounded-full text-xs font-bold">
+                                    {{ $row['amenities_label'] }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-xs font-medium text-gray-500">{{ $row['room_create_date'] }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button @click="open({{ json_encode($row) }})" title="Edit"
+                                        class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
+                                        <i class="fas fa-edit text-xs"></i>
+                                    </button>
+                                    <button @click="quickAction(`/receptionist/hostel-rooms/{{ $row['id'] }}`, 'Delete Room', 'DELETE')" title="Delete"
+                                        class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
+                                        <i class="fas fa-trash-alt text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+
+                    {{-- Alpine-managed rows --}}
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak
+                        :class="loading ? 'opacity-50' : 'opacity-100'">
+                        <template x-for="row in rows" :key="row.id">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-500 group-hover:bg-teal-100">
+                                            <i class="fas fa-door-open"></i>
+                                        </div>
+                                        <span class="font-bold text-gray-800 dark:text-gray-100" x-text="row.room_name"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">
+                                            <i class="fas fa-building text-[10px] text-gray-400"></i>
+                                            <span x-text="row.hostel_name"></span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 text-[10px] text-gray-400">
+                                            <i class="fas fa-layer-group text-[9px]"></i>
+                                            <span x-text="row.floor_name"></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold"
+                                        :class="row.amenities_label !== 'None' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'"
+                                        x-text="row.amenities_label"></span>
+                                </td>
+                                <td class="px-6 py-4 text-xs font-medium text-gray-500" x-text="row.room_create_date"></td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button @click="open(row)" title="Edit"
+                                            class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center">
+                                            <i class="fas fa-edit text-xs"></i>
+                                        </button>
+                                        <button @click="quickAction(`/receptionist/hostel-rooms/${row.id}`, 'Delete Room', 'DELETE')" title="Delete"
+                                            class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <x-table.empty-state :colspan="5" icon="fas fa-door-open" message="No rooms found matching your criteria." />
+                    </tbody>
+                </table>
             </div>
+
+            @if($initialData['pagination']['total'] > 0)
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
+                </div>
+            </div>
+            @endif
+
+            <x-table.pagination />
         </div>
-    </div>
 
-    {{-- Rooms Table --}}
-    @php
-        $tableColumns = [
-            [
-                'key' => 'sr_no',
-                'label' => 'SR NO',
-                'sortable' => false,
-                'render' => function($row, $index, $data) {
-                    return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
-                }
-            ],
-            [
-                'key' => 'hostel',
-                'label' => 'HOSTEL BLOCK',
-                'sortable' => false,
-                'render' => function($row) {
-                    return $row->hostel->hostel_name ?? 'N/A';
-                }
-            ],
-            [
-                'key' => 'floor',
-                'label' => 'FLOOR LEVEL',
-                'sortable' => false,
-                'render' => function($row) {
-                    return $row->floor->floor_name ?? 'N/A';
-                }
-            ],
-            [
-                'key' => 'room_name',
-                'label' => 'ROOM NAME',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<span class="font-bold text-gray-800">' . $row->room_name . '</span>';
-                }
-            ],
-            [
-                'key' => 'amenities',
-                'label' => 'CLIMATE',
-                'sortable' => false,
-                'render' => function($row) {
-                    if ($row->ac->value === YesNo::Yes->value) {
-                        return '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold uppercase tracking-tight">AC</span>';
-                    }
-                    return '<span class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px] font-bold uppercase tracking-tight">NON-AC</span>';
-                }
-            ],
-            [
-                'key' => 'capacity',
-                'label' => 'OCCUPANCY',
-                'sortable' => false,
-                'render' => function($row) {
-                    $count = $row->bedAssignments()->count();
-                    return '<span class="font-bold ' . ($count > 0 ? 'text-indigo-600' : 'text-gray-400') . '">' . $count . ' Students</span>';
-                }
-            ],
-            [
-                'key' => 'room_create_date',
-                'label' => 'INITIALIZED',
-                'sortable' => true,
-                'render' => function($row) {
-                    return $row->room_create_date ? $row->room_create_date->format('d M, Y') : 'N/A';
-                }
-            ],
-        ];
+        <x-confirm-modal title="Delete Room?"
+            message="This will remove the room. Make sure there are no students assigned to this room."
+            confirm-text="Delete" confirm-color="red" />
 
-        $tableActions = [
-            [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    $roomData = [
-                        'id' => $row->id,
-                        'hostel_id' => $row->hostel_id,
-                        'hostel_floor_id' => $row->hostel_floor_id,
-                        'room_name' => $row->room_name,
-                        'ac' => $row->ac->value,
-                        'cooler' => $row->cooler->value,
-                        'fan' => $row->fan->value,
-                        'room_create_date' => $row->room_create_date ? $row->room_create_date->format('Y-m-d') : '',
-                    ];
-                    return "window.dispatchEvent(new CustomEvent('open-edit-hostel-room', { detail: ".json_encode($roomData)." }))";
-                },
-                'icon' => 'fas fa-edit',
-                'class' => 'text-indigo-600 hover:text-indigo-900',
-                'title' => 'Edit',
-            ],
-            [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    $deleteData = [
-                        'url' => route('receptionist.hostel-rooms.destroy', $row->id),
-                        'name' => $row->room_name
-                    ];
-                    return "window.dispatchEvent(new CustomEvent('open-delete-hostel-room', { detail: ".json_encode($deleteData)." }))";
-                },
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900',
-                'title' => 'Delete',
-            ],
-        ];
-    @endphp
+        {{-- Add/Edit Room Modal --}}
+        <x-modal name="room-modal" alpineTitle="editMode ? 'Edit Room' : 'Add New Room'" maxWidth="2xl">
+            <form @submit.prevent="save" id="roomForm" class="p-1" novalidate>
+                @csrf
+                <template x-if="editMode">
+                    <input type="hidden" name="_method" value="PUT">
+                </template>
 
-    <x-data-table 
-        :columns="$tableColumns"
-        :data="$rooms"
-        :searchable="true"
-        :actions="$tableActions"
-        empty-message="No residential units configured"
-        empty-icon="fas fa-door-open"
-    >
-        Room List
-    </x-data-table>
-
-    {{-- Add/Edit Room Modal --}}
-    <x-modal name="hostel-room-modal" alpineTitle="editMode ? 'Modify Room Configuration' : 'Initialize New Residential Unit'" maxWidth="2xl">
-        <form @submit.prevent="save" id="roomForm" method="POST" class="space-y-6" novalidate>
-            @csrf
-            <template x-if="editMode">
-                <input type="hidden" name="_method" value="PUT">
-            </template>
-
-            <div class="space-y-6">
-                <!-- Block & Level Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
-                        <label class="modal-label-premium">Hostel Block <span class="text-red-500 font-bold">*</span></label>
-                        <select name="hostel_id" x-model="formData.hostel_id" @change="loadFloors(); clearError('hostel_id')"
-                                class="modal-input-premium" :class="errors.hostel_id ? 'border-red-500 ring-red-500/10' : ''">
-                            <option value="">Choose Hostel Block</option>
+                        <label class="modal-label-premium">Hostel Block <span class="text-red-600 font-bold">*</span></label>
+                        <select x-model="formData.hostel_id" @change="loadFloors(); clearError('hostel_id')"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200'">
+                            <option value="">Select Hostel</option>
                             @foreach($hostels as $hostel)
                                 <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
                             @endforeach
                         </select>
                         <template x-if="errors.hostel_id">
-                            <p class="modal-error-message" x-text="errors.hostel_id[0]"></p>
+                            <p x-text="errors.hostel_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
 
                     <div class="space-y-2">
-                        <label class="modal-label-premium">Floor Level <span class="text-red-500 font-bold">*</span></label>
-                        <select name="hostel_floor_id" x-model="formData.hostel_floor_id" :disabled="!formData.hostel_id"
-                                @change="clearError('hostel_floor_id')"
-                                class="modal-input-premium" :class="errors.hostel_floor_id ? 'border-red-500 ring-red-500/10' : ''">
+                        <label class="modal-label-premium">Floor Level <span class="text-red-600 font-bold">*</span></label>
+                        <select x-model="formData.hostel_floor_id" :disabled="!formData.hostel_id"
+                            @change="clearError('hostel_floor_id')"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all disabled:opacity-50"
+                            :class="errors.hostel_floor_id ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select Floor</option>
                             <template x-for="floor in floors" :key="floor.id">
                                 <option :value="floor.id" x-text="floor.floor_name"></option>
                             </template>
                         </select>
                         <template x-if="errors.hostel_floor_id">
-                            <p class="modal-error-message" x-text="errors.hostel_floor_id[0]"></p>
+                            <p x-text="errors.hostel_floor_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
-                </div>
 
-                <!-- Room Designation -->
-                <div class="space-y-2">
-                    <label class="modal-label-premium">Room Identifier <span class="text-red-500 font-bold">*</span></label>
-                    <input type="text" name="room_name" x-model="formData.room_name" placeholder="e.g., Room 101, Deluxe Suite"
-                           @input="clearError('room_name')" class="modal-input-premium" :class="errors.room_name ? 'border-red-500 ring-red-500/10' : ''">
-                    <template x-if="errors.room_name">
-                        <p class="modal-error-message" x-text="errors.room_name[0]"></p>
-                    </template>
-                </div>
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="modal-label-premium">Room Name <span class="text-red-600 font-bold">*</span></label>
+                        <input type="text" x-model="formData.room_name" @input="clearError('room_name')"
+                            placeholder="e.g., Room 101"
+                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.room_name ? 'border-red-500' : 'border-slate-200'">
+                        <template x-if="errors.room_name">
+                            <p x-text="errors.room_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                        </template>
+                    </div>
 
-                <!-- Amenities Cluster -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium text-emerald-600">Air Conditioning</label>
-                        <select name="ac" x-model="formData.ac" class="modal-input-premium">
+                        <select x-model="formData.ac"
+                            class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
+
                     <div class="space-y-2">
-                        <label class="modal-label-premium text-indigo-600">Cooling Unit</label>
-                        <select name="cooler" x-model="formData.cooler" class="modal-input-premium">
+                        <label class="modal-label-premium text-indigo-600">Cooler</label>
+                        <select x-model="formData.cooler"
+                            class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
+
                     <div class="space-y-2">
-                        <label class="modal-label-premium text-amber-600">Fan Node</label>
-                        <select name="fan" x-model="formData.fan" class="modal-input-premium">
+                        <label class="modal-label-premium text-amber-600">Fan</label>
+                        <select x-model="formData.fan"
+                            class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
+
                     <div class="space-y-2">
-                        <label class="modal-label-premium">Configuration Date</label>
-                        <input type="date" name="room_create_date" x-model="formData.room_create_date"
-                               class="modal-input-premium">
+                        <label class="modal-label-premium">Established On</label>
+                        <input type="date" x-model="formData.room_create_date"
+                            class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                     </div>
                 </div>
 
-                <!-- Guidance Notification Card sits between sections -->
-                <div class="flex items-start gap-4 bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm mb-8">
-                    <div class="w-11 h-11 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
-                        <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-sm font-bold text-slate-900 leading-tight">Occupancy Notice</span>
-                        <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                            Room units serve as <span class="text-indigo-600 font-bold underline decoration-indigo-200">occupancy nodes</span>. Select amenities below to accurately reflect the room's facilities.
-                        </p>
-                    </div>
+                <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
+                    <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">
+                        After adding a room, assign students to it via the Bed Assignments section.
+                    </p>
                 </div>
-            </div>
-        </form>
-        
-        <x-slot name="footer">
-            <button type="button" @click="closeModal()" :disabled="submitting"
-                    class="btn-premium-cancel px-10">
-                Cancel
-            </button>
-            <button type="submit" form="roomForm" :disabled="submitting"
-                    class="btn-premium-primary min-w-[160px]">
-                <template x-if="submitting">
-                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                </template>
-                <span x-text="submitting ? 'Propagating...' : (editMode ? 'Update Changes' : 'Confirm Room')"></span>
-            </button>
-        </x-slot>
-    </x-modal>
+            </form>
 
-    {{-- Custom Confirm Modal --}}
-    <x-confirm-modal 
-        title="Dismantle Room Node?" 
-        message="This will remove the residential unit from inventory. Active bed assignments must be struck first."
-        confirm-text="Strike Record"
-        confirm-color="red"
-    />
-</div>
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'room-modal')" :disabled="submitting"
+                    class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" form="roomForm" :disabled="submitting"
+                    class="bg-slate-900 hover:bg-black text-white px-8 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50">
+                    <template x-if="submitting">
+                        <i class="fas fa-spinner animate-spin mr-2"></i>
+                    </template>
+                    <span x-text="submitting ? 'Saving...' : (editMode ? 'Update Room' : 'Save Room')"></span>
+                </button>
+            </x-slot>
+        </x-modal>
+    </div>
 
-@push('scripts')
-<script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('hostelRoomManagement', () => ({
-        editMode: false,
-        roomId: null,
-        formData: {
-            hostel_id: '',
-            hostel_floor_id: '',
-            room_name: '',
-            ac: '{{ YesNo::No->value }}',
-            cooler: '{{ YesNo::No->value }}',
-            fan: '{{ YesNo::Yes->value }}',
-            room_create_date: '',
-        },
-        floors: [],
-        errors: {},
-        submitting: false,
-        
-        init() {
-            window.addEventListener('open-add-hostel-room', () => this.openAddModal());
-            window.addEventListener('open-edit-hostel-room', (e) => this.openEditModal(e.detail));
-            window.addEventListener('open-delete-hostel-room', (e) => this.confirmDelete(e.detail));
+    @push('scripts')
+        <script>
+            function hostelRoomForm() {
+                return {
+                    editMode: false,
+                    submitting: false,
+                    roomId: null,
+                    floors: [],
+                    formData: {
+                        hostel_id: '',
+                        hostel_floor_id: '',
+                        room_name: '',
+                        ac: '{{ YesNo::No->value }}',
+                        cooler: '{{ YesNo::No->value }}',
+                        fan: '{{ YesNo::Yes->value }}',
+                        room_create_date: '',
+                    },
+                    errors: {},
 
-            this.$nextTick(() => {
-                if (typeof $ !== 'undefined') {
-                    $('select[name="hostel_id"], select[name="hostel_floor_id"], select[name="ac"], select[name="cooler"], select[name="fan"]').on('change', (e) => {
-                        const field = e.target.getAttribute('name');
-                        if (field && this.formData.hasOwnProperty(field)) {
-                            this.formData[field] = e.target.value;
-                            if (field === 'hostel_id') this.loadFloors();
-                            this.clearError(field);
+                    clearError(field) {
+                        if (this.errors[field]) delete this.errors[field];
+                    },
+
+                    async loadFloors(targetFloorId = null) {
+                        if (!this.formData.hostel_id) {
+                            this.floors = [];
+                            this.formData.hostel_floor_id = '';
+                            return;
                         }
-                    });
-                }
-            });
-        },
-
-        clearError(field) {
-            if (this.errors[field]) {
-                delete this.errors[field];
-            }
-        },
-
-        async loadFloors(targetFloorId = null) {
-            if (!this.formData.hostel_id) {
-                this.floors = [];
-                this.formData.hostel_floor_id = '';
-                return;
-            }
-
-            try {
-                const response = await fetch('{{ route('receptionist.hostel-rooms.get-floors') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        hostel_id: this.formData.hostel_id
-                    })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    this.floors = data.floors;
-                    if (targetFloorId) {
-                        this.formData.hostel_floor_id = String(targetFloorId);
-                        this.$nextTick(() => {
-                            if (typeof $ !== 'undefined') {
-                                $('select[name="hostel_floor_id"]').val(this.formData.hostel_floor_id).trigger('change');
+                        try {
+                            const response = await fetch('{{ route('receptionist.hostel-rooms.get-floors') }}', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                body: JSON.stringify({ hostel_id: this.formData.hostel_id })
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                this.floors = data.floors;
+                                this.formData.hostel_floor_id = targetFloorId ? String(targetFloorId) : '';
                             }
-                        });
-                    } else if (!this.editMode) {
-                        this.formData.hostel_floor_id = '';
-                    }
-                }
-            } catch (error) {
-                console.error('Cascading Floor Refresh Failed:', error);
-            }
-        },
-
-        async save() {
-            this.submitting = true;
-            this.errors = {};
-
-            const url = this.editMode 
-                ? `{{ route('receptionist.hostel-rooms.update', '___ID___') }}`.replace('___ID___', this.roomId)
-                : '{{ route('receptionist.hostel-rooms.store') }}';
-            
-            const method = this.editMode ? 'PUT' : 'POST';
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        } catch (e) { console.error(e); }
                     },
-                    body: JSON.stringify({
-                        ...this.formData,
-                        _method: method
-                    })
-                });
 
-                const result = await response.json();
+                    resetForm() {
+                        this.editMode = false;
+                        this.roomId = null;
+                        this.errors = {};
+                        this.floors = [];
+                        this.formData = {
+                            hostel_id: '',
+                            hostel_floor_id: '',
+                            room_name: '',
+                            ac: '{{ YesNo::No->value }}',
+                            cooler: '{{ YesNo::No->value }}',
+                            fan: '{{ YesNo::Yes->value }}',
+                            room_create_date: '',
+                        };
+                    },
 
-                if (response.ok) {
-                    if (window.Toast) {
-                        window.Toast.fire({
-                            icon: 'success',
-                            title: result.message || 'Registry updated successfully'
-                        });
-                    }
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    if (response.status === 422) {
-                        this.errors = result.errors || {};
-                    } else {
-                        throw new Error(result.message || 'Transmission failed');
+                    async open(room = null) {
+                        this.errors = {};
+                        if (room) {
+                            this.editMode = true;
+                            this.roomId = room.id;
+                            this.formData = {
+                                hostel_id: String(room.raw.hostel_id),
+                                hostel_floor_id: String(room.raw.hostel_floor_id),
+                                room_name: room.raw.room_name,
+                                ac: String(room.raw.ac),
+                                cooler: String(room.raw.cooler),
+                                fan: String(room.raw.fan),
+                                room_create_date: room.raw.room_create_date || '',
+                            };
+                            await this.loadFloors(room.raw.hostel_floor_id);
+                        } else {
+                            this.editMode = false;
+                            this.roomId = null;
+                            this.formData = {
+                                hostel_id: '',
+                                hostel_floor_id: '',
+                                room_name: '',
+                                ac: '{{ YesNo::No->value }}',
+                                cooler: '{{ YesNo::No->value }}',
+                                fan: '{{ YesNo::Yes->value }}',
+                                room_create_date: '{{ date('Y-m-d') }}',
+                            };
+                            this.floors = [];
+                        }
+                        this.$dispatch('open-modal', 'room-modal');
+                    },
+
+                    async save() {
+                        this.submitting = true;
+                        this.errors = {};
+                        const url = this.editMode
+                            ? `/receptionist/hostel-rooms/${this.roomId}`
+                            : `{{ route('receptionist.hostel-rooms.store') }}`;
+
+                        try {
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                body: JSON.stringify({ ...this.formData, _method: this.editMode ? 'PUT' : 'POST' })
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'room-modal');
+                                this.fetchData();
+                            } else {
+                                this.errors = result.errors || {};
+                                if (result.message && response.status !== 422) {
+                                    if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message });
+                                }
+                            }
+                        } catch (e) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Failed to save room' });
+                        } finally {
+                            this.submitting = false;
+                        }
                     }
                 }
-            } catch (error) {
-                if (window.Toast) {
-                    window.Toast.fire({ icon: 'error', title: error.message });
-                }
-            } finally {
-                this.submitting = false;
             }
-        },
-
-        confirmDelete(detail) {
-            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                detail: {
-                    message: `Are you sure you want to decommission the residential node: "${detail.name}"?`,
-                    onConfirm: () => this.deleteRoom(detail.url)
-                }
-            }));
-        },
-
-        async deleteRoom(url) {
-            try {
-                const response = await fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    if (window.Toast) {
-                        window.Toast.fire({ icon: 'success', title: result.message });
-                    }
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    throw new Error(result.message || 'Strike operation failed');
-                }
-            } catch (error) {
-                if (window.Toast) {
-                    window.Toast.fire({ icon: 'error', title: error.message });
-                }
-            }
-        },
-        
-        openAddModal() {
-            this.editMode = false;
-            this.roomId = null;
-            this.errors = {};
-            this.formData = {
-                hostel_id: '',
-                hostel_floor_id: '',
-                room_name: '',
-                ac: '{{ YesNo::No->value }}',
-                cooler: '{{ YesNo::No->value }}',
-                fan: '{{ YesNo::Yes->value }}',
-                room_create_date: '{{ date('Y-m-d') }}',
-            };
-            this.floors = [];
-            this.$dispatch('open-modal', 'hostel-room-modal');
-
-            this.$nextTick(() => {
-                if (typeof $ !== 'undefined') {
-                    ['hostel_id', 'hostel_floor_id', 'ac', 'cooler', 'fan'].forEach(field => {
-                        $(`select[name="${field}"]`).val(this.formData[field]).trigger('change');
-                    });
-                }
-            });
-        },
-        
-        async openEditModal(room) {
-            this.editMode = true;
-            this.roomId = room.id;
-            this.errors = {};
-            this.formData = {
-                hostel_id: room.hostel_id ? String(room.hostel_id) : '',
-                hostel_floor_id: room.hostel_floor_id ? String(room.hostel_floor_id) : '',
-                room_name: room.room_name || '',
-                ac: String(room.ac),
-                cooler: String(room.cooler),
-                fan: String(room.fan),
-                room_create_date: room.room_create_date || '',
-            };
-
-            // Wait for floors to load before showing modal to ensure correct floor is selected
-            await this.loadFloors(String(room.hostel_floor_id));
-            this.$dispatch('open-modal', 'hostel-room-modal');
-
-            // Sync other Select2 fields
-            this.$nextTick(() => {
-                setTimeout(() => {
-                    if (typeof $ !== 'undefined') {
-                        const fields = ['hostel_id', 'ac', 'cooler', 'fan'];
-                        fields.forEach(field => {
-                            $(`select[name="${field}"]`).val(this.formData[field]).trigger('change');
-                        });
-                    }
-                }, 150);
-            });
-        },
-        
-        closeModal() {
-            this.$dispatch('close-modal', 'hostel-room-modal');
-            this.errors = {};
-        }
-    }));
-});
-</script>
-@endpush
+        </script>
+    @endpush
 @endsection
-
-

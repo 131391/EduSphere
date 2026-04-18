@@ -20,6 +20,11 @@ class HostelAttendanceController extends TenantController
     {
         $schoolId = $this->getSchoolId();
         
+        // Get all hostels for the school
+        $hostels = Hostel::where('school_id', $schoolId)
+            ->orderBy('hostel_name')
+            ->get();
+
         // Calculate Global Stats for today
         $today = now()->toDateString();
         $stats = [
@@ -36,6 +41,8 @@ class HostelAttendanceController extends TenantController
                 ->count(),
         ];
 
+        $hostels = Hostel::where('school_id', $schoolId)->orderBy('hostel_name')->get();
+
         return view('receptionist.hostel-attendance.index', compact('hostels', 'stats'));
     }
 
@@ -48,19 +55,10 @@ class HostelAttendanceController extends TenantController
             $schoolId = $this->getSchoolId();
             
             $request->validate([
-                'hostel_id' => 'required|exists:hostels,id',
+                'hostel_id' => ['required', \Illuminate\Validation\Rule::exists('hostels', 'id')->where('school_id', $this->getSchoolId())],
             ]);
 
             $hostel = Hostel::findOrFail($request->hostel_id);
-            
-            // Verify tenant ownership
-            if ($hostel->school_id !== $schoolId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['hostel_id' => ['The selected hostel block is not part of this institutional registry.']]
-                ], 422);
-            }
 
             // Get active bed assignments for this hostel
             $assignments = HostelBedAssignment::where('school_id', $schoolId)
@@ -247,12 +245,25 @@ class HostelAttendanceController extends TenantController
         // Search by student name or admission number using whereHas
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('student', function($q) use ($search) {
-                $q->where('admission_no', 'like', "%{$search}%")
-                  ->orWhere('first_name', 'like', "%{$search}%")
-                  ->orWhere('middle_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%");
+            $query->whereHas('student', function($q) use ($search, $schoolId) {
+                $q->where('school_id', $schoolId)
+                  ->where(function($sub) use ($search) {
+                    $sub->where('admission_no', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                  });
             });
+        }
+
+        // Calculate Stats based on filters (before pagination)
+        $stats = [
+            'total_logs' => (clone $query)->count(),
+            'compliance_present' => (clone $query)->where('is_present', true)->count(),
+            'compliance_percentage' => 0
+        ];
+        if ($stats['total_logs'] > 0) {
+            $stats['compliance_percentage'] = round(($stats['compliance_present'] / $stats['total_logs']) * 100);
         }
 
         // Sorting - use joins but ensure we select the primary key to preserve model hydration
@@ -367,7 +378,8 @@ class HostelAttendanceController extends TenantController
         return view('receptionist.hostel-attendance.report', compact(
             'hostels',
             'attendances',
-            'selectedHostel'
+            'selectedHostel',
+            'stats'
         ));
     }
 

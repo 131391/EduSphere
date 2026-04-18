@@ -7,6 +7,7 @@ use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\YesNo;
 
@@ -54,6 +55,14 @@ class HostelRoom extends Model
     public function floor(): BelongsTo
     {
         return $this->belongsTo(HostelFloor::class, 'hostel_floor_id');
+    }
+
+    /**
+     * Get the bed assignments for the room.
+     */
+    public function bedAssignments(): HasMany
+    {
+        return $this->hasMany(HostelBedAssignment::class, 'hostel_room_id');
     }
 }
 

@@ -81,7 +81,19 @@ class AttendanceController extends Controller
         $classId = $request->class_id;
         $schoolId = $teacher->school_id;
 
-        DB::transaction(function () use ($request, $date, $classId, $schoolId, $teacher) {
+        // Verify class belongs to teacher's school and is assigned to this teacher
+        if (!$classIds->contains($classId)) {
+            return back()->with('error', 'You are not authorized to mark attendance for this class.');
+        }
+
+        // Pre-load section IDs to avoid N+1 inside transaction
+        $studentSections = Student::where('school_id', $schoolId)
+            ->where('class_id', $classId)
+            ->pluck('section_id', 'id');
+
+        $academicYearId = AcademicYear::where('school_id', $schoolId)->where('is_current', true)->value('id');
+
+        DB::transaction(function () use ($request, $date, $classId, $schoolId, $teacher, $studentSections, $academicYearId) {
             foreach ($request->attendance as $studentId => $statusValue) {
                 Attendance::updateOrCreate(
                     [
@@ -91,10 +103,10 @@ class AttendanceController extends Controller
                         'date'       => $date,
                     ],
                     [
-                        'section_id'      => Student::find($studentId)?->section_id,
-                        'academic_year_id'=> AcademicYear::where('school_id', $schoolId)->where('is_current', true)->value('id'),
-                        'status'          => $statusValue,
-                        'marked_by'       => Auth::id(),
+                        'section_id'       => $studentSections[$studentId] ?? null,
+                        'academic_year_id' => $academicYearId,
+                        'status'           => $statusValue,
+                        'marked_by'        => Auth::id(),
                     ]
                 );
             }

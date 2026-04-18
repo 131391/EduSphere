@@ -9,196 +9,221 @@
 @section('page-description', 'Manage school staff records')
 
 @section('content')
-<div class="space-y-6" x-data="staffManagement" x-init="init()">
-    {{-- Success/Error Messages --}}
-
-
-    {{-- Staff Statistics --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-lg shadow-sm border-l-4 border-blue-500 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Total Staff</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $stats['total'] }}</p>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-full">
-                    <i class="fas fa-users-gear text-blue-600"></i>
-                </div>
-            </div>
+    <div x-data="Object.assign(ajaxDataTable({
+        fetchUrl: '{{ route('receptionist.staff.fetch') }}',
+        defaultSort: 'created_at',
+        defaultDirection: 'desc',
+        defaultPerPage: 25,
+        defaultFilters: { post: '', class_id: '' },
+        initialRows: @js($initialData['rows']),
+        initialPagination: @js($initialData['pagination']),
+        initialStats: @js($initialData['stats']),
+        filterLabels: {
+            post: {
+                @foreach($staffPosts as $p) '{{ $p->value }}': '{{ $p->label() }}', @endforeach
+            },
+            class_id: {
+                @foreach($classes as $c) '{{ $c->id }}': '{{ $c->name }}', @endforeach
+            }
+        }
+    }), staffManagementData())" class="space-y-6" @close-modal.window="if ($event.detail === 'staff-modal') { resetForm(); }">
+        
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <x-stat-card label="Total Staff" :value="$stats['total']" icon="fas fa-users-gear" color="blue" alpine-text="stats.total" />
+            <x-stat-card label="Teaching Staff" :value="$stats['teaching']" icon="fas fa-chalkboard-user" color="emerald" alpine-text="stats.teaching" />
+            <x-stat-card label="Non-Teaching" :value="$stats['non_teaching']" icon="fas fa-user-tie" color="amber" alpine-text="stats.non_teaching" />
+            <x-stat-card label="Recent Joiners" :value="$stats['recent']" icon="fas fa-user-plus" color="indigo" alpine-text="stats.recent" />
         </div>
 
-        <div class="bg-white rounded-lg shadow-sm border-l-4 border-emerald-500 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Teaching Staff</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $stats['teaching'] }}</p>
+        <!-- Header Section -->
+        <x-page-header title="Staff Management" description="Manage school staff records and assignments" icon="fas fa-users-cog">
+            <button @click="openAddModal()"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                New Staff
+            </button>
+            <button @click="exportData('csv')" :disabled="exporting"
+                class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
+                <span x-show="exporting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block" x-cloak></span>
+                <i x-show="!exporting" class="fas fa-file-excel mr-2 text-xs"></i>
+                <span x-text="exporting ? 'Exporting...' : 'Excel Export'">Excel Export</span>
+            </button>
+        </x-page-header>
+
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header with Search and Filters -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Left: Title and Search -->
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Staff Registry</h2>
+                        <x-table.search placeholder="Search by name, mobile, email..." />
+                    </div>
+
+                    <!-- Right: Filters and Actions -->
+                    <div class="flex items-center gap-3">
+                        <x-table.filter-select
+                            model="filters.post"
+                            action="applyFilter('post', $event.target.value)"
+                            placeholder="Designation"
+                            :options="collect($staffPosts)->mapWithKeys(fn($p) => [$p->value => $p->label()])->toArray()"
+                        />
+
+                        <x-table.filter-select
+                            model="filters.class_id"
+                            action="applyFilter('class_id', $event.target.value)"
+                            placeholder="Class Assignment"
+                            :options="collect($classes)->mapWithKeys(fn($c) => [$c->id => $c->name])->toArray()"
+                        />
+
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
+                    </div>
                 </div>
-                <div class="bg-emerald-100 p-3 rounded-full">
-                    <i class="fas fa-chalkboard-user text-emerald-600"></i>
+
+                <!-- Active Filters Display -->
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <div x-show="value" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
+                            <span x-text="getFilterLabel(key, value)"></span>
+                            <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <button @click="clearAllFilters()" class="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition-colors">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Clear All</span>
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <div class="bg-white rounded-lg shadow-sm border-l-4 border-amber-500 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Non-Teaching</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $stats['non_teaching'] }}</p>
-                </div>
-                <div class="bg-amber-100 p-3 rounded-full">
-                    <i class="fas fa-user-tie text-amber-600"></i>
+            <!-- Table Content -->
+            <div class="relative min-h-[400px]">
+                <x-table.loading-overlay />
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                                <th class="px-6 py-4 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                                    Sr No
+                                </th>
+                                <x-table.sort-header column="name" label="Staff Member" />
+                                <x-table.sort-header column="post" label="Designation" />
+                                <th class="px-6 py-4 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                                    Assignment
+                                </th>
+                                <x-table.sort-header column="mobile" label="Contact Details" />
+                                <x-table.sort-header column="joining_date" label="Joining Date" />
+                                <x-table.sort-header column="current_salary" label="Salary" />
+                                <th class="px-6 py-4 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-right">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                            <template x-for="(row, index) in rows" :key="row.id">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-400" x-text="(pagination.current_page - 1) * pagination.per_page + index + 1"></td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-sm font-bold text-white shadow-sm shrink-0 overflow-hidden" 
+                                                :class="'from-' + (row.post_color || 'slate') + '-500 to-' + (row.post_color || 'slate') + '-600'">
+                                                <img x-show="row.staff_image" :src="row.staff_image" class="w-full h-full object-cover">
+                                                <span x-show="!row.staff_image" x-text="row.initials"></span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-[13px] font-bold text-gray-800 dark:text-white group-hover:text-teal-600 transition-colors" x-text="row.name"></span>
+                                                <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider" x-text="'ID: #' + row.id"></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border"
+                                            :class="`bg-${row.post_color}-50 text-${row.post_color}-700 border-${row.post_color}-100 dark:bg-${row.post_color}-900/20 dark:border-${row.post_color}-800`"
+                                            x-text="row.post_label">
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="text-[12px] font-semibold text-gray-700 dark:text-gray-300" x-text="row.class_name"></span>
+                                            <span class="text-[11px] text-gray-400" x-text="row.section_name"></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center gap-1.5">
+                                                <i class="fas fa-phone text-[10px] text-gray-300"></i>
+                                                <span class="text-[12px] font-semibold text-gray-700 dark:text-gray-300" x-text="row.mobile"></span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <i class="fas fa-envelope text-[10px] text-gray-300"></i>
+                                                <span class="text-[11px] text-gray-400" x-text="row.email"></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300" x-text="row.joining_date"></span>
+                                            <span class="text-[10px] text-gray-400 uppercase font-medium" x-text="'Joined Staff'"></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col text-right pr-4">
+                                            <span class="text-[13px] font-black text-slate-800 dark:text-white" x-text="'₹' + Number(row.current_salary).toLocaleString()"></span>
+                                            <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Active Roll</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <button @click="openEditModal(row)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 transition-colors" title="Edit Staff">
+                                                <i class="fas fa-edit text-xs"></i>
+                                            </button>
+                                            <button @click="confirmDelete(row)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-400 transition-colors" title="Delete Staff">
+                                                <i class="fas fa-trash text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+
+                            <!-- Empty State -->
+                            <x-table.empty-state 
+                                model="rows" 
+                                colspan="8"
+                                icon="fas fa-users-slash" 
+                                title="No Staff Records Found" 
+                                message="We couldn't find any staff matching your current search or filter criteria."
+                            />
+
+                            <!-- Loading State (Skeleton) -->
+                            <template x-if="loading">
+                                <tr>
+                                    <td colspan="8" class="p-0">
+                                        <div class="p-6 space-y-4">
+                                            <template x-for="i in 5" :key="i">
+                                                <div class="flex items-center gap-4 animate-pulse">
+                                                    <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+                                                    <div class="flex-1 space-y-2">
+                                                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                                                        <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded w-1/6"></div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+
+            <!-- Table Footer/Pagination -->
+            <x-table.pagination />
         </div>
-
-        <div class="bg-white rounded-lg shadow-sm border-l-4 border-indigo-500 p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase font-semibold mb-1">Recent Joiners</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $stats['recent'] }}</p>
-                </div>
-                <div class="bg-indigo-100 p-3 rounded-full">
-                    <i class="fas fa-user-plus text-indigo-600"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Page Header with Actions --}}
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <h2 class="text-xl font-bold text-gray-800">Staff List</h2>
-            <div class="flex flex-wrap gap-2">
-                <button @click="openAddModal()" 
-                        class="inline-flex items-center px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
-                    <i class="fas fa-plus mr-2"></i>
-                    Create Staff
-                </button>
-                <button class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-md transition-colors shadow-sm">
-                    <i class="fas fa-file-excel mr-2"></i>
-                    Export
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Staff Table --}}
-    @php
-        $tableColumns = [
-            [
-                'key' => 'sr_no',
-                'label' => 'SR NO',
-                'sortable' => false,
-                'render' => function($row, $index, $data) {
-                    return ($data->currentPage() - 1) * $data->perPage() + $index + 1;
-                }
-            ],
-            [
-                'key' => 'name',
-                'label' => 'NAME',
-                'sortable' => true,
-            ],
-            [
-                'key' => 'post',
-                'label' => 'POST',
-                'sortable' => true,
-                'render' => function($row) {
-                    return $row->post->label();
-                }
-            ],
-            [
-                'key' => 'class',
-                'label' => 'CLASS',
-                'sortable' => false,
-                'render' => function($row) {
-                    return $row->class ? $row->class->name : 'N/A';
-                }
-            ],
-            [
-                'key' => 'section',
-                'label' => 'SECTION',
-                'sortable' => false,
-                'render' => function($row) {
-                    return $row->section ? $row->section->name : 'N/A';
-                }
-            ],
-            [
-                'key' => 'mobile',
-                'label' => 'MOBILE',
-                'sortable' => true,
-            ],
-            [
-                'key' => 'email',
-                'label' => 'EMAIL',
-                'sortable' => true,
-            ],
-            [
-                'key' => 'joining_date',
-                'label' => 'JOINING DATE',
-                'sortable' => true,
-                'render' => function($row) {
-                    return $row->joining_date ? $row->joining_date->format('d/m/Y') : 'N/A';
-                }
-            ],
-        ];
-
-        $tableActions = [
-            [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    $staffData = [
-                        'id' => $row->id,
-                        'post' => $row->post->value,
-                        'class_id' => $row->class_id,
-                        'section_id' => $row->section_id,
-                        'name' => $row->name,
-                        'mobile' => $row->mobile,
-                        'email' => $row->email,
-                        'gender' => $row->gender ? $row->gender->value : null,
-                        'total_experience' => $row->total_experience,
-                        'previous_school_salary' => $row->previous_school_salary,
-                        'current_salary' => $row->current_salary,
-                        'country_id' => $row->country_id,
-                        'state_id' => $row->state_id,
-                        'city_id' => $row->city_id,
-                        'zip_code' => $row->zip_code,
-                        'address' => $row->address,
-                        'aadhar_no' => $row->aadhar_no,
-                        'aadhar_card' => $row->aadhar_card,
-                        'staff_image' => $row->staff_image,
-                        'joining_date' => $row->joining_date ? $row->joining_date->format('Y-m-d') : '',
-                        'higher_qualification_id' => $row->higher_qualification_id,
-                        'previous_school_company_name' => $row->previous_school_company_name,
-                    ];
-                    $data = json_encode($staffData);
-                    return "window.dispatchEvent(new CustomEvent('open-edit-staff', { detail: $data }))";
-                },
-                'icon' => 'fas fa-edit',
-                'class' => 'text-blue-600 hover:text-blue-900',
-                'title' => 'Edit',
-            ],
-            [
-                'type' => 'button',
-                'onclick' => function($row) {
-                    return "window.dispatchEvent(new CustomEvent('open-delete-staff', { detail: { id: " . $row->id . ", name: '" . addslashes($row->name) . "' } }))";
-                },
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900',
-                'title' => 'Delete',
-            ],
-        ];
-    @endphp
-
-    <x-data-table 
-        :columns="$tableColumns"
-        :data="$staff"
-        :searchable="true"
-        :actions="$tableActions"
-        empty-message="No staff found"
-        empty-icon="fas fa-users"
-    >
-        Staff List
-    </x-data-table>
 
     {{-- Add/Edit Staff Modal --}}
     <x-modal name="staff-modal" alpineTitle="editMode ? 'Modify Staff Information' : 'Register New Staff'" maxWidth="6xl">
@@ -595,13 +620,13 @@
 @push('scripts')
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('staffManagement', () => ({
-        showModal: false,
+    Alpine.data('staffManagementData', () => ({
         editMode: false,
         submitting: false,
         staffId: null,
         sections: [],
         errors: {},
+        exporting: false,
         
         formData: {
             post: '',
@@ -638,9 +663,7 @@ document.addEventListener('alpine:init', () => {
         },
         
         init() {
-            window.addEventListener('open-edit-staff', (e) => this.openEditModal(e.detail));
-            window.addEventListener('open-delete-staff', (e) => this.confirmDelete(e.detail));
-
+            // Listen for changes from select2 or other components if necessary
             this.$watch('formData.post', (newValue) => {
                 if (String(newValue) !== '2') {
                     this.formData.class_id = '';
@@ -673,7 +696,6 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-        // ── AJAX Form Submission (Academic Year Pattern) ──
         async submitForm() {
             if (this.submitting) return;
             this.submitting = true;
@@ -684,93 +706,52 @@ document.addEventListener('alpine:init', () => {
                 : '{{ route("receptionist.staff.store") }}';
 
             try {
-                // Use FormData because this form includes file uploads
                 const fd = new FormData();
                 fd.append('_token', '{{ csrf_token() }}');
                 if (this.editMode) fd.append('_method', 'PUT');
 
-                // Append all text fields
                 const fields = [
                     'post', 'class_id', 'section_id', 'name', 'mobile', 'email',
                     'gender', 'total_experience', 'previous_school_salary', 'current_salary',
                     'country_id', 'state_id', 'city_id', 'zip_code', 'address',
                     'aadhar_no', 'joining_date', 'higher_qualification_id', 'previous_school_company_name'
                 ];
+                
                 fields.forEach(f => {
-                    if (this.formData[f] !== '' && this.formData[f] !== null && this.formData[f] !== undefined) {
+                    if (this.formData[f] !== '' && this.formData[f] !== null) {
                         fd.append(f, this.formData[f]);
                     }
                 });
 
-                // Append file inputs (if user selected new files)
-                const aadharInput = this.$refs.aadharCardInput;
-                if (aadharInput && aadharInput.files.length > 0) {
-                    fd.append('aadhar_card', aadharInput.files[0]);
-                }
-                const staffImageInput = this.$refs.staffImageInput;
-                if (staffImageInput && staffImageInput.files.length > 0) {
-                    fd.append('staff_image', staffImageInput.files[0]);
-                }
+                if (this.$refs.aadharCardInput?.files.length) fd.append('aadhar_card', this.$refs.aadharCardInput.files[0]);
+                if (this.$refs.staffImageInput?.files.length) fd.append('staff_image', this.$refs.staffImageInput.files[0]);
 
                 const response = await fetch(url, {
                     method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: fd
                 });
 
                 const result = await response.json();
-
                 if (response.ok) {
-                    if (window.Toast) {
-                        window.Toast.fire({
-                            icon: 'success',
-                            title: result.message
-                        });
-                    }
-                    setTimeout(() => window.location.reload(), 800);
+                    window.Toast?.fire({ icon: 'success', title: result.message });
+                    this.fetchData(); // Refresh table
+                    this.$dispatch('close-modal', 'staff-modal');
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(result.message || 'System error');
                 }
             } catch (error) {
-                if (window.Toast) {
-                    window.Toast.fire({
-                        icon: 'error',
-                        title: error.message
-                    });
-                }
+                window.Toast?.fire({ icon: 'error', title: error.message });
             } finally {
                 this.submitting = false;
             }
         },
 
-        clearError(field) {
-            if (this.errors[field]) {
-                delete this.errors[field];
-            }
-        },
-        
-        updateSelect2DisabledState() {
-            if (typeof $ === 'undefined') return;
-            const $classSelect = $('#class_id');
-            const $sectionSelect = $('#section_id');
-            
-            if ($classSelect.length) {
-                $classSelect.prop('disabled', !this.canSelectClass).trigger('change.select2');
-            }
-            if ($sectionSelect.length) {
-                $sectionSelect.prop('disabled', !this.canSelectSection).trigger('change.select2');
-            }
-        },
-        
         openAddModal() {
             this.editMode = false;
             this.staffId = null;
-            this.errors = {};
             this.resetForm();
             this.$nextTick(() => {
                 this.updateSelect2DisabledState();
@@ -778,33 +759,11 @@ document.addEventListener('alpine:init', () => {
             });
         },
         
-        openEditModal(staff) {
+        openEditModal(row) {
             this.editMode = true;
-            this.staffId = staff.id;
+            this.staffId = row.id;
             this.errors = {};
-            this.formData = {
-                post: staff.post ? String(staff.post) : '',
-                class_id: staff.class_id ? String(staff.class_id) : '',
-                section_id: staff.section_id ? String(staff.section_id) : '',
-                name: staff.name || '',
-                mobile: staff.mobile || '',
-                email: staff.email || '',
-                gender: staff.gender ? String(staff.gender) : '',
-                total_experience: staff.total_experience || '',
-                previous_school_salary: staff.previous_school_salary || '',
-                current_salary: staff.current_salary || '',
-                country_id: staff.country_id ? String(staff.country_id) : '',
-                state_id: staff.state_id ? String(staff.state_id) : '',
-                city_id: staff.city_id ? String(staff.city_id) : '',
-                zip_code: staff.zip_code || '',
-                address: staff.address || '',
-                aadhar_no: staff.aadhar_no || '',
-                joining_date: staff.joining_date || '',
-                higher_qualification_id: staff.higher_qualification_id ? String(staff.higher_qualification_id) : '',
-                previous_school_company_name: staff.previous_school_company_name || '',
-                aadhar_card_preview: staff.aadhar_card ? `/storage/${staff.aadhar_card}` : '',
-                staff_image_preview: staff.staff_image ? `/storage/${staff.staff_image}` : '',
-            };
+            this.formData = { ...row }; // row already contains formatted and raw values
             
             if (this.formData.class_id && this.isTeacher) this.loadSections();
 
@@ -815,7 +774,7 @@ document.addEventListener('alpine:init', () => {
                         const selectFields = ['post', 'class_id', 'gender', 'country_id', 'higher_qualification_id'];
                         selectFields.forEach(f => $(`select[name="${f}"]`).val(this.formData[f]).trigger('change'));
                         
-                        // Handle Location Cascade
+                        // Location Logic
                         if (window.locationCascade && this.formData.country_id) {
                             window.locationCascade.loadStates(document.querySelector('select[name="state_id"]'), this.formData.country_id, this.formData.state_id);
                             setTimeout(() => {
@@ -824,50 +783,44 @@ document.addEventListener('alpine:init', () => {
                                 }
                             }, 300);
                         }
-                        
-                        if (this.formData.section_id) {
-                            setTimeout(() => $('#section_id').val(this.formData.section_id).trigger('change'), 400);
-                        }
                     }
                 }, 100);
             });
         },
         
-        async confirmDelete(staff) {
+        async confirmDelete(row) {
             window.dispatchEvent(new CustomEvent('open-confirm-modal', {
                 detail: {
-                    title: 'Delete Staff Record',
-                    message: `Are you sure you want to delete the profile for "${staff.name}"? This action is permanent.`,
+                    title: 'Relieve Staff Member',
+                    message: `Are you sure you want to permanently delete "${row.name}" from the institutional registry?`,
                     callback: async () => {
                         try {
-                            const response = await fetch(`/receptionist/staff/${staff.id}`, {
+                            const res = await fetch(`/receptionist/staff/${row.id}`, {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                                 body: JSON.stringify({ _method: 'DELETE' })
                             });
-
-                            const result = await response.json();
-
-                            if (response.ok) {
-                                if (window.Toast) {
-                                    window.Toast.fire({ icon: 'success', title: result.message });
-                                }
-                                setTimeout(() => window.location.reload(), 800);
+                            const result = await res.json();
+                            if (res.ok) {
+                                window.Toast?.fire({ icon: 'success', title: result.message });
+                                this.fetchData();
                             } else {
-                                throw new Error(result.message || 'Delete failed');
+                                throw new Error(result.message);
                             }
-                        } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: 'error', title: error.message });
-                            }
+                        } catch (e) {
+                            window.Toast?.fire({ icon: 'error', title: e.message });
                         }
                     }
                 }
             }));
+        },
+
+        exportData(format = 'csv') {
+            this.exporting = true;
+            const params = new URLSearchParams(this.filters);
+            params.append('export', format);
+            window.location.href = `{{ route('receptionist.staff.index') }}?${params.toString()}`;
+            setTimeout(() => { this.exporting = false; }, 2000);
         },
 
         loadSections() {
@@ -875,9 +828,9 @@ document.addEventListener('alpine:init', () => {
             fetch(`/receptionist/staff/get-sections/${this.formData.class_id}`)
                 .then(res => res.json())
                 .then(data => { this.sections = data.sections || []; })
-                .catch(err => console.error('Error loading sections:', err));
+                .catch(err => console.error('Section fetch failed:', err));
         },
-        
+
         previewAadharCard(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -885,7 +838,7 @@ document.addEventListener('alpine:init', () => {
             reader.onload = (ev) => this.formData.aadhar_card_preview = ev.target.result;
             reader.readAsDataURL(file);
         },
-        
+
         previewStaffImage(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -893,7 +846,14 @@ document.addEventListener('alpine:init', () => {
             reader.onload = (ev) => this.formData.staff_image_preview = ev.target.result;
             reader.readAsDataURL(file);
         },
-        
+
+        updateSelect2DisabledState() {
+            if (typeof $ === 'undefined') return;
+            $('#class_id, #section_id').prop('disabled', !this.isTeacher).trigger('change.select2');
+        },
+
+        clearError(field) { delete this.errors[field]; },
+
         resetForm() {
             this.formData = {
                 post: '', class_id: '', section_id: '', name: '', mobile: '', email: '', gender: '',
@@ -904,19 +864,9 @@ document.addEventListener('alpine:init', () => {
             };
             this.sections = [];
             this.errors = {};
-            
-            // Reset file inputs
             if (this.$refs.aadharCardInput) this.$refs.aadharCardInput.value = '';
             if (this.$refs.staffImageInput) this.$refs.staffImageInput.value = '';
-            
-            if (typeof $ !== 'undefined') {
-                $('select').val('').trigger('change');
-            }
-        },
-        
-        closeModal() {
-            this.$dispatch('close-modal', 'staff-modal');
-            this.resetForm();
+            if (typeof $ !== 'undefined') $('select').val('').trigger('change');
         }
     }));
 });

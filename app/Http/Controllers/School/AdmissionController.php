@@ -17,6 +17,7 @@ use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
 use App\Enums\FeeStatus;
 use App\Http\Requests\School\StoreAdmissionRequest;
+use App\Http\Requests\School\UpdateAdmissionRequest;
 use App\Models\Fee;
 use App\Models\FeeName;
 use App\Models\FeePayment;
@@ -24,11 +25,18 @@ use App\Models\StudentTransportAssignment;
 use App\Models\HostelBedAssignment;
 use App\Traits\HandlesFileCopies;
 use App\Enums\GeneralStatus;
+use App\Enums\UserStatus;
+use App\Enums\EnquiryStatus;
+use App\Models\Role;
+use App\Models\User;
+use App\Models\StudentEnquiry;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdmissionController extends TenantController
 {
-    use HandlesFileCopies;
+    use HandlesFileCopies, \App\Traits\HandlesFinancialNumbers;
     public function index(Request $request)
     {
         $query = Student::query()
@@ -56,9 +64,9 @@ class AdmissionController extends TenantController
         $admissionDone = Student::where('school_id', $this->getSchoolId())->count();
         $pendingRegistration = StudentRegistration::where('school_id', $this->getSchoolId())->pending()->count();
         $cancelledRegistration = StudentRegistration::where('school_id', $this->getSchoolId())->cancelled()->count();
-        $totalEnquiry = \App\Models\StudentEnquiry::where('school_id', $this->getSchoolId())->count();
+        $totalEnquiry = StudentEnquiry::where('school_id', $this->getSchoolId())->count();
 
-        $classes = \App\Models\ClassModel::where('school_id', $this->getSchoolId())->get();
+        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
 
         return view('school.admission.index', compact(
             'students', 
@@ -124,27 +132,33 @@ class AdmissionController extends TenantController
             $student = new Student();
             $student->school_id = $school->id;
             
-            // Generate Admission No early if not provided to use for User generation
+            // Generate Admission No atomically with a cache lock to prevent race conditions
             $admissionNo = $request->admission_no;
             if (!$admissionNo) {
-                $lastStudent = Student::where('school_id', $school->id)->latest()->first();
-                $admissionNo = $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
+                $lockKey = 'admission_no_seq_' . $school->id;
+                $admissionNo = Cache::lock($lockKey, 10)->block(5, function () use ($school) {
+                    $maxNo = Student::where('school_id', $school->id)->max('admission_no');
+                    return $maxNo ? (intval($maxNo) + 1) : 100001;
+                });
             }
             $student->admission_no = $admissionNo;
 
             // Create Student User Account
-            $studentRole = \App\Models\Role::where('slug', \App\Models\Role::STUDENT)->first();
-            $userEmail = $request->email ?: 'student.' . $admissionNo . '@edusphere.local';
-            
-            $user = \App\Models\User::create([
-                'name' => trim($request->first_name . ' ' . $request->last_name),
-                'email' => $userEmail,
-                'password' => \Illuminate\Support\Facades\Hash::make('password'),
-                'role_id' => $studentRole ? $studentRole->id : null,
+            $studentRole = Role::where('slug', Role::STUDENT)->first();
+            $userEmail = $request->email ?: 'student.' . $admissionNo . '@' . $school->subdomain . '.edusphere.local';
+            $tempPassword = Str::password(12);
+
+            $user = User::create([
+                'name'     => trim($request->first_name . ' ' . $request->last_name),
+                'email'    => $userEmail,
+                'password' => Hash::make($tempPassword),
+                'role_id'  => $studentRole ? $studentRole->id : null,
                 'school_id' => $school->id,
-                'phone' => $request->phone,
-                'status' => \App\Enums\UserStatus::Active,
+                'phone'    => $request->phone,
+                'status'   => UserStatus::Active,
+                'must_change_password' => true,
             ]);
+            // TODO: dispatch a SendStudentCredentials notification with $tempPassword
             
             $student->user_id = $user->id;
             
@@ -183,61 +197,66 @@ class AdmissionController extends TenantController
                 ->first();
 
             if ($admissionFeeName) {
-                // 2. Create the Fee Record (Ledger)
+                $cashPaymentMethod = \App\Models\PaymentMethod::where('school_id', $school->id)
+                    ->where('name', 'Cash')
+                    ->first();
+
+                if (!$cashPaymentMethod) {
+                    throw new \Exception('No Cash payment method configured for this school. Please add one in Payment Methods settings.');
+                }
+
                 $fee = Fee::create([
-                    'school_id' => $school->id,
-                    'student_id' => $student->id,
+                    'school_id'        => $school->id,
+                    'student_id'       => $student->id,
                     'academic_year_id' => $student->academic_year_id,
-                    'fee_type_id' => $admissionFeeName->fee_type_id,
-                    'fee_name_id' => $admissionFeeName->id,
-                    'class_id' => $student->class_id,
-                    'bill_no' => 'ADM-' . time(),
-                    'fee_period' => 'Admission',
-                    'payable_amount' => $request->admission_fee,
-                    'paid_amount' => $request->admission_fee,
-                    'due_amount' => 0,
-                    'due_date' => now(),
-                    'payment_date' => now(),
-                    'payment_status' => \App\Enums\FeeStatus::Paid,
-                    'payment_mode' => 'Cash', // Default for now
-                    'remarks' => 'Admission Fee paid during intake'
+                    'fee_type_id'      => $admissionFeeName->fee_type_id,
+                    'fee_name_id'      => $admissionFeeName->id,
+                    'class_id'         => $student->class_id,
+                    'bill_no'          => $this->generateBillNumber($school->id),
+                    'fee_period'       => 'Admission',
+                    'payable_amount'   => $request->admission_fee,
+                    'paid_amount'      => $request->admission_fee,
+                    'due_amount'       => 0,
+                    'due_date'         => now(),
+                    'payment_date'     => now(),
+                    'payment_status'   => FeeStatus::Paid,
+                    'payment_mode'     => strtolower($cashPaymentMethod->name),
+                    'remarks'          => 'Admission Fee paid during intake',
                 ]);
 
-                // 3. Create the Fee Payment Record (Transaction)
-                $cashPaymentMethod = \App\Models\PaymentMethod::where('name', 'Cash')->first();
-
                 FeePayment::create([
-                    'school_id' => $school->id,
-                    'student_id' => $student->id,
-                    'fee_id' => $fee->id,
-                    'academic_year_id' => $student->academic_year_id,
-                    'amount' => $request->admission_fee,
-                    'payment_date' => now(),
-                    'payment_method_id' => $cashPaymentMethod->id ?? 1,
-                    'receipt_no' => $request->receipt_no,
-                    'created_by' => Auth::id(),
+                    'school_id'         => $school->id,
+                    'student_id'        => $student->id,
+                    'fee_id'            => $fee->id,
+                    'academic_year_id'  => $student->academic_year_id,
+                    'amount'            => $request->admission_fee,
+                    'payment_date'      => now(),
+                    'payment_method_id' => $cashPaymentMethod->id,
+                    'receipt_no'        => $this->generateReceiptNumber($school->id),
+                    'created_by'        => Auth::id(),
                 ]);
             }
 
             // --- FACILITY INTEGRATION (PHASE 2 PREP) ---
             if ($request->transport_route_id) {
                 StudentTransportAssignment::create([
-                    'school_id' => $school->id,
+                    'school_id'  => $school->id,
                     'student_id' => $student->id,
-                    'transport_route_id' => $request->transport_route_id,
-                    'status' => GeneralStatus::Active,
-                    'start_date' => now()
+                    'route_id'   => $request->transport_route_id,
+                    'status'     => GeneralStatus::Active,
+                    'start_date' => now(),
                 ]);
             }
 
-            if ($request->hostel_id) {
-                // Simplified assignment - Phase 2 will handle floor/room selection
+            if ($request->hostel_id && $request->hostel_room_id && $request->hostel_bed_id) {
                 HostelBedAssignment::create([
-                    'school_id' => $school->id,
-                    'student_id' => $student->id,
-                    'hostel_id' => $request->hostel_id,
-                    'status' => GeneralStatus::Active,
-                    'start_date' => now()
+                    'school_id'      => $school->id,
+                    'student_id'     => $student->id,
+                    'hostel_id'      => $request->hostel_id,
+                    'hostel_room_id' => $request->hostel_room_id,
+                    'hostel_bed_id'  => $request->hostel_bed_id,
+                    'status'         => GeneralStatus::Active,
+                    'start_date'     => now(),
                 ]);
             }
 
@@ -261,10 +280,9 @@ class AdmissionController extends TenantController
                     }
 
                     if ($registration->enquiry_id) {
-                        $enquiry = \App\Models\StudentEnquiry::find($registration->enquiry_id);
-                        if ($enquiry) {
-                            $enquiry->update(['form_status' => \App\Enums\EnquiryStatus::Admitted]);
-                        }
+                        StudentEnquiry::where('school_id', $school->id)
+                            ->where('id', $registration->enquiry_id)
+                            ->update(['form_status' => EnquiryStatus::Admitted]);
                     }
                 }
             }
@@ -345,36 +363,13 @@ class AdmissionController extends TenantController
         ));
     }
 
-    public function update(Request $request, Student $student)
+    public function update(UpdateAdmissionRequest $request, Student $student)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'class_id' => 'required|exists:classes,id',
-            'section_id' => 'required|exists:sections,id',
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'admission_date' => 'required|date',
-            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
-            'permanent_address' => 'required|string',
-            'permanent_country_id' => 'required|exists:countries,id',
-            'permanent_state_id' => 'required|exists:states,id',
-            'permanent_city_id' => 'required|exists:cities,id',
-            'correspondence_address' => 'required|string',
-            'correspondence_country_id' => 'nullable|exists:countries,id',
-            'correspondence_state_id' => 'nullable|exists:states,id',
-            'correspondence_city_id' => 'nullable|exists:cities,id',
-            'father_first_name' => 'required|string|max:255',
-            'father_last_name' => 'required|string|max:255',
-            'father_mobile' => 'required|string|max:20',
-            'mother_first_name' => 'required|string|max:255',
-            'mother_last_name' => 'required|string|max:255',
-            'mother_mobile' => 'required|string|max:20',
-            'roll_no' => 'required|string|max:255',
-            'receipt_no' => 'required|string|max:255',
-            'admission_fee' => 'required|numeric|min:0',
-            'student_photo' => 'nullable|image|max:2048',
-        ]);
+        // Authorization: ensure this student belongs to the current school.
+        // UpdateAdmissionRequest already validates all foreign keys are tenant-scoped.
+        $this->authorizeTenant($student);
+
+        $validated = $request->validated();
 
         DB::beginTransaction();
         try {
@@ -528,8 +523,16 @@ class AdmissionController extends TenantController
 
     public function destroy(Student $student)
     {
+        $this->authorizeTenant($student);
         try {
-            $student->forceDelete();
+            if ($student->fees()->whereHas('payments')->exists()) {
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Cannot delete student with existing fee payment records.'], 422);
+                }
+                return redirect()->route('school.admission.index')->with('error', 'Cannot delete student with existing fee payment records.');
+            }
+
+            $student->delete(); // soft delete
 
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json([

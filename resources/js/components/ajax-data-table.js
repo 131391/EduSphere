@@ -283,8 +283,10 @@ document.addEventListener('alpine:init', () => {
                     message: `Are you sure you want to perform: ${label}? This action cannot be undone.`,
                     callback: async () => {
                         try {
-                            const payload = method.toUpperCase() === 'DELETE' ? { _method: 'DELETE' } : {};
-                            const response = await axios.post(url, payload, {
+                            const isDelete = method.toUpperCase() === 'DELETE';
+                            const response = await axios({
+                                method: isDelete ? 'delete' : method.toLowerCase(),
+                                url: url,
                                 headers: {
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,

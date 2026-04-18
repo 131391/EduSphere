@@ -140,29 +140,51 @@ class SchoolSettingsController extends TenantController
     public function updateSession(Request $request)
     {
         $request->validate([
-            'current_session_id' => 'required|exists:academic_years,id',
+            'current_session_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('academic_years', 'id')
+                    ->where('school_id', $this->getSchoolId()),
+            ],
         ]);
 
         $sessionId = $request->input('current_session_id');
-        $school = $this->getSchool();
+        $school    = $this->getSchool();
 
-        // Ensure the session belongs to this school
         $academicYear = AcademicYear::where('school_id', $school->id)->findOrFail($sessionId);
 
-        // Update current session flags
-        AcademicYear::where('school_id', $school->id)
-            ->where('is_current', true)
-            ->get()
-            ->each(fn($year) => $year->update(['is_current' => false]));
+        // Warn if students in the current year have not been promoted yet
+        $currentYear = AcademicYear::where('school_id', $school->id)
+            ->where('is_current', \App\Enums\YesNo::Yes)
+            ->first();
 
-        $academicYear->update(['is_current' => true]);
-        
-        // Sync settings for backward compatibility if needed
-        $settings = $school->settings ?? [];
-        $settings['current_session_id'] = $sessionId;
-        $school->update(['settings' => $settings]);
+        if ($currentYear && $currentYear->id !== $academicYear->id) {
+            $unpromoted = \App\Models\Student::where('school_id', $school->id)
+                ->where('academic_year_id', $currentYear->id)
+                ->where('status', \App\Enums\StudentStatus::Active)
+                ->count();
 
-        return back()->with('success', 'Academic session updated successfully and applied across all modules.');
+            if ($unpromoted > 0 && !$request->boolean('force')) {
+                return back()->with('warning',
+                    "{$unpromoted} active student(s) in '{$currentYear->name}' have not been promoted yet. "
+                    . "Please use the <a href='" . route('school.student-promotions.index') . "' class='underline font-bold'>Student Promotion</a> module before switching the session, or submit again to force the switch."
+                )->with('force_confirm', true);
+            }
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($school, $academicYear, $sessionId) {
+            // Bulk update — single query instead of N queries
+            AcademicYear::where('school_id', $school->id)
+                ->where('is_current', \App\Enums\YesNo::Yes)
+                ->update(['is_current' => \App\Enums\YesNo::No]);
+
+            $academicYear->update(['is_current' => \App\Enums\YesNo::Yes]);
+
+            $settings = $school->settings ?? [];
+            $settings['current_session_id'] = $sessionId;
+            $school->update(['settings' => $settings]);
+        });
+
+        return back()->with('success', "Academic session switched to '{$academicYear->name}' successfully.");
     }
     public function receiptNote()
     {

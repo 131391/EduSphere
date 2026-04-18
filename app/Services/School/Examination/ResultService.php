@@ -27,8 +27,27 @@ class ResultService
 
         DB::beginTransaction();
         try {
+            // Pre-load valid student IDs for this school + class to prevent cross-tenant writes
+            $validStudentIds = Student::where('school_id', $school->id)
+                ->where('class_id', $classId)
+                ->pluck('id')
+                ->toArray();
+
+            $errors = [];
+
             foreach ($marksData as $mark) {
+                if (!in_array($mark['student_id'], $validStudentIds)) {
+                    $errors[] = "Student ID {$mark['student_id']} does not belong to this school/class.";
+                    continue;
+                }
+
                 $obtained = floatval($mark['marks_obtained']);
+
+                if ($obtained > $totalMarks) {
+                    $errors[] = "Marks {$obtained} exceed total marks {$totalMarks} for student ID {$mark['student_id']}.";
+                    continue;
+                }
+
                 $percentage = ($totalMarks > 0) ? ($obtained / $totalMarks) * 100 : 0;
                 $grade = $this->calculateGrade($school, $percentage);
 
@@ -55,7 +74,8 @@ class ResultService
 
             return [
                 'success' => true,
-                'message' => 'Marks saved successfully.'
+                'message' => 'Marks saved successfully.' . (count($errors) ? ' Skipped: ' . count($errors) : ''),
+                'errors'  => $errors,
             ];
 
         } catch (\Exception $e) {

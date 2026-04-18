@@ -87,6 +87,12 @@ class StoreAdmissionRequest extends FormRequest
                 'nullable',
                 Rule::exists('hostels', 'id')->where('school_id', $schoolId)
             ],
+            // hostel_room_id must belong to the selected hostel AND this school
+            'hostel_room_id' => [
+                'nullable',
+                'required_with:hostel_id',
+                Rule::exists('hostel_rooms', 'id')->where('school_id', $schoolId)
+            ],
         ];
     }
 }

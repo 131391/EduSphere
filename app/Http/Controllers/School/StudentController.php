@@ -4,6 +4,7 @@ namespace App\Http\Controllers\School;
 
 use App\Http\Controllers\TenantController;
 use Illuminate\Http\Request;
+use App\Enums\StudentStatus;
 
 class StudentController extends TenantController
 {
@@ -38,9 +39,9 @@ class StudentController extends TenantController
 
         // Stats
         $stats = [
-            'total' => \App\Models\Student::where('school_id', $this->getSchoolId())->count(),
-            'active' => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', 'active')->count(),
-            'inactive' => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', 'inactive')->count(),
+            'total'    => \App\Models\Student::where('school_id', $this->getSchoolId())->count(),
+            'active'   => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Active)->count(),
+            'inactive' => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Inactive)->count(),
             'admissions_this_month' => \App\Models\Student::where('school_id', $this->getSchoolId())
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
@@ -93,15 +94,24 @@ class StudentController extends TenantController
         $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
 
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'class_id' => 'required|exists:classes,id',
-            'section_id' => 'required|exists:sections,id',
-            'status' => 'required|string',
-            'address' => 'nullable|string|max:500',
+            'first_name'  => 'required|string|max:255',
+            'last_name'   => 'required|string|max:255',
+            'email'       => 'nullable|email|max:255',
+            'phone'       => 'nullable|string|max:20',
+            'class_id'    => ['required', \Illuminate\Validation\Rule::exists('classes', 'id')->where('school_id', $this->getSchoolId())],
+            'section_id'  => ['required', \Illuminate\Validation\Rule::exists('sections', 'id')->where('school_id', $this->getSchoolId())],
+            'status'      => ['required', \Illuminate\Validation\Rule::in(array_column(StudentStatus::cases(), 'value'))],
+            'address'     => 'nullable|string|max:500',
         ]);
+
+        // Ensure section belongs to the selected class
+        $sectionValid = \App\Models\Section::where('id', $validated['section_id'])
+            ->where('class_id', $validated['class_id'])
+            ->where('school_id', $this->getSchoolId())
+            ->exists();
+        if (!$sectionValid) {
+            return back()->withErrors(['section_id' => 'The selected section does not belong to the chosen class.'])->withInput();
+        }
 
         $student->update($validated);
 

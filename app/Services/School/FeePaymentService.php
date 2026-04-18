@@ -47,6 +47,15 @@ class FeePaymentService
                 
                 if ($amountToPay <= 0) continue;
 
+                // Guard against overpayment
+                $currentDue = (float)($fee->payable_amount ?? 0)
+                    - (float)($fee->paid_amount ?? 0)
+                    - (float)($fee->waiver_amount ?? 0)
+                    - (float)($fee->discount_amount ?? 0);
+                if ($amountToPay > $currentDue && $currentDue > 0) {
+                    $amountToPay = $currentDue;
+                }
+
                 // Create Payment record
                 FeePayment::create([
                     'school_id' => $school->id,
@@ -108,13 +117,18 @@ class FeePaymentService
      */
     protected function generateReceiptNumber(School $school): string
     {
-        $prefix = 'RCPT';
-        $year = date('Y');
-        $count = FeePayment::where('school_id', $school->id)
-            ->distinct('receipt_no')
-            ->count('receipt_no') + 1;
-        
-        return "{$prefix}-{$school->id}-{$year}-" . str_pad($count, 6, '0', STR_PAD_LEFT);
+        // Use a DB-level advisory lock per school to prevent race conditions
+        $key = 'receipt_seq_' . $school->id;
+        return \Illuminate\Support\Facades\Cache::lock($key, 5)->block(3, function () use ($school) {
+            $prefix = 'RCPT';
+            $year   = date('Y');
+            $last   = FeePayment::withTrashed()
+                ->where('school_id', $school->id)
+                ->where('receipt_no', 'like', "{$prefix}-{$school->id}-{$year}-%")
+                ->max('receipt_no');
+            $count = $last ? ((int) substr($last, strrpos($last, '-') + 1)) + 1 : 1;
+            return "{$prefix}-{$school->id}-{$year}-" . str_pad($count, 6, '0', STR_PAD_LEFT);
+        });
     }
 
     /**

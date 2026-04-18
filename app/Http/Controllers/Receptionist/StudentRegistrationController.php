@@ -33,7 +33,7 @@ use App\Traits\HasAjaxDataTable;
 
 class StudentRegistrationController extends TenantController
 {
-    use HandlesFileCopies, HasAjaxDataTable;
+    use HandlesFileCopies, HasAjaxDataTable, \App\Traits\HandlesFinancialNumbers;
     protected $locationService;
 
     public function __construct(LocationService $locationService)
@@ -220,9 +220,18 @@ class StudentRegistrationController extends TenantController
         try {
             $validated = $request->validate([
                 // Registration Form Information
-                'enquiry_id' => 'nullable|exists:student_enquiries,id',
-                'academic_year_id' => 'required|exists:academic_years,id',
-                'class_id' => 'required|exists:classes,id',
+                'enquiry_id' => [
+                    'nullable',
+                    Rule::exists('student_enquiries', 'id')->where('school_id', $school->id)
+                ],
+                'academic_year_id' => [
+                    'required',
+                    Rule::exists('academic_years', 'id')->where('school_id', $school->id)
+                ],
+                'class_id' => [
+                    'required',
+                    Rule::exists('classes', 'id')->where('school_id', $school->id)
+                ],
                 'registration_fee' => 'nullable|numeric',
 
                 // Personal Information
@@ -321,7 +330,7 @@ class StudentRegistrationController extends TenantController
                     'fee_type_id' => $regFeeName->fee_type_id,
                     'fee_name_id' => $regFeeName->id,
                     'class_id' => $registration->class_id,
-                    'bill_no' => 'REG-' . time(),
+                    'bill_no' => $this->generateBillNumber($school->id),
                     'fee_period' => 'One-time',
                     'payable_amount' => $request->registration_fee,
                     'paid_amount' => $request->registration_fee,
@@ -333,7 +342,13 @@ class StudentRegistrationController extends TenantController
                     'remarks' => 'Registration Fee for No: ' . $registration->registration_no
                 ]);
 
-                $cashPaymentMethod = \App\Models\PaymentMethod::where('name', 'Cash')->first();
+                $cashPaymentMethod = \App\Models\PaymentMethod::where('school_id', $school->id)
+                    ->where('name', 'Cash')
+                    ->first();
+
+                if (!$cashPaymentMethod) {
+                    throw new \Exception('No Cash payment method configured for this school.');
+                }
 
                 FeePayment::create([
                     'school_id' => $school->id,
@@ -341,8 +356,8 @@ class StudentRegistrationController extends TenantController
                     'academic_year_id' => $registration->academic_year_id,
                     'amount' => $request->registration_fee,
                     'payment_date' => now(),
-                    'payment_method_id' => $cashPaymentMethod->id ?? 1,
-                    'receipt_no' => 'R-' . time(),
+                    'payment_method_id' => $cashPaymentMethod->id,
+                    'receipt_no' => $this->generateReceiptNumber($school->id),
                     'created_by' => Auth::id(),
                 ]);
             }
@@ -417,8 +432,8 @@ class StudentRegistrationController extends TenantController
 
         try {
             $validated = $request->validate([
-                'academic_year_id' => 'required|exists:academic_years,id',
-                'class_id' => 'required|exists:classes,id',
+                'academic_year_id' => ['required', Rule::exists('academic_years', 'id')->where('school_id', $school->id)],
+                'class_id' => ['required', Rule::exists('classes', 'id')->where('school_id', $school->id)],
                 'first_name' => 'required|string|max:100',
                 'last_name' => 'required|string|max:100',
                 'mobile_no' => 'required|string|max:20',
@@ -482,7 +497,14 @@ class StudentRegistrationController extends TenantController
 
     public function destroy(StudentRegistration $studentRegistration)
     {
-        // Delete files
+        $this->authorizeTenant($studentRegistration);
+
+        // Block deletion if already admitted
+        if ($studentRegistration->admission_status === AdmissionStatus::Admitted) {
+            return redirect()->route('receptionist.student-registrations.index')
+                ->with('error', 'Cannot delete a registration that has already been admitted.');
+        }
+
         $fileFields = ['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature'];
         foreach ($fileFields as $field) {
             if ($studentRegistration->$field) {

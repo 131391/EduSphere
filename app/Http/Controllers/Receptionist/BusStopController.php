@@ -220,7 +220,17 @@ class BusStopController extends TenantController
         $this->authorizeTenant($busStop);
 
         try {
-            // Future check: ensure no students are assigned to this stop
+            // Block deletion if students are assigned to this stop
+            $assignedCount = \App\Models\StudentTransportAssignment::where('bus_stop_id', $busStop->id)
+                ->whereNull('deleted_at')
+                ->count();
+            if ($assignedCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete bus stop',
+                    'errors' => ['bus_stop' => ["{$assignedCount} student(s) are assigned to this stop. Please reassign them first."]]
+                ], 422);
+            }
 
             $busStop->delete();
 

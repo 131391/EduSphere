@@ -62,9 +62,8 @@ class TenantMiddleware
             return null;
         }
 
-        return Cache::remember("school.subdomain.{$subdomain}", 3600, function () use ($subdomain) {
-            return School::where('subdomain', $subdomain)
-                ->first();
+        return Cache::remember("school.subdomain.{$subdomain}", 60, function () use ($subdomain) {
+            return School::where('subdomain', $subdomain)->first();
         });
     }
 
@@ -75,9 +74,8 @@ class TenantMiddleware
     {
         $domain = $request->getHost();
 
-        return Cache::remember("school.domain.{$domain}", 3600, function () use ($domain) {
-            return School::where('domain', $domain)
-                ->first();
+        return Cache::remember("school.domain.{$domain}", 60, function () use ($domain) {
+            return School::where('domain', $domain)->first();
         });
     }
 
@@ -92,9 +90,8 @@ class TenantMiddleware
             return null;
         }
 
-        return Cache::remember("school.path.{$path}", 3600, function () use ($path) {
-            return School::where('code', $path)
-                ->first();
+        return Cache::remember("school.path.{$path}", 60, function () use ($path) {
+            return School::where('code', $path)->first();
         });
     }
 
@@ -109,9 +106,8 @@ class TenantMiddleware
             return null;
         }
 
-        return Cache::remember("school.id.{$schoolId}", 3600, function () use ($schoolId) {
-            return School::where('id', $schoolId)
-                ->first();
+        return Cache::remember("school.id.{$schoolId}", 60, function () use ($schoolId) {
+            return School::where('id', $schoolId)->first();
         });
     }
 

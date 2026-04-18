@@ -96,14 +96,21 @@ Route::get('transport-attendance/month-wise-report', [TransportAttendanceControl
 Route::post('transport-attendance/get-routes-for-report', [TransportAttendanceController::class, 'getRoutesForReport'])->name('transport-attendance.get-routes-for-report');
 
 // Hostel Management
+Route::post('hostels/fetch', [HostelController::class, 'index'])->name('hostels.fetch');
 Route::resource('hostels', HostelController::class);
 Route::get('hostels-export', [HostelController::class, 'export'])->name('hostels.export');
+
+Route::post('hostel-floors/fetch', [HostelFloorController::class, 'index'])->name('hostel-floors.fetch');
 Route::resource('hostel-floors', HostelFloorController::class);
 Route::get('hostel-floors-export', [HostelFloorController::class, 'export'])->name('hostel-floors.export');
+
+Route::post('hostel-rooms/fetch', [HostelRoomController::class, 'index'])->name('hostel-rooms.fetch');
+Route::post('hostel-rooms/get-floors', [HostelRoomController::class, 'getFloors'])->name('hostel-rooms.get-floors');
 Route::resource('hostel-rooms', HostelRoomController::class);
 Route::get('hostel-rooms-export', [HostelRoomController::class, 'export'])->name('hostel-rooms.export');
-Route::post('hostel-rooms/get-floors', [HostelRoomController::class, 'getFloors'])->name('hostel-rooms.get-floors');
+
 // Specific routes must come BEFORE resource route to avoid conflicts
+Route::post('hostel-bed-assignments/fetch', [HostelBedAssignmentController::class, 'index'])->name('hostel-bed-assignments.fetch');
 Route::get('hostel-bed-assignments/get-months', [HostelBedAssignmentController::class, 'getMonths'])->name('hostel-bed-assignments.get-months');
 Route::post('hostel-bed-assignments/search-students', [HostelBedAssignmentController::class, 'searchStudents'])->name('hostel-bed-assignments.search-students');
 Route::post('hostel-bed-assignments/get-floors', [HostelBedAssignmentController::class, 'getFloors'])->name('hostel-bed-assignments.get-floors');
@@ -113,10 +120,12 @@ Route::resource('hostel-bed-assignments', HostelBedAssignmentController::class);
 
 // Hostel Attendance
 Route::post('hostel-attendance/get-students', [HostelAttendanceController::class, 'getStudents'])->name('hostel-attendance.get-students');
+Route::post('hostel-attendance/report/fetch', [HostelAttendanceController::class, 'report'])->name('hostel-attendance.report.fetch');
 Route::get('hostel-attendance/report', [HostelAttendanceController::class, 'report'])->name('hostel-attendance.report');
 Route::resource('hostel-attendance', HostelAttendanceController::class)->only(['index', 'store']);
 
 // Staff Management
 Route::get('staff/get-sections/{classId}', [StaffController::class, 'getSections'])->name('staff.get-sections');
+Route::match(['get', 'post'], 'staff/fetch', [StaffController::class, 'index'])->name('staff.fetch');
 Route::resource('staff', StaffController::class);
 

@@ -15,7 +15,7 @@ trait Tenantable
             if (app()->bound('currentSchool')) {
                 $school = app('currentSchool');
                 if ($school instanceof School) {
-                    $builder->where('school_id', $school->id);
+                    $builder->where($builder->getModel()->getTable() . '.school_id', $school->id);
                 }
             }
         });

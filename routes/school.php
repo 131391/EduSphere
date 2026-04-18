@@ -8,6 +8,7 @@ use App\Http\Controllers\School\RegistrationController;
 use App\Http\Controllers\School\ClassController;
 use App\Http\Controllers\School\SectionController;
 use App\Http\Controllers\School\AcademicYearController;
+use App\Http\Controllers\School\StudentPromotionController;
 use App\Http\Controllers\School\WaiverController;
 use App\Http\Controllers\School\LateFeeController;
 use App\Http\Controllers\School\FeeTypeController;
@@ -102,6 +103,14 @@ Route::resource('sections', SectionController::class);
 
 // Academic Year Management
 Route::resource('academic-years', AcademicYearController::class);
+
+// Student Promotion
+Route::prefix('student-promotions')->name('student-promotions.')->group(function () {
+    Route::get('/', [StudentPromotionController::class, 'index'])->name('index');
+    Route::post('/preview', [StudentPromotionController::class, 'preview'])->name('preview');
+    Route::post('/promote', [StudentPromotionController::class, 'promote'])->name('promote');
+    Route::get('/history', [StudentPromotionController::class, 'history'])->name('history');
+});
 
 // Fee Type Management
 Route::resource('fee-types', FeeTypeController::class)->only(['index', 'store', 'update', 'destroy']);

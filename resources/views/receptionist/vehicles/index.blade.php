@@ -338,9 +338,6 @@
         </x-modal>
     </div>
 
-    <x-confirm-modal title="Delete Vehicle?"
-        message="This will permanently delete the vehicle. This action cannot be undone."
-        confirm-text="Delete" confirm-color="red" />
 
     @push('scripts')
     <script>
@@ -473,14 +470,14 @@
 
                         const result = await response.json();
                         if (response.ok) {
-                            window.Toast.fire({ icon: 'success', title: result.message });
+                            if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                             this.$dispatch('close-modal', 'vehicle-modal');
                             this.fetchData();
                         } else {
                             this.errors = result.errors || {};
                         }
                     } catch (e) {
-                        window.Toast.fire({ icon: 'error', title: 'Failed to save vehicle' });
+                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Failed to save vehicle' });
                     } finally {
                         this.submitting = false;
                     }

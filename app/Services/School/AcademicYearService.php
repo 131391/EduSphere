@@ -116,7 +116,13 @@ class AcademicYearService
 
         try {
             if ($academicYear->students()->count() > 0) {
-                throw new \Exception('Cannot delete academic year with enrolled students');
+                throw new \Exception('Cannot delete academic year with enrolled students.');
+            }
+            if ($academicYear->fees()->count() > 0) {
+                throw new \Exception('Cannot delete academic year with associated fee records.');
+            }
+            if ($academicYear->exams()->count() > 0) {
+                throw new \Exception('Cannot delete academic year with associated exams.');
             }
 
             $academicYear->delete();

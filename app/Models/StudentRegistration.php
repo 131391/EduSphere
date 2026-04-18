@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Cache;
 use App\Traits\Tenantable;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -104,24 +105,27 @@ class StudentRegistration extends Model
     }
 
     /**
-     * Generate unique registration number
+     * Generate unique registration number with an atomic lock
      */
     private static function generateRegistrationNumber($schoolId)
     {
-        $year = date('Y');
-        $lastRegistration = self::where('school_id', $schoolId)
-            ->where('registration_no', 'like', "REG-{$year}-%")
-            ->orderBy('id', 'desc')
-            ->first();
+        return Cache::lock("registration_no_generation_{$schoolId}", 10)->block(5, function () use ($schoolId) {
+            $year = date('Y');
+            $lastRegistration = self::where('school_id', $schoolId)
+                ->where('registration_no', 'like', "REG-{$year}-%")
+                ->orderBy('registration_no', 'desc')
+                ->first();
 
-        if ($lastRegistration) {
-            $lastNumber = (int) substr($lastRegistration->registration_no, -5);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
+            $nextNumber = 1;
+            if ($lastRegistration) {
+                // Extract number from format REG-YYYY-XXXXX
+                $parts = explode('-', $lastRegistration->registration_no);
+                $lastNumber = (int) end($parts);
+                $nextNumber = $lastNumber + 1;
+            }
 
-        return sprintf('REG-%s-%05d', $year, $newNumber);
+            return sprintf('REG-%s-%05d', $year, $nextNumber);
+        });
     }
 
     /**
@@ -216,7 +220,7 @@ class StudentRegistration extends Model
 
     public function getGenderLabelAttribute()
     {
-        if ($this->gender instanceof \App\Enums\Gender) {
+        if ($this->gender instanceof Gender) {
             return $this->gender->label();
         }
         

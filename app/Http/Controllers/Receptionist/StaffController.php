@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\ClassModel;
 use App\Models\Section;
 use App\Models\Qualification;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -15,20 +16,60 @@ use App\Enums\StaffPost;
 
 class StaffController extends TenantController
 {
-    /**
-     * Display a listing of staff.
-     */
+    use HasAjaxDataTable;
+
     public function index(Request $request)
     {
-        $school_id = $this->getSchoolId();
-        
-        $query = Staff::where('school_id', $school_id)
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($staff) {
+            $post = $staff->post;
+            
+            return [
+                'id'                           => $staff->id,
+                'name'                         => $staff->name,
+                'initials'                     => collect(explode(' ', $staff->name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
+                'post_label'                   => $post?->label() ?? 'N/A',
+                'post_value'                   => $post?->value,
+                'post_color'                   => $post?->color() ?? 'slate',
+                'class_name'                   => $staff->class?->name ?? 'N/A',
+                'section_name'                 => $staff->section?->name ?? 'N/A',
+                'mobile'                       => $staff->mobile,
+                'email'                        => $staff->email ?? '',
+                'gender_label'                 => $staff->gender?->label() ?? 'N/A',
+                'joining_date'                 => $staff->joining_date?->format('d M, Y') ?? 'N/A',
+                'current_salary'               => $staff->current_salary,
+                'aadhar_no'                    => $staff->aadhar_no ?? '',
+                'staff_image'                  => $staff->staff_image ? asset('storage/' . $staff->staff_image) : null,
+                'created_at_label'             => $staff->created_at->format('d M, Y'),
+                
+                // Payload for edit form
+                'post'                         => $post?->value,
+                'class_id'                     => $staff->class_id,
+                'section_id'                   => $staff->section_id,
+                'gender'                       => $staff->gender?->value,
+                'total_experience'             => $staff->total_experience,
+                'previous_school_salary'       => $staff->previous_school_salary,
+                'country_id'                   => $staff->country_id,
+                'state_id'                     => $staff->state_id,
+                'city_id'                      => $staff->city_id,
+                'zip_code'                     => $staff->zip_code ?? '',
+                'address'                      => $staff->address ?? '',
+                'aadhar_card'                  => $staff->aadhar_card ?? '',
+                'aadhar_card_preview'          => $staff->aadhar_card ? asset('storage/' . $staff->aadhar_card) : '',
+                'staff_image_preview'          => $staff->staff_image ? asset('storage/' . $staff->staff_image) : '',
+                'joining_date_raw'             => $staff->joining_date?->format('Y-m-d') ?? '',
+                'higher_qualification_id'      => $staff->higher_qualification_id,
+                'previous_school_company_name' => $staff->previous_school_company_name ?? '',
+            ];
+        };
+
+        $query = Staff::where('school_id', $schoolId)
             ->with(['class', 'section', 'higherQualification']);
 
-        // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('mobile', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
@@ -36,201 +77,159 @@ class StaffController extends TenantController
             });
         }
 
-        // Filter by post
         if ($request->filled('post')) {
             $query->where('post', $request->post);
         }
 
-        // Filter by class
         if ($request->filled('class_id')) {
             $query->where('class_id', $request->class_id);
         }
 
-        // Sorting
-        $sortColumn = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
-        $query->orderBy($sortColumn, $sortDirection);
+        $sort      = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc');
+        $allowed   = ['name', 'mobile', 'joining_date', 'current_salary', 'created_at'];
+        if (in_array($sort, $allowed)) {
+            $query->orderBy($sort, $direction);
+        }
 
-        // Pagination
-        $perPage = $request->input('per_page', 15);
-        $staff = $query->paginate($perPage)->withQueryString();
-
-        // Get classes and qualifications for filters
-        $classes = ClassModel::where('school_id', $school_id)->orderBy('order')->get();
-        $qualifications = Qualification::where('school_id', $school_id)->where('is_active', true)->orderBy('name')->get();
-
-        $countries = \Nnjeim\World\Models\Country::orderBy('name')->get(['id', 'name']);
-
-        // Staff Statistics
         $stats = [
-            'total' => Staff::where('school_id', $school_id)->count(),
-            'teaching' => Staff::where('school_id', $school_id)->where('post', StaffPost::Teacher)->count(),
-            'non_teaching' => Staff::where('school_id', $school_id)->where('post', '!=', StaffPost::Teacher)->count(),
-            'recent' => Staff::where('school_id', $school_id)->where('joining_date', '>=', now()->subDays(30))->count(),
+            'total'       => Staff::where('school_id', $schoolId)->count(),
+            'teaching'    => Staff::where('school_id', $schoolId)->where('post', StaffPost::Teacher->value)->count(),
+            'non_teaching'=> Staff::where('school_id', $schoolId)->where('post', '!=', StaffPost::Teacher->value)->count(),
+            'recent'      => Staff::where('school_id', $schoolId)->where('joining_date', '>=', now()->subDays(30))->count(),
         ];
 
-        return view('receptionist.staff.index', compact('staff', 'classes', 'qualifications', 'countries', 'stats'));
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $stats);
+        }
+
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, ['stats' => $stats]);
+
+        $classes        = ClassModel::where('school_id', $schoolId)->orderBy('order')->get();
+        $qualifications = Qualification::where('school_id', $schoolId)->where('is_active', true)->orderBy('name')->get();
+        $countries      = \Nnjeim\World\Models\Country::orderBy('name')->get(['id', 'name']);
+        $staffPosts     = StaffPost::cases();
+
+        return view('receptionist.staff.index', compact(
+            'initialData', 'stats', 'classes', 'qualifications', 'countries', 'staffPosts'
+        ));
     }
 
-    /**
-     * Store a newly created staff.
-     */
+    private function exportToCsv($query)
+    {
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="staff_export_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Name', 'Post', 'Mobile', 'Email', 'Class', 'Section', 'Joining Date', 'Salary']);
+            $query->orderBy('created_at', 'desc')->cursor()->each(function ($s) use ($file) {
+                fputcsv($file, [
+                    $s->name, $s->post?->label(), $s->mobile, $s->email,
+                    $s->class?->name, $s->section?->name,
+                    $s->joining_date?->format('Y-m-d'), $s->current_salary,
+                ]);
+            });
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'post' => ['required', 'integer', Rule::enum(StaffPost::class)],
-            'class_id' => 'nullable|exists:classes,id',
-            'section_id' => 'nullable|exists:sections,id',
-            'name' => 'required|string|max:255',
-            'mobile' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
-            'total_experience' => 'nullable|integer|min:0',
-            'previous_school_salary' => 'nullable|numeric|min:0',
-            'current_salary' => 'required|numeric|min:0',
-            'country_id' => 'nullable|exists:countries,id',
-            'state_id' => 'nullable|exists:states,id',
-            'city_id' => 'nullable|exists:cities,id',
-            'zip_code' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'aadhar_no' => 'nullable|string|max:20',
-            'aadhar_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'staff_image' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-            'joining_date' => 'required|date',
-            'higher_qualification_id' => 'nullable|exists:qualifications,id',
-            'previous_school_company_name' => 'nullable|string|max:255',
-        ]);
+        $validated = $this->validateStaff($request);
+        $validated['school_id'] = $this->getSchoolId();
 
-        $schoolId = $this->getSchoolId();
-        $validated['school_id'] = $schoolId;
-
-        // Handle file uploads
         if ($request->hasFile('aadhar_card')) {
             $validated['aadhar_card'] = $request->file('aadhar_card')->store('staff/aadhar', 'public');
         }
-
         if ($request->hasFile('staff_image')) {
             $validated['staff_image'] = $request->file('staff_image')->store('staff/images', 'public');
         }
 
         try {
             Staff::create($validated);
-
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Staff registered successfully.']);
-            }
-
-            return redirect()->route('receptionist.staff.index')->with('success', 'Staff added successfully.');
+            return response()->json(['success' => true, 'message' => 'Staff registered successfully.']);
         } catch (\Exception $e) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Failed to create staff. Please try again.'], 500);
-            }
-
-            return back()->withErrors(['error' => 'Failed to create staff. Please try again.'])->withInput();
+            return response()->json(['success' => false, 'message' => 'Failed to create staff: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Update the specified staff.
-     */
     public function update(Request $request, Staff $staff)
     {
         $this->authorizeTenant($staff);
+        $validated = $this->validateStaff($request, $staff);
 
-        $validated = $request->validate([
-            'post' => ['required', 'integer', Rule::enum(StaffPost::class)],
-            'class_id' => 'nullable|exists:classes,id',
-            'section_id' => 'nullable|exists:sections,id',
-            'name' => 'required|string|max:255',
-            'mobile' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
-            'total_experience' => 'nullable|integer|min:0',
-            'previous_school_salary' => 'nullable|numeric|min:0',
-            'current_salary' => 'required|numeric|min:0',
-            'country_id' => 'nullable|exists:countries,id',
-            'state_id' => 'nullable|exists:states,id',
-            'city_id' => 'nullable|exists:cities,id',
-            'zip_code' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'aadhar_no' => 'nullable|string|max:20',
-            'aadhar_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'staff_image' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-            'joining_date' => 'required|date',
-            'higher_qualification_id' => 'nullable|exists:qualifications,id',
-            'previous_school_company_name' => 'nullable|string|max:255',
-        ]);
-
-        // Handle file uploads
         if ($request->hasFile('aadhar_card')) {
-            // Delete old file if exists
-            if ($staff->aadhar_card && Storage::disk('public')->exists($staff->aadhar_card)) {
-                Storage::disk('public')->delete($staff->aadhar_card);
-            }
+            if ($staff->aadhar_card) Storage::disk('public')->delete($staff->aadhar_card);
             $validated['aadhar_card'] = $request->file('aadhar_card')->store('staff/aadhar', 'public');
         }
-
         if ($request->hasFile('staff_image')) {
-            // Delete old file if exists
-            if ($staff->staff_image && Storage::disk('public')->exists($staff->staff_image)) {
-                Storage::disk('public')->delete($staff->staff_image);
-            }
+            if ($staff->staff_image) Storage::disk('public')->delete($staff->staff_image);
             $validated['staff_image'] = $request->file('staff_image')->store('staff/images', 'public');
         }
 
         try {
             $staff->update($validated);
-
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Staff record updated successfully.']);
-            }
-
-            return redirect()->route('receptionist.staff.index')->with('success', 'Staff updated successfully.');
+            return response()->json(['success' => true, 'message' => 'Staff record updated successfully.']);
         } catch (\Exception $e) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Failed to update staff. Please try again.'], 500);
-            }
-
-            return back()->withErrors(['error' => 'Failed to update staff. Please try again.'])->withInput();
+            return response()->json(['success' => false, 'message' => 'Failed to update staff: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Remove the specified staff.
-     */
     public function destroy(Request $request, Staff $staff)
     {
         $this->authorizeTenant($staff);
 
-        // Delete files if they exist
-        if ($staff->aadhar_card && Storage::disk('public')->exists($staff->aadhar_card)) {
-            Storage::disk('public')->delete($staff->aadhar_card);
-        }
-        if ($staff->staff_image && Storage::disk('public')->exists($staff->staff_image)) {
-            Storage::disk('public')->delete($staff->staff_image);
-        }
+        if ($staff->aadhar_card) Storage::disk('public')->delete($staff->aadhar_card);
+        if ($staff->staff_image) Storage::disk('public')->delete($staff->staff_image);
 
         $staff->delete();
 
-        if ($request->expectsJson()) {
-            return response()->json(['message' => 'Staff record deleted successfully.']);
-        }
-
-        return redirect()->route('receptionist.staff.index')->with('success', 'Staff deleted successfully.');
+        return response()->json(['success' => true, 'message' => 'Staff record deleted successfully.']);
     }
 
-    /**
-     * Get sections for a class (AJAX endpoint).
-     */
     public function getSections(Request $request, $classId)
     {
-        $schoolId = $this->getSchoolId();
-        
-        $sections = Section::where('school_id', $schoolId)
+        $sections = Section::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
             ->orderBy('name')
             ->get(['id', 'name']);
 
         return response()->json(['sections' => $sections]);
+    }
+
+    private function validateStaff(Request $request, ?Staff $staff = null): array
+    {
+        return $request->validate([
+            'post'                         => ['required', 'integer', Rule::enum(StaffPost::class)],
+            'class_id'                     => ['nullable', Rule::exists('classes', 'id')->where('school_id', $this->getSchoolId())],
+            'section_id'                   => ['nullable', Rule::exists('sections', 'id')->where('school_id', $this->getSchoolId())],
+            'name'                         => 'required|string|max:255',
+            'mobile'                       => 'required|string|max:20',
+            'email'                        => 'nullable|email|max:255',
+            'gender'                       => ['required', 'integer', Rule::enum(Gender::class)],
+            'total_experience'             => 'nullable|integer|min:0',
+            'previous_school_salary'       => 'nullable|numeric|min:0',
+            'current_salary'               => 'required|numeric|min:0',
+            'country_id'                   => 'nullable|exists:countries,id',
+            'state_id'                     => 'nullable|exists:states,id',
+            'city_id'                      => 'nullable|exists:cities,id',
+            'zip_code'                     => 'nullable|string|max:20',
+            'address'                      => 'nullable|string',
+            'aadhar_no'                    => 'nullable|string|max:20',
+            'aadhar_card'                  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'staff_image'                  => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'joining_date'                 => 'required|date',
+            'higher_qualification_id'      => ['nullable', Rule::exists('qualifications', 'id')->where('school_id', $this->getSchoolId())],
+            'previous_school_company_name' => 'nullable|string|max:255',
+        ]);
     }
 }

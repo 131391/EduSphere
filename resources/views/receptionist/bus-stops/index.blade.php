@@ -525,14 +525,14 @@
 
                             const result = await response.json();
                             if (response.ok) {
-                                window.Toast.fire({ icon: 'success', title: result.message });
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                                 this.$dispatch('close-modal', 'bus-stop-modal');
                                 this.fetchData();
                             } else {
                                 this.errors = result.errors || {};
                             }
                         } catch (e) {
-                            window.Toast.fire({ icon: 'error', title: 'Failed to save bus stop' });
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Failed to save bus stop' });
                         } finally {
                             this.submitting = false;
                         }

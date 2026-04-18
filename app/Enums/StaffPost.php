@@ -25,6 +25,19 @@ enum StaffPost: int
         };
     }
 
+    public function color(): string
+    {
+        return match($this) {
+            self::Principal => 'indigo',
+            self::Teacher => 'emerald',
+            self::Assistant => 'blue',
+            self::Counselor => 'amber',
+            self::CrossingGuard => 'slate',
+            self::SchoolBusDriver => 'cyan',
+            self::FoodServiceWorker => 'rose',
+        };
+    }
+
     public static function values(): array
     {
         return array_column(self::cases(), 'value');

@@ -47,9 +47,18 @@
                         </div>
                     </div>
 
+                    @if(session('warning'))
+                    <div class="bg-amber-50 rounded-xl border border-amber-200 p-4 mb-4">
+                        <p class="text-sm font-bold text-amber-800">{!! session('warning') !!}</p>
+                    </div>
+                    @endif
+
                     <form action="{{ route('school.settings.session.update') }}" method="POST" class="space-y-6">
                         @csrf
                         @method('PUT')
+                        @if(session('force_confirm'))
+                        <input type="hidden" name="force" value="1">
+                        @endif
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @foreach($academicYears as $year)

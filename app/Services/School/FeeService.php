@@ -114,13 +114,18 @@ class FeeService
      */
     protected function generateBillNumber(School $school, Student $student): string
     {
-        $prefix = 'INV';
-        $year = date('Y');
-        $month = date('m');
-        $random = Str::upper(Str::random(4));
-        
-        // Pattern: INV-SCHOOLID-YEARMONTH-STUDENTID-RANDOM
-        return "{$prefix}-{$school->id}-{$year}{$month}-{$student->id}-{$random}";
+        $key = 'bill_seq_' . $school->id;
+        return \Illuminate\Support\Facades\Cache::lock($key, 5)->block(3, function () use ($school, $student) {
+            $prefix = 'INV';
+            $year   = date('Y');
+            $month  = date('m');
+            $last   = Fee::withTrashed()
+                ->where('school_id', $school->id)
+                ->where('bill_no', 'like', "{$prefix}-{$school->id}-{$year}{$month}-%")
+                ->max('bill_no');
+            $count = $last ? ((int) substr($last, strrpos($last, '-') + 1)) + 1 : 1;
+            return "{$prefix}-{$school->id}-{$year}{$month}-" . str_pad($count, 5, '0', STR_PAD_LEFT);
+        });
     }
 
     /**

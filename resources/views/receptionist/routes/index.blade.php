@@ -432,14 +432,14 @@
 
                             const result = await response.json();
                             if (response.ok) {
-                                window.Toast.fire({ icon: 'success', title: result.message });
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                                 this.$dispatch('close-modal', 'route-modal');
                                 this.fetchData();
                             } else {
                                 this.errors = result.errors || {};
                             }
                         } catch (e) {
-                            window.Toast.fire({ icon: 'error', title: 'Failed to save route' });
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Failed to save route' });
                         } finally {
                             this.submitting = false;
                         }

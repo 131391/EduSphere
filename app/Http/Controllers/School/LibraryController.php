@@ -39,7 +39,7 @@ class LibraryController extends TenantController
         $request->validate([
             'title' => 'required|string|max:255',
             'author' => 'required|string|max:255',
-            'category_id' => 'required|exists:book_categories,id',
+            'category_id' => ['required', \Illuminate\Validation\Rule::exists('book_categories', 'id')->where('school_id', $this->getSchoolId())],
             'quantity' => 'required|integer|min:1',
             'price' => 'nullable|numeric|min:0',
         ]);
@@ -98,9 +98,9 @@ class LibraryController extends TenantController
     {
         $this->ensureSchoolActive();
         $request->validate([
-            'book_id' => 'required|exists:books,id',
-            'student_id' => 'required|exists:students,id',
-            'due_date' => 'required|date|after:today',
+            'book_id'    => ['required', \Illuminate\Validation\Rule::exists('books', 'id')->where('school_id', $this->getSchoolId())],
+            'student_id' => ['required', \Illuminate\Validation\Rule::exists('students', 'id')->where('school_id', $this->getSchoolId())],
+            'due_date'   => 'required|date|after:today',
         ]);
 
         try {
@@ -133,6 +133,7 @@ class LibraryController extends TenantController
 
     public function returnBook(BookIssue $issue)
     {
+        $this->authorizeTenant($issue);
         try {
             $result = $this->libraryService->returnBook($issue);
 

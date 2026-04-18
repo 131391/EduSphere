@@ -23,6 +23,8 @@ class StudentTransportAssignment extends Model
         'fee_per_month',
         'academic_year_id',
         'status',
+        'start_date',
+        'end_date',
     ];
 
     protected $casts = [

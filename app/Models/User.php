@@ -42,6 +42,8 @@ class User extends Authenticatable
         'status',
         'last_login_at',
         'last_login_ip',
+        // Requires password reset on first login (set true for auto-created accounts)
+        'must_change_password',
     ];
 
     protected $hidden = [
@@ -50,10 +52,11 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'last_login_at' => 'datetime',
-        'status' => UserStatus::class,
+        'email_verified_at'    => 'datetime',
+        'password'             => 'hashed',
+        'last_login_at'        => 'datetime',
+        'status'               => UserStatus::class,
+        'must_change_password' => 'boolean',
     ];
 
     public function getActivitylogOptions(): LogOptions

@@ -199,8 +199,18 @@ class RouteController extends TenantController
         $this->authorizeTenant($route);
 
         try {
-            // Future check: ensure no students are assigned (once that relation exists)
-            
+            // Block deletion if students are assigned to this route
+            $assignedCount = \App\Models\StudentTransportAssignment::where('route_id', $route->id)
+                ->whereNull('deleted_at')
+                ->count();
+            if ($assignedCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete route',
+                    'errors' => ['route' => ["{$assignedCount} student(s) are assigned to this route. Please remove them first."]]
+                ], 422);
+            }
+
             $route->delete();
 
             return response()->json([

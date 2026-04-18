@@ -143,7 +143,19 @@ class VehicleController extends TenantController
 
             $schoolId = $this->getSchoolId();
             $validated['school_id'] = $schoolId;
-            
+
+            // Prevent duplicate registration number within the same school
+            $exists = Vehicle::where('school_id', $schoolId)
+                ->where('registration_no', $validated['registration_no'])
+                ->exists();
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => ['registration_no' => ['A vehicle with this registration number already exists.']]
+                ], 422);
+            }
+
             if (empty($validated['vehicle_no'])) {
                 $validated['vehicle_no'] = Vehicle::generateVehicleNo($schoolId);
             }

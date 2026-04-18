@@ -275,13 +275,11 @@
                                 callback: async () => {
                                     try {
                                         const response = await fetch(`/school/academic-years/${year.id}`, {
-                                            method: 'POST',
+                                            method: 'DELETE',
                                             headers: {
-                                                'Content-Type': 'application/json',
                                                 'Accept': 'application/json',
                                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                            },
-                                            body: JSON.stringify({ _method: 'DELETE' })
+                                            }
                                         });
                                         
                                         if (response.ok) {
