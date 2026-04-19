@@ -9,7 +9,7 @@
 @section('page-description', 'View student enquiry information')
 
 @section('content')
-<div class="w-full px-4 sm:px-6 lg:px-8">
+<div class="w-full px-4 sm:px-6 lg:px-8" x-data="{}">
     {{-- Header with Actions --}}
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -23,6 +23,45 @@
                     <i class="fas fa-arrow-left mr-2"></i>
                     Back
                 </a>
+                @if($studentEnquiry->form_status !== \App\Enums\EnquiryStatus::Admitted)
+                <a href="{{ route('school.student-enquiries.edit', $studentEnquiry) }}"
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+                    <i class="fas fa-edit mr-2"></i>
+                    Edit Enquiry
+                </a>
+                @endif
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open"
+                            class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors shadow-sm">
+                        <i class="fas fa-exchange-alt mr-2"></i>
+                        Change Status
+                        <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                    </button>
+                    <div x-show="open" @click.outside="open = false" x-cloak
+                         class="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-20 py-1">
+                        @foreach(\App\Enums\EnquiryStatus::cases() as $s)
+                        @php
+                            $isCurrent = $studentEnquiry->form_status === $s;
+                            $isLocked  = $studentEnquiry->form_status === \App\Enums\EnquiryStatus::Admitted && $s !== \App\Enums\EnquiryStatus::Admitted;
+                        @endphp
+                        <form method="POST" action="{{ route('school.student-enquiries.update-status', $studentEnquiry) }}" class="{{ $isLocked ? 'opacity-40 pointer-events-none' : '' }}">
+                            @csrf @method('PATCH')
+                            <input type="hidden" name="form_status" value="{{ $s->value }}">
+                            <button type="submit"
+                                    class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 {{ $isCurrent ? 'font-bold text-teal-600' : 'text-gray-700 dark:text-gray-300' }}">
+                                <i class="fas {{ match($s) {
+                                    \App\Enums\EnquiryStatus::Pending   => 'fa-clock text-yellow-500',
+                                    \App\Enums\EnquiryStatus::Completed => 'fa-check-circle text-blue-500',
+                                    \App\Enums\EnquiryStatus::Cancelled => 'fa-times-circle text-red-500',
+                                    \App\Enums\EnquiryStatus::Admitted  => 'fa-user-check text-green-500',
+                                } }} text-xs"></i>
+                                {{ $s->label() }}
+                                @if($isCurrent) <i class="fas fa-check ml-auto text-teal-500 text-xs"></i> @endif
+                            </button>
+                        </form>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
     </div>

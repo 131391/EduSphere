@@ -83,6 +83,10 @@ class StudentEnquiryController extends TenantController
             $query->where('academic_year_id', $request->academic_year_id);
         }
 
+        if ($request->filled('follow_up_today')) {
+            $query->whereDate('follow_up_date', today());
+        }
+
         if ($request->expectsJson() || $request->ajax()) {
             return $this->handleAjaxTable($query, $transformer, $this->getStats($schoolId));
         }
@@ -256,6 +260,48 @@ class StudentEnquiryController extends TenantController
             }
             return back()->with('error', 'Operational failure: ' . $e->getMessage());
         }
+    }
+
+    public function updateStatus(Request $request, StudentEnquiry $studentEnquiry)
+    {
+        $this->authorizeTenant($studentEnquiry);
+
+        $validated = $request->validate([
+            'form_status' => ['required', 'integer', Rule::enum(EnquiryStatus::class)],
+        ]);
+
+        if (in_array($studentEnquiry->form_status, [EnquiryStatus::Admitted])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot change status of an admitted enquiry.'
+            ], 422);
+        }
+
+        $studentEnquiry->update(['form_status' => $validated['form_status']]);
+
+        $newStatus = EnquiryStatus::from($validated['form_status']);
+        $color = $newStatus->color();
+
+        if ($request->ajax() || $request->wantsJson() || $request->isMethod('patch')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Status updated to ' . $newStatus->label(),
+                'status_label' => $newStatus->label(),
+                'status_config' => [
+                    'bg'     => "bg-{$color}-50",
+                    'text'   => "text-{$color}-700",
+                    'border' => "border-{$color}-100",
+                    'icon'   => match($newStatus) {
+                        EnquiryStatus::Pending   => 'fa-clock',
+                        EnquiryStatus::Completed => 'fa-check-circle',
+                        EnquiryStatus::Cancelled => 'fa-times-circle',
+                        EnquiryStatus::Admitted  => 'fa-user-check',
+                    },
+                ],
+            ]);
+        }
+
+        return back()->with('success', 'Status updated to ' . $newStatus->label());
     }
 
     public function destroy(StudentEnquiry $studentEnquiry)

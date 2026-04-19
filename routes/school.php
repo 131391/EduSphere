@@ -237,6 +237,7 @@ Route::post('users/fetch', [UserController::class, 'index'])->name('users.fetch'
 // Student Enquiry Management
 Route::get('student-enquiries', [\App\Http\Controllers\School\StudentEnquiryController::class, 'index'])->name('student-enquiries.index');
 Route::post('student-enquiries/fetch', [\App\Http\Controllers\School\StudentEnquiryController::class, 'index'])->name('student-enquiries.fetch');
+Route::patch('student-enquiries/{studentEnquiry}/status', [\App\Http\Controllers\School\StudentEnquiryController::class, 'updateStatus'])->name('student-enquiries.update-status');
 Route::resource('student-enquiries', \App\Http\Controllers\School\StudentEnquiryController::class)->except(['index']);
 
 // Student Registration Management

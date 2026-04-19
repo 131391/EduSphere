@@ -8,7 +8,7 @@
         defaultSort: 'created_at',
         defaultDirection: 'desc',
         defaultPerPage: 25,
-        defaultFilters: { status: '', class_id: '', academic_year_id: '' },
+        defaultFilters: { status: '', class_id: '', academic_year_id: '', follow_up_today: '' },
         initialRows: @js($initialData['rows']),
         initialPagination: @js($initialData['pagination']),
         initialStats: @js($initialData['stats']),
@@ -79,6 +79,14 @@
                         />
 
                         <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
+
+                        {{-- Follow-up Today chip --}}
+                        <button @click="applyFilter('follow_up_today', filters.follow_up_today ? '' : '1')"
+                                :class="filters.follow_up_today ? 'bg-rose-500 text-white border-rose-500' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-rose-400 hover:text-rose-600'"
+                                class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap">
+                            <i class="fas fa-bell text-[10px]"></i>
+                            Follow-up Today
+                        </button>
                     </div>
                 </div>
 
@@ -112,7 +120,7 @@
                             <th class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Class & Academic</th>
                             <x-table.sort-header column="form_status" label="Status" sort-var="sort" direction-var="direction" />
                             <x-table.sort-header column="created_at" label="Dates" sort-var="sort" direction-var="direction" />
-                            <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                            <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-40">Actions</th>
                         </tr>
                     </thead>
 
@@ -174,8 +182,24 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex items-center justify-center gap-2">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <a href="{{ route('school.student-enquiries.show', $row['id']) }}" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors" title="View"><i class="fas fa-eye text-xs"></i></a>
+                                    @if($row['can_edit'])
                                     <a href="{{ route('school.student-enquiries.edit', $row['id']) }}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                    @endif
+                                    <div class="relative" x-data="{ open: false }">
+                                        <button @click="open = !open" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Change Status"><i class="fas fa-exchange-alt text-xs"></i></button>
+                                        <div x-show="open" @click.outside="open = false" x-cloak
+                                             class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-20 py-1">
+                                            @foreach(\App\Enums\EnquiryStatus::cases() as $s)
+                                            <button @click="updateStatus('{{ route('school.student-enquiries.update-status', $row['id']) }}', {{ $s->value }}, $el.closest('[x-data]')); open = false"
+                                                    class="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                                                <i class="fas {{ match($s) { \App\Enums\EnquiryStatus::Pending=>'fa-clock text-yellow-500', \App\Enums\EnquiryStatus::Completed=>'fa-check-circle text-blue-500', \App\Enums\EnquiryStatus::Cancelled=>'fa-times-circle text-red-500', \App\Enums\EnquiryStatus::Admitted=>'fa-user-check text-green-500' } }} text-[10px]"></i>
+                                                {{ $s->label() }}
+                                            </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
                                     <button @click="quickAction('{{ route('school.student-enquiries.destroy', $row['id']) }}', 'Delete Enquiry', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
                                 </div>
                             </td>
@@ -231,8 +255,22 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a :href="`/school/student-enquiries/${row.id}/edit`" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <a :href="`/school/student-enquiries/${row.id}`" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors" title="View"><i class="fas fa-eye text-xs"></i></a>
+                                        <a x-show="row.can_edit" :href="`/school/student-enquiries/${row.id}/edit`" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                        <div class="relative" x-data="{ open: false }">
+                                            <button @click="open = !open" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center hover:bg-teal-100 transition-colors" title="Change Status"><i class="fas fa-exchange-alt text-xs"></i></button>
+                                            <div x-show="open" @click.outside="open = false" x-cloak
+                                                 class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-20 py-1">
+                                                <template x-for="opt in statusOptions" :key="opt.value">
+                                                    <button @click="updateStatus(`/school/student-enquiries/${row.id}/status`, opt.value, row); open = false"
+                                                            class="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                                                        <i class="fas text-[10px]" :class="opt.icon"></i>
+                                                        <span x-text="opt.label"></span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
                                         <button @click="quickAction(`/school/student-enquiries/${row.id}`, 'Delete Enquiry', 'DELETE')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
                                     </div>
                                 </td>
@@ -263,6 +301,37 @@
         <script>
             function studentEnquiry() {
                 return {
+                    statusOptions: [
+                        { value: 1, label: 'Pending',   icon: 'fa-clock text-yellow-500' },
+                        { value: 2, label: 'Completed', icon: 'fa-check-circle text-blue-500' },
+                        { value: 3, label: 'Cancelled', icon: 'fa-times-circle text-red-500' },
+                        { value: 4, label: 'Admitted',  icon: 'fa-user-check text-green-500' },
+                    ],
+
+                    async updateStatus(url, statusValue, row) {
+                        try {
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'PATCH', form_status: statusValue })
+                            });
+                            const result = await response.json();
+                            if (response.ok) {
+                                row.status_label  = result.status_label;
+                                row.status_config = result.status_config;
+                                if (typeof this.refreshStats === 'function') this.refreshStats();
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                            } else {
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Update failed' });
+                            }
+                        } catch (e) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });
+                        }
+                    },
 
                     async quickAction(url, title, method = 'POST', message = 'Are you sure you want to proceed with this action?') {
                         const self = this;
