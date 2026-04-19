@@ -684,7 +684,7 @@
             </nav>
 
             <!-- Footer -->
-            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center" x-show="!sidebarCollapsed">
+            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center sidebar-text flex-shrink-0" x-show="!sidebarCollapsed" x-cloak>
                 <p>{{ date('Y') }} ©</p>
             </div>
         </aside>

@@ -214,7 +214,7 @@
                         </tbody>
 
                         <!-- Dynamic Alpine Table Body -->
-                        <tbody class="bg-white divide-y divide-gray-200 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
+                        <tbody class="bg-white divide-y divide-gray-200 transition-opacity duration-150" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
                             <template x-for="row in rows" :key="row.id">
                                 <tr class="hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap">

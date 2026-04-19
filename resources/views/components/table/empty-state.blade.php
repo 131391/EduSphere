@@ -2,7 +2,7 @@
     'colspan' => 8,
     'icon' => 'fas fa-inbox',
     'message' => 'No records found.',
-    'showCondition' => '!loading && rows.length === 0',
+    'showCondition' => 'rows.length === 0 && !initialLoad',
 ])
 
 <template x-if="{{ $showCondition }}">

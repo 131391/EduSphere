@@ -3,7 +3,10 @@
     'showVar' => 'showSpinner',
 ])
 
-<div x-show="{{ $showVar }}" x-cloak
+{{-- Skip the white spinner overlay when the list is empty. The empty-state
+     row is already visible underneath; layering a white wash + spinner over
+     the icon/text causes a visible "pulse" on each fetch. --}}
+<div x-show="{{ $showVar }} && rows.length > 0" x-cloak
      x-transition:enter="transition ease-out duration-150"
      x-transition:enter-start="opacity-0"
      x-transition:enter-end="opacity-100"

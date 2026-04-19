@@ -183,7 +183,7 @@
                 </tbody>
 
                 {{-- Alpine-managed rows: takes over once initialized --}}
-                <tbody class="bg-white divide-y divide-gray-200 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
+                <tbody class="bg-white divide-y divide-gray-200 transition-opacity duration-150" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
                     <template x-for="school in rows" :key="school.id">
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="school.id"></td>

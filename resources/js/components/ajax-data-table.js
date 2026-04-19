@@ -44,8 +44,11 @@ document.addEventListener('alpine:init', () => {
         filterLabels: config.filterLabels || {},
         exporting: false,
 
-        // Track whether we're still showing the initial server-rendered content
-        initialLoad: true,
+        // Track whether we're still showing the initial server-rendered content.
+        // If the server pre-loaded rows (even an empty array), we're already past
+        // the "first load" phase — this avoids a race where the empty-state template
+        // doesn't render on pages that hydrate with zero rows.
+        initialLoad: !config.initialRows,
 
         // Debounce timer
         _searchTimer: null,
@@ -63,14 +66,19 @@ document.addEventListener('alpine:init', () => {
             } else {
                 // To allow proper cascade and UI rendering when using pre-loaded data
                 this.loading = false;
+                this.initialLoad = false;
             }
         },
 
         // ─── Core Fetch ─────────────────────────────────────────────────
         async fetchData() {
-            // Capture current height to prevent layout collapse during loading
+            // Pin the current height so the wrapper doesn't collapse mid-fetch.
+            // Skip this when the list is already empty — the CSS baseline on
+            // .ajax-table-wrapper already reserves enough room for the empty
+            // state + spinner, and pinning a shorter value here would cause a
+            // visible jerk when the spinner overlay (min-h-[200px]) appears.
             const tableWrapper = this.$el?.querySelector('.ajax-table-wrapper');
-            if (tableWrapper) {
+            if (tableWrapper && this.rows.length > 0) {
                 this._minHeight = tableWrapper.offsetHeight;
                 tableWrapper.style.minHeight = this._minHeight + 'px';
             }

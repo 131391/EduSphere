@@ -25,6 +25,13 @@ input[type=number] {
     display: none !important;
 }
 
+/* AJAX table wrapper — stable min-height so the loading spinner overlay
+   (min-h-[200px]) never overflows the wrapper when the list is empty,
+   and the empty-state row sits at a consistent height. */
+.ajax-table-wrapper {
+    min-height: 260px;
+}
+
 /* Sidebar scroll styling - Comprehensive */
 .sidebar-scroll {
     scrollbar-width: thin;
