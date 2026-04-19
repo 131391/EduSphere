@@ -138,8 +138,8 @@
                                     <div class="flex items-center gap-3">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm relative">
-                                            @if($row['photo'])
-                                                <img src="{{ $row['photo'] }}" class="w-full h-full object-cover">
+                                            @if($row['student_photo'])
+                                                <img src="{{ $row['student_photo'] }}" class="w-full h-full object-cover">
                                             @else
                                                 <div
                                                     class="w-full h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs">
@@ -168,7 +168,7 @@
                                         <div
                                             class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-medium">
                                             <i class="fas fa-phone-alt text-[8px] text-teal-500"></i>
-                                            {{ $row['phone'] }}
+                                            {{ $row['mobile_no'] }}
                                         </div>
                                     </div>
                                 </td>
@@ -220,10 +220,10 @@
                                     <div class="flex items-center gap-3">
                                         <div
                                             class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm relative">
-                                            <template x-if="row.photo">
-                                                <img :src="row.photo" class="w-full h-full object-cover">
+                                            <template x-if="row.student_photo">
+                                                <img :src="row.student_photo" class="w-full h-full object-cover">
                                             </template>
-                                            <template x-if="!row.photo">
+                                            <template x-if="!row.student_photo">
                                                 <div class="w-full h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs"
                                                     x-text="row.initials"></div>
                                             </template>
@@ -251,7 +251,7 @@
                                         <div
                                             class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-medium">
                                             <i class="fas fa-phone-alt text-[8px] text-teal-500"></i>
-                                            <span x-text="row.phone"></span>
+                                            <span x-text="row.mobile_no"></span>
                                         </div>
                                     </div>
                                 </td>

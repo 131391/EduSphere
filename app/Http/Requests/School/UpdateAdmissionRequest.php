@@ -29,7 +29,7 @@ class UpdateAdmissionRequest extends FormRequest
         return [
             'first_name'               => 'required|string|max:255',
             'last_name'                => 'required|string|max:255',
-            'phone'                    => 'required|string|max:20',
+            'mobile_no'                => 'required|string|max:20',
 
             // Tenant-scoped: class must belong to this school
             'class_id' => [
@@ -50,6 +50,7 @@ class UpdateAdmissionRequest extends FormRequest
                 Rule::exists('academic_years', 'id')->where('school_id', $schoolId),
             ],
 
+            'dob'                      => 'required|date',
             'admission_date'           => 'required|date',
             'gender'                   => ['required', 'integer', Rule::enum(Gender::class)],
 
@@ -58,18 +59,18 @@ class UpdateAdmissionRequest extends FormRequest
             'permanent_state_id'       => 'required|exists:states,id',
             'permanent_city_id'        => 'required|exists:cities,id',
 
-            'correspondence_address'   => 'required|string',
+            'correspondence_address'   => 'nullable|string',
             'correspondence_country_id'=> 'nullable|exists:countries,id',
             'correspondence_state_id'  => 'nullable|exists:states,id',
             'correspondence_city_id'   => 'nullable|exists:cities,id',
 
             'father_first_name'        => 'required|string|max:255',
             'father_last_name'         => 'required|string|max:255',
-            'father_mobile'            => 'required|string|max:20',
+            'father_mobile_no'          => 'required|string|max:20',
 
             'mother_first_name'        => 'required|string|max:255',
             'mother_last_name'         => 'required|string|max:255',
-            'mother_mobile'            => 'required|string|max:20',
+            'mother_mobile_no'         => 'required|string|max:20',
 
             'roll_no'                  => 'required|string|max:255',
             'receipt_no'               => 'required|string|max:255',

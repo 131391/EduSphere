@@ -39,7 +39,7 @@ class StaffController extends TenantController
                 'gender_label'                 => $staff->gender?->label() ?? 'N/A',
                 'joining_date'                 => $staff->joining_date?->format('d M, Y') ?? 'N/A',
                 'current_salary'               => $staff->current_salary,
-                'aadhar_no'                    => $staff->aadhar_no ?? '',
+                'aadhaar_no'                    => $staff->aadhaar_no ?? '',
                 'staff_image'                  => $staff->staff_image ? asset('storage/' . $staff->staff_image) : null,
                 'created_at_label'             => $staff->created_at->format('d M, Y'),
                 
@@ -55,8 +55,8 @@ class StaffController extends TenantController
                 'city_id'                      => $staff->city_id,
                 'zip_code'                     => $staff->zip_code ?? '',
                 'address'                      => $staff->address ?? '',
-                'aadhar_card'                  => $staff->aadhar_card ?? '',
-                'aadhar_card_preview'          => $staff->aadhar_card ? asset('storage/' . $staff->aadhar_card) : '',
+                'aadhaar_card'                  => $staff->aadhaar_card ?? '',
+                'aadhaar_card_preview'          => $staff->aadhaar_card ? asset('storage/' . $staff->aadhaar_card) : '',
                 'staff_image_preview'          => $staff->staff_image ? asset('storage/' . $staff->staff_image) : '',
                 'joining_date_raw'             => $staff->joining_date?->format('Y-m-d') ?? '',
                 'higher_qualification_id'      => $staff->higher_qualification_id,
@@ -73,7 +73,7 @@ class StaffController extends TenantController
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('mobile', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('aadhar_no', 'like', "%{$search}%");
+                  ->orWhere('aadhaar_no', 'like', "%{$search}%");
             });
         }
 
@@ -147,8 +147,8 @@ class StaffController extends TenantController
         $validated = $this->validateStaff($request);
         $validated['school_id'] = $this->getSchoolId();
 
-        if ($request->hasFile('aadhar_card')) {
-            $validated['aadhar_card'] = $request->file('aadhar_card')->store('staff/aadhar', 'public');
+        if ($request->hasFile('aadhaar_card')) {
+            $validated['aadhaar_card'] = $request->file('aadhaar_card')->store('staff/aadhaar', 'public');
         }
         if ($request->hasFile('staff_image')) {
             $validated['staff_image'] = $request->file('staff_image')->store('staff/images', 'public');
@@ -167,9 +167,9 @@ class StaffController extends TenantController
         $this->authorizeTenant($staff);
         $validated = $this->validateStaff($request, $staff);
 
-        if ($request->hasFile('aadhar_card')) {
-            if ($staff->aadhar_card) Storage::disk('public')->delete($staff->aadhar_card);
-            $validated['aadhar_card'] = $request->file('aadhar_card')->store('staff/aadhar', 'public');
+        if ($request->hasFile('aadhaar_card')) {
+            if ($staff->aadhaar_card) Storage::disk('public')->delete($staff->aadhaar_card);
+            $validated['aadhaar_card'] = $request->file('aadhaar_card')->store('staff/aadhaar', 'public');
         }
         if ($request->hasFile('staff_image')) {
             if ($staff->staff_image) Storage::disk('public')->delete($staff->staff_image);
@@ -188,7 +188,7 @@ class StaffController extends TenantController
     {
         $this->authorizeTenant($staff);
 
-        if ($staff->aadhar_card) Storage::disk('public')->delete($staff->aadhar_card);
+        if ($staff->aadhaar_card) Storage::disk('public')->delete($staff->aadhaar_card);
         if ($staff->staff_image) Storage::disk('public')->delete($staff->staff_image);
 
         $staff->delete();
@@ -224,8 +224,8 @@ class StaffController extends TenantController
             'city_id'                      => 'nullable|exists:cities,id',
             'zip_code'                     => 'nullable|string|max:20',
             'address'                      => 'nullable|string',
-            'aadhar_no'                    => 'nullable|string|max:20',
-            'aadhar_card'                  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'aadhaar_no'                    => 'nullable|string|max:20',
+            'aadhaar_card'                  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'staff_image'                  => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             'joining_date'                 => 'required|date',
             'higher_qualification_id'      => ['nullable', Rule::exists('qualifications', 'id')->where('school_id', $this->getSchoolId())],

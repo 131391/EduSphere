@@ -17,6 +17,7 @@ use Illuminate\Validation\Rule;
 use App\Enums\AdmissionStatus;
 use App\Enums\Gender;
 use App\Http\Requests\School\StoreAdmissionRequest;
+use App\Http\Requests\School\UpdateAdmissionRequest;
 use App\Models\Fee;
 use App\Models\FeeName;
 use App\Models\FeePayment;
@@ -37,6 +38,7 @@ use App\Models\AdmissionFee;
 use App\Traits\HandlesFileCopies;
 use App\Enums\GeneralStatus;
 use App\Enums\UserStatus;
+use App\Enums\FeeStatus;
 use Illuminate\Support\Facades\Hash;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -44,10 +46,16 @@ use App\Models\StudentEnquiry;
 use App\Enums\EnquiryStatus;
 
 use App\Traits\HasAjaxDataTable;
+use App\Services\LocationService;
 
 class AdmissionController extends TenantController
 {
     use HandlesFileCopies, HasAjaxDataTable, \App\Traits\HandlesFinancialNumbers;
+
+    public function __construct(protected LocationService $locationService)
+    {
+        parent::__construct();
+    }
 
     public function index(Request $request)
     {
@@ -61,13 +69,13 @@ class AdmissionController extends TenantController
                 'registration_no' => $student->registration_no ?? 'N/A',
                 'full_name' => $student->full_name,
                 'initials' => collect(explode(' ', $student->full_name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
-                'phone' => $student->phone,
+                'mobile_no' => $student->mobile_no,
                 'email' => $student->email ?? 'N/A',
                 'father_name' => $student->father_name,
                 'class_name' => $student->class?->name ?? 'N/A',
                 'section_name' => $student->section?->name ?? 'A',
                 'admission_date' => $student->admission_date ? $student->admission_date->format('d M, Y') : 'N/A',
-                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                'student_photo' => $student->student_photo ? asset('storage/' . $student->student_photo) : null,
                 'status_label' => $student->status?->label() ?? 'Active',
                 'status_color' => 'teal', // Standard for confirmed admissions
             ];
@@ -84,7 +92,8 @@ class AdmissionController extends TenantController
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('admission_no', 'like', "%{$search}%")
-                    ->orWhere('father_name', 'like', "%{$search}%");
+                    ->orWhere('father_name', 'like', "%{$search}%")
+                    ->orWhere('mobile_no', 'like', "%{$search}%");
             });
         }
 
@@ -154,7 +163,7 @@ class AdmissionController extends TenantController
                     $student->father_name,
                     $student->class?->name ?? 'N/A',
                     $student->section?->name ?? 'N/A',
-                    $student->phone,
+                    $student->mobile_no,
                     $student->admission_date ? $student->admission_date->format('Y-m-d') : 'N/A'
                 ]);
             });
@@ -190,6 +199,8 @@ class AdmissionController extends TenantController
         $lastStudent = Student::where('school_id', $this->getSchoolId())->latest()->first();
         $nextAdmissionNo = $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
 
+        $countries = $this->locationService->getCountries();
+
         return view('receptionist.admission.create', compact(
             'classes',
             'sections',
@@ -203,7 +214,8 @@ class AdmissionController extends TenantController
             'correspondingRelatives',
             'qualifications',
             'transportRoutes',
-            'hostels'
+            'hostels',
+            'countries'
         ));
     }
 
@@ -236,17 +248,20 @@ class AdmissionController extends TenantController
 
             // Create Student User Account
             $studentRole = Role::where('slug', Role::STUDENT)->first();
-            $userEmail = $request->email ?: 'student.' . $admissionNo . '@edusphere.local';
+            $userEmail = $request->email ?: 'student.' . $admissionNo . '@' . $school->subdomain . '.edusphere.local';
+            $tempPassword = Str::password(12);
 
             $user = User::create([
                 'name' => trim($request->first_name . ' ' . $request->last_name),
                 'email' => $userEmail,
-                'password' => Hash::make('password'),
+                'password' => Hash::make($tempPassword),
                 'role_id' => $studentRole ? $studentRole->id : null,
                 'school_id' => $school->id,
-                'phone' => $request->phone,
+                'phone' => $request->mobile_no,
                 'status' => UserStatus::Active,
+                'must_change_password' => true,
             ]);
+            // TODO: dispatch a SendStudentCredentials notification with $tempPassword
 
             $student->user_id = $user->id;
 
@@ -272,19 +287,18 @@ class AdmissionController extends TenantController
 
             $student->fill($request->except($excludedFields));
 
-            // Handle Photo/Signature copies or uploads using Trait
-            $student->photo = $this->storeTenantFile($request->file('student_photo'), "students/{$school->id}/photos", $request->student_photo_path);
-            $student->father_photo = $this->storeTenantFile($request->file('father_photo'), "parents/{$school->id}/photos", $request->father_photo_path);
-            $student->mother_photo = $this->storeTenantFile($request->file('mother_photo'), "parents/{$school->id}/photos", $request->mother_photo_path);
+            $student->student_photo     = $this->storeTenantFile($request->file('student_photo'),     "students/{$school->id}/photos",     $request->student_photo_path);
+            $student->father_photo      = $this->storeTenantFile($request->file('father_photo'),      "parents/{$school->id}/photos",      $request->father_photo_path);
+            $student->mother_photo      = $this->storeTenantFile($request->file('mother_photo'),      "parents/{$school->id}/photos",      $request->mother_photo_path);
+            $student->student_signature = $this->storeTenantFile($request->file('student_signature'), "students/{$school->id}/signatures", $request->student_signature_path);
+            $student->father_signature  = $this->storeTenantFile($request->file('father_signature'),  "parents/{$school->id}/signatures",  $request->father_signature_path);
+            $student->mother_signature  = $this->storeTenantFile($request->file('mother_signature'),  "parents/{$school->id}/signatures",  $request->mother_signature_path);
 
-            // Admission No is already generated above
-
-            // Concatenate Parent Names if necessary (handled by validation mapping usually but ensuring here)
             if (!$student->father_name) {
-                $student->father_name = trim($request->father_first_name . ' ' . ($request->father_middle_name ?? '') . ' ' . $request->father_last_name);
+                $student->father_name = trim(implode(' ', array_filter([$request->father_first_name, $request->father_middle_name, $request->father_last_name])));
             }
             if (!$student->mother_name) {
-                $student->mother_name = trim($request->mother_first_name . ' ' . ($request->mother_middle_name ?? '') . ' ' . $request->mother_last_name);
+                $student->mother_name = trim(implode(' ', array_filter([$request->mother_first_name, $request->mother_middle_name, $request->mother_last_name])));
             }
 
             $student->save();
@@ -296,60 +310,67 @@ class AdmissionController extends TenantController
                 ->first();
 
             if ($admissionFeeName) {
-                // 2. Create the Fee Record (Ledger) with sequential bill numbering
-                $billNo = $this->generateBillNumber($school->id);
-                
+                $cashPaymentMethod = PaymentMethod::where('school_id', $school->id)
+                    ->where('name', 'Cash')
+                    ->first();
+
+                if (!$cashPaymentMethod) {
+                    throw new \Exception('No Cash payment method configured for this school. Please add one in Payment Methods settings.');
+                }
+
                 $fee = Fee::create([
-                    'school_id' => $school->id,
-                    'student_id' => $student->id,
+                    'school_id'        => $school->id,
+                    'student_id'       => $student->id,
                     'academic_year_id' => $student->academic_year_id,
-                    'fee_type_id' => $admissionFeeName->fee_type_id,
-                    'fee_name_id' => $admissionFeeName->id,
-                    'class_id' => $student->class_id,
-                    'bill_no' => $billNo,
-                    'fee_period' => 'Admission',
-                    'payable_amount' => $request->admission_fee,
-                    'paid_amount' => $request->admission_fee,
-                    'due_amount' => 0,
-                    'due_date' => now(),
-                    'payment_date' => now(),
-                    'payment_status' => \App\Enums\FeeStatus::Paid,
-                    'payment_mode' => $request->payment_mode ?? 'Cash',
-                    'remarks' => 'Admission Fee collected during intake'
+                    'fee_type_id'      => $admissionFeeName->fee_type_id,
+                    'fee_name_id'      => $admissionFeeName->id,
+                    'class_id'         => $student->class_id,
+                    'bill_no'          => $this->generateBillNumber($school->id),
+                    'fee_period'       => 'Admission',
+                    'payable_amount'   => $request->admission_fee,
+                    'paid_amount'      => $request->admission_fee,
+                    'due_amount'       => 0,
+                    'due_date'         => now(),
+                    'payment_date'     => now(),
+                    'payment_status'   => FeeStatus::Paid,
+                    'payment_mode'     => strtolower($cashPaymentMethod->name),
+                    'remarks'          => 'Admission Fee paid during intake',
                 ]);
 
-                // 3. Create the Fee Payment Record (Transaction)
-                $paymentMethodName = $request->payment_mode ?? 'Cash';
-                $paymentMethod = PaymentMethod::where('school_id', $school->id)
-                    ->where('name', $paymentMethodName)
-                    ->first() ?? PaymentMethod::where('name', 'Cash')->first();
-
                 FeePayment::create([
-                    'school_id' => $school->id,
-                    'student_id' => $student->id,
-                    'fee_id' => $fee->id,
-                    'academic_year_id' => $student->academic_year_id,
-                    'amount' => $request->admission_fee,
-                    'payment_date' => now(),
-                    'payment_method_id' => $paymentMethod->id ?? 1,
-                    'receipt_no' => $request->receipt_no,
-                    'created_by' => Auth::id(),
+                    'school_id'         => $school->id,
+                    'student_id'        => $student->id,
+                    'fee_id'            => $fee->id,
+                    'academic_year_id'  => $student->academic_year_id,
+                    'amount'            => $request->admission_fee,
+                    'payment_date'      => now(),
+                    'payment_method_id' => $cashPaymentMethod->id,
+                    'receipt_no'        => $this->generateReceiptNumber($school->id),
+                    'created_by'        => Auth::id(),
                 ]);
             }
 
-            // --- FACILITY INTEGRATION ---
+            // --- FACILITY INTEGRATION (PHASE 2 PREP) ---
             if ($request->transport_route_id) {
-                $currentAcademicYear = AcademicYear::where('school_id', $school->id)
-                    ->where('is_current', true)->first();
-                if ($currentAcademicYear) {
-                    StudentTransportAssignment::create([
-                        'school_id'        => $school->id,
-                        'student_id'       => $student->id,
-                        'route_id'         => $request->transport_route_id,
-                        'academic_year_id' => $currentAcademicYear->id,
-                        'fee_per_month'    => 0,
-                    ]);
-                }
+                StudentTransportAssignment::create([
+                    'school_id'  => $school->id,
+                    'student_id' => $student->id,
+                    'route_id'   => $request->transport_route_id,
+                    'status'     => GeneralStatus::Active,
+                    'start_date' => now(),
+                ]);
+            }
+
+            if ($request->hostel_id && $request->hostel_room_id && $request->hostel_bed_id) {
+                HostelBedAssignment::create([
+                    'school_id'      => $school->id,
+                    'student_id'     => $student->id,
+                    'hostel_id'      => $request->hostel_id,
+                    'hostel_room_id' => $request->hostel_room_id,
+                    'hostel_bed_id'  => $request->hostel_bed_id,
+                    'status'         => GeneralStatus::Active,
+                    'start_date'     => now(),
+                ]);
             }
 
             // If linked to a registration, update its status and the underlying Enquiry
@@ -372,6 +393,7 @@ class AdmissionController extends TenantController
                     }
 
                     if ($registration->enquiry_id) {
+                        /** @var StudentEnquiry|null $enquiry */
                         $enquiry = StudentEnquiry::find($registration->enquiry_id);
                         if ($enquiry) {
                             $enquiry->update(['form_status' => EnquiryStatus::Admitted]);
@@ -381,10 +403,25 @@ class AdmissionController extends TenantController
             }
 
             DB::commit();
-            return redirect()->route('receptionist.admission.index')->with('success', 'Student admitted successfully and fee records generated.');
+
+            if (request()->expectsJson() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student admitted successfully.',
+                    'redirect' => route('receptionist.admission.index')
+                ]);
+            }
+            return redirect()->route('receptionist.admission.index')->with('success', 'Student admitted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             \Illuminate\Support\Facades\Log::error("Admission Error: " . $e->getMessage());
+
+            if (request()->expectsJson() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admission failed: ' . $e->getMessage()
+                ], 500);
+            }
             return back()->with('error', 'Error admitting student: ' . $e->getMessage())->withInput();
         }
     }
@@ -422,6 +459,8 @@ class AdmissionController extends TenantController
         $transportRoutes = TransportRoute::where('school_id', $this->getSchoolId())->get();
         $hostels = Hostel::where('school_id', $this->getSchoolId())->get();
 
+        $countries = $this->locationService->getCountries();
+
         return view('receptionist.admission.edit', compact(
             'student',
             'classes',
@@ -435,97 +474,50 @@ class AdmissionController extends TenantController
             'correspondingRelatives',
             'qualifications',
             'transportRoutes',
-            'hostels'
+            'hostels',
+            'countries'
         ));
     }
 
-    public function update(Request $request, Student $student)
+    public function update(UpdateAdmissionRequest $request, Student $student)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'class_id' => 'required|exists:classes,id',
-            'section_id' => 'required|exists:sections,id',
-            'academic_year_id' => 'required|exists:academic_years,id',
-            'admission_date' => 'required|date',
-            'gender' => ['required', 'integer', Rule::enum(Gender::class)],
-            'permanent_address' => 'required|string',
-            'permanent_country_id' => 'required|exists:countries,id',
-            'permanent_state_id' => 'required|exists:states,id',
-            'permanent_city_id' => 'required|exists:cities,id',
-            'correspondence_address' => 'required|string',
-            'correspondence_country_id' => 'nullable|exists:countries,id',
-            'correspondence_state_id' => 'nullable|exists:states,id',
-            'correspondence_city_id' => 'nullable|exists:cities,id',
-            'father_first_name' => 'required|string|max:255',
-            'father_last_name' => 'required|string|max:255',
-            'father_mobile' => 'required|string|max:20',
-            'mother_first_name' => 'required|string|max:255',
-            'mother_last_name' => 'required|string|max:255',
-            'mother_mobile' => 'required|string|max:20',
-            'roll_no' => 'required|string|max:255',
-            'receipt_no' => 'required|string|max:255',
-            'admission_fee' => 'required|numeric|min:0',
-            'student_photo' => 'nullable|image|max:2048',
-        ]);
+        // Authorization: ensure this student belongs to the current school.
+        // UpdateAdmissionRequest already validates all foreign keys are tenant-scoped.
+        $this->authorizeTenant($student);
+
+        $validated = $request->validated();
 
         DB::beginTransaction();
         try {
             // Exclude fields that don't exist in students table or need special handling
             $excludedFields = [
-                'student_photo',
-                'father_photo',
-                'mother_photo',
-                'student_signature',
-                'father_signature',
-                'mother_signature',
-                'father_first_name',
-                'father_middle_name',
-                'father_last_name',
-                'father_mobile_no',
-                'father_landline',
-                'father_landline_no',
-                'father_organization',
-                'father_office_address',
+                'student_photo', 'father_photo', 'mother_photo',
+                'student_signature', 'father_signature', 'mother_signature',
+                'father_first_name', 'father_middle_name', 'father_last_name',
+                'father_mobile_no', 'father_landline', 'father_landline_no',
+                'father_organization', 'father_office_address',
                 'father_designation',
-                'mother_first_name',
-                'mother_middle_name',
-                'mother_last_name',
-                'mother_mobile_no',
-                'mother_landline',
-                'mother_landline_no',
-                'mother_organization',
-                'mother_office_address',
+                'mother_first_name', 'mother_middle_name', 'mother_last_name',
+                'mother_mobile_no', 'mother_landline', 'mother_landline_no',
+                'mother_organization', 'mother_office_address',
                 'mother_designation',
-                'father_name_prefix',
-                'mother_name_prefix',
-                'registration_id',
-                'student_photo_path',
-                'father_photo_path',
-                'mother_photo_path',
-                'student_signature_path',
-                'father_signature_path',
-                'mother_signature_path'
+                'father_name_prefix', 'mother_name_prefix',
+                'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
+                'student_signature_path', 'father_signature_path', 'mother_signature_path'
             ];
-
+            
             $student->fill($request->except($excludedFields));
 
-            // Concatenate Father Name
-            $fatherName = trim($request->father_first_name . ' ' . $request->father_middle_name . ' ' . $request->father_last_name);
-            $student->father_name = $fatherName;
-
-            // Concatenate Mother Name
-            $motherName = trim($request->mother_first_name . ' ' . $request->mother_middle_name . ' ' . $request->mother_last_name);
-            $student->mother_name = $motherName;
+            $student->father_name = trim(implode(' ', array_filter([$request->father_first_name, $request->father_middle_name, $request->father_last_name])));
+            $student->mother_name = trim(implode(' ', array_filter([$request->mother_first_name, $request->mother_middle_name, $request->mother_last_name])));
 
             // Handle Student Photo
             if ($request->hasFile('student_photo')) {
-                if ($student->photo) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo);
+                if ($student->student_photo) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->student_photo);
                 }
                 $path = $request->file('student_photo')->store('student_photos', 'public');
-                $student->photo = $path;
+                $student->student_photo = $path;
             }
 
             // Handle Father Photo
@@ -564,18 +556,18 @@ class AdmissionController extends TenantController
 
             // Handle Student Signature
             if ($request->hasFile('student_signature')) {
-                if ($student->signature) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->signature);
+                if ($student->student_signature) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->student_signature);
                 }
                 $path = $request->file('student_signature')->store('student_signatures', 'public');
-                $student->signature = $path;
+                $student->student_signature = $path;
             } elseif ($request->filled('student_signature_path')) {
                 $sourcePath = $request->student_signature_path;
                 if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
                     $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
                     $newPath = 'student_signatures/' . Str::random(40) . '.' . $extension;
                     \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->signature = $newPath;
+                    $student->student_signature = $newPath;
                 }
             }
 
@@ -616,9 +608,26 @@ class AdmissionController extends TenantController
             $student->save();
 
             DB::commit();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student details updated successfully.',
+                    'redirect' => route('receptionist.admission.index')
+                ]);
+            }
+
             return redirect()->route('receptionist.admission.index')->with('success', 'Student details updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Update failed: ' . $e->getMessage()
+                ], 500);
+            }
+
             return back()->with('error', 'Error updating student: ' . $e->getMessage())->withInput();
         }
     }
@@ -626,9 +635,33 @@ class AdmissionController extends TenantController
     public function destroy(Student $student)
     {
         $this->authorizeTenant($student);
-        // Soft-delete preserves fee, attendance, and assignment history
-        $student->delete();
-        return redirect()->route('receptionist.admission.index')->with('success', 'Student record archived successfully.');
+        try {
+            if ($student->fees()->whereHas('payments')->exists()) {
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Cannot delete student with existing fee payment records.'], 422);
+                }
+                return redirect()->route('receptionist.admission.index')->with('error', 'Cannot delete student with existing fee payment records.');
+            }
+
+            $student->delete(); // soft delete
+
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Student record deleted successfully.'
+                ]);
+            }
+
+            return redirect()->route('receptionist.admission.index')->with('success', 'Student record deleted successfully.');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Deletion failed: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->route('receptionist.admission.index')->with('error', 'Deletion failed: ' . $e->getMessage());
+        }
     }
 
     public function getClassData($classId)
@@ -683,23 +716,4 @@ class AdmissionController extends TenantController
         return $pdf->download('student-admission-' . $student->admission_no . '.pdf');
     }
 
-    /**
-     * Generate a sequential bill number with an atomic lock
-     */
-    private function generateBillNumber(int $schoolId): string
-    {
-        return Cache::lock("bill_no_generation_{$schoolId}", 10)->block(5, function () use ($schoolId) {
-            $lastFee = Fee::where('school_id', $schoolId)
-                ->where('bill_no', 'like', 'BILL-%')
-                ->latest()
-                ->first();
-
-            $nextNumber = 1;
-            if ($lastFee && preg_match('/BILL-(\d+)/', $lastFee->bill_no, $matches)) {
-                $nextNumber = intval($matches[1]) + 1;
-            }
-
-            return 'BILL-' . str_pad($nextNumber, 8, '0', STR_PAD_LEFT);
-        });
-    }
 }

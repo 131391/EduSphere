@@ -402,8 +402,8 @@
     {{-- ── Student Hero Row ── --}}
     <div class="hero">
         <div class="hero-photo">
-            @if($student->photo)
-                <img src="{{ public_path('storage/' . $student->photo) }}" alt="Photo">
+            @if($student->student_photo)
+                <img src="{{ public_path('storage/' . $student->student_photo) }}" alt="Photo">
             @else
                 <div class="hero-photo-placeholder">&#128100;</div>
             @endif
@@ -429,7 +429,7 @@
                 </div>
                 <div class="hero-quick-cell">
                     <div class="quick-label">Date of Birth</div>
-                    <div class="quick-value">{{ $student->date_of_birth?->format('d M Y') ?? 'N/A' }}</div>
+                    <div class="quick-value">{{ $student->dob?->format('d M Y') ?? 'N/A' }}</div>
                 </div>
                 <div class="hero-quick-cell">
                     <div class="quick-label">Blood Group</div>
@@ -455,7 +455,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label">Date of Birth</div>
-                        <div class="info-value">{{ $student->date_of_birth?->format('d F Y') ?? 'N/A' }}</div>
+                        <div class="info-value">{{ $student->dob?->format('d F Y') ?? 'N/A' }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Blood Group</div>
@@ -473,7 +473,7 @@
                 <div class="info-col">
                     <div class="info-row">
                         <div class="info-label">Mobile</div>
-                        <div class="info-value">{{ $student->phone ?? 'N/A' }}</div>
+                        <div class="info-value">{{ $student->mobile_no ?? 'N/A' }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Email</div>
@@ -514,7 +514,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label">Mobile</div>
-                        <div class="info-value">{{ $student->father_mobile ?? 'N/A' }}</div>
+                        <div class="info-value">{{ $student->father_mobile_no ?? 'N/A' }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Email</div>
@@ -538,7 +538,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label">Mobile</div>
-                        <div class="info-value">{{ $student->mother_mobile ?? 'N/A' }}</div>
+                        <div class="info-value">{{ $student->mother_mobile_no ?? 'N/A' }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Email</div>
@@ -601,14 +601,14 @@
     </div>
 
     {{-- ── Photos ── --}}
-    @if($student->photo || $student->father_photo || $student->mother_photo)
+    @if($student->student_photo || $student->father_photo || $student->mother_photo)
     <div class="section">
         <div class="section-header">Photographs</div>
         <div class="section-body">
             <div class="photos-row">
                 <div class="photo-cell">
-                    @if($student->photo)
-                        <img src="{{ public_path('storage/' . $student->photo) }}" alt="Student">
+                    @if($student->student_photo)
+                        <img src="{{ public_path('storage/' . $student->student_photo) }}" alt="Student">
                     @else
                         <div class="photo-placeholder">&#128100;</div>
                     @endif
@@ -646,8 +646,8 @@
         <div class="section-body">
             <div class="sig-row">
                 <div class="sig-cell">
-                    @if($student->signature)
-                        <img src="{{ public_path('storage/' . $student->signature) }}" alt="Student Signature">
+                    @if($student->student_signature)
+                        <img src="{{ public_path('storage/' . $student->student_signature) }}" alt="Student Signature">
                     @else
                         <div class="sig-line"></div>
                     @endif

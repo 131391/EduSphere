@@ -35,8 +35,8 @@
                 {{-- Photo --}}
                 <div class="shrink-0">
                     <div class="w-28 h-28 rounded-2xl border-4 border-white dark:border-gray-700 shadow-md overflow-hidden bg-gray-100 dark:bg-gray-700">
-                        @if($student->photo)
-                            <img src="{{ asset('storage/' . $student->photo) }}"
+                        @if($student->student_photo)
+                            <img src="{{ asset('storage/' . $student->student_photo) }}"
                                  alt="{{ $student->full_name }}"
                                  class="w-full h-full object-cover">
                         @else
@@ -93,7 +93,7 @@
                     <div class="flex flex-wrap justify-center sm:justify-start gap-6 text-sm text-gray-500 dark:text-gray-400">
                         <span class="flex items-center gap-1.5">
                             <i class="fas fa-birthday-cake text-gray-400 text-xs"></i>
-                            {{ $student->date_of_birth?->format('d M Y') ?? 'N/A' }}
+                            {{ $student->dob?->format('d M Y') ?? 'N/A' }}
                         </span>
                         <span class="flex items-center gap-1.5">
                             <i class="fas fa-venus-mars text-gray-400 text-xs"></i>
@@ -105,10 +105,10 @@
                             {{ $student->blood_group }}
                         </span>
                         @endif
-                        @if($student->phone)
+                        @if($student->mobile_no)
                         <span class="flex items-center gap-1.5">
                             <i class="fas fa-phone text-gray-400 text-xs"></i>
-                            {{ $student->phone }}
+                            {{ $student->mobile_no }}
                         </span>
                         @endif
                         <span class="flex items-center gap-1.5">
@@ -137,10 +137,10 @@
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-user',        'label' => 'Full Name',            'value' => $student->full_name])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-birthday-cake','label' => 'Date of Birth',       'value' => $student->date_of_birth?->format('d F Y') ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-birthday-cake','label' => 'Date of Birth',       'value' => $student->dob?->format('d F Y') ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-venus-mars',  'label' => 'Gender',               'value' => $student->gender_label])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-tint',        'label' => 'Blood Group',          'value' => $student->blood_group ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',               'value' => $student->phone ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',               'value' => $student->mobile_no ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',                'value' => $student->email ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-pray',        'label' => 'Religion',             'value' => $student->religion ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-layer-group', 'label' => 'Category',             'value' => $student->category ?? 'N/A'])
@@ -159,7 +159,7 @@
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-user',        'label' => 'Name',          'value' => $student->father_name])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',        'value' => $student->father_mobile ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',        'value' => $student->father_mobile_no ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',         'value' => $student->father_email ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-briefcase',   'label' => 'Occupation',    'value' => $student->father_occupation ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification','value' => $student->father_qualification ?? 'N/A'])
@@ -176,7 +176,7 @@
                 </div>
                 <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-user',        'label' => 'Name',          'value' => $student->mother_name])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',        'value' => $student->mother_mobile ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',        'value' => $student->mother_mobile_no ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',         'value' => $student->mother_email ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-briefcase',   'label' => 'Occupation',    'value' => $student->mother_occupation ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification','value' => $student->mother_qualification ?? 'N/A'])
@@ -258,7 +258,7 @@
                 </div>
                 <div class="p-5 grid grid-cols-3 gap-3">
                     @foreach([
-                        ['photo' => $student->photo,        'label' => 'Student'],
+                        ['photo' => $student->student_photo,        'label' => 'Student'],
                         ['photo' => $student->father_photo, 'label' => 'Father'],
                         ['photo' => $student->mother_photo, 'label' => 'Mother'],
                     ] as $item)
@@ -290,7 +290,7 @@
                 </div>
                 <div class="p-5 space-y-4">
                     @foreach([
-                        ['sig' => $student->signature,        'label' => 'Student'],
+                        ['sig' => $student->student_signature,        'label' => 'Student'],
                         ['sig' => $student->father_signature, 'label' => 'Father'],
                         ['sig' => $student->mother_signature, 'label' => 'Mother'],
                     ] as $item)

@@ -29,8 +29,8 @@ return new class extends Migration
             $table->unsignedInteger('city_id')->nullable();
             $table->string('zip_code')->nullable();
             $table->text('address')->nullable();
-            $table->string('aadhar_no')->nullable();
-            $table->string('aadhar_card')->nullable()->comment('Aadhar card file path');
+            $table->string('aadhaar_no')->nullable();
+            $table->string('aadhaar_card')->nullable()->comment('Aadhaar card file path');
             $table->string('staff_image')->nullable()->comment('Staff photo file path');
             $table->date('joining_date')->nullable();
             $table->foreignId('higher_qualification_id')->nullable()->constrained('qualifications')->onDelete('set null');

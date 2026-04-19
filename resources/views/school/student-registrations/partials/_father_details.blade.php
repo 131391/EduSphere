@@ -199,14 +199,14 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Father Aadhar No
+                    Father Aadhaar No
                 </label>
-                <input type="text" name="father_aadhar_no" x-model="formData.father_aadhar_no" placeholder="Enter Father Aadhar No"
-                       @input="clearError('father_aadhar_no')"
+                <input type="text" name="father_aadhaar_no" x-model="formData.father_aadhaar_no" placeholder="Enter Father Aadhaar No"
+                       @input="clearError('father_aadhaar_no')"
                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                       :class="errors.father_aadhar_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
-                <template x-if="errors.father_aadhar_no">
-                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.father_aadhar_no[0]"></p>
+                       :class="errors.father_aadhaar_no ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                <template x-if="errors.father_aadhaar_no">
+                    <p class="text-red-500 text-[10px] font-bold mt-1 uppercase tracking-tight" x-text="errors.father_aadhaar_no[0]"></p>
                 </template>
             </div>
 

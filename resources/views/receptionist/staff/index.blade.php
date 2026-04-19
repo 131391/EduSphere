@@ -587,41 +587,41 @@
                     </template>
                 </div>
 
-                <!-- Aadhar Number -->
+                <!-- Aadhaar Number -->
                 <div class="space-y-2 mb-6">
-                    <label class="modal-label-premium">Aadhar Card Number</label>
+                    <label class="modal-label-premium">Aadhaar Card Number</label>
                     <div class="relative group">
-                        <input type="text" name="aadhar_no" x-model="formData.aadhar_no"
-                            @input="clearError('aadhar_no')" placeholder="12-digit Aadhar number"
-                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.aadhar_no}">
+                        <input type="text" name="aadhaar_no" x-model="formData.aadhaar_no"
+                            @input="clearError('aadhaar_no')" placeholder="12-digit Aadhaar number"
+                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.aadhaar_no}">
                     </div>
-                    <template x-if="errors.aadhar_no">
-                        <p class="modal-error-message" x-text="errors.aadhar_no[0]"></p>
+                    <template x-if="errors.aadhaar_no">
+                        <p class="modal-error-message" x-text="errors.aadhaar_no[0]"></p>
                     </template>
                 </div>
 
                 <div class="grid grid-cols-2 gap-6 mb-6">
-                    <!-- Aadhar Card Upload -->
+                    <!-- Aadhaar Card Upload -->
                     <div class="space-y-2">
-                        <label class="modal-label-premium">Aadhar Card Document</label>
+                        <label class="modal-label-premium">Aadhaar Card Document</label>
                         <div class="relative group">
                             <div class="flex items-center gap-4">
                                 <div class="w-20 h-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
-                                    <img :src="formData.aadhar_card_preview" x-show="formData.aadhar_card_preview" class="w-full h-full object-cover">
-                                    <i x-show="!formData.aadhar_card_preview" class="fas fa-id-card text-xl text-slate-300"></i>
+                                    <img :src="formData.aadhaar_card_preview" x-show="formData.aadhaar_card_preview" class="w-full h-full object-cover">
+                                    <i x-show="!formData.aadhaar_card_preview" class="fas fa-id-card text-xl text-slate-300"></i>
                                 </div>
                                 <div class="flex-1">
                                     <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm">
                                         <i class="fas fa-upload mr-2 text-slate-400"></i> Choose File
-                                        <input type="file" x-ref="aadharCardInput" accept=".pdf,.jpg,.jpeg,.png"
-                                            @change="previewAadharCard($event); clearError('aadhar_card')" class="hidden">
+                                        <input type="file" x-ref="aadhaarCardInput" accept=".pdf,.jpg,.jpeg,.png"
+                                            @change="previewAadhaarCard($event); clearError('aadhaar_card')" class="hidden">
                                     </label>
                                     <p class="text-[10px] text-slate-400 mt-1">PDF, JPG, PNG (max 2MB)</p>
                                 </div>
                             </div>
                         </div>
-                        <template x-if="errors.aadhar_card">
-                            <p class="modal-error-message" x-text="errors.aadhar_card[0]"></p>
+                        <template x-if="errors.aadhaar_card">
+                            <p class="modal-error-message" x-text="errors.aadhaar_card[0]"></p>
                         </template>
                     </div>
 
@@ -707,8 +707,8 @@ document.addEventListener('alpine:init', () => {
             city_id: '',
             zip_code: '',
             address: '',
-            aadhar_no: '',
-            aadhar_card_preview: '',
+            aadhaar_no: '',
+            aadhaar_card_preview: '',
             staff_image_preview: '',
             joining_date: '',
             higher_qualification_id: '',
@@ -765,7 +765,7 @@ document.addEventListener('alpine:init', () => {
                     'post', 'class_id', 'section_id', 'name', 'mobile', 'email',
                     'gender', 'total_experience', 'previous_school_salary', 'current_salary',
                     'country_id', 'state_id', 'city_id', 'zip_code', 'address',
-                    'aadhar_no', 'joining_date', 'higher_qualification_id', 'previous_school_company_name'
+                    'aadhaar_no', 'joining_date', 'higher_qualification_id', 'previous_school_company_name'
                 ];
                 
                 fields.forEach(f => {
@@ -774,7 +774,7 @@ document.addEventListener('alpine:init', () => {
                     }
                 });
 
-                if (this.$refs.aadharCardInput?.files.length) fd.append('aadhar_card', this.$refs.aadharCardInput.files[0]);
+                if (this.$refs.aadhaarCardInput?.files.length) fd.append('aadhaar_card', this.$refs.aadhaarCardInput.files[0]);
                 if (this.$refs.staffImageInput?.files.length) fd.append('staff_image', this.$refs.staffImageInput.files[0]);
 
                 const response = await fetch(url, {
@@ -891,11 +891,11 @@ document.addEventListener('alpine:init', () => {
                 .catch(err => console.error('Section fetch failed:', err));
         },
 
-        previewAadharCard(e) {
+        previewAadhaarCard(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => this.formData.aadhar_card_preview = ev.target.result;
+            reader.onload = (ev) => this.formData.aadhaar_card_preview = ev.target.result;
             reader.readAsDataURL(file);
         },
 
@@ -914,13 +914,13 @@ document.addEventListener('alpine:init', () => {
             this.formData = {
                 post: '', class_id: '', section_id: '', name: '', mobile: '', email: '', gender: '',
                 total_experience: '', previous_school_salary: '', current_salary: '', country_id: '',
-                state_id: '', city_id: '', zip_code: '', address: '', aadhar_no: '',
-                aadhar_card_preview: '', staff_image_preview: '', joining_date: '',
+                state_id: '', city_id: '', zip_code: '', address: '', aadhaar_no: '',
+                aadhaar_card_preview: '', staff_image_preview: '', joining_date: '',
                 higher_qualification_id: '', previous_school_company_name: '',
             };
             this.sections = [];
             this.errors = {};
-            if (this.$refs.aadharCardInput) this.$refs.aadharCardInput.value = '';
+            if (this.$refs.aadhaarCardInput) this.$refs.aadhaarCardInput.value = '';
             if (this.$refs.staffImageInput) this.$refs.staffImageInput.value = '';
         }
     }));

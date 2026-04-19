@@ -3,7 +3,7 @@
 @section('title', 'Admission Confirmation Ledger')
 
 @section('content')
-    <div x-data="ajaxDataTable({
+    <div x-data="Object.assign(ajaxDataTable({
         fetchUrl: '{{ route('receptionist.admission.fetch') }}',
         defaultSort: 'created_at',
         defaultDirection: 'desc',
@@ -20,7 +20,7 @@
                 @foreach($sections as $s) '{{ $s->id }}': '{{ $s->name }}', @endforeach
             }
         }
-    })" class="space-y-6">
+    }), admissionConfirmation())" class="space-y-6">
         
         <!-- Institutional Analytics -->
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -131,8 +131,8 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm relative">
-                                        @if($row['photo'])
-                                            <img src="{{ $row['photo'] }}" class="w-full h-full object-cover">
+                                        @if($row['student_photo'])
+                                            <img src="{{ $row['student_photo'] }}" class="w-full h-full object-cover">
                                         @else
                                             <div class="w-full h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs">{{ $row['initials'] }}</div>
                                         @endif
@@ -154,7 +154,7 @@
                                     <div class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ $row['father_name'] }}</div>
                                     <div class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-medium">
                                         <i class="fas fa-phone-alt text-[8px] text-teal-500"></i>
-                                        {{ $row['phone'] }}
+                                        {{ $row['mobile_no'] }}
                                     </div>
                                 </div>
                             </td>
@@ -192,10 +192,10 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm relative">
-                                            <template x-if="row.photo">
-                                                <img :src="row.photo" class="w-full h-full object-cover">
+                                            <template x-if="row.student_photo">
+                                                <img :src="row.student_photo" class="w-full h-full object-cover">
                                             </template>
-                                            <template x-if="!row.photo">
+                                            <template x-if="!row.student_photo">
                                                 <div class="w-full h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs" x-text="row.initials"></div>
                                             </template>
                                         </div>
@@ -216,7 +216,7 @@
                                         <div class="text-xs font-bold text-gray-700 dark:text-gray-200" x-text="row.father_name"></div>
                                         <div class="flex items-center gap-1.5 text-[10px] text-gray-400 tabular-nums font-medium">
                                             <i class="fas fa-phone-alt text-[8px] text-teal-500"></i>
-                                            <span x-text="row.phone"></span>
+                                            <span x-text="row.mobile_no"></span>
                                         </div>
                                     </div>
                                 </td>
@@ -264,4 +264,44 @@
     </div>
 @endsection
 
+@push('scripts')
+<script>
+    function admissionConfirmation() {
+        return {
+            async quickAction(url, title, method = 'POST', message = 'Are you sure you want to proceed with this action?') {
+                const self = this;
+                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                    detail: {
+                        title: title,
+                        message: message,
+                        callback: async () => {
+                            try {
+                                const response = await fetch(url, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({ _method: method })
+                                });
 
+                                const result = await response.json();
+
+                                if (response.ok) {
+                                    if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Action completed successfully' });
+                                    if (typeof self.refreshTable === 'function') self.refreshTable();
+                                } else {
+                                    if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Action failed' });
+                                }
+                            } catch (error) {
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });
+                            }
+                        }
+                    }
+                }));
+            }
+        }
+    }
+</script>
+@endpush

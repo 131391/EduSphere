@@ -132,7 +132,7 @@
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-envelope',     'label' => 'Email',       'value' => $studentRegistration->email ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-pray',         'label' => 'Religion',    'value' => $studentRegistration->religion ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-layer-group',  'label' => 'Category',    'value' => $studentRegistration->category ?? 'N/A'])
-                    @include('school.admission.partials._detail_row', ['icon' => 'fa-id-badge',     'label' => 'Aadhaar No',  'value' => $studentRegistration->aadhar_no ?? 'N/A'])
+                    @include('school.admission.partials._detail_row', ['icon' => 'fa-id-badge',     'label' => 'Aadhaar No',  'value' => $studentRegistration->aadhaar_no ?? 'N/A'])
                     @include('school.admission.partials._detail_row', ['icon' => 'fa-globe',        'label' => 'Nationality', 'value' => $studentRegistration->nationality ?? 'N/A'])
                 </div>
             </div>

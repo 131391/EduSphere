@@ -110,15 +110,15 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm">
-                                            @if($row['photo'])
-                                                <img src="{{ $row['photo'] }}" class="w-full h-full object-cover">
+                                            @if($row['student_photo'])
+                                                <img src="{{ $row['student_photo'] }}" class="w-full h-full object-cover">
                                             @else
                                                 <div class="w-full h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs uppercase">{{ $row['initials'] }}</div>
                                             @endif
                                         </div>
                                         <div>
                                             <div class="text-sm font-bold text-gray-800 dark:text-gray-100 group-hover:text-teal-600 transition-colors">{{ $row['full_name'] }}</div>
-                                            <div class="text-[10px] font-medium text-gray-400 italic">Contact: {{ $row['phone'] }}</div>
+                                            <div class="text-[10px] font-medium text-gray-400 italic">Contact: {{ $row['mobile_no'] }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -165,16 +165,16 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm relative">
-                                            <template x-if="row.photo">
-                                                <img :src="row.photo" class="w-full h-full object-cover">
+                                            <template x-if="row.student_photo">
+                                                <img :src="row.student_photo" class="w-full h-full object-cover">
                                             </template>
-                                            <template x-if="!row.photo">
+                                            <template x-if="!row.student_photo">
                                                 <div class="w-full h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs uppercase" x-text="row.initials"></div>
                                             </template>
                                         </div>
                                         <div>
                                             <div class="text-sm font-bold text-gray-800 dark:text-gray-100 group-hover:text-teal-600 transition-colors" x-text="row.full_name"></div>
-                                            <div class="text-[10px] font-medium text-gray-400 italic" x-text="'Contact: ' + row.phone"></div>
+                                            <div class="text-[10px] font-medium text-gray-400 italic" x-text="'Contact: ' + row.mobile_no"></div>
                                         </div>
                                     </div>
                                 </td>

@@ -34,7 +34,7 @@ class Student extends Model
         'last_name',
         'father_name',
         'mother_name',
-        'date_of_birth',
+        'dob',
         'gender',
         'blood_group',
         'religion',
@@ -47,12 +47,12 @@ class Student extends Model
         'permanent_pin',
         'latitude',
         'longitude',
-        'phone',
+        'mobile_no',
         'email',
-        'photo',
+        'student_photo',
         'father_photo',
         'mother_photo',
-        'signature',
+        'student_signature',
         'father_signature',
         'mother_signature',
         'class_id',
@@ -72,21 +72,21 @@ class Student extends Model
         'number_of_sisters',
         'is_single_parent',
         'corresponding_relative',
-        'transport_required',
+        'is_transport_required',
         'bus_stop',
         'other_stop',
         'boarding_type',
-        'father_aadhaar',
+        'father_aadhaar_no',
         'father_pan',
         'father_email',
-        'father_mobile',
+        'father_mobile_no',
         'father_occupation',
         'father_qualification',
         'father_annual_income',
-        'mother_aadhaar',
+        'mother_aadhaar_no',
         'mother_pan',
         'mother_email',
-        'mother_mobile',
+        'mother_mobile_no',
         'mother_occupation',
         'mother_qualification',
         'mother_annual_income',
@@ -102,7 +102,7 @@ class Student extends Model
     ];
 
     protected $casts = [
-        'date_of_birth' => 'date',
+        'dob' => 'date',
         'admission_date' => 'date',
         'additional_info' => 'array',
         'permanent_country_id' => 'integer',
@@ -114,7 +114,7 @@ class Student extends Model
         'status' => StudentStatus::class,
         'gender' => Gender::class,
         'is_single_parent' => YesNo::class,
-        'transport_required' => YesNo::class,
+        'is_transport_required' => YesNo::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -251,7 +251,7 @@ class Student extends Model
     {
         $parts = explode(' ', $fullName);
         $count = count($parts);
-        
+
         if ($count === 1) {
             return ['first' => $parts[0], 'middle' => '', 'last' => ''];
         } elseif ($count === 2) {
@@ -264,50 +264,50 @@ class Student extends Model
         }
     }
 
-    public function getFatherFirstNameAttribute()
+    public function getFatherFirstNameAttribute(): string
     {
         return $this->splitName($this->father_name)['first'];
     }
 
-    public function getFatherMiddleNameAttribute()
+    public function getFatherMiddleNameAttribute(): string
     {
         return $this->splitName($this->father_name)['middle'];
     }
 
-    public function getFatherLastNameAttribute()
+    public function getFatherLastNameAttribute(): string
     {
         return $this->splitName($this->father_name)['last'];
     }
 
-    public function getMotherFirstNameAttribute()
+    public function getMotherFirstNameAttribute(): string
     {
         return $this->splitName($this->mother_name)['first'];
     }
 
-    public function getMotherMiddleNameAttribute()
+    public function getMotherMiddleNameAttribute(): string
     {
         return $this->splitName($this->mother_name)['middle'];
     }
 
-    public function getMotherLastNameAttribute()
+    public function getMotherLastNameAttribute(): string
     {
         return $this->splitName($this->mother_name)['last'];
     }
 
     public function getGenderLabelAttribute()
     {
-        if ($this->gender instanceof \App\Enums\Gender) {
+        if ($this->gender instanceof Gender) {
             return $this->gender->label();
         }
-        
+
         if ($this->gender === null) {
             return 'Not Specified';
         }
-        
+
         // Handle legacy integer values
-        $genderValue = (int)$this->gender;
-        
-        return match($genderValue) {
+        $genderValue = (int) $this->gender;
+
+        return match ($genderValue) {
             1 => 'Male',
             2 => 'Female',
             3 => 'Other',

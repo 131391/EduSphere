@@ -42,6 +42,7 @@ Route::get('visitors-export', [VisitorController::class, 'export'])->name('visit
 // Student Enquiry Management
 Route::get('student-enquiries', [StudentEnquiryController::class, 'index'])->name('student-enquiries.index');
 Route::post('student-enquiries/fetch', [StudentEnquiryController::class, 'index'])->name('student-enquiries.fetch');
+Route::patch('student-enquiries/{studentEnquiry}/status', [StudentEnquiryController::class, 'updateStatus'])->name('student-enquiries.update-status');
 Route::resource('student-enquiries', StudentEnquiryController::class)->except(['index']);
 
 // Student Registration Management

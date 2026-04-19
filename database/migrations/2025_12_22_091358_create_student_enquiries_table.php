@@ -59,7 +59,7 @@ return new class extends Migration
             
             // Personal Details
             $table->date('dob')->nullable();
-            $table->string('aadhar_no')->nullable();
+            $table->string('aadhaar_no')->nullable();
             $table->string('grand_father_name')->nullable();
             $table->decimal('annual_income', 12, 2)->nullable();
             $table->integer('no_of_brothers')->default(0);

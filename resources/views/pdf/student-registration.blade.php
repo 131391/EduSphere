@@ -428,7 +428,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label">Aadhaar No</div>
-                        <div class="info-value muted">{{ $studentRegistration->aadhar_no ?? 'N/A' }}</div>
+                        <div class="info-value muted">{{ $studentRegistration->aadhaar_no ?? 'N/A' }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Applied Class</div>

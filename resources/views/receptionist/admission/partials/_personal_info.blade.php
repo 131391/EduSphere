@@ -66,11 +66,11 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Date of Birth <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="date_of_birth" x-model="formData.date_of_birth" @input="clearError('date_of_birth')"
+                        <input type="date" name="dob" x-model="formData.dob" @input="clearError('dob')"
                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                               :class="errors.date_of_birth ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'">
-                        <template x-if="errors.date_of_birth">
-                            <p class="text-red-500 text-xs mt-1" x-text="errors.date_of_birth[0]"></p>
+                               :class="errors.dob ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.dob">
+                            <p class="text-red-500 text-xs mt-1" x-text="errors.dob[0]"></p>
                         </template>
                     </div>
 
@@ -87,13 +87,13 @@
                             Mobile No <span class="text-red-500">*</span>
                         </label>
                         <x-phone-input 
-                            name="phone" 
-                            x-model="formData.phone"
-                            @input="clearError('phone')"
-                            :value="isset($student) ? $student->phone : ''" 
+                            name="mobile_no" 
+                            x-model="formData.mobile_no"
+                            @input="clearError('mobile_no')"
+                            :value="isset($student) ? $student->mobile_no : ''" 
                         />
-                        <template x-if="errors.phone">
-                            <p class="text-red-500 text-xs mt-1" x-text="errors.phone[0]"></p>
+                        <template x-if="errors.mobile_no">
+                            <p class="text-red-500 text-xs mt-1" x-text="errors.mobile_no[0]"></p>
                         </template>
                     </div>
 

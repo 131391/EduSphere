@@ -84,11 +84,11 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Mobile No <span class="text-red-500">*</span>
                         </label>
-                        <input type="tel" name="mother_mobile" x-model="formData.mother_mobile" @input="clearError('mother_mobile')" placeholder="Enter Mobile No" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        <input type="tel" name="mother_mobile_no" x-model="formData.mother_mobile_no" @input="clearError('mother_mobile_no')" placeholder="Enter Mobile No" pattern="[0-9]{10,15}" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white"
-                               :class="errors.mother_mobile ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'">
-                        <template x-if="errors.mother_mobile">
-                            <p class="text-red-500 text-xs mt-1" x-text="errors.mother_mobile[0]"></p>
+                               :class="errors.mother_mobile_no ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'">
+                        <template x-if="errors.mother_mobile_no">
+                            <p class="text-red-500 text-xs mt-1" x-text="errors.mother_mobile_no[0]"></p>
                         </template>
                     </div>
 
@@ -124,7 +124,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Aadhaar No
                         </label>
-                        <input type="text" name="mother_aadhaar" x-model="formData.mother_aadhaar" placeholder="Enter Aadhaar No"
+                        <input type="text" name="mother_aadhaar_no" x-model="formData.mother_aadhaar_no" placeholder="Enter Aadhaar No"
                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                     </div>
 

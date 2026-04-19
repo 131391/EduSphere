@@ -46,7 +46,7 @@
 
                 <div>
                     <label for="phone" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Phone Number</label>
-                    <input type="text" name="phone" id="phone" value="{{ old('phone', $student->phone) }}"
+                    <input type="text" name="mobile_no" id="phone" value="{{ old('mobile_no', $student->mobile_no) }}"
                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 @error('phone') border-red-500 @enderror">
                     @error('phone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>

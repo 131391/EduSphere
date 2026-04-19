@@ -206,7 +206,7 @@ function enquiryManagement() {
             twitter_id: '{{ old('twitter_id') }}',
             emergency_contact_no: '{{ old('emergency_contact_no') }}',
             dob: '{{ old('dob') }}',
-            aadhar_no: '{{ old('aadhar_no') }}',
+            aadhaar_no: '{{ old('aadhaar_no') }}',
             grand_father_name: '{{ old('grand_father_name') }}',
             annual_income: '{{ old('annual_income') }}',
             no_of_brothers: '{{ old('no_of_brothers', 0) }}',
@@ -340,7 +340,7 @@ function enquiryManagement() {
 
             const step1Fields = ['academic_year_id','class_id','student_name','gender','subject_name','follow_up_date'];
             const step2Fields = Object.keys(errors).filter(f => f.startsWith('father_') || f.startsWith('mother_'));
-            const step3Fields = ['contact_no','whatsapp_no','email_id','country_id','dob','aadhar_no','category','religion'];
+            const step3Fields = ['contact_no','whatsapp_no','email_id','country_id','dob','aadhaar_no','category','religion'];
             const step4Fields = ['student_photo','father_photo','mother_photo'];
 
             if (Object.keys(errors).some(f => step1Fields.includes(f))) { this.currentStep = 1; return; }

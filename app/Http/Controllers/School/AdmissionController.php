@@ -34,10 +34,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Traits\HasAjaxDataTable;
+use App\Services\LocationService;
 
 class AdmissionController extends TenantController
 {
     use HandlesFileCopies, HasAjaxDataTable, \App\Traits\HandlesFinancialNumbers;
+
+    public function __construct(protected LocationService $locationService)
+    {
+        parent::__construct();
+    }
 
     public function index(Request $request)
     {
@@ -50,20 +56,19 @@ class AdmissionController extends TenantController
                 'registration_no' => $student->registration_no ?? 'N/A',
                 'full_name' => $student->full_name,
                 'initials' => collect(explode(' ', $student->full_name))->map(fn($n) => mb_substr($n, 0, 1))->take(2)->join(''),
-                'phone' => $student->phone,
+                'mobile_no' => $student->mobile_no,
                 'email' => $student->email ?? 'N/A',
                 'father_name' => $student->father_name,
                 'class_name' => $student->class?->name ?? 'N/A',
                 'section_name' => $student->section?->name ?? 'A',
                 'admission_date' => $student->admission_date ? $student->admission_date->format('d M, Y') : 'N/A',
-                'photo' => $student->photo ? asset('storage/' . $student->photo) : null,
+                'student_photo' => $student->student_photo ? asset('storage/' . $student->student_photo) : null,
                 'status_label' => $student->status?->label() ?? 'Active',
                 'status_color' => 'teal',
             ];
         };
 
-        $query = Student::where('school_id', $schoolId)
-            ->with(['class', 'section']);
+        $query = Student::where('school_id', $schoolId)->with(['class', 'section']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -71,7 +76,8 @@ class AdmissionController extends TenantController
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('admission_no', 'like', "%{$search}%")
-                    ->orWhere('father_name', 'like', "%{$search}%");
+                    ->orWhere('father_name', 'like', "%{$search}%")
+                    ->orWhere('mobile_no', 'like', "%{$search}%");
             });
         }
 
@@ -135,7 +141,7 @@ class AdmissionController extends TenantController
                     $student->father_name,
                     $student->class?->name ?? 'N/A',
                     $student->section?->name ?? 'N/A',
-                    $student->phone,
+                    $student->mobile_no,
                     $student->admission_date ? $student->admission_date->format('Y-m-d') : 'N/A'
                 ]);
             });
@@ -171,10 +177,12 @@ class AdmissionController extends TenantController
         $lastStudent = Student::where('school_id', $this->getSchoolId())->latest()->first();
         $nextAdmissionNo = $lastStudent ? (intval($lastStudent->admission_no) + 1) : 100001;
 
+        $countries = $this->locationService->getCountries();
+
         return view('school.admission.create', compact(
-            'classes', 
-            'sections', 
-            'academicYears', 
+            'classes',
+            'sections',
+            'academicYears',
             'nextAdmissionNo',
             'registrations',
             'bloodGroups',
@@ -184,7 +192,8 @@ class AdmissionController extends TenantController
             'correspondingRelatives',
             'qualifications',
             'transportRoutes',
-            'hostels'
+            'hostels',
+            'countries'
         ));
     }
 
@@ -221,7 +230,7 @@ class AdmissionController extends TenantController
                 'password' => Hash::make($tempPassword),
                 'role_id'  => $studentRole ? $studentRole->id : null,
                 'school_id' => $school->id,
-                'phone'    => $request->phone,
+                'phone'    => $request->mobile_no,
                 'status'   => UserStatus::Active,
                 'must_change_password' => true,
             ]);
@@ -239,20 +248,19 @@ class AdmissionController extends TenantController
             ];
             
             $student->fill($request->except($excludedFields));
-            
-            // Handle Photo/Signature copies or uploads using Trait
-            $student->photo = $this->storeTenantFile($request->file('student_photo'), "students/{$school->id}/photos", $request->student_photo_path);
-            $student->father_photo = $this->storeTenantFile($request->file('father_photo'), "parents/{$school->id}/photos", $request->father_photo_path);
-            $student->mother_photo = $this->storeTenantFile($request->file('mother_photo'), "parents/{$school->id}/photos", $request->mother_photo_path);
-            
-            // Admission No is already generated above
 
-            // Concatenate Parent Names if necessary (handled by validation mapping usually but ensuring here)
+            $student->student_photo = $this->storeTenantFile($request->file('student_photo'), "students/{$school->id}/photos", $request->student_photo_path);
+            $student->father_photo  = $this->storeTenantFile($request->file('father_photo'),  "parents/{$school->id}/photos",  $request->father_photo_path);
+            $student->mother_photo  = $this->storeTenantFile($request->file('mother_photo'),  "parents/{$school->id}/photos",  $request->mother_photo_path);
+            $student->student_signature = $this->storeTenantFile($request->file('student_signature'), "students/{$school->id}/signatures", $request->student_signature_path);
+            $student->father_signature  = $this->storeTenantFile($request->file('father_signature'),  "parents/{$school->id}/signatures",  $request->father_signature_path);
+            $student->mother_signature  = $this->storeTenantFile($request->file('mother_signature'),  "parents/{$school->id}/signatures",  $request->mother_signature_path);
+
             if (!$student->father_name) {
-                $student->father_name = trim($request->father_first_name . ' ' . ($request->father_middle_name ?? '') . ' ' . $request->father_last_name);
+                $student->father_name = trim(implode(' ', array_filter([$request->father_first_name, $request->father_middle_name, $request->father_last_name])));
             }
             if (!$student->mother_name) {
-                $student->mother_name = trim($request->mother_first_name . ' ' . ($request->mother_middle_name ?? '') . ' ' . $request->mother_last_name);
+                $student->mother_name = trim(implode(' ', array_filter([$request->mother_first_name, $request->mother_middle_name, $request->mother_last_name])));
             }
 
             $student->save();
@@ -413,11 +421,13 @@ class AdmissionController extends TenantController
         $transportRoutes = \App\Models\TransportRoute::where('school_id', $this->getSchoolId())->get();
         $hostels = \App\Models\Hostel::where('school_id', $this->getSchoolId())->get();
 
+        $countries = $this->locationService->getCountries();
+
         return view('school.admission.edit', compact(
-            'student', 
-            'classes', 
-            'sections', 
-            'academicYears', 
+            'student',
+            'classes',
+            'sections',
+            'academicYears',
             'registrations',
             'bloodGroups',
             'religions',
@@ -426,7 +436,8 @@ class AdmissionController extends TenantController
             'correspondingRelatives',
             'qualifications',
             'transportRoutes',
-            'hostels'
+            'hostels',
+            'countries'
         ));
     }
 
@@ -459,21 +470,16 @@ class AdmissionController extends TenantController
             
             $student->fill($request->except($excludedFields));
 
-            // Concatenate Father Name
-            $fatherName = trim($request->father_first_name . ' ' . $request->father_middle_name . ' ' . $request->father_last_name);
-            $student->father_name = $fatherName;
-
-            // Concatenate Mother Name
-            $motherName = trim($request->mother_first_name . ' ' . $request->mother_middle_name . ' ' . $request->mother_last_name);
-            $student->mother_name = $motherName;
+            $student->father_name = trim(implode(' ', array_filter([$request->father_first_name, $request->father_middle_name, $request->father_last_name])));
+            $student->mother_name = trim(implode(' ', array_filter([$request->mother_first_name, $request->mother_middle_name, $request->mother_last_name])));
 
             // Handle Student Photo
             if ($request->hasFile('student_photo')) {
-                if ($student->photo) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo);
+                if ($student->student_photo) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->student_photo);
                 }
                 $path = $request->file('student_photo')->store('student_photos', 'public');
-                $student->photo = $path;
+                $student->student_photo = $path;
             }
 
             // Handle Father Photo
@@ -512,18 +518,18 @@ class AdmissionController extends TenantController
 
             // Handle Student Signature
             if ($request->hasFile('student_signature')) {
-                if ($student->signature) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->signature);
+                if ($student->student_signature) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->student_signature);
                 }
                 $path = $request->file('student_signature')->store('student_signatures', 'public');
-                $student->signature = $path;
+                $student->student_signature = $path;
             } elseif ($request->filled('student_signature_path')) {
                 $sourcePath = $request->student_signature_path;
                 if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
                     $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
                     $newPath = 'student_signatures/' . Str::random(40) . '.' . $extension;
                     \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->signature = $newPath;
+                    $student->student_signature = $newPath;
                 }
             }
 

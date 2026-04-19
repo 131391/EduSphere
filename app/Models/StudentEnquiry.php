@@ -57,7 +57,7 @@ class StudentEnquiry extends Model
         'emergency_contact_no',
         // Personal Details
         'dob',
-        'aadhar_no',
+        'aadhaar_no',
         'grand_father_name',
         'annual_income',
         'no_of_brothers',

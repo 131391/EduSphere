@@ -88,6 +88,10 @@ class StudentEnquiryController extends TenantController
             $query->where('academic_year_id', $request->academic_year_id);
         }
 
+        if ($request->filled('follow_up_today')) {
+            $query->whereDate('follow_up_date', today());
+        }
+
         // 3. Handle AJAX or CSV Export vs Blade Hydration
         if ($request->expectsJson() || $request->ajax()) {
             return $this->handleAjaxTable($query, $transformer, $this->getStats($schoolId));
@@ -210,6 +214,12 @@ class StudentEnquiryController extends TenantController
         }
     }
 
+    public function show(StudentEnquiry $studentEnquiry)
+    {
+        $this->authorizeTenant($studentEnquiry);
+        return view('receptionist.student-enquiries.show', compact('studentEnquiry'));
+    }
+
     public function edit(StudentEnquiry $studentEnquiry)
     {
         $this->authorizeTenant($studentEnquiry);
@@ -264,6 +274,44 @@ class StudentEnquiryController extends TenantController
         }
     }
 
+    public function updateStatus(Request $request, StudentEnquiry $studentEnquiry)
+    {
+        $this->authorizeTenant($studentEnquiry);
+
+        $validated = $request->validate([
+            'form_status' => ['required', 'integer', Rule::enum(EnquiryStatus::class)],
+        ]);
+
+        if ($studentEnquiry->form_status === EnquiryStatus::Admitted) {
+            return response()->json(['success' => false, 'message' => 'Cannot change status of an admitted enquiry.'], 422);
+        }
+
+        $studentEnquiry->update(['form_status' => $validated['form_status']]);
+        $newStatus = EnquiryStatus::from($validated['form_status']);
+        $color = $newStatus->color();
+
+        if ($request->ajax() || $request->wantsJson() || $request->isMethod('patch')) {
+            return response()->json([
+                'success'      => true,
+                'message'      => 'Status updated to ' . $newStatus->label(),
+                'status_label' => $newStatus->label(),
+                'status_config' => [
+                    'bg'     => "bg-{$color}-50",
+                    'text'   => "text-{$color}-700",
+                    'border' => "border-{$color}-100",
+                    'icon'   => match($newStatus) {
+                        EnquiryStatus::Pending   => 'fa-clock',
+                        EnquiryStatus::Completed => 'fa-check-circle',
+                        EnquiryStatus::Cancelled => 'fa-times-circle',
+                        EnquiryStatus::Admitted  => 'fa-user-check',
+                    },
+                ],
+            ]);
+        }
+
+        return back()->with('success', 'Status updated to ' . $newStatus->label());
+    }
+
     public function destroy(StudentEnquiry $studentEnquiry)
     {
         $this->authorizeTenant($studentEnquiry);
@@ -276,6 +324,10 @@ class StudentEnquiryController extends TenantController
 
         $this->deleteFiles($studentEnquiry);
         $studentEnquiry->delete();
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Student enquiry deleted successfully.']);
+        }
 
         return redirect()->route('receptionist.student-enquiries.index')
             ->with('success', 'Student enquiry deleted successfully.');
@@ -337,7 +389,7 @@ class StudentEnquiryController extends TenantController
 
             // Personal Details
             'dob' => 'nullable|date',
-            'aadhar_no' => 'nullable|string|max:12',
+            'aadhaar_no' => 'nullable|string|max:12',
             'grand_father_name' => 'nullable|string|max:255',
             'annual_income' => 'nullable|numeric|min:0',
             'no_of_brothers' => 'nullable|integer|min:0',

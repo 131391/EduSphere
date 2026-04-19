@@ -381,7 +381,7 @@ class StudentEnquiryController extends TenantController
             'emergency_contact_no' => 'nullable|string|max:20',
 
             'dob' => 'nullable|date',
-            'aadhar_no' => 'nullable|string|max:12',
+            'aadhaar_no' => 'nullable|string|max:12',
             'grand_father_name' => 'nullable|string|max:255',
             'annual_income' => 'nullable|numeric|min:0',
             'no_of_brothers' => 'nullable|integer|min:0',

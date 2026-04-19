@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('student_type', 100)->nullable();
             $table->string('blood_group', 20)->nullable();
             $table->string('dob_certificate_no', 100)->nullable();
-            $table->string('aadhar_no', 20)->nullable();
+            $table->string('aadhaar_no', 20)->nullable();
             $table->string('place_of_birth', 150)->nullable();
             $table->string('nationality', 50)->default('Indian');
             $table->string('religion', 50)->nullable();
@@ -64,7 +64,7 @@ return new class extends Migration
             $table->text('father_qualification')->nullable();
             $table->string('father_department', 150)->nullable();
             $table->string('father_designation', 150)->nullable();
-            $table->string('father_aadhar_no', 20)->nullable();
+            $table->string('father_aadhaar_no', 20)->nullable();
             $table->decimal('father_annual_income', 12, 2)->nullable();
             $table->integer('father_age')->nullable();
             
@@ -82,7 +82,7 @@ return new class extends Migration
             $table->text('mother_qualification')->nullable();
             $table->string('mother_department', 150)->nullable();
             $table->string('mother_designation', 150)->nullable();
-            $table->string('mother_aadhar_no', 20)->nullable();
+            $table->string('mother_aadhaar_no', 20)->nullable();
             $table->decimal('mother_annual_income', 12, 2)->nullable();
             $table->integer('mother_age')->nullable();
             

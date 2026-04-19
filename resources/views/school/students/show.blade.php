@@ -33,8 +33,8 @@
                 <div class="bg-gradient-to-r from-blue-600 to-indigo-700 h-24"></div>
                 <div class="px-6 pb-6 text-center -mt-12">
                     <div class="inline-block relative">
-                        @if($student->photo)
-                            <img class="h-24 w-24 rounded-2xl object-cover ring-4 ring-white shadow-md mx-auto" src="{{ Storage::url($student->photo) }}" alt="">
+                        @if($student->student_photo)
+                            <img class="h-24 w-24 rounded-2xl object-cover ring-4 ring-white shadow-md mx-auto" src="{{ Storage::url($student->student_photo) }}" alt="">
                         @else
                             <div class="h-24 w-24 rounded-2xl bg-blue-100 ring-4 ring-white shadow-md mx-auto flex items-center justify-center text-blue-600 text-3xl font-bold">
                                 {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
@@ -71,7 +71,7 @@
                         </div>
                         <div class="ml-3">
                             <p class="text-xs text-gray-500">Phone</p>
-                            <p class="text-sm font-medium text-gray-900">{{ $student->phone ?? 'N/A' }}</p>
+                            <p class="text-sm font-medium text-gray-900">{{ $student->mobile_no ?? 'N/A' }}</p>
                         </div>
                     </div>
                     <div class="flex items-start">
@@ -122,7 +122,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <div>
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Date of Birth</p>
-                                <p class="text-sm font-medium text-gray-900">{{ $student->date_of_birth ? $student->date_of_birth->format('d M, Y') : 'N/A' }}</p>
+                                <p class="text-sm font-medium text-gray-900">{{ $student->dob ? $student->dob->format('d M, Y') : 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Gender</p>
@@ -156,7 +156,7 @@
                                 <p class="text-sm text-gray-600 mb-4">{{ $student->father_occupation ?? 'Occupation N/A' }}</p>
                                 <div class="space-y-2">
                                     <p class="text-xs flex items-center text-gray-500">
-                                        <i class="fas fa-phone mr-2 w-4"></i> {{ $student->father_mobile ?? 'N/A' }}
+                                        <i class="fas fa-phone mr-2 w-4"></i> {{ $student->father_mobile_no ?? 'N/A' }}
                                     </p>
                                     <p class="text-xs flex items-center text-gray-500">
                                         <i class="fas fa-id-card mr-2 w-4"></i> {{ $student->father_aadhaar ?? 'Aadhaar N/A' }}
@@ -169,7 +169,7 @@
                                 <p class="text-sm text-gray-600 mb-4">{{ $student->mother_occupation ?? 'Occupation N/A' }}</p>
                                 <div class="space-y-2">
                                     <p class="text-xs flex items-center text-gray-500">
-                                        <i class="fas fa-phone mr-2 w-4"></i> {{ $student->mother_mobile ?? 'N/A' }}
+                                        <i class="fas fa-phone mr-2 w-4"></i> {{ $student->mother_mobile_no ?? 'N/A' }}
                                     </p>
                                     <p class="text-xs flex items-center text-gray-500">
                                         <i class="fas fa-id-card mr-2 w-4"></i> {{ $student->mother_aadhaar ?? 'Aadhaar N/A' }}

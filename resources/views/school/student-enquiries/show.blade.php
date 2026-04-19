@@ -284,7 +284,7 @@
     </div>
 
     {{-- Personal Information --}}
-    @if($studentEnquiry->dob || $studentEnquiry->aadhar_no || $studentEnquiry->category || $studentEnquiry->religion)
+    @if($studentEnquiry->dob || $studentEnquiry->aadhaar_no || $studentEnquiry->category || $studentEnquiry->religion)
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
         <div class="bg-gradient-to-r from-teal-50 to-teal-100 px-6 py-4 border-b border-teal-200">
             <h3 class="text-lg font-semibold text-gray-900 flex items-center">
@@ -302,12 +302,12 @@
                 </div>
             </div>
             @endif
-            @if($studentEnquiry->aadhar_no)
+            @if($studentEnquiry->aadhaar_no)
             <div class="flex items-start">
                 <i class="fas fa-id-card w-5 text-gray-400 mr-3 mt-1"></i>
                 <div>
-                    <p class="text-xs text-gray-500">Aadhar Number</p>
-                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->aadhar_no }}</p>
+                    <p class="text-xs text-gray-500">Aadhaar Number</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->aadhaar_no }}</p>
                 </div>
             </div>
             @endif

@@ -12,8 +12,8 @@
     <!-- Profile Card -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
         <div class="flex flex-col sm:flex-row gap-5 items-start sm:items-center">
-            @if($student->photo)
-            <img src="{{ asset('storage/' . $student->photo) }}" class="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600" alt="">
+            @if($student->student_photo)
+            <img src="{{ asset('storage/' . $student->student_photo) }}" class="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600" alt="">
             @else
             <div class="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                 {{ strtoupper(substr($student->first_name, 0, 1)) }}

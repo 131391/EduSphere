@@ -584,15 +584,15 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Aadhar No</label>
-                <input type="text" name="aadhar_no" 
-                       x-model="formData.aadhar_no"
-                       @input="clearError('aadhar_no')"
-                       placeholder="Aadhar no of the Students"
-                       :class="{'border-red-500 ring-red-500/10': errors.aadhar_no}"
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Aadhaar No</label>
+                <input type="text" name="aadhaar_no" 
+                       x-model="formData.aadhaar_no"
+                       @input="clearError('aadhaar_no')"
+                       placeholder="Aadhaar no of the Students"
+                       :class="{'border-red-500 ring-red-500/10': errors.aadhaar_no}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                <template x-if="errors.aadhar_no">
-                    <p class="text-red-500 text-xs mt-1" x-text="errors.aadhar_no[0]"></p>
+                <template x-if="errors.aadhaar_no">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.aadhaar_no[0]"></p>
                 </template>
             </div>
 

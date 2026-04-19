@@ -23,7 +23,7 @@ class StudentRegistration extends Model
         
         // Personal Information
         'first_name', 'middle_name', 'last_name', 'gender', 'dob', 'email', 'mobile_no',
-        'student_type', 'blood_group', 'dob_certificate_no', 'aadhar_no', 'place_of_birth',
+        'student_type', 'blood_group', 'dob_certificate_no', 'aadhaar_no', 'place_of_birth',
         'nationality', 'religion', 'category', 'special_needs', 'mother_tongue', 'remarks',
         
         // Family Information
@@ -34,14 +34,14 @@ class StudentRegistration extends Model
         'father_name_prefix', 'father_first_name', 'father_middle_name', 'father_last_name',
         'father_email', 'father_mobile_no', 'father_landline_no', 'father_occupation',
         'father_organization', 'father_office_address', 'father_qualification',
-        'father_department', 'father_designation', 'father_aadhar_no', 'father_annual_income',
+        'father_department', 'father_designation', 'father_aadhaar_no', 'father_annual_income',
         'father_age',
         
         // Mother's Details
         'mother_name_prefix', 'mother_first_name', 'mother_middle_name', 'mother_last_name',
         'mother_email', 'mother_mobile_no', 'mother_landline_no', 'mother_occupation',
         'mother_organization', 'mother_office_address', 'mother_qualification',
-        'mother_department', 'mother_designation', 'mother_aadhar_no', 'mother_annual_income',
+        'mother_department', 'mother_designation', 'mother_aadhaar_no', 'mother_annual_income',
         'mother_age',
         
         // Permanent Address

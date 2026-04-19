@@ -28,8 +28,8 @@ class StudentController extends TenantController
                 'class_name' => $row->class->name ?? 'N/A',
                 'section_name' => $row->section->name ?? 'N/A',
                 'status' => $row->status,
-                'phone' => $row->phone ?? 'N/A',
-                'photo' => $row->photo ? \Storage::url($row->photo) : null,
+                'phone' => $row->mobile_no ?? 'N/A',
+                'photo' => $row->student_photo ? \Storage::url($row->student_photo) : null,
             ];
         };
 
@@ -54,7 +54,7 @@ class StudentController extends TenantController
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('admission_no', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('mobile_no', 'like', "%{$search}%");
             });
         }
 
