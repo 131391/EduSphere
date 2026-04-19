@@ -49,9 +49,9 @@
                     prefix="permanent" 
                     label="Permanent" 
                     :countries="$countries"
-                    :selectedCountry="old('permanent_country_id', $studentRegistration->permanent_country_id ?? 102)"
-                    :selectedState="old('permanent_state_id', $studentRegistration->permanent_state_id ?? '')"
-                    :selectedCity="old('permanent_city_id', $studentRegistration->permanent_city_id ?? '')"
+                    :selectedCountry="old('permanent_country_id', isset($studentRegistration) ? ($studentRegistration->permanent_country_id ?? 102) : 102)"
+                    :selectedState="old('permanent_state_id', isset($studentRegistration) ? ($studentRegistration->permanent_state_id ?? '') : '')"
+                    :selectedCity="old('permanent_city_id', isset($studentRegistration) ? ($studentRegistration->permanent_city_id ?? '') : '')"
                 />
             </div>
 

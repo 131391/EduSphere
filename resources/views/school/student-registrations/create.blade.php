@@ -359,7 +359,5 @@
                 }
             }
         }
-
-@endpush
     </script>
 @endpush
