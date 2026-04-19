@@ -47,11 +47,19 @@
         Every admission requires a completed student registration first. There are no pending registrations available to admit.
     </p>
     <div class="flex items-center gap-3">
-        <a href="{{ route('school.student-registrations.create') }}"
+        @php
+            $regCreateRoute = Route::has('receptionist.student-registrations.create')
+                ? route('receptionist.student-registrations.create')
+                : route('school.student-registrations.create');
+            $regIndexRoute = Route::has('receptionist.student-registrations.index')
+                ? route('receptionist.student-registrations.index')
+                : route('school.student-registrations.index');
+        @endphp
+        <a href="{{ $regCreateRoute }}"
            class="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all">
             <i class="fas fa-plus text-xs"></i> Create Registration First
         </a>
-        <a href="{{ route('school.student-registrations.index') }}"
+        <a href="{{ $regIndexRoute }}"
            class="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-all">
             View Registrations
         </a>
