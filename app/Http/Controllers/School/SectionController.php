@@ -8,10 +8,13 @@ use App\Http\Requests\School\UpdateSectionRequest;
 use App\Models\Section;
 use App\Models\ClassModel;
 use App\Services\School\SectionService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class SectionController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected SectionService $sectionService;
 
     public function __construct(SectionService $sectionService)
@@ -22,39 +25,64 @@ class SectionController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'class_id' => $request->input('class_id'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'class_name' => $item->class?->name ?? 'N/A',
+                'class_id' => $item->class_id,
+                'students_count' => $item->students_count ?? 0,
+                'is_available' => (bool) $item->is_available,
+                'created_at' => $item->created_at?->format('M d, Y'),
             ];
+        };
 
-            $sections = $this->sectionService->getPaginatedSections(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = Section::where('sections.school_id', $schoolId)
+            ->with(['class'])
+            ->withCount(['students']);
 
-            $stats = $this->sectionService->getSectionStatistics($this->getSchool());
-            
-            $classes = ClassModel::where('school_id', $this->getSchoolId())
-                ->orderBy('order')
-                ->get();
-
-            return view('school.sections.index', compact('sections', 'stats', 'classes'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load sections.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
-    }
 
-    public function create()
-    {
-        $classes = ClassModel::where('school_id', $this->getSchoolId())
+        if ($request->filled('class_id') && $request->input('class_id') !== 'all') {
+            $query->where('class_id', $request->input('class_id'));
+        }
+
+        $sort = $request->input('sort', 'class_name');
+        $direction = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
+
+        if ($sort === 'class_name') {
+            $query->join('classes', 'sections.class_id', '=', 'classes.id')
+                ->orderBy('classes.name', $direction)
+                ->select('sections.*');
+        } elseif (\in_array($sort, ['id', 'name', 'created_at', 'students_count'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $stats = $this->sectionService->getSectionStatistics($this->getSchool());
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        $classes = ClassModel::where('school_id', $schoolId)
             ->orderBy('order')
-            ->get();
-            
-        return view('school.sections.create', compact('classes'));
+            ->get(['id', 'name']);
+
+        return view('school.sections.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+            'classes' => $classes,
+        ]);
     }
 
     public function store(StoreSectionRequest $request)
@@ -85,36 +113,6 @@ class SectionController extends TenantController
                 ], 500);
             }
             return $this->backWithError('Failed to create section: ' . $e->getMessage());
-        }
-    }
-
-    public function show($id)
-    {
-        try {
-            $section = Section::where('school_id', $this->getSchoolId())
-                ->with(['class', 'students'])
-                ->withCount(['students'])
-                ->findOrFail($id);
-
-            return view('school.sections.show', compact('section'));
-        } catch (\Exception $e) {
-            return $this->redirectWithError('school.sections.index', 'Section not found.');
-        }
-    }
-
-    public function edit($id)
-    {
-        try {
-            $section = Section::where('school_id', $this->getSchoolId())
-                ->findOrFail($id);
-                
-            $classes = ClassModel::where('school_id', $this->getSchoolId())
-                ->orderBy('order')
-                ->get();
-
-            return view('school.sections.edit', compact('section', 'classes'));
-        } catch (\Exception $e) {
-            return $this->redirectWithError('school.sections.index', 'Section not found.');
         }
     }
 

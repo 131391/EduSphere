@@ -4,18 +4,60 @@ namespace App\Http\Controllers\School;
 
 use App\Http\Controllers\TenantController;
 use App\Models\Subject;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class SubjectController extends TenantController
 {
-    public function index()
-    {
-        $school = auth()->user()->school;
-        $subjects = Subject::where('school_id', $school->id)
-            ->orderBy('name')
-            ->paginate(15);
+    use HasAjaxDataTable;
 
-        return view('school.subjects.index', compact('subjects'));
+    public function index(Request $request)
+    {
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'code' => $item->code ?? 'N/A',
+                'description' => $item->description,
+                'created_at' => $item->created_at?->format('M d, Y'),
+            ];
+        };
+
+        $query = Subject::where('school_id', $schoolId);
+
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('search') . '%')
+                  ->orWhere('code', 'like', '%' . $request->input('search') . '%');
+            });
+        }
+
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
+        if (\in_array($sort, ['id', 'name', 'code', 'created_at'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $stats = [
+            'total' => Subject::where('school_id', $schoolId)->count(),
+        ];
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.subjects.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+        ]);
     }
 
     public function store(Request $request)
@@ -26,10 +68,8 @@ class SubjectController extends TenantController
             'description' => 'nullable|string',
         ]);
 
-        $school = auth()->user()->school;
-
         $subject = Subject::create([
-            'school_id' => $school->id,
+            'school_id' => $this->getSchoolId(),
             'name' => $request->name,
             'code' => $request->code,
             'description' => $request->description,

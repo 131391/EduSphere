@@ -5,25 +5,79 @@ namespace App\Http\Controllers\School;
 use App\Http\Controllers\TenantController;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAjaxDataTable;
+
 class WaiverController extends TenantController
 {
+    use HasAjaxDataTable {
+        handleAjaxTable as traitHandleAjaxTable;
+    }
+
+
     public function index(Request $request)
     {
-        $school = $this->getSchool(); // Consistent with other controllers
-        $query = \App\Models\Waiver::where('school_id', $school->id)
+        $this->ensureSchoolActive();
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'student_name' => $row->student?->full_name ?? 'N/A',
+                'admission_no' => $row->student?->admission_no ?? 'N/A',
+                'fee_period' => $row->fee_period,
+                'actual_fee' => number_format($row->actual_fee, 2),
+                'waiver_percentage' => $row->waiver_percentage . '%',
+                'waiver_amount' => number_format($row->waiver_amount, 2),
+                'reason' => $row->reason ?? 'N/A',
+            ];
+        };
+
+        $query = \App\Models\Waiver::where('school_id', $schoolId)
             ->with(['student', 'academicYear']);
 
         if ($request->filled('student_id')) {
             $query->where('student_id', $request->student_id);
         }
 
-        $waivers = $query->latest()->paginate(20);
-        $students = \App\Models\Student::where('school_id', $school->id)->get();
-        $academicYears = \App\Models\AcademicYear::where('school_id', $school->id)->get();
-        $academicYear = \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', 1)->first() 
-                      ?? \App\Models\AcademicYear::where('school_id', $school->id)->latest()->first();
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('student', function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('admission_no', 'like', "%{$search}%");
+            });
+        }
 
-        return view('school.waivers.index', compact('waivers', 'students', 'academicYears', 'academicYear'));
+        $stats = $this->getTableStats();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.waivers.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+            'students' => \App\Models\Student::where('school_id', $schoolId)->get(),
+            'academicYears' => \App\Models\AcademicYear::where('school_id', $schoolId)->get(),
+            'academicYear' => \App\Models\AcademicYear::where('school_id', $schoolId)->where('is_current', 1)->first() 
+                          ?? \App\Models\AcademicYear::where('school_id', $schoolId)->latest()->first(),
+        ]);
+    }
+
+
+
+
+    protected function getTableStats()
+    {
+        return [
+            'total_waivers' => \App\Models\Waiver::where('school_id', $this->getSchoolId())->count(),
+            'total_amount_waived' => number_format(\App\Models\Waiver::where('school_id', $this->getSchoolId())->sum('waiver_amount'), 2),
+            'unique_students' => \App\Models\Waiver::where('school_id', $this->getSchoolId())->distinct('student_id')->count('student_id'),
+        ];
     }
 
     public function create()

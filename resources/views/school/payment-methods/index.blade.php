@@ -3,308 +3,296 @@
 @section('title', 'Payment Methods')
 
 @section('content')
-<div x-data="paymentMethodManagement">
-    <!-- Header Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-emerald-100/50">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
-                        <i class="fas fa-credit-card text-xs"></i>
-                    </div>
-                    Payment Methods
-                </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure acceptable payment modes like Cash, Bank Transfer, or Online Portals</p>
-            </div>
-            <button @click="openAddModal" 
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                <i class="fas fa-plus mr-2"></i>
+    <div x-data="Object.assign(ajaxDataTable({
+        fetchUrl: '{{ route('school.payment-methods.fetch') }}',
+        defaultSort: 'created_at',
+        defaultDirection: 'desc',
+        defaultPerPage: 25,
+        initialRows: @js($initialData['rows']),
+        initialPagination: @js($initialData['pagination']),
+        initialStats: @js($initialData['stats']),
+    }), paymentMethodManagement())" class="space-y-6" @close-modal.window="if ($event.detail === 'payment-method-modal') { resetForm(); }">
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <x-stat-card label="Total Payment Methods" :value="$stats['total']" icon="fas fa-credit-card" color="emerald" alpine-text="stats.total" />
+        </div>
+
+        <!-- Header Section -->
+        <x-page-header title="Payment Methods" description="Configure acceptable payment modes like Cash, Bank Transfer, or Online Portals" icon="fas fa-credit-card">
+            <button @click="openAddModal()"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
                 Add Payment Method
             </button>
-        </div>
-    </div>
+        </x-page-header>
 
-    @php
-        $tableColumns = [
-            [
-                'key' => 'name',
-                'label' => 'METHOD NAME',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Payment Methods List</h2>
+                        <x-table.search placeholder="Search methods..." />
+                    </div>
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 border border-teal-100 shadow-sm">
-                            <i class="fas fa-money-bill-wave text-[10px]"></i>
-                        </div>
-                        <span class="font-bold text-gray-700">' . e($row->name) . '</span>
-                    </div>';
-                }
-            ],
-            [
-                'key' => 'code',
-                'label' => 'SYSTEM CODE',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<code class="px-2 py-1 bg-gray-100 text-emerald-700 text-[10px] font-bold rounded-md border border-gray-200 uppercase tracking-tighter">' . ($row->code ?: 'N/A') . '</code>';
-                }
-            ],
-            [
-                'key' => 'created_at',
-                'label' => 'CONFIGURED ON',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<div class="text-gray-500 text-[12px] font-medium">' . $row->created_at->format('M d, Y') . '</div>';
-                }
-            ],
-        ];
-
-        $tableActions = [
-            [
-                'type' => 'button',
-                'icon' => 'fas fa-edit',
-                'class' => 'text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors',
-                'onclick' => function($row) {
-                    $encoded = json_encode([
-                        'id' => $row->id,
-                        'name' => $row->name,
-                        'code' => $row->code,
-                    ]);
-                    return "window.dispatchEvent(new CustomEvent('open-edit-payment-method', { detail: $encoded }))";
-                },
-                'title' => 'Edit',
-            ],
-            [
-                'type' => 'button',
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
-                'onclick' => function($row) {
-                    $name = addslashes($row->name);
-                    return "window.dispatchEvent(new CustomEvent('open-delete-payment-method', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
-                },
-                'title' => 'Delete',
-            ],
-        ];
-    @endphp
-
-    <div>
-        <x-data-table 
-            :columns="$tableColumns"
-            :data="$methods"
-            :actions="$tableActions"
-            empty-message="No payment methods configured"
-            empty-icon="fas fa-credit-card"
-        >
-            Payment Methods Matrix
-        </x-data-table>
-    </div>
-
-    <!-- Add/Edit Payment Method Modal -->
-    <x-modal name="payment-method-modal" alpineTitle="editMode ? 'Edit Payment Method' : 'Create Payment Mode'" maxWidth="2xl">
-        <form @submit.prevent="submitForm()" method="POST" novalidate>
-            @csrf
-            <template x-if="editMode">
-                <input type="hidden" name="_method" value="PUT">
-            </template>
-
-            <div class="space-y-6">
-                <!-- Method Name -->
-                <div class="space-y-2">
-                    <label class="modal-label-premium">Method Name <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative group">
-                        <input 
-                            type="text" 
-                            name="name" 
-                            x-model="formData.name"
-                            @input="clearError('name')"
-                            placeholder="e.g., Online Gateway"
-                            class="modal-input-premium pr-10"
-                            :class="{'border-red-500 ring-red-500/10': errors.name}"
-                        >
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                            <i class="fas fa-wallet text-sm"></i>
-                        </div>
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
                     </div>
-                    <template x-if="errors.name">
-                        <p class="modal-error-message" x-text="errors.name[0]"></p>
-                    </template>
-                </div>
-
-                <!-- Code -->
-                <div class="space-y-2">
-                    <label class="modal-label-premium">Reference Code</label>
-                    <div class="relative group">
-                        <input 
-                            type="text" 
-                            name="code" 
-                            x-model="formData.code"
-                            @input="clearError('code')"
-                            placeholder="e.g., ONLINE_PG"
-                            class="modal-input-premium pr-10 uppercase font-bold"
-                            :class="{'border-red-500 ring-red-500/10': errors.code}"
-                        >
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                            <i class="fas fa-barcode text-sm"></i>
-                        </div>
-                    </div>
-                    <template x-if="errors.code">
-                        <p class="modal-error-message" x-text="errors.code[0]"></p>
-                    </template>
                 </div>
             </div>
 
-            <!-- Modal Footer -->
-            <x-slot name="footer">
-                <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
-                    Cancel
-                </button>
-                <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-100 min-w-[160px]">
-                    <template x-if="submitting">
-                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
-                    </template>
-                    <span x-text="editMode ? 'Update Changes' : 'Create Mode'"></span>
-                </button>
-            </x-slot>
-        </form>
-    </x-modal>
-</div>
+            <div class="overflow-x-auto relative ajax-table-wrapper">
+                <x-table.loading-overlay />
 
-<!-- Confirmation Modal -->
-<x-confirm-modal />
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <x-table.sort-header column="name" label="Method Name" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="code" label="System Code" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="created_at" label="Configured On" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        </tr>
+                    </thead>
 
-@push('scripts')
-<script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('paymentMethodManagement', () => ({
-        editMode: false,
-        methodId: null,
-        submitting: false,
-        errors: {},
-        formData: {
-            name: '',
-            code: ''
-        },
+                    {{-- Server-rendered rows --}}
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @if(empty($initialData['rows']))
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-credit-card text-4xl text-gray-300 mb-4"></i>
+                                        <p class="text-lg text-gray-500">No payment methods configured.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
+                        @foreach($initialData['rows'] as $row)
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fas fa-money-bill-wave text-xs"></i>
+                                        </div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['name'] }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <code class="px-2 py-1 bg-gray-100 text-emerald-700 text-[10px] font-bold rounded-md border border-gray-200 uppercase tracking-tighter">{{ $row['code'] ?: 'N/A' }}</code>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">{{ $row['created_at'] }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditModal(@js($row))" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="confirmDelete(@js($row))" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
 
-        init() {
-            window.addEventListener('open-edit-payment-method', (e) => this.openEditModal(e.detail));
-            window.addEventListener('open-delete-payment-method', (e) => this.confirmDelete(e.detail));
-        },
+                    {{-- Alpine-managed rows --}}
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
+                        <template x-for="row in rows" :key="row.id">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fas fa-money-bill-wave text-xs"></i>
+                                        </div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.name"></div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <code class="px-2 py-1 bg-gray-100 text-emerald-700 text-[10px] font-bold rounded-md border border-gray-200 uppercase tracking-tighter" x-text="row.code || 'N/A'"></code>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500" x-text="row.created_at"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditModal(row)" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="confirmDelete(row)" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
 
-        async submitForm() {
-            if (this.submitting) return;
-            this.submitting = true;
-            this.errors = {};
-            
-            const url = this.editMode 
-                ? `/school/payment-methods/${this.methodId}` 
-                : '{{ route('school.payment-methods.store') }}';
-            
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        <x-table.empty-state :colspan="4" icon="fas fa-credit-card" message="No payment methods configured." />
+                    </tbody>
+                </table>
+            </div>
+
+            <x-table.pagination />
+        </div>
+
+        <!-- Add/Edit Payment Method Modal -->
+        <x-modal name="payment-method-modal" alpineTitle="editMode ? 'Edit Payment Method' : 'Create Payment Mode'" maxWidth="2xl">
+            <form @submit.prevent="submitForm()" method="POST" novalidate class="p-1">
+                @csrf
+                <template x-if="editMode">
+                    <input type="hidden" name="_method" value="PUT">
+                </template>
+
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Method Name <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
+                                placeholder="e.g., Online Gateway"
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 transition-all pr-10"
+                                :class="errors.name ? 'border-red-500' : 'border-slate-200'">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                                <i class="fas fa-wallet text-sm"></i>
+                            </div>
+                        </div>
+                        <template x-if="errors.name">
+                            <p class="modal-error-message" x-text="errors.name[0]"></p>
+                        </template>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Reference Code</label>
+                        <div class="relative group">
+                            <input type="text" name="code" x-model="formData.code" @input="clearError('code')"
+                                placeholder="e.g., ONLINE_PG"
+                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold uppercase focus:ring-2 focus:ring-emerald-500/20 transition-all pr-10"
+                                :class="errors.code ? 'border-red-500' : 'border-slate-200'">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
+                                <i class="fas fa-barcode text-sm"></i>
+                            </div>
+                        </div>
+                        <template x-if="errors.code">
+                            <p class="modal-error-message" x-text="errors.code[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'payment-method-modal')" class="btn-premium-cancel px-10">
+                        Cancel
+                    </button>
+                    <button type="button" @click="submitForm()" :disabled="submitting"
+                        class="btn-premium-primary min-w-[160px] !from-emerald-600 !to-teal-600 hover:!from-emerald-700 hover:!to-teal-700 shadow-emerald-200">
+                        <template x-if="submitting">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                        </template>
+                        <span x-text="editMode ? 'Update Changes' : 'Create Mode'"></span>
+                    </button>
+                </x-slot>
+            </form>
+        </x-modal>
+
+        <x-confirm-modal />
+    </div>
+
+    @push('scripts')
+        <script>
+            function paymentMethodManagement() {
+                return {
+                    submitting: false,
+                    errors: {},
+                    editMode: false,
+                    methodId: null,
+                    formData: { name: '', code: '' },
+
+                    clearError(field) {
+                        if (this.errors[field]) delete this.errors[field];
                     },
-                    body: JSON.stringify({
-                        ...this.formData,
-                        _method: this.editMode ? 'PUT' : 'POST'
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    if (window.Toast) {
-                        window.Toast.fire({
-                            icon: 'success',
-                            title: result.message
-                        });
-                    }
-                    setTimeout(() => window.location.reload(), 800);
-                } else if (response.status === 422) {
-                    this.errors = result.errors || {};
-                } else {
-                    throw new Error(result.message || 'Something went wrong');
-                }
-            } catch (error) {
-                if (window.Toast) {
-                    window.Toast.fire({
-                        icon: 'error',
-                        title: error.message
-                    });
-                }
-            } finally {
-                this.submitting = false;
-            }
-        },
 
-        clearError(field) {
-            if (this.errors[field]) {
-                delete this.errors[field];
-            }
-        },
+                    resetForm() {
+                        this.editMode = false;
+                        this.methodId = null;
+                        this.errors = {};
+                        this.formData = { name: '', code: '' };
+                    },
 
-        openAddModal() {
-            this.editMode = false;
-            this.methodId = null;
-            this.errors = {};
-            this.formData = { name: '', code: '' };
-            this.$dispatch('open-modal', 'payment-method-modal');
-        },
-        
-        openEditModal(method) {
-            this.editMode = true;
-            this.methodId = method.id;
-            this.errors = {};
-            this.formData = {
-                name: method.name,
-                code: method.code || ''
-            };
-            this.$dispatch('open-modal', 'payment-method-modal');
-        },
+                    openAddModal() {
+                        this.resetForm();
+                        this.$dispatch('open-modal', 'payment-method-modal');
+                    },
 
-        async confirmDelete(method) {
-            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                detail: {
-                    title: 'Delete Payment Method',
-                    message: `Are you sure you want to delete the payment method "${method.name}"? This action cannot be undone and may affect transaction reports.`,
-                    callback: async () => {
+                    openEditModal(method) {
+                        this.editMode = true;
+                        this.methodId = method.id;
+                        this.errors = {};
+                        this.formData = { name: method.name || '', code: method.code || '' };
+                        this.$dispatch('open-modal', 'payment-method-modal');
+                    },
+
+                    async submitForm() {
+                        if (this.submitting) return;
+                        this.submitting = true;
+                        this.errors = {};
+
+                        const url = this.editMode
+                            ? `/school/payment-methods/${this.methodId}`
+                            : '{{ route('school.payment-methods.store') }}';
+
                         try {
-                            const response = await fetch(`/school/payment-methods/${method.id}`, {
+                            const response = await fetch(url, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 },
-                                body: JSON.stringify({ _method: 'DELETE' })
+                                body: JSON.stringify({
+                                    ...this.formData,
+                                    _method: this.editMode ? 'PUT' : 'POST'
+                                })
                             });
-                            
+
+                            const result = await response.json();
+
                             if (response.ok) {
-                                window.location.reload();
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'payment-method-modal');
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else if (response.status === 422) {
+                                this.errors = result.errors || {};
                             } else {
-                                const result = await response.json();
-                                if (window.Toast) {
-                                    window.Toast.fire({
-                                        icon: 'error',
-                                        title: result.message || 'Delete failed'
-                                    });
-                                }
+                                throw new Error(result.message || 'Something went wrong');
                             }
                         } catch (error) {
-                            console.error('Delete Error:', error);
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
+                        } finally {
+                            this.submitting = false;
                         }
-                    }
-                }
-            }));
-        },
+                    },
 
-        closeModal() {
-            this.$dispatch('close-modal', 'payment-method-modal');
-        }
-    }));
-});
-</script>
-@endpush
+                    confirmDelete(method) {
+                        const self = this;
+                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                            detail: {
+                                title: 'Delete Payment Method',
+                                message: `Are you sure you want to delete the payment method "${method.name}"? This action cannot be undone and may affect transaction reports.`,
+                                callback: async () => {
+                                    try {
+                                        const response = await fetch(`/school/payment-methods/${method.id}`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            },
+                                            body: JSON.stringify({ _method: 'DELETE' })
+                                        });
+
+                                        const result = await response.json();
+
+                                        if (response.ok) {
+                                            if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Deleted successfully' });
+                                            if (typeof self.refreshTable === 'function') self.refreshTable();
+                                        } else {
+                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Delete failed' });
+                                        }
+                                    } catch (error) {
+                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Delete failed' });
+                                    }
+                                }
+                            }
+                        }));
+                    },
+                }
+            }
+        </script>
+    @endpush
 @endsection

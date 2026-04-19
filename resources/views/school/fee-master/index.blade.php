@@ -1,511 +1,585 @@
 @extends('layouts.school')
 
-@section('title', 'Fee Master Configuration')
+@section('title', 'Fee Master')
 
 @section('content')
-<div x-data="feeMasterManagement()">
-    <!-- Header Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-emerald-100/50">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
-                        <i class="fas fa-university text-xs"></i>
-                    </div>
-                    Fee Master Configuration
-                </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure complex fee structures for different classes and installments</p>
-            </div>
-            <div class="flex gap-2">
-                <button @click="openBulkModal()" 
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-layer-group mr-2"></i>
+    <div x-data="Object.assign(ajaxDataTable({
+        fetchUrl: '{{ route('school.fee-master.fetch') }}',
+        defaultSort: 'id',
+        defaultDirection: 'desc',
+        defaultPerPage: 25,
+        defaultFilters: { class_id: '', fee_type_id: '' },
+        initialRows: @js($initialData['rows']),
+        initialPagination: @js($initialData['pagination']),
+        initialStats: @js($initialData['stats']),
+        filterLabels: {
+            class_id: { @foreach($classes as $c) '{{ $c->id }}': '{{ $c->name }}', @endforeach },
+            fee_type_id: { @foreach($feeTypes as $t) '{{ $t->id }}': '{{ $t->name }}', @endforeach }
+        }
+    }), feeMasterManagement())" class="space-y-6" @close-modal.window="if ($event.detail.startsWith('fee-master')) { resetForms(); }">
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <x-stat-card label="Fee Configurations" :value="$stats['total_configurations']" icon="fas fa-university" color="indigo" alpine-text="stats.total_configurations" />
+            <x-stat-card label="Active Fee Types" :value="$stats['fee_types_count']" icon="fas fa-layer-group" color="emerald" alpine-text="stats.fee_types_count" />
+            <x-stat-card label="Classes Configured" :value="$stats['classes_mapped']" icon="fas fa-school" color="amber" alpine-text="stats.classes_mapped" />
+        </div>
+
+        <!-- Header Section -->
+        <x-page-header title="Fee Master" description="Define institutional fee structures, seasonal installments, and academic billing components." icon="fas fa-university">
+            <div class="flex items-center gap-3">
+                <button @click="openBulkModal()"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-layer-group mr-2 text-xs"></i>
                     Bulk Assignment
                 </button>
-                <button @click="openMiscModal()" 
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-plus mr-2"></i>
-                    Add Misc Fee
+                <button @click="openMiscModal()"
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <i class="fas fa-plus mr-2 text-xs"></i>
+                    Single Entry
                 </button>
             </div>
-        </div>
-    </div>
+        </x-page-header>
 
-    @php
-        $tableColumns = [
-            [
-                'key' => 'class_name',
-                'label' => 'CLASS / BATCH',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Rate Inventory</h2>
+                        <x-table.search placeholder="Search by fee head..." />
+                    </div>
+
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm">
-                            <i class="fas fa-school text-[10px]"></i>
+                        <x-table.filter-select
+                            model="filters.fee_type_id"
+                            action="applyFilter('fee_type_id', $event.target.value)"
+                            placeholder="Installment"
+                            :options="$feeTypes->pluck('name', 'id')->toArray()"
+                        />
+                        <x-table.filter-select
+                            model="filters.class_id"
+                            action="applyFilter('class_id', $event.target.value)"
+                            placeholder="All Classes"
+                            :options="$classes->pluck('name', 'id')->toArray()"
+                        />
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
+                    </div>
+                </div>
+
+                <!-- Active Filter Tags -->
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <template x-if="value">
+                            <div class="flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                <span x-text="key.replace('_', ' ') + ': ' + getFilterLabel(key, value)"></span>
+                                <button @click="removeFilter(key)" class="ml-1 hover:text-indigo-900 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </template>
+                    <button @click="clearAllFilters()" class="text-[10px] font-bold text-red-600 hover:text-red-700 uppercase tracking-widest ml-2 transition-colors">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Body -->
+            <div class="overflow-x-auto relative ajax-table-wrapper">
+                <x-table.loading-overlay />
+
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Class / Batch</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fee Label</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Installment</th>
+                            <x-table.sort-header column="amount" label="Standard Rate" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @foreach($initialData['rows'] as $row)
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 border border-emerald-100 dark:border-emerald-800 shadow-sm">
+                                            <i class="fas fa-school text-[10px]"></i>
+                                        </div>
+                                        <span class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['class_name'] }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600 dark:text-gray-300">
+                                    {{ $row['fee_name'] }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-bold rounded-lg uppercase tracking-tight border border-gray-200 dark:border-gray-600">
+                                        {{ $row['fee_type'] }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/40 px-3 py-1 rounded-lg inline-block border border-emerald-100 dark:border-emerald-800">
+                                        <span class="text-xs mr-0.5 font-medium">₹</span>{{ $row['amount'] }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditModal(@js($row))" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="confirmDelete(@js($row))" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
+                        <template x-for="row in rows" :key="row.id">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 border border-emerald-100 dark:border-emerald-800 shadow-sm">
+                                            <i class="fas fa-school text-[10px]"></i>
+                                        </div>
+                                        <span class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.class_name"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600 dark:text-gray-300" x-text="row.fee_name"></td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-bold rounded-lg uppercase tracking-tight border border-gray-200 dark:border-gray-600" x-text="row.fee_type"></span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/40 px-3 py-1 rounded-lg inline-block border border-emerald-100 dark:border-emerald-800" x-text="'₹' + row.amount"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditModal(row)" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="confirmDelete(row)" class="w-8 h-8 rounded-lg bg-rose-50 text-red-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <x-table.empty-state :colspan="5" icon="fas fa-university" message="No fee configurations match your filters." />
+                    </tbody>
+                </table>
+            </div>
+
+            <x-table.pagination />
+        </div>
+
+        <!-- Bulk Assignment Modal -->
+        <x-modal name="bulk-fee-master-modal" alpineTitle="'Bulk Fee Master Assignment'" maxWidth="2xl">
+            <form @submit.prevent="submitBulkForm" method="POST" class="p-1">
+                @csrf
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Target Class <span class="text-red-600 font-bold">*</span></label>
+                            <div class="relative group">
+                                <select x-model="bulkData.class_id" @change="clearError('class_id')"
+                                    class="modal-input-premium appearance-none pr-10"
+                                    :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
+                                    <option value="">Select Class...</option>
+                                    @foreach($classes as $class)
+                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:rotate-180 transition-transform">
+                                    <i class="fas fa-chevron-down text-[10px]"></i>
+                                </div>
+                            </div>
+                            <template x-if="errors.class_id">
+                                <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                            </template>
                         </div>
-                        <span class="font-bold text-gray-700">' . e($row->class->name) . '</span>
-                    </div>';
-                }
-            ],
-            [
-                'key' => 'fee_name',
-                'label' => 'FEE LABEL',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<div class="text-gray-600 font-medium">' . e($row->feeName->name) . '</div>';
-                }
-            ],
-            [
-                'key' => 'fee_type',
-                'label' => 'INSTALLMENT / TYPE',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg uppercase tracking-tight border border-gray-200">' . e($row->feeType->name) . '</span>';
-                }
-            ],
-            [
-                'key' => 'amount',
-                'label' => 'AMOUNT',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '<div class="text-emerald-700 font-bold bg-emerald-50 px-3 py-1 rounded-lg inline-block border border-emerald-100">
-                                <span class="text-xs mr-0.5 font-medium">₹</span>' . number_format($row->amount, 2) . '
-                            </div>';
-                }
-            ],
-        ];
+                        <div class="space-y-2">
+                            <label class="modal-label-premium">Installment Type <span class="text-red-600 font-bold">*</span></label>
+                            <div class="relative group">
+                                <select x-model="bulkData.fee_type_id" @change="clearError('fee_type_id')"
+                                    class="modal-input-premium appearance-none pr-10"
+                                    :class="errors.fee_type_id ? 'border-red-500' : 'border-slate-200'">
+                                    <option value="">Select Type...</option>
+                                    @foreach($feeTypes as $feeType)
+                                        <option value="{{ $feeType->id }}">{{ $feeType->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:rotate-180 transition-transform">
+                                    <i class="fas fa-chevron-down text-[10px]"></i>
+                                </div>
+                            </div>
+                            <template x-if="errors.fee_type_id">
+                                <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
+                            </template>
+                        </div>
+                    </div>
 
-        $tableActions = [
-            [
-                'type' => 'button',
-                'icon' => 'fas fa-edit',
-                'class' => 'text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-lg transition-colors',
-                'onclick' => function($row) {
-                    $data = json_encode([
-                        'id' => $row->id,
-                        'class_name' => $row->class->name,
-                        'fee_name' => $row->feeName->name,
-                        'fee_type' => $row->feeType->name,
-                        'amount' => $row->amount,
-                    ]);
-                    return "window.dispatchEvent(new CustomEvent('open-edit-fee-master', { detail: $data }))";
-                },
-                'title' => 'Edit',
-            ],
-            [
-                'type' => 'button',
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
-                'onclick' => function($row) {
-                    return "window.dispatchEvent(new CustomEvent('open-delete-fee-master', { detail: { id: " . $row->id . ", name: '" . addslashes($row->feeName->name) . " for " . addslashes($row->class->name) . "' } }))";
-                },
-                'title' => 'Delete',
-            ],
-        ];
-    @endphp
+                    <div class="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-2xl overflow-hidden shadow-inner">
+                        <div class="bg-indigo-50/50 dark:bg-indigo-900/20 px-6 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                            <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Fee Component</span>
+                            <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest pr-16">Amount (₹)</span>
+                        </div>
+                        <div class="max-h-[320px] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700 custom-scrollbar">
+                            @foreach($feeNames as $feeName)
+                            <div class="flex items-center px-6 py-3 hover:bg-white dark:hover:bg-gray-800 transition-colors group">
+                                <div class="flex-1">
+                                    <span class="text-sm font-bold text-slate-700 dark:text-gray-200 group-hover:text-indigo-600 transition-colors">{{ $feeName->name }}</span>
+                                </div>
+                                <div class="w-40">
+                                    <div class="relative">
+                                        <input
+                                            type="number"
+                                            x-model="bulkData.amounts[{{ $feeName->id }}]"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="0.00"
+                                            class="modal-input-premium !py-2 !px-3 !bg-white dark:!bg-gray-700 font-bold text-right text-slate-800 dark:text-gray-100"
+                                        >
+                                        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs">₹</div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
 
-    <div>
-        <x-data-table 
-            :columns="$tableColumns"
-            :data="$fees"
-            :actions="$tableActions"
-            empty-message="No fee configurations set in Master"
-            empty-icon="fas fa-university"
-        >
-            Fee Master List
-        </x-data-table>
-    </div>
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'bulk-fee-master-modal')" class="btn-premium-cancel px-10">Discard</button>
+                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[180px] !from-indigo-600 !to-violet-600 shadow-indigo-200">
+                        <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
+                        <span x-text="submitting ? 'Processing...' : 'Assign Class Fees'"></span>
+                    </button>
+                </x-slot>
+            </form>
+        </x-modal>
 
-    <!-- Bulk Assignment Modal -->
-    <x-modal name="bulk-fee-master-modal" alpineTitle="'Bulk Fee Master Assignment'" maxWidth="2xl">
-        <form id="bulk-fee-form" @submit.prevent="submitBulkForm" method="POST">
-            @csrf
-            <div class="space-y-6">
-                <div class="grid grid-cols-2 gap-6">
+        <!-- Single Edit Modal -->
+        <x-modal name="edit-fee-master-modal" alpineTitle="'Modify Fee Rate'" maxWidth="xl">
+            <form @submit.prevent="submitEditForm" method="POST" class="p-1">
+                @csrf
+                <div class="space-y-6">
+                    <div class="p-5 bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl space-y-1.5 shadow-sm">
+                        <div class="flex justify-between text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                            <span x-text="editData.class_name"></span>
+                            <span x-text="editData.fee_type"></span>
+                        </div>
+                        <div class="text-base font-black text-indigo-900 dark:text-indigo-400" x-text="editData.fee_name"></div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Updated Fee Amount <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative">
+                            <input
+                                type="number"
+                                x-model="editData.amount"
+                                step="0.01"
+                                min="0"
+                                class="modal-input-premium !pr-10 font-black text-slate-800 dark:text-gray-100"
+                                :class="errors.amount ? 'border-red-500' : 'border-slate-200'"
+                            >
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm">₹</div>
+                        </div>
+                        <template x-if="errors.amount">
+                            <p class="modal-error-message" x-text="errors.amount[0]"></p>
+                        </template>
+                    </div>
+                </div>
+
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'edit-fee-master-modal')" class="btn-premium-cancel px-10">Discard</button>
+                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[180px] !from-indigo-600 !to-violet-600 shadow-indigo-200">
+                        <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
+                        <span x-text="submitting ? 'Updating...' : 'Save Rate Change'"></span>
+                    </button>
+                </x-slot>
+            </form>
+        </x-modal>
+
+        <!-- Single Misc Modal -->
+        <x-modal name="misc-fee-master-modal" alpineTitle="'Establish Single Fee Configuration'" maxWidth="2xl">
+            <form @submit.prevent="submitMiscForm" method="POST" class="p-1">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Target Class <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
-                            <select x-model="bulkData.class_id" @change="clearError('class_id')" class="modal-input-premium appearance-none pr-10 hover:border-indigo-400 transition-colors" :class="{'border-red-500 ring-red-500/10': errors.class_id}">
+                            <select x-model="miscData.class_id" @change="clearError('class_id')"
+                                class="modal-input-premium appearance-none pr-10"
+                                :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Class...</option>
                                 @foreach($classes as $class)
                                     <option value="{{ $class->id }}">{{ $class->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                                <i class="fas fa-school text-sm"></i>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:rotate-180 transition-transform">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
                             </div>
                         </div>
-                        <template x-if="errors.class_id">
-                            <p class="modal-error-message" x-text="errors.class_id[0]"></p>
-                        </template>
                     </div>
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Installment Type <span class="text-red-600 font-bold">*</span></label>
-                        <div class="relative group">
-                            <select x-model="bulkData.fee_type_id" @change="clearError('fee_type_id')" class="modal-input-premium appearance-none pr-10 hover:border-indigo-400 transition-colors" :class="{'border-red-500 ring-red-500/10': errors.fee_type_id}">
-                                <option value="">Select Type...</option>
-                                @foreach($feeTypes as $feeType)
-                                    <option value="{{ $feeType->id }}">{{ $feeType->name }}</option>
-                                @endforeach
-                            </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                                <i class="fas fa-layer-group text-sm"></i>
-                            </div>
-                        </div>
-                        <template x-if="errors.fee_type_id">
-                            <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
-                        </template>
-                    </div>
-                </div>
 
-                <div class="bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden shadow-inner">
-                    <div class="bg-indigo-50/50 px-6 py-3 border-b border-slate-200 flex items-center justify-between">
-                        <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Fee Component</span>
-                        <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest pr-16">Amount (₹)</span>
-                    </div>
-                    <div class="max-h-[320px] overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
-                        @foreach($feeNames as $feeName)
-                        <div class="flex items-center px-6 py-3 hover:bg-white transition-colors group">
-                            <div class="flex-1">
-                                <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">{{ $feeName->name }}</span>
-                            </div>
-                            <div class="w-40">
-                                <div class="relative">
-                                    <input 
-                                        type="number" 
-                                        x-model="bulkData.amounts[{{ $feeName->id }}]" 
-                                        step="0.01" 
-                                        min="0" 
-                                        placeholder="0.00" 
-                                        class="modal-input-premium !py-2 !px-3 !bg-white font-bold text-right text-slate-800"
-                                    >
-                                    <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs transition-colors group-focus-within:text-emerald-500">₹</div>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <x-slot name="footer">
-                <button type="button" @click="closeModal('bulk-fee-master-modal')" class="btn-premium-cancel px-10">Cancel</button>
-                <button type="submit" form="bulk-fee-form" :disabled="submitting" class="btn-premium-primary min-w-[180px] bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200">
-                    <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
-                    <span x-text="submitting ? 'Processing...' : 'Assign Fees'"></span>
-                </button>
-            </x-slot>
-        </form>
-    </x-modal>
-
-    <!-- Single Edit Modal -->
-    <x-modal name="edit-fee-master-modal" alpineTitle="'Edit Fee Configuration'" maxWidth="2xl">
-        <form id="edit-fee-form" @submit.prevent="submitEditForm" method="POST">
-            @csrf
-            <template x-if="editMode"><input type="hidden" name="_method" value="PUT"></template>
-            <div class="space-y-6">
-                <div class="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-1.5 shadow-sm">
-                    <div class="flex justify-between text-[10px] font-black text-indigo-400 uppercase tracking-widest">
-                        <span x-text="editData.class_name"></span>
-                        <span x-text="editData.fee_type"></span>
-                    </div>
-                    <div class="text-base font-black text-indigo-900" x-text="editData.fee_name"></div>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="modal-label-premium">Updated Fee Amount <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative">
-                        <input 
-                            type="number" 
-                            x-model="editData.amount" 
-                            step="0.01" 
-                            min="0"
-                            class="modal-input-premium !pr-10 font-bold text-slate-800"
-                        >
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm transition-colors group-focus-within:text-emerald-500">₹</div>
-                    </div>
-                </div>
-            </div>
-
-            <x-slot name="footer">
-                <button type="button" @click="closeModal('edit-fee-master-modal')" class="btn-premium-cancel px-10">Cancel</button>
-                <button type="submit" form="edit-fee-form" :disabled="submitting" class="btn-premium-primary min-w-[180px] bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200">
-                    <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
-                    <span x-text="submitting ? 'Updating...' : 'Save Rate Changes'"></span>
-                </button>
-            </x-slot>
-        </form>
-    </x-modal>
-
-    <!-- Misc Modal -->
-    <x-modal name="misc-fee-master-modal" alpineTitle="'Add Single Configuration'" maxWidth="2xl">
-        <form id="misc-fee-form" @submit.prevent="submitMiscForm" method="POST">
-            @csrf
-            <div class="space-y-6">
-                <div class="space-y-2">
-                    <label class="modal-label-premium">Select Class <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative group">
-                        <select x-model="miscData.class_id" @change="clearError('class_id')" class="modal-input-premium appearance-none pr-10" :class="{'border-red-500 ring-red-500/10': errors.class_id}">
-                            <option value="">Select Class...</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                            @endforeach
-                        </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                            <i class="fas fa-school text-sm"></i>
-                        </div>
-                    </div>
-                    <template x-if="errors.class_id">
-                        <p class="modal-error-message" x-text="errors.class_id[0]"></p>
-                    </template>
-                </div>
-
-                <div class="grid grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Fee Category <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
-                            <select x-model="miscData.fee_name_id" @change="errors = {}" class="modal-input-premium appearance-none pr-10" :class="{'border-red-500 ring-red-500/10': errors.amounts}">
+                            <select x-model="miscData.fee_name_id" @change="errors = {}"
+                                class="modal-input-premium appearance-none pr-10"
+                                :class="errors.amounts ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Category...</option>
                                 @foreach($feeNames as $fn)
                                     <option value="{{ $fn->id }}">{{ $fn->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                                <i class="fas fa-tag text-sm"></i>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:rotate-180 transition-transform">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
                             </div>
                         </div>
-                        <template x-if="errors.amounts">
-                            <p class="modal-error-message" x-text="errors.amounts[0]"></p>
-                        </template>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div class="space-y-2">
-                        <label class="modal-label-premium">Installment <span class="text-red-600 font-bold">*</span></label>
+                        <label class="modal-label-premium">Installment Type <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
-                            <select x-model="miscData.fee_type_id" @change="clearError('fee_type_id')" class="modal-input-premium appearance-none pr-10" :class="{'border-red-500 ring-red-500/10': errors.fee_type_id}">
+                            <select x-model="miscData.fee_type_id" @change="clearError('fee_type_id')"
+                                class="modal-input-premium appearance-none pr-10"
+                                :class="errors.fee_type_id ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Type...</option>
                                 @foreach($feeTypes as $ft)
                                     <option value="{{ $ft->id }}">{{ $ft->name }}</option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                                <i class="fas fa-layer-group text-sm"></i>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:rotate-180 transition-transform">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
                             </div>
                         </div>
-                        <template x-if="errors.fee_type_id">
-                            <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
-                        </template>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Standard Rate (₹) <span class="text-red-600 font-bold">*</span></label>
+                        <div class="relative group">
+                            <input type="number" x-model="miscData.amount" @input="errors = {}"
+                                placeholder="0.00"
+                                class="modal-input-premium pr-10 font-bold text-slate-800 dark:text-gray-100"
+                                :class="Object.keys(errors).some(k => k.startsWith('amounts.')) ? 'border-red-500' : 'border-slate-200'">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm">₹</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="space-y-2 pb-2">
-                    <label class="modal-label-premium">Configuration Amount <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative group">
-                        <input type="number" x-model="miscData.amount" @input="errors = {}" placeholder="0.00" class="modal-input-premium pr-10 font-black text-slate-800" :class="{'border-red-500 ring-red-500/10': Object.keys(errors).some(k => k.startsWith('amounts.'))}">
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm transition-colors group-focus-within:text-emerald-500">₹</div>
+                <div class="mb-4 flex items-start gap-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 p-5 rounded-2xl shadow-sm">
+                    <div class="w-11 h-11 bg-white dark:bg-gray-800 rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fas fa-info-circle text-emerald-600 text-sm"></i>
                     </div>
-                    <template x-if="Object.keys(errors).some(k => k.startsWith('amounts.'))">
-                        <p class="modal-error-message" x-text="errors[Object.keys(errors).find(k => k.startsWith('amounts.'))][0]"></p>
-                    </template>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-bold text-slate-900 dark:text-gray-100 leading-tight">Configuration Scope</span>
+                        <p class="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            Configurations established here set the standard rates. These will be used during automated fee generation.
+                        </p>
+                    </div>
                 </div>
-            </div>
 
-            <x-slot name="footer">
-                <button type="button" @click="closeModal('misc-fee-master-modal')" class="btn-premium-cancel px-10">Cancel</button>
-                <button type="submit" form="misc-fee-form" :disabled="submitting" class="btn-premium-primary min-w-[180px] bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200">
-                    <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
-                    <span x-text="submitting ? 'Processing...' : 'Save Configuration'"></span>
-                </button>
-            </x-slot>
-        </form>
-    </x-modal>
-</div>
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'misc-fee-master-modal')" class="btn-premium-cancel px-10">Discard</button>
+                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[180px] !from-emerald-600 !to-teal-600 shadow-emerald-200">
+                        <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
+                        <span x-text="submitting ? 'Processing...' : 'Save Configuration'"></span>
+                    </button>
+                </x-slot>
+            </form>
+        </x-modal>
 
-<!-- Confirmation Modal -->
-<x-confirm-modal />
+        <x-confirm-modal />
+    </div>
 
-@push('scripts')
-<script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('feeMasterManagement', () => ({
-        submitting: false,
-        editMode: false,
-        errors: {},
-        bulkData: { class_id: '', fee_type_id: '', amounts: {} },
-        miscData: { class_id: '', fee_type_id: '', fee_name_id: '', amount: '' },
-        editData: { id: '', class_name: '', fee_name: '', fee_type: '', amount: '' },
+    @push('scripts')
+        <script>
+            function feeMasterManagement() {
+                return {
+                    submitting: false,
+                    errors: {},
+                    bulkData: { class_id: '', fee_type_id: '', amounts: {} },
+                    miscData: { class_id: '', fee_type_id: '', fee_name_id: '', amount: '' },
+                    editData: { id: '', class_name: '', fee_name: '', fee_type: '', amount: '' },
 
-        init() {
-            window.addEventListener('open-edit-fee-master', (e) => this.openEditModal(e.detail));
-            window.addEventListener('open-delete-fee-master', (e) => this.confirmDelete(e.detail));
+                    clearError(field) {
+                        if (this.errors[field]) delete this.errors[field];
+                    },
 
-            this.$nextTick(() => {
-                if (typeof $ !== 'undefined') {
-                    // Sync Bulk Modal Selects
-                    $('select[x-model="bulkData.class_id"]').on('change', (e) => {
-                        this.bulkData.class_id = e.target.value;
-                        this.clearError('class_id');
-                    });
-                    $('select[x-model="bulkData.fee_type_id"]').on('change', (e) => {
-                        this.bulkData.fee_type_id = e.target.value;
-                        this.clearError('fee_type_id');
-                    });
-
-                    // Sync Misc Modal Selects
-                    $('select[x-model="miscData.class_id"]').on('change', (e) => {
-                        this.miscData.class_id = e.target.value;
-                        this.clearError('class_id');
-                    });
-                    $('select[x-model="miscData.fee_name_id"]').on('change', (e) => {
-                        this.miscData.fee_name_id = e.target.value;
+                    resetForms() {
                         this.errors = {};
-                    });
-                    $('select[x-model="miscData.fee_type_id"]').on('change', (e) => {
-                        this.miscData.fee_type_id = e.target.value;
-                        this.clearError('fee_type_id');
-                    });
-                }
-            });
-        },
-
-        async submitBulkForm() {
-            if (this.submitting) return;
-            this.submitting = true;
-            this.errors = {};
-            try {
-                const response = await fetch("{{ route('school.fee-master.store') }}", {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json", 
-                        "Accept": "application/json", 
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}" 
+                        this.bulkData = { class_id: '', fee_type_id: '', amounts: {} };
+                        this.miscData = { class_id: '', fee_type_id: '', fee_name_id: '', amount: '' };
                     },
-                    body: JSON.stringify(this.bulkData)
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
-                    setTimeout(() => window.location.reload(), 800);
-                } else if (response.status === 422) {
-                    this.errors = result.errors || {};
-                } else { throw new Error(result.message || 'Operation failed'); }
-            } catch (e) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
-            } finally { this.submitting = false; }
-        },
 
-        async submitEditForm() {
-            if (this.submitting) return;
-            this.submitting = true;
-            this.errors = {};
-            try {
-                const response = await fetch(`/school/fee-master/${this.editData.id}`, {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json", 
-                        "Accept": "application/json", 
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}" 
+                    openBulkModal() {
+                        this.resetForms();
+                        this.$dispatch('open-modal', 'bulk-fee-master-modal');
                     },
-                    body: JSON.stringify({ ...this.editData, _method: "PUT" })
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
-                    setTimeout(() => window.location.reload(), 800);
-                } else if (response.status === 422) {
-                    this.errors = result.errors || {};
-                } else { throw new Error(result.message || 'Update failed'); }
-            } catch (e) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
-            } finally { this.submitting = false; }
-        },
 
-        async submitMiscForm() {
-            if (this.submitting) return;
-            // Map misc data to the bulk format for the existing controller logic
-            const payload = {
-                class_id: this.miscData.class_id,
-                fee_type_id: this.miscData.fee_type_id,
-                amounts: { [this.miscData.fee_name_id]: this.miscData.amount }
-            };
-            this.submitting = true;
-            this.errors = {};
-            try {
-                const response = await fetch("{{ route('school.fee-master.store') }}", {
-                    method: "POST",
-                    headers: { 
-                        "Content-Type": "application/json", 
-                        "Accept": "application/json", 
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}" 
+                    openMiscModal() {
+                        this.resetForms();
+                        this.$dispatch('open-modal', 'misc-fee-master-modal');
                     },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
-                    setTimeout(() => window.location.reload(), 800);
-                } else if (response.status === 422) {
-                    this.errors = result.errors || {};
-                } else { throw new Error(result.message || 'Failed to save'); }
-            } catch (e) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
-            } finally { this.submitting = false; }
-        },
 
-        clearError(field) {
-            if (this.errors[field]) {
-                delete this.errors[field];
-            }
-        },
+                    openEditModal(row) {
+                        this.errors = {};
+                        this.editData = {
+                            id: row.id,
+                            class_name: row.class_name,
+                            fee_name: row.fee_name,
+                            fee_type: row.fee_type,
+                            amount: row.amount.replace(/,/g, '')
+                        };
+                        this.$dispatch('open-modal', 'edit-fee-master-modal');
+                    },
 
-        openBulkModal() { this.errors = {}; this.bulkData = { class_id: '', fee_type_id: '', amounts: {} }; this.$dispatch('open-modal', 'bulk-fee-master-modal'); },
-        openMiscModal() { this.errors = {}; this.miscData = { class_id: '', fee_type_id: '', fee_name_id: '', amount: '' }; this.$dispatch('open-modal', 'misc-fee-master-modal'); },
-        openEditModal(fee) { this.errors = {}; this.editMode = true; this.editData = { ...fee }; this.$dispatch('open-modal', 'edit-fee-master-modal'); },
-        
-        async confirmDelete(fee) {
-            window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                detail: {
-                    title: 'Delete Fee Configuration',
-                    message: `Are you sure you want to delete the fee configuration for "${fee.name}"? This action cannot be undone and may affect billing reports.`,
-                    callback: async () => {
+                    async submitBulkForm() {
+                        if (this.submitting) return;
+                        this.submitting = true;
+                        this.errors = {};
+
                         try {
-                            const response = await fetch(`/school/fee-master/${fee.id}`, {
+                            const response = await fetch("{{ route('school.fee-master.store') }}", {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json",
                                     "Accept": "application/json",
                                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                                 },
-                                body: JSON.stringify({ _method: "DELETE" })
+                                body: JSON.stringify(this.bulkData)
                             });
-                            
+
+                            const result = await response.json();
                             if (response.ok) {
-                                window.location.reload();
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'bulk-fee-master-modal');
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else if (response.status === 422) {
+                                this.errors = result.errors || {};
                             } else {
-                                const result = await response.json();
-                                if (window.Toast) {
-                                    window.Toast.fire({
-                                        icon: 'error',
-                                        title: result.message || 'Delete failed'
-                                    });
+                                throw new Error(result.message || 'Bulk assignment failed');
+                            }
+                        } catch (e) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                        } finally {
+                            this.submitting = false;
+                        }
+                    },
+
+                    async submitEditForm() {
+                        if (this.submitting) return;
+                        this.submitting = true;
+                        this.errors = {};
+
+                        try {
+                            const response = await fetch(`/school/fee-master/${this.editData.id}`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Accept": "application/json",
+                                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                },
+                                body: JSON.stringify({ amount: this.editData.amount, _method: "PUT" })
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'edit-fee-master-modal');
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else if (response.status === 422) {
+                                this.errors = result.errors || {};
+                            } else {
+                                throw new Error(result.message || 'Update failed');
+                            }
+                        } catch (e) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                        } finally {
+                            this.submitting = false;
+                        }
+                    },
+
+                    async submitMiscForm() {
+                        if (this.submitting) return;
+                        this.submitting = true;
+                        this.errors = {};
+
+                        try {
+                            const payload = {
+                                class_id: this.miscData.class_id,
+                                fee_type_id: this.miscData.fee_type_id,
+                                amounts: { [this.miscData.fee_name_id]: this.miscData.amount }
+                            };
+
+                            const response = await fetch("{{ route('school.fee-master.store') }}", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Accept": "application/json",
+                                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                },
+                                body: JSON.stringify(payload)
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'misc-fee-master-modal');
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else if (response.status === 422) {
+                                this.errors = result.errors || {};
+                            } else {
+                                throw new Error(result.message || 'Single entry failed');
+                            }
+                        } catch (e) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                        } finally {
+                            this.submitting = false;
+                        }
+                    },
+
+                    confirmDelete(row) {
+                        const self = this;
+                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                            detail: {
+                                title: 'Delete Fee Configuration',
+                                message: `Are you sure you want to delete the configuration for "${row.fee_name}"? This action cannot be undone and may affect billing reports.`,
+                                callback: async () => {
+                                    try {
+                                        const response = await fetch(`/school/fee-master/${row.id}`, {
+                                            method: "POST",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                "Accept": "application/json",
+                                                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                                            },
+                                            body: JSON.stringify({ _method: "DELETE" })
+                                        });
+
+                                        const result = await response.json();
+                                        if (response.ok) {
+                                            if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Deleted successfully' });
+                                            if (typeof self.refreshTable === 'function') self.refreshTable();
+                                        } else {
+                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Delete failed' });
+                                        }
+                                    } catch (error) {
+                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Delete failed' });
+                                    }
                                 }
                             }
-                        } catch (error) {
-                            console.error('Delete Error:', error);
-                        }
-                    }
+                        }));
+                    },
                 }
-            }));
-        },
-
-        closeModal(name) { this.$dispatch('close-modal', name); }
-    }));
-});
-</script>
-<style>
-.custom-scrollbar::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-</style>
-@endpush
+            }
+        </script>
+        <style>
+            .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        </style>
+    @endpush
 @endsection

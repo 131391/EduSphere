@@ -13,8 +13,12 @@ use App\Services\School\FeePaymentService;
 use App\Enums\FeeStatus;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAjaxDataTable;
+
 class FeePaymentController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected $paymentService;
 
     public function __construct(FeePaymentService $paymentService)
@@ -23,33 +27,86 @@ class FeePaymentController extends TenantController
         $this->paymentService = $paymentService;
     }
 
-    /**
-     * Display a listing of students to collect fees.
-     */
     public function index(Request $request)
     {
         $this->ensureSchoolActive();
 
-        $query = Student::where('school_id', $this->getSchoolId())->active();
+        if ($request->expectsJson()) {
+            return $this->handleAjaxTable($request);
+        }
+
+        $hydrationData = $this->getHydrationData($request);
+
+        return view('school.fee-payments.index', array_merge($hydrationData, [
+            'classes' => ClassModel::where('school_id', $this->getSchoolId())->get()
+        ]));
+    }
+
+    protected function handleAjaxTable(Request $request)
+    {
+        $query = Student::where('school_id', $this->getSchoolId())
+            ->active()
+            ->with(['class', 'section'])
+            ->withCount(['fees as pending_fees_count' => function($q) {
+                $q->where('payment_status', '!=', FeeStatus::Paid);
+            }])
+            ->withSum(['fees as total_due' => function($q) {
+                $q->where('payment_status', '!=', FeeStatus::Paid);
+            }], 'due_amount');
+
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('admission_no', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('admission_no', 'like', "%{$search}%");
             });
         }
 
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
-        }
+        return $this->processAjaxTable($query, $request, [
+            'first_name' => 'first_name',
+            'admission_no' => 'admission_no'
+        ], function($row) {
+            return [
+                'id' => $row->id,
+                'full_name' => $row->full_name,
+                'admission_no' => $row->admission_no,
+                'class_name' => $row->class?->name ?? 'N/A',
+                'section_name' => $row->section?->name ?? 'N/A',
+                'pending_count' => $row->pending_fees_count ?? 0,
+                'total_due' => number_format($row->total_due ?? 0, 2),
+                'collect_url' => route('school.fee-payments.collect', $row->id),
+            ];
+        });
+    }
 
-        $students = $query->with(['class', 'section'])->paginate(15);
-        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
-
-        return view('school.fee-payments.index', compact('students', 'classes'));
+    protected function getTableStats()
+    {
+        $today = now()->toDateString();
+        
+        return [
+            'collected_today' => number_format(FeePayment::where('school_id', $this->getSchoolId())
+                ->whereDate('payment_date', $today)
+                ->sum('amount'), 2),
+            'pending_students' => Student::where('school_id', $this->getSchoolId())
+                ->active()
+                ->whereHas('fees', function($q) {
+                    $q->where('payment_status', '!=', FeeStatus::Paid);
+                })
+                ->count(),
+            'total_collections_month' => number_format(FeePayment::where('school_id', $this->getSchoolId())
+                ->whereMonth('payment_date', now()->month)
+                ->whereYear('payment_date', now()->year)
+                ->sum('amount'), 2),
+            'mode_distribution' => FeePayment::where('school_id', $this->getSchoolId())
+                ->whereDate('payment_date', $today)
+                ->distinct('payment_method_id')
+                ->count('payment_method_id')
+        ];
     }
 
     /**

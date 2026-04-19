@@ -3,159 +3,147 @@
 @section('title', 'Class Management')
 
 @section('content')
-    <div x-data="classManagement">
+    <div x-data="Object.assign(ajaxDataTable({
+        fetchUrl: '{{ route('school.classes.fetch') }}',
+        defaultSort: 'order',
+        defaultDirection: 'asc',
+        defaultPerPage: 25,
+        initialRows: @js($initialData['rows']),
+        initialPagination: @js($initialData['pagination']),
+        initialStats: @js($initialData['stats']),
+    }), classManagement())" class="space-y-6" @close-modal.window="if ($event.detail === 'class-modal') { resetForm(); }">
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <x-stat-card label="Total Classes" :value="$stats['total_classes']" icon="fas fa-chalkboard" color="indigo" alpine-text="stats.total_classes" />
+            <x-stat-card label="Available" :value="$stats['available_classes']" icon="fas fa-check-circle" color="emerald" alpine-text="stats.available_classes" />
+            <x-stat-card label="Unavailable" :value="$stats['unavailable_classes']" icon="fas fa-times-circle" color="rose" alpine-text="stats.unavailable_classes" />
+            <x-stat-card label="Total Students" :value="$stats['total_students']" icon="fas fa-users" color="violet" alpine-text="stats.total_students" />
+        </div>
+
         <!-- Header Section -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Class Management</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Manage school classes and their availability</p>
+        <x-page-header title="Class Management" description="Manage school classes and their availability" icon="fas fa-chalkboard">
+            <button @click="openAddModal()"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                Add New Class
+            </button>
+        </x-page-header>
+
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header with Search -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Classes List</h2>
+                        <x-table.search placeholder="Search classes..." />
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
+                    </div>
                 </div>
-                <button @click="openAddModal"
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-plus mr-2"></i>
-                    Add New Class
-                </button>
             </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto relative ajax-table-wrapper">
+                <x-table.loading-overlay />
+
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <x-table.sort-header column="order" label="Order" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="name" label="Class Name" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @foreach($initialData['rows'] as $row)
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
+                                    {{ $row['order'] }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fas fa-chalkboard text-xs"></i>
+                                        </div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['name'] }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($row['is_available'])
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-700 uppercase tracking-tight border border-emerald-200">Available</span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black bg-rose-100 text-rose-700 uppercase tracking-tight border border-rose-200">Unavailable</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditModal(@js($row))" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="confirmDelete(@js($row))" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
+                        <template x-for="row in rows" :key="row.id">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500" x-text="row.order"></td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fas fa-chalkboard text-xs"></i>
+                                        </div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.name"></div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <template x-if="row.is_available">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-100 text-emerald-700 uppercase tracking-tight border border-emerald-200">Available</span>
+                                    </template>
+                                    <template x-if="!row.is_available">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black bg-rose-100 text-rose-700 uppercase tracking-tight border border-rose-200">Unavailable</span>
+                                    </template>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditModal(row)" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="confirmDelete(row)" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <x-table.empty-state :colspan="4" icon="fas fa-chalkboard" message="No classes found." />
+                    </tbody>
+                </table>
+            </div>
+
+            <x-table.pagination />
         </div>
 
-        <!-- Stats Section -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div
-                class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
-                <div
-                    class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fas fa-chalkboard text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Classes</p>
-                    <p class="text-2xl font-black text-gray-800">{{ $stats['total_classes'] }}</p>
-                </div>
-            </div>
-            <div
-                class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
-                <div
-                    class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fas fa-check-circle text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Available</p>
-                    <p class="text-2xl font-black text-emerald-600">{{ $stats['available_classes'] }}</p>
-                </div>
-            </div>
-            <div
-                class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
-                <div
-                    class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fas fa-times-circle text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Unavailable</p>
-                    <p class="text-2xl font-black text-rose-600">{{ $stats['unavailable_classes'] }}</p>
-                </div>
-            </div>
-            <div
-                class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
-                <div
-                    class="w-12 h-12 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <i class="fas fa-users text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Students</p>
-                    <p class="text-2xl font-black text-violet-600">{{ $stats['total_students'] }}</p>
-                </div>
-            </div>
-        </div>
-
-        @php
-            $tableColumns = [
-                [
-                    'key' => 'name',
-                    'label' => 'CLASS DETAILS',
-                    'sortable' => true,
-                    'render' => function ($row) {
-                        return '
-                                                                                                                                                                                                <div class="flex items-center gap-4">
-                                                                                                                                                                                                    <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400"><i class="fas fa-chalkboard-teacher"></i></div>
-                                                                                                                                                                                                    <div>
-                                                                                                                                                                                                        <div class="text-sm font-bold text-gray-800">' . e($row->name) . '</div>
-                                                                                                                                                                                                        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-tight">' . $row->sections_count . ' sections • ' . $row->students_count . ' students</div>
-                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                </div>';
-                    }
-                ],
-                [
-                    'key' => 'is_available',
-                    'label' => 'STATUS',
-                    'sortable' => true,
-                    'render' => function ($row) {
-                        $color = $row->is_available ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200';
-                        $text = $row->is_available ? 'Available' : 'Unavailable';
-                        return '<span class="px-3 py-1 text-[10px] font-bold rounded-full border uppercase tracking-wider ' . $color . '">' . $text . '</span>';
-                    }
-                ],
-            ];
-
-            $tableActions = [
-                [
-                    'type' => 'button',
-                    'icon' => 'fas fa-edit',
-                    'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
-                    'onclick' => function ($row) {
-                        $data = json_encode([
-                            'id' => $row->id,
-                            'name' => $row->name,
-                        ]);
-                        return "window.dispatchEvent(new CustomEvent('open-edit-class', { detail: $data }))";
-                    },
-                    'title' => 'Edit',
-                ],
-                [
-                    'type' => 'button',
-                    'icon' => 'fas fa-power-off',
-                    'class' => 'text-teal-600 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 p-2 rounded-lg transition-colors',
-                    'onclick' => function ($row) {
-                        return "window.dispatchEvent(new CustomEvent('toggle-class-availability', { detail: { id: " . $row->id . ", name: '" . addslashes($row->name) . "' } }))";
-                    },
-                    'title' => 'Toggle Availability',
-                ],
-                [
-                    'type' => 'button',
-                    'icon' => 'fas fa-trash',
-                    'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
-                    'onclick' => function ($row) {
-                        $name = addslashes($row->name);
-                        return "window.dispatchEvent(new CustomEvent('open-delete-class', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
-                    },
-                    'title' => 'Delete',
-                ],
-            ];
-        @endphp
-
-        <div>
-            <x-data-table :columns="$tableColumns" :data="$classes" :actions="$tableActions"
-                empty-message="No classes found" empty-icon="fas fa-chalkboard">
-                Classes List
-            </x-data-table>
-        </div>
-
-        <!-- Add/Edit Class Modal -->
+        <!-- Add/Edit Modal -->
         <x-modal name="class-modal" alpineTitle="editMode ? 'Edit Class' : 'Create New Class'" maxWidth="2xl">
-            <form @submit.prevent="submitForm()" method="POST" novalidate>
+            <form @submit.prevent="submitForm()" method="POST" novalidate class="p-1">
                 @csrf
                 <template x-if="editMode">
                     <input type="hidden" name="_method" value="PUT">
                 </template>
 
                 <div class="space-y-6">
-                    <!-- Name -->
                     <div class="space-y-2">
                         <label class="modal-label-premium">Class Name <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
-                                placeholder="e.g., Grade 10-A" class="modal-input-premium pr-10"
-                                :class="{'border-red-500 ring-red-500/10': errors.name}">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-indigo-500">
+                                placeholder="e.g., Grade 10"
+                                class="modal-input-premium pr-10"
+                                :class="errors.name ? 'border-red-500' : 'border-slate-200'">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
                                 <i class="fas fa-school text-sm"></i>
                             </div>
                         </div>
@@ -163,46 +151,83 @@
                             <p class="modal-error-message" x-text="errors.name[0]"></p>
                         </template>
                     </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Display Order <span class="text-gray-400 text-xs">(Optional)</span></label>
+                        <div class="relative group">
+                            <input type="number" name="order" x-model="formData.order" @input="clearError('order')"
+                                placeholder="e.g., 1, 2, 3"
+                                class="modal-input-premium pr-10"
+                                :class="errors.order ? 'border-red-500' : 'border-slate-200'">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
+                                <i class="fas fa-sort-numeric-down text-sm"></i>
+                            </div>
+                        </div>
+                        <template x-if="errors.order">
+                            <p class="modal-error-message" x-text="errors.order[0]"></p>
+                        </template>
+                    </div>
                 </div>
 
-                <!-- Modal Footer -->
                 <x-slot name="footer">
-                    <button type="button" @click="closeModal()" class="btn-premium-cancel px-10">
+                    <button type="button" @click="$dispatch('close-modal', 'class-modal')" class="btn-premium-cancel px-10">
                         Cancel
                     </button>
                     <button type="button" @click="submitForm()" :disabled="submitting"
-                        class="btn-premium-primary min-w-[160px]">
+                        class="btn-premium-primary min-w-[160px] !from-indigo-600 !to-blue-600 hover:!from-indigo-700 hover:!to-blue-700 shadow-indigo-200">
                         <template x-if="submitting">
-                            <span
-                                class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                         </template>
-                        <span x-text="editMode ? 'Update Class' : 'Create Class'"></span>
+                        <span x-text="editMode ? 'Update Changes' : 'Create Class'"></span>
                     </button>
                 </x-slot>
             </form>
         </x-modal>
+
+        <x-confirm-modal />
     </div>
-
-
-    <!-- Confirmation Modal -->
-    <x-confirm-modal />
 
     @push('scripts')
         <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('classManagement', () => ({
-                    editMode: false,
-                    classId: null,
+            function classManagement() {
+                return {
                     submitting: false,
                     errors: {},
+                    editMode: false,
+                    classId: null,
                     formData: {
-                        name: ''
+                        name: '',
+                        order: 0
                     },
 
-                    init() {
-                        window.addEventListener('open-edit-class', (e) => this.openEditModal(e.detail));
-                        window.addEventListener('toggle-class-availability', (e) => this.toggleAvailability(e.detail));
-                        window.addEventListener('open-delete-class', (e) => this.confirmDelete(e.detail));
+                    clearError(field) {
+                        if (this.errors[field]) delete this.errors[field];
+                    },
+
+                    resetForm() {
+                        this.editMode = false;
+                        this.classId = null;
+                        this.errors = {};
+                        this.formData = { 
+                            name: '',
+                            order: 0
+                        };
+                    },
+
+                    openAddModal() {
+                        this.resetForm();
+                        this.$dispatch('open-modal', 'class-modal');
+                    },
+
+                    openEditModal(classData) {
+                        this.editMode = true;
+                        this.classId = classData.id;
+                        this.errors = {};
+                        this.formData = { 
+                            name: classData.name || '',
+                            order: classData.order || 0
+                        };
+                        this.$dispatch('open-modal', 'class-modal');
                     },
 
                     async submitForm() {
@@ -231,82 +256,27 @@
                             const result = await response.json();
 
                             if (response.ok) {
-                                if (window.Toast) {
-                                    window.Toast.fire({
-                                        icon: 'success',
-                                        title: result.message
-                                    });
-                                }
-                                setTimeout(() => window.location.reload(), 800);
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'class-modal');
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
                             } else {
                                 throw new Error(result.message || 'Something went wrong');
                             }
                         } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({
-                                    icon: 'error',
-                                    title: error.message
-                                });
-                            }
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
                         } finally {
                             this.submitting = false;
                         }
                     },
 
-                    clearError(field) {
-                        if (this.errors[field]) {
-                            delete this.errors[field];
-                        }
-                    },
-
-                    openAddModal() {
-                        this.editMode = false;
-                        this.classId = null;
-                        this.errors = {};
-                        this.formData = { name: '' };
-                        this.$dispatch('open-modal', 'class-modal');
-                    },
-
-                    openEditModal(classData) {
-                        this.editMode = true;
-                        this.classId = classData.id;
-                        this.errors = {};
-                        this.formData = {
-                            name: classData.name
-                        };
-                        this.$dispatch('open-modal', 'class-modal');
-                    },
-
-                    async toggleAvailability(classData) {
-                        try {
-                            const response = await fetch(`/school/classes/${classData.id}/toggle-availability`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({ _method: 'PATCH' })
-                            });
-
-                            if (response.ok) {
-                                window.location.reload();
-                            } else {
-                                const result = await response.json();
-                                alert(result.message || 'Toggle failed');
-                            }
-                        } catch (error) {
-                            alert('An error occurred');
-                        }
-                    },
-
-                    async confirmDelete(classData) {
+                    confirmDelete(classData) {
+                        const self = this;
                         window.dispatchEvent(new CustomEvent('open-confirm-modal', {
                             detail: {
                                 title: 'Delete Class',
-                                message: `Are you sure you want to delete the class "${classData.name}"? This action cannot be undone and will affect all associated students and sections.`,
+                                message: `Are you sure you want to delete and remove "${classData.name}"? This action cannot be undone.`,
                                 callback: async () => {
                                     try {
                                         const response = await fetch(`/school/classes/${classData.id}`, {
@@ -319,30 +289,23 @@
                                             body: JSON.stringify({ _method: 'DELETE' })
                                         });
 
+                                        const result = await response.json();
+
                                         if (response.ok) {
-                                            window.location.reload();
+                                            if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Deleted successfully' });
+                                            if (typeof self.refreshTable === 'function') self.refreshTable();
                                         } else {
-                                            const result = await response.json();
-                                            if (window.Toast) {
-                                                window.Toast.fire({
-                                                    icon: 'error',
-                                                    title: result.message || 'Delete failed'
-                                                });
-                                            }
+                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Delete failed' });
                                         }
                                     } catch (error) {
-                                        console.error('Delete Error:', error);
+                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Delete failed' });
                                     }
                                 }
                             }
                         }));
                     },
-
-                    closeModal() {
-                        this.$dispatch('close-modal', 'class-modal');
-                    }
-                }));
-            });
+                }
+            }
         </script>
     @endpush
 @endsection

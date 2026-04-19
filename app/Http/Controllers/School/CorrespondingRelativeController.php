@@ -9,8 +9,14 @@ use App\Models\CorrespondingRelative;
 use App\Services\School\CorrespondingRelativeService;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAjaxDataTable;
+
 class CorrespondingRelativeController extends TenantController
 {
+    use HasAjaxDataTable {
+        handleAjaxTable as traitHandleAjaxTable;
+    }
+
     protected CorrespondingRelativeService $service;
 
     public function __construct(CorrespondingRelativeService $service)
@@ -21,30 +27,46 @@ class CorrespondingRelativeController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $this->ensureSchoolActive();
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'name' => $row->name,
+                'is_active' => $row->is_active,
+                'created_at' => $row->created_at->format('M d, Y'),
             ];
+        };
 
-            $relatives = $this->service->getPaginatedRelatives(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = CorrespondingRelative::where('school_id', $schoolId);
 
-            if ($request->ajax() || $request->wantsJson()) {
-                return view('school.corresponding-relatives.index', compact('relatives'))->fragment('table');
-            }
-
-            return view('school.corresponding-relatives.index', compact('relatives'));
-        } catch (\Exception $e) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Failed to load relatives.'], 500);
-            }
-            return $this->backWithError('Failed to load corresponding relatives.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
+
+        $stats = $this->getTableStats();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.corresponding-relatives.index', [
+            'initialData' => $initialData,
+            'stats' => $stats,
+        ]);
+    }
+
+    protected function getTableStats()
+    {
+        return [
+            'total_relatives' => CorrespondingRelative::where('school_id', $this->getSchoolId())->count(),
+            'active_relatives' => CorrespondingRelative::where('school_id', $this->getSchoolId())->where('is_active', true)->count(),
+        ];
     }
 
     public function store(StoreCorrespondingRelativeRequest $request)

@@ -7,10 +7,13 @@ use App\Http\Requests\School\StorePaymentMethodRequest;
 use App\Http\Requests\School\UpdatePaymentMethodRequest;
 use App\Models\PaymentMethod;
 use App\Services\School\PaymentMethodService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class PaymentMethodController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected PaymentMethodService $service;
 
     public function __construct(PaymentMethodService $service)
@@ -21,23 +24,52 @@ class PaymentMethodController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($method) {
+            return [
+                'id' => $method->id,
+                'name' => $method->name,
+                'code' => $method->code,
+                'created_at' => $method->created_at?->format('M d, Y'),
+                'created_at_human' => $method->created_at?->diffForHumans(),
             ];
+        };
 
-            $methods = $this->service->getPaginatedMethods(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = PaymentMethod::where('school_id', $schoolId);
 
-            return view('school.payment-methods.index', compact('methods'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load payment methods.');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('code', 'like', '%' . $search . '%');
+            });
         }
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+        if (\in_array($sort, ['name', 'code', 'created_at'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, [
+                'total' => PaymentMethod::where('school_id', $schoolId)->count(),
+            ]);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => PaymentMethod::where('school_id', $schoolId)->count(),
+            ],
+        ]);
+
+        return view('school.payment-methods.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+        ]);
     }
 
     public function store(StorePaymentMethodRequest $request)

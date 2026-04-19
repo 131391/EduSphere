@@ -59,10 +59,11 @@ Route::post('/registrations/import', [RegistrationController::class, 'import'])-
 Route::get('/registrations/download-template', [RegistrationController::class, 'downloadTemplate'])->name('registrations.download-template');
 
 // Registration Code Management
+Route::post('registration-codes/fetch', [RegistrationCodeController::class, 'index'])->name('registration-codes.fetch');
 Route::resource('registration-codes', RegistrationCodeController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Student Management
-Route::resource('students', StudentController::class);
+Route::post('fee-master/fetch', [FeeMasterController::class, 'index'])->name('fee-master.fetch');
 Route::resource('fee-master', FeeMasterController::class);
 
 // Favorites
@@ -85,23 +86,25 @@ Route::post('/fee-payments/collect/{student}', [FeePaymentController::class, 'st
 Route::get('/fee-payments/receipt/{receipt_no}', [FeePaymentController::class, 'receipt'])->name('fee-payments.receipt');
 
 // Waiver Management
-Route::get('/waivers', [WaiverController::class, 'index'])->name('waivers.index');
-Route::get('/waivers/create', [WaiverController::class, 'create'])->name('waivers.create');
-Route::post('/waivers', [WaiverController::class, 'store'])->name('waivers.store');
+Route::post('waivers/fetch', [WaiverController::class, 'index'])->name('waivers.fetch');
+Route::resource('waivers', WaiverController::class);
 
 // Late Fee Management
+Route::post('late-fee/fetch', [LateFeeController::class, 'index'])->name('late-fee.fetch');
 Route::resource('late-fee', LateFeeController::class);
 
 // Class Management
-// Class Management
+Route::post('classes/fetch', [ClassController::class, 'index'])->name('classes.fetch');
 Route::patch('classes/{class}/toggle-availability', [ClassController::class, 'toggleAvailability'])
     ->name('classes.toggle-availability');
 Route::resource('classes', ClassController::class);
 
 // Section Management
+Route::post('sections/fetch', [SectionController::class, 'index'])->name('sections.fetch');
 Route::resource('sections', SectionController::class);
 
 // Academic Year Management
+Route::post('academic-years/fetch', [AcademicYearController::class, 'index'])->name('academic-years.fetch');
 Route::resource('academic-years', AcademicYearController::class);
 
 // Student Promotion
@@ -113,42 +116,55 @@ Route::prefix('student-promotions')->name('student-promotions.')->group(function
 });
 
 // Fee Type Management
+Route::post('fee-types/fetch', [FeeTypeController::class, 'index'])->name('fee-types.fetch');
 Route::resource('fee-types', FeeTypeController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Miscellaneous Fee Management
+Route::post('miscellaneous-fees/fetch', [MiscellaneousFeeController::class, 'index'])->name('miscellaneous-fees.fetch');
 Route::resource('miscellaneous-fees', MiscellaneousFeeController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Fee Name Management
+Route::post('fee-names/fetch', [FeeNameController::class, 'index'])->name('fee-names.fetch');
 Route::resource('fee-names', FeeNameController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Payment Method Management
+Route::post('payment-methods/fetch', [PaymentMethodController::class, 'index'])->name('payment-methods.fetch');
 Route::resource('payment-methods', PaymentMethodController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // School Bank Management
+Route::post('school-banks/fetch', [SchoolBankController::class, 'index'])->name('school-banks.fetch');
 Route::resource('school-banks', SchoolBankController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Admission Code Management
+Route::post('admission-codes/fetch', [AdmissionCodeController::class, 'index'])->name('admission-codes.fetch');
 Route::resource('admission-codes', AdmissionCodeController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Student Type Management
+Route::post('student-types/fetch', [StudentTypeController::class, 'index'])->name('student-types.fetch');
 Route::resource('student-types', StudentTypeController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Boarding Type Management
+Route::post('boarding-types/fetch', [BoardingTypeController::class, 'index'])->name('boarding-types.fetch');
 Route::resource('boarding-types', BoardingTypeController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Corresponding Relative Management
+Route::post('corresponding-relatives/fetch', [CorrespondingRelativeController::class, 'index'])->name('corresponding-relatives.fetch');
 Route::resource('corresponding-relatives', CorrespondingRelativeController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Blood Group Management
+Route::post('blood-groups/fetch', [BloodGroupController::class, 'index'])->name('blood-groups.fetch');
 Route::resource('blood-groups', BloodGroupController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Religion Management
+Route::post('religions/fetch', [ReligionController::class, 'index'])->name('religions.fetch');
 Route::resource('religions', ReligionController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Category Management
+Route::post('categories/fetch', [CategoryController::class, 'index'])->name('categories.fetch');
 Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Qualification Management
+Route::post('qualifications/fetch', [QualificationController::class, 'index'])->name('qualifications.fetch');
 Route::resource('qualifications', QualificationController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // School Settings
@@ -171,11 +187,15 @@ Route::prefix('settings')->name('settings.')->group(function () {
     Route::get('receipt-note', [SchoolSettingsController::class, 'receiptNote'])->name('receipt-note');
     Route::put('receipt-note', [SchoolSettingsController::class, 'updateReceiptNote'])->name('receipt-note.update');
 
+    Route::post('registration-fee/fetch', [RegistrationFeeController::class, 'index'])->name('registration-fee.fetch');
     Route::resource('registration-fee', RegistrationFeeController::class);
+
+    Route::post('admission-fee/fetch', [AdmissionFeeController::class, 'index'])->name('admission-fee.fetch');
     Route::resource('admission-fee', AdmissionFeeController::class);
 });
 
 // Admission News
+Route::post('admission-news/fetch', [AdmissionNewsController::class, 'index'])->name('admission-news.fetch');
 Route::resource('admission-news', AdmissionNewsController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // Support
@@ -183,12 +203,18 @@ Route::get('support', [SupportController::class, 'index'])->name('support');
 
 // Examination Module
 Route::prefix('examination')->name('examination.')->group(function () {
+    Route::post('subjects/fetch', [ExamSubjectController::class, 'index'])->name('subjects.fetch');
     Route::get('subjects', [ExamSubjectController::class, 'index'])->name('subjects.index');
     Route::post('subjects', [ExamSubjectController::class, 'store'])->name('subjects.store');
     Route::delete('subjects/{id}', [ExamSubjectController::class, 'destroy'])->name('subjects.destroy');
     
+    Route::post('exam-types/fetch', [ExamTypeController::class, 'index'])->name('exam-types.fetch');
     Route::resource('exam-types', ExamTypeController::class)->only(['index', 'store', 'update', 'destroy']);
+    
+    Route::post('exams/fetch', [ExamController::class, 'index'])->name('exams.fetch');
     Route::resource('exams', ExamController::class)->only(['index', 'store', 'destroy']);
+
+    Route::post('grades/fetch', [GradeController::class, 'index'])->name('grades.fetch');
     Route::resource('grades', GradeController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Mark Entry
@@ -201,6 +227,7 @@ Route::prefix('examination')->name('examination.')->group(function () {
 });
 
 // Subject Management
+Route::post('subjects/fetch', [SubjectController::class, 'index'])->name('subjects.fetch');
 Route::resource('subjects', SubjectController::class)->only(['index', 'store', 'update', 'destroy']);
 
 // User Management

@@ -7,10 +7,13 @@ use App\Http\Requests\School\StoreBloodGroupRequest;
 use App\Http\Requests\School\UpdateBloodGroupRequest;
 use App\Models\BloodGroup;
 use App\Services\School\BloodGroupService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class BloodGroupController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected BloodGroupService $service;
 
     public function __construct(BloodGroupService $service)
@@ -21,23 +24,47 @@ class BloodGroupController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($group) {
+            return [
+                'id' => $group->id,
+                'name' => $group->name,
+                'created_at' => $group->created_at?->format('M d, Y'),
+                'created_at_human' => $group->created_at?->diffForHumans(),
             ];
+        };
 
-            $groups = $this->service->getPaginatedGroups(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = BloodGroup::where('school_id', $schoolId);
 
-            return view('school.blood-groups.index', compact('groups'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load blood groups.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+        if (\in_array($sort, ['name', 'created_at'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, [
+                'total' => BloodGroup::where('school_id', $schoolId)->count(),
+            ]);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => BloodGroup::where('school_id', $schoolId)->count(),
+            ],
+        ]);
+
+        return view('school.blood-groups.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+        ]);
     }
 
     public function store(StoreBloodGroupRequest $request)

@@ -10,8 +10,12 @@ use App\Models\Student;
 use App\Services\School\LibraryService;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAjaxDataTable;
+
 class LibraryController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected $libraryService;
 
     public function __construct(LibraryService $libraryService)
@@ -20,17 +24,124 @@ class LibraryController extends TenantController
         $this->libraryService = $libraryService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $this->ensureSchoolActive();
-        $books = Book::where('school_id', $this->getSchoolId())
-            ->with('category')
-            ->latest()
-            ->paginate(15);
-        
-        $categories = BookCategory::where('school_id', $this->getSchoolId())->withCount('books')->get();
 
-        return view('school.library.index', compact('books', 'categories'));
+        $query = Book::where('school_id', $this->getSchoolId())
+            ->with('category');
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->input('category_id'));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('author', 'like', "%{$search}%")
+                  ->orWhere('isbn', 'like', "%{$search}%");
+            });
+        }
+
+        $sort = $request->input('sort', 'title');
+        $direction = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
+        
+        if (in_array($sort, ['title', 'author', 'quantity', 'available_quantity', 'price'], true)) {
+            $query->orderBy($sort, $direction);
+        }
+
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'title' => $row->title,
+                'author' => $row->author,
+                'isbn' => $row->isbn ?? 'N/A',
+                'category_name' => $row->category?->name ?? 'Uncategorized',
+                'total_quantity' => $row->quantity,
+                'available_quantity' => $row->available_quantity,
+                'status_color' => $row->available_quantity > 0 ? 'emerald' : 'rose',
+                'price' => number_format((float)($row->price ?? 0), 2),
+            ];
+        };
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $this->getTableStats());
+        }
+
+        $hydrationData = $this->getHydrationData($query, $transformer, [
+            'stats' => $this->getTableStats()
+        ]);
+
+        return view('school.library.index', array_merge($hydrationData, [
+            'categories' => BookCategory::where('school_id', $this->getSchoolId())->withCount('books')->get()
+        ]));
+    }
+
+    public function issues(Request $request)
+    {
+        $this->ensureSchoolActive();
+
+        $query = BookIssue::where('school_id', $this->getSchoolId())
+            ->where('status', 'issued')
+            ->with(['book', 'student']);
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereHas('student', function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%");
+            })->orWhereHas('book', function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%");
+            });
+        }
+
+        $sort = $request->input('sort', 'due_date');
+        $direction = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
+
+        if (in_array($sort, ['issue_date', 'due_date', 'id'], true)) {
+            $query->orderBy($sort, $direction);
+        }
+
+        $transformer = function($row) {
+            $isOverdue = now()->greaterThan($row->due_date);
+            return [
+                'id' => $row->id,
+                'book_title' => $row->book?->title ?? 'N/A',
+                'student_name' => $row->student?->full_name ?? 'N/A',
+                'admission_no' => $row->student?->admission_no ?? 'N/A',
+                'issue_date' => $row->issue_date->format('d M, Y'),
+                'due_date' => $row->due_date->format('d M, Y'),
+                'overdue' => $isOverdue,
+                'overdue_days' => $isOverdue ? now()->diffInDays($row->due_date) : 0,
+            ];
+        };
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $this->getTableStats());
+        }
+
+        $hydrationData = $this->getHydrationData($query, $transformer, [
+            'stats' => $this->getTableStats()
+        ]);
+
+        return view('school.library.issues', array_merge($hydrationData, [
+            'books' => Book::where('school_id', $this->getSchoolId())->where('available_quantity', '>', 0)->get(),
+            'students' => Student::where('school_id', $this->getSchoolId())->active()->get()
+        ]));
+    }
+
+    protected function getTableStats()
+    {
+        return [
+            'total_books' => Book::where('school_id', $this->getSchoolId())->sum('quantity'),
+            'issued_books' => BookIssue::where('school_id', $this->getSchoolId())->where('status', 'issued')->count(),
+            'available_titles' => Book::where('school_id', $this->getSchoolId())->count(),
+            'overdue_returns' => BookIssue::where('school_id', $this->getSchoolId())
+                ->where('status', 'issued')
+                ->where('due_date', '<', now())
+                ->count()
+        ];
     }
 
     public function storeBook(Request $request)
@@ -74,24 +185,6 @@ class LibraryController extends TenantController
             }
             return back()->with('error', 'Failed to add book: ' . $e->getMessage());
         }
-    }
-
-    public function issues()
-    {
-        $this->ensureSchoolActive();
-        $activeIssues = BookIssue::where('school_id', $this->getSchoolId())
-            ->where('status', 'issued')
-            ->with(['book', 'student'])
-            ->latest()
-            ->paginate(15);
-
-        $books = Book::where('school_id', $this->getSchoolId())
-            ->where('available_quantity', '>', 0)
-            ->get();
-            
-        $students = Student::where('school_id', $this->getSchoolId())->active()->get();
-
-        return view('school.library.issues', compact('activeIssues', 'books', 'students'));
     }
 
     public function issueBook(Request $request)

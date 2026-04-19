@@ -7,18 +7,67 @@ use App\Models\AdmissionFee;
 use App\Models\ClassModel;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAjaxDataTable;
+
 class AdmissionFeeController extends TenantController
 {
-    public function index()
+    use HasAjaxDataTable {
+        handleAjaxTable as traitHandleAjaxTable;
+    }
+
+    public function index(Request $request)
     {
-        $fees = AdmissionFee::with('class')
-            ->where('school_id', $this->getSchoolId())
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-        
-        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
-        
-        return view('school.settings.admission-fee.index', compact('fees', 'classes'));
+        $this->ensureSchoolActive();
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'class_id' => $row->class_id,
+                'class_name' => $row->class?->name ?? 'N/A',
+                'amount' => number_format($row->amount, 2),
+                'created_at' => $row->created_at->format('d M, Y'),
+            ];
+        };
+
+        $query = AdmissionFee::where('school_id', $schoolId)
+            ->with('class');
+
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('class', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
+        $stats = $this->getTableStats();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.settings.admission-fee.index', array_merge($initialData, [
+            'initialData' => $initialData,
+            'stats' => $stats,
+            'classes' => ClassModel::where('school_id', $schoolId)->get()
+        ]));
+    }
+
+    protected function getTableStats()
+    {
+        return [
+            'total_configurations' => AdmissionFee::where('school_id', $this->getSchoolId())->count(),
+            'average_admission_fee' => number_format(AdmissionFee::where('school_id', $this->getSchoolId())->avg('amount') ?? 0, 2),
+            'unique_classes' => AdmissionFee::where('school_id', $this->getSchoolId())->distinct('class_id')->count('class_id'),
+        ];
     }
 
     public function create()

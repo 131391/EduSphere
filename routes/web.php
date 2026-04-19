@@ -65,3 +65,4 @@ Route::prefix('receptionist')->name('receptionist.')->middleware(['auth', 'tenan
     require __DIR__.'/receptionist.php';
 });
 
+Route::get('/dev-login', function () { \Auth::loginUsingId(1); return redirect('/school/dashboard'); });

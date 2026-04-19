@@ -8,34 +8,83 @@ use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+use App\Traits\HasAjaxDataTable;
+
 class SubjectController extends TenantController
 {
-    public function index()
+    use HasAjaxDataTable {
+        handleAjaxTable as traitHandleAjaxTable;
+    }
+
+    public function index(Request $request)
     {
-        $school = $this->getSchool(); // Consistent with other controllers
-        
-        // Get all classes for the school
-        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
-        
-        // Get all subjects for the school
-        $subjects = Subject::where('school_id', $this->getSchoolId())->get();
-        
-        // Get subjects assigned to classes with full marks
-        $classSubjects = DB::table('class_subject')
+        $this->ensureSchoolActive();
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'class_name' => $row->class_name,
+                'subject_name' => $row->subject_name,
+                'full_marks' => $row->full_marks,
+            ];
+        };
+
+        $query = DB::table('class_subject')
             ->join('classes', 'class_subject.class_id', '=', 'classes.id')
             ->join('subjects', 'class_subject.subject_id', '=', 'subjects.id')
-            ->where('classes.school_id', $this->getSchoolId())
+            ->where('classes.school_id', $schoolId)
             ->select(
                 'class_subject.id',
                 'classes.name as class_name',
+                'classes.id as class_id',
                 'subjects.name as subject_name',
+                'subjects.id as subject_id',
                 'class_subject.full_marks'
-            )
-            ->orderBy('classes.name')
-            ->orderBy('subjects.name')
-            ->paginate(15);
+            );
 
-        return view('school.examination.subjects.index', compact('classes', 'subjects', 'classSubjects'));
+        if ($request->filled('class_id')) {
+            $query->where('class_subject.class_id', $request->class_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('subjects.name', 'like', "%{$search}%")
+                  ->orWhere('classes.name', 'like', "%{$search}%");
+            });
+        }
+
+        $stats = $this->getTableStats();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.examination.subjects.index', array_merge($initialData, [
+            'initialData' => $initialData,
+            'classes' => ClassModel::where('school_id', $schoolId)->get(),
+            'subjects' => Subject::where('school_id', $schoolId)->get(),
+        ]));
+    }
+
+    protected function getTableStats()
+    {
+        return [
+            'total_assignments' => DB::table('class_subject')
+                ->join('classes', 'class_subject.class_id', '=', 'classes.id')
+                ->where('classes.school_id', $this->getSchoolId())
+                ->count(),
+            'classes_covered' => DB::table('class_subject')
+                ->join('classes', 'class_subject.class_id', '=', 'classes.id')
+                ->where('classes.school_id', $this->getSchoolId())
+                ->distinct('class_id')
+                ->count('class_id'),
+        ];
     }
 
     public function store(Request $request)

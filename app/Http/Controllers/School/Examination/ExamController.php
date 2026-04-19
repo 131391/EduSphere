@@ -13,8 +13,14 @@ use App\Models\Student;
 use App\Services\School\Examination\ResultService;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAjaxDataTable;
+
 class ExamController extends TenantController
 {
+    use HasAjaxDataTable {
+        handleAjaxTable as traitHandleAjaxTable;
+    }
+
     protected $resultService;
 
     public function __construct(ResultService $resultService)
@@ -23,24 +29,78 @@ class ExamController extends TenantController
         $this->resultService = $resultService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $this->ensureSchoolActive();
-        
-        $exams = Exam::with(['academicYear', 'class', 'examType'])
-            ->where('school_id', $this->getSchoolId())
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $schoolId = $this->getSchoolId();
 
-        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
-        $examTypes = ExamType::where('school_id', $this->getSchoolId())->get();
-        $academicYears = AcademicYear::where('school_id', $this->getSchoolId())->get();
-        
-        $months = FeeName::where('school_id', $this->getSchoolId())
-            ->where('is_active', true)
-            ->pluck('name');
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'exam_type' => $row->examType->name ?? 'N/A',
+                'class_name' => $row->class->name ?? 'N/A',
+                'academic_year' => $row->academicYear->name ?? 'N/A',
+                'month' => $row->month,
+                'status' => $row->status->label(),
+                'status_value' => $row->status->value,
+                'status_color' => $row->status->color(),
+                'created_at' => $row->created_at->format('M d, Y'),
+            ];
+        };
 
-        return view('school.examination.exams.index', compact('exams', 'classes', 'examTypes', 'academicYears', 'months'));
+        $query = Exam::with(['academicYear', 'class', 'examType'])
+            ->where('school_id', $schoolId);
+
+        // Filters
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
+        if ($request->filled('exam_type_id')) {
+            $query->where('exam_type_id', $request->exam_type_id);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('examType', function($sq) use ($search) {
+                    $sq->where('name', 'like', "%{$search}%");
+                })->orWhere('month', 'like', "%{$search}%");
+            });
+        }
+
+        $stats = $this->getTableStats();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.examination.exams.index', [
+            'initialData' => $initialData,
+            'stats' => $stats,
+            'classes' => ClassModel::where('school_id', $schoolId)->get(),
+            'examTypes' => ExamType::where('school_id', $schoolId)->get(),
+            'academicYears' => AcademicYear::where('school_id', $schoolId)->get(),
+            'months' => FeeName::where('school_id', $schoolId)
+                ->where('is_active', true)
+                ->pluck('name'),
+        ]);
+    }
+
+    protected function getTableStats()
+    {
+        return [
+            'total'     => Exam::where('school_id', $this->getSchoolId())->count(),
+            'scheduled' => Exam::where('school_id', $this->getSchoolId())->where('status', \App\Enums\ExamStatus::Scheduled)->count(),
+            'ongoing'   => Exam::where('school_id', $this->getSchoolId())->where('status', \App\Enums\ExamStatus::Ongoing)->count(),
+            'completed' => Exam::where('school_id', $this->getSchoolId())->where('status', \App\Enums\ExamStatus::Completed)->count(),
+        ];
     }
 
     public function store(Request $request)

@@ -5,14 +5,35 @@ namespace App\Http\Controllers\School;
 use App\Http\Controllers\TenantController;
 use Illuminate\Http\Request;
 use App\Enums\StudentStatus;
+use App\Traits\HasAjaxDataTable;
 
 class StudentController extends TenantController
 {
+    use HasAjaxDataTable {
+        handleAjaxTable as traitHandleAjaxTable;
+    }
+
     public function index(Request $request)
     {
-        $school = $this->getSchool();
-        
-        $query = \App\Models\Student::where('school_id', $this->getSchoolId())
+        $this->ensureSchoolActive();
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'full_name' => $row->full_name,
+                'initials' => strtoupper(substr($row->first_name, 0, 1) . substr($row->last_name, 0, 1)),
+                'admission_no' => $row->admission_no,
+                'admission_date' => $row->admission_date ? $row->admission_date->format('M d, Y') : 'N/A',
+                'class_name' => $row->class->name ?? 'N/A',
+                'section_name' => $row->section->name ?? 'N/A',
+                'status' => $row->status,
+                'phone' => $row->phone ?? 'N/A',
+                'photo' => $row->photo ? \Storage::url($row->photo) : null,
+            ];
+        };
+
+        $query = \App\Models\Student::where('students.school_id', $schoolId)
             ->with(['class', 'section']);
 
         // Filters
@@ -25,6 +46,8 @@ class StudentController extends TenantController
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
+
+        // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -35,25 +58,41 @@ class StudentController extends TenantController
             });
         }
 
-        $students = $query->latest()->paginate(20);
+        $stats = $this->getTableStats();
 
-        // Stats
-        $stats = [
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+        
+        return view('school.students.index', array_merge($initialData, [
+            'initialData' => $initialData,
+            'stats' => $stats,
+            'classes' => \App\Models\ClassModel::where('school_id', $schoolId)->get(),
+        ]));
+    }
+
+    protected function getTableStats()
+    {
+        return [
             'total'    => \App\Models\Student::where('school_id', $this->getSchoolId())->count(),
+            'total_formatted' => number_format(\App\Models\Student::where('school_id', $this->getSchoolId())->count()),
             'active'   => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Active)->count(),
+            'active_formatted' => number_format(\App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Active)->count()),
             'inactive' => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Inactive)->count(),
+            'inactive_formatted' => number_format(\App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Inactive)->count()),
             'admissions_this_month' => \App\Models\Student::where('school_id', $this->getSchoolId())
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->count(),
+            'admissions_this_month_formatted' => number_format(\App\Models\Student::where('school_id', $this->getSchoolId())
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count()),
         ];
-
-        $classes = \App\Models\ClassModel::where('school_id', $this->getSchoolId())->get();
-        $sections = $request->filled('class_id') 
-            ? \App\Models\Section::where('class_id', $request->class_id)->get()
-            : collect();
-
-        return view('school.students.index', compact('students', 'classes', 'sections', 'request', 'stats'));
     }
 
     public function create()
@@ -113,7 +152,13 @@ class StudentController extends TenantController
             return back()->withErrors(['section_id' => 'The selected section does not belong to the chosen class.'])->withInput();
         }
 
-        $student->update($validated);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Student information updated successfully.',
+                'student' => $student
+            ]);
+        }
 
         return redirect()->route('school.students.index')
             ->with('success', 'Student information updated successfully.');

@@ -6,16 +6,56 @@ use App\Http\Controllers\TenantController;
 use App\Models\Grade;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAjaxDataTable;
+
 class GradeController extends TenantController
 {
-    public function index()
-    {
-        $school = auth()->user()->school;
-        $grades = Grade::where('school_id', $school->id)
-            ->orderBy('range_start', 'desc')
-            ->paginate(15);
+    use HasAjaxDataTable {
+        handleAjaxTable as traitHandleAjaxTable;
+    }
 
-        return view('school.examination.grades.index', compact('grades'));
+    public function index(Request $request)
+    {
+        $this->ensureSchoolActive();
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'grade' => $row->grade,
+                'range_start' => $row->range_start,
+                'range_end' => $row->range_end,
+                'range_display' => "{$row->range_start}% - {$row->range_end}%",
+            ];
+        };
+
+        $query = Grade::where('school_id', $schoolId);
+
+        if ($request->filled('search')) {
+            $query->where('grade', 'like', '%' . $request->search . '%');
+        }
+
+        $stats = $this->getTableStats();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.examination.grades.index', array_merge($initialData, [
+            'initialData' => $initialData,
+            'stats' => $stats,
+        ]));
+    }
+
+    protected function getTableStats()
+    {
+        return [
+            'total_grades' => Grade::where('school_id', $this->getSchoolId())->count(),
+        ];
     }
 
     public function store(Request $request)

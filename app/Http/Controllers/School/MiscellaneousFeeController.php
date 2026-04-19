@@ -7,10 +7,13 @@ use App\Http\Requests\School\StoreMiscellaneousFeeRequest;
 use App\Http\Requests\School\UpdateMiscellaneousFeeRequest;
 use App\Models\MiscellaneousFee;
 use App\Services\School\MiscellaneousFeeService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class MiscellaneousFeeController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected MiscellaneousFeeService $service;
 
     public function __construct(MiscellaneousFeeService $service)
@@ -21,23 +24,51 @@ class MiscellaneousFeeController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'amount' => $item->amount,
+                'amount_formatted' => $this->formatCurrency($item->amount),
+                'description' => $item->description,
+                'created_at' => $item->created_at?->format('M d, Y'),
             ];
+        };
 
-            $fees = $this->service->getPaginatedFees(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = MiscellaneousFee::where('school_id', $schoolId);
 
-            return view('school.miscellaneous-fees.index', compact('fees'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load fees.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
+
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
+        if (\in_array($sort, ['id', 'name', 'amount', 'created_at'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $stats = [
+            'total_fees' => MiscellaneousFee::where('school_id', $schoolId)->count(),
+            'total_amount' => MiscellaneousFee::where('school_id', $schoolId)->sum('amount'),
+        ];
+        $stats['total_amount_formatted'] = $this->formatCurrency($stats['total_amount']);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.miscellaneous-fees.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+        ]);
     }
 
     public function store(StoreMiscellaneousFeeRequest $request)
@@ -133,5 +164,10 @@ class MiscellaneousFeeController extends TenantController
                 'Failed to delete fee: ' . $e->getMessage()
             );
         }
+    }
+
+    private function formatCurrency($amount)
+    {
+        return number_format($amount, 2);
     }
 }

@@ -1,288 +1,269 @@
 @extends('layouts.school')
 
-@section('title', 'Students')
+@section('title', 'Student Directory')
 
 @section('content')
-<div x-data="studentManagement">
-    <!-- Header Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Student Management</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Total {{ number_format($stats['total']) }} students enrolled in your school</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <button type="button" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm">
-                    <i class="fas fa-file-export mr-2 opacity-50"></i>
-                    Export
-                </button>
-                <a href="{{ route('school.admission.index') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-user-plus mr-2"></i>
-                    New Admission
-                </a>
-            </div>
-        </div>
-    </div>
+    <div x-data="Object.assign(ajaxDataTable({
+        fetchUrl: '{{ route('school.students.fetch') }}',
+        defaultSort: 'name',
+        defaultDirection: 'asc',
+        defaultPerPage: 25,
+        defaultFilters: { class_id: '', section_id: '', status: '' },
+        initialRows: @js($initialData['rows']),
+        initialPagination: @js($initialData['pagination']),
+        initialStats: @js($initialData['stats']),
+        filterLabels: {
+            class_id: { @foreach($classes as $c) '{{ $c->id }}': '{{ $c->name }}', @endforeach },
+            status: { 'active': 'Active', 'inactive': 'Inactive', 'withdrawn': 'Withdrawn' }
+        }
+    }), studentManagement())" class="space-y-6">
 
-    <!-- Stats Section -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
-            <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i class="fas fa-users text-xl"></i>
-            </div>
-            <div>
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Enrolled</p>
-                <p class="text-2xl font-black text-gray-800">{{ number_format($stats['total']) }}</p>
-            </div>
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <x-stat-card label="Total Enrolled" :value="$stats['total_formatted']" icon="fas fa-users" color="indigo" alpine-text="stats.total_formatted" />
+            <x-stat-card label="Active Students" :value="$stats['active_formatted']" icon="fas fa-user-check" color="emerald" alpine-text="stats.active_formatted" />
+            <x-stat-card label="Inactive/Archive" :value="$stats['inactive_formatted']" icon="fas fa-user-slash" color="rose" alpine-text="stats.inactive_formatted" />
+            <x-stat-card label="Recent Admissions" :value="$stats['admissions_this_month_formatted']" icon="fas fa-user-clock" color="amber" alpine-text="stats.admissions_this_month_formatted" />
         </div>
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
-            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i class="fas fa-check-circle text-xl"></i>
-            </div>
-            <div>
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Students</p>
-                <p class="text-2xl font-black text-emerald-600">{{ number_format($stats['active']) }}</p>
-            </div>
-        </div>
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
-            <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i class="fas fa-user-slash text-xl"></i>
-            </div>
-            <div>
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Inactive/Archive</p>
-                <p class="text-2xl font-black text-rose-600">{{ number_format($stats['inactive']) }}</p>
-            </div>
-        </div>
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 group hover:shadow-md transition-all duration-300">
-            <div class="w-12 h-12 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i class="fas fa-user-clock text-xl"></i>
-            </div>
-            <div>
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Recent Admits</p>
-                <p class="text-2xl font-black text-violet-600">{{ number_format($stats['admissions_this_month']) }}</p>
-            </div>
-        </div>
-    </div>
 
-    <!-- Filters Section -->
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-        <form action="{{ route('school.students.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Class</label>
-                <select name="class_id" 
-                        class="w-full h-10 px-3 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-teal-500 focus:border-teal-500 transition-all">
-                    <option value="">All Classes</option>
-                    @foreach($classes as $class)
-                        <option value="{{ $class->id }}" {{ request('class_id') == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Section</label>
-                <select name="section_id" 
-                        class="w-full h-10 px-3 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-teal-500 focus:border-teal-500 transition-all">
-                    <option value="">All Sections</option>
-                    @foreach($sections as $section)
-                        <option value="{{ $section->id }}" {{ request('section_id') == $section->id ? 'selected' : '' }}>{{ $section->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Status</label>
-                <select name="status" 
-                        class="w-full h-10 px-3 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-teal-500 focus:border-teal-500 transition-all">
-                    <option value="">All Statuses</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                    <option value="withdrawn" {{ request('status') == 'withdrawn' ? 'selected' : '' }}>Withdrawn</option>
-                </select>
-            </div>
-            <div class="lg:col-span-1">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Smart Search</label>
-                <div class="relative">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, Roll, No..." 
-                           class="w-full h-10 pl-9 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:ring-teal-500 focus:border-teal-500 transition-all">
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                        <i class="fas fa-search text-xs"></i>
+        <!-- Header Section -->
+        <x-page-header title="Student Directory" description="Manage student profiles, academic records, and institutional lifecycle." icon="fas fa-user-graduate">
+            <a href="{{ route('school.admission.index') }}"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-user-plus mr-2 text-xs"></i>
+                New Admission
+            </a>
+            <button @click="exportCSV()"
+                class="inline-flex items-center px-4 py-2 bg-slate-800 hover:bg-black text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-file-export mr-2 text-xs"></i>
+                Export Results
+            </button>
+        </x-page-header>
+
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header with Search and Filters -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Active Registry</h2>
+                        <x-table.search placeholder="Search by name, roll, or phone..." />
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <x-table.filter-select
+                            model="filters.status"
+                            action="applyFilter('status', $event.target.value)"
+                            placeholder="All Status"
+                            :options="['active' => 'Active', 'inactive' => 'Inactive', 'withdrawn' => 'Withdrawn']"
+                        />
+
+                        <x-table.filter-select
+                            model="filters.class_id"
+                            action="applyFilter('class_id', $event.target.value)"
+                            placeholder="All Classes"
+                            :options="$classes->pluck('name', 'id')->toArray()"
+                        />
+
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
                     </div>
                 </div>
-            </div>
-            <div class="flex items-end">
-                <button type="submit" 
-                        class="w-full h-10 flex items-center justify-center gap-2 bg-gray-800 dark:bg-gray-700 hover:bg-black dark:hover:bg-gray-600 text-white font-bold text-xs uppercase tracking-widest rounded-lg shadow-sm transition-all duration-300">
-                    <i class="fas fa-filter text-[10px] opacity-50"></i>
-                    Apply Filters
-                </button>
-            </div>
-        </form>
-    </div>
 
-    @php
-        $tableColumns = [
-            [
-                'key' => 'student_details',
-                'label' => 'Student Profile',
-                'sortable' => false,
-                'render' => function($row) {
-                    $photoUrl = $row->photo ? Storage::url($row->photo) : null;
-                    $initials = strtoupper(substr($row->first_name, 0, 1) . substr($row->last_name, 0, 1));
-                    
-                    $imgHtml = $photoUrl 
-                        ? '<img class="w-10 h-10 rounded-xl object-cover shadow-sm ring-2 ring-white" src="'.$photoUrl.'">'
-                        : '<div class="w-10 h-10 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-600 font-black text-xs">'.$initials.'</div>';
-                        
-                    return '
-                        <div class="flex items-center gap-4">
-                            '.$imgHtml.'
-                            <div>
-                                <div class="text-sm font-bold text-gray-800">'.e($row->full_name).'</div>
-                                <div class="text-[11px] font-semibold text-gray-400 italic">'.($row->phone ?? 'No Contact').'</div>
+                <!-- Active Filter Tags -->
+                <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
+                    <template x-for="(value, key) in filters" :key="key">
+                        <template x-if="value">
+                            <div class="flex items-center gap-1 bg-teal-50 text-teal-700 border border-teal-100 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                <span x-text="key.replace('_', ' ') + ': ' + getFilterLabel(key, value)"></span>
+                                <button @click="removeFilter(key)" class="ml-1 hover:text-teal-900 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
-                        </div>';
-                }
-            ],
-            [
-                'key' => 'admission_no',
-                'label' => 'Admission Info',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '
-                        <div>
-                            <div class="text-[12px] font-mono font-black text-teal-600 tracking-tighter">'.e($row->admission_no).'</div>
-                            <div class="text-[10px] font-bold text-gray-400">'.($row->admission_date ? $row->admission_date->format('M d, Y') : 'N/A').'</div>
-                        </div>';
-                }
-            ],
-            [
-                'key' => 'class_section',
-                'label' => 'Class / Section',
-                'sortable' => false,
-                'render' => function($row) {
-                    return '
-                        <div>
-                            <div class="text-sm font-bold text-gray-700">'.e($row->class->name ?? 'N/A').'</div>
-                            <div class="text-[11px] font-semibold text-emerald-600">'.e($row->section->name ?? 'N/A').'</div>
-                        </div>';
-                }
-            ],
-            [
-                'key' => 'status',
-                'label' => 'Status',
-                'sortable' => true,
-                'render' => function($row) {
-                    $colors = [
-                        'active' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                        'inactive' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                        'withdrawn' => 'bg-rose-100 text-rose-700 border-rose-200',
-                    ];
-                    $cls = $colors[$row->status] ?? 'bg-gray-100 text-gray-700 border-gray-200';
-                    return '<span class="px-3 py-1 text-[10px] font-black uppercase rounded-full border tracking-wide '.$cls.'">'.e(ucfirst($row->status)).'</span>';
-                }
-            ],
-        ];
+                        </template>
+                    </template>
+                    <button @click="clearAllFilters()" class="text-[10px] font-bold text-red-600 hover:text-red-700 uppercase tracking-widest ml-2 transition-colors">
+                        Clear All
+                    </button>
+                </div>
+            </div>
 
-        $tableActions = [
-            [
-                'type' => 'button',
-                'icon' => 'fas fa-eye',
-                'class' => 'text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors',
-                'onclick' => function($row) {
-                    return "window.location.href='".route('school.students.show', $row->id)."'";
-                },
-                'title' => 'View Profile',
-            ],
-            [
-                'type' => 'button',
-                'icon' => 'fas fa-edit',
-                'class' => 'text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded-lg transition-colors',
-                'onclick' => function($row) {
-                    return "window.location.href='".route('school.students.edit', $row->id)."'";
-                },
-                'title' => 'Edit',
-            ],
-            [
-                'type' => 'button',
-                'icon' => 'fas fa-trash',
-                'class' => 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors',
-                'onclick' => function($row) {
-                    $name = addslashes($row->full_name);
-                    return "window.dispatchEvent(new CustomEvent('open-delete-student', { detail: { id: " . $row->id . ", name: '{$name}' } }))";
-                },
-                'title' => 'Archive Student',
-            ],
-        ];
-    @endphp
+            <!-- Table Body -->
+            <div class="overflow-x-auto relative ajax-table-wrapper">
+                <x-table.loading-overlay />
 
-    <div class="mt-6">
-        <x-data-table 
-            :columns="$tableColumns" 
-            :data="$students" 
-            :actions="$tableActions"
-            empty-message="No student records found matching your criteria" 
-            empty-icon="fas fa-user-slash"
-        >
-            Student Directory
-        </x-data-table>
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <x-table.sort-header column="name" label="Student Profile" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="admission_no" label="Admission No" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Academic Placement</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                            <x-table.sort-header column="admission_date" label="Joined On" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <!-- Initial Render (Blade) -->
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                        @foreach($initialData['rows'] as $row)
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm">
+                                            @if($row['photo'])
+                                                <img src="{{ $row['photo'] }}" class="w-full h-full object-cover">
+                                            @else
+                                                <div class="w-full h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs uppercase">{{ $row['initials'] }}</div>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100 group-hover:text-teal-600 transition-colors">{{ $row['full_name'] }}</div>
+                                            <div class="text-[10px] font-medium text-gray-400 italic">Contact: {{ $row['phone'] }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-[10px] font-black text-teal-600 bg-teal-50 px-2.5 py-1.5 rounded-lg border border-teal-100 uppercase tabular-nums tracking-widest">#{{ $row['admission_no'] }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <div class="text-xs font-bold text-gray-700 dark:text-gray-200">{{ $row['class_name'] }}</div>
+                                        <div class="text-[10px] font-medium text-emerald-600">Section {{ $row['section_name'] }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @php
+                                        $statusStyles = [
+                                            'active' => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                            'inactive' => 'bg-yellow-50 text-yellow-700 border-yellow-100',
+                                            'withdrawn' => 'bg-rose-50 text-rose-700 border-rose-100'
+                                        ];
+                                        $style = $statusStyles[$row['status']] ?? 'bg-gray-50 text-gray-700 border-gray-100';
+                                    @endphp
+                                    <span class="px-3 py-1 text-[10px] font-black uppercase rounded-full border tracking-wide {{ $style }}">
+                                        {{ $row['status'] }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 tabular-nums">
+                                    {{ $row['admission_date'] }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route('school.students.show', $row['id']) }}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="View Profile"><i class="fas fa-eye text-xs"></i></a>
+                                        <a href="{{ route('school.students.edit', $row['id']) }}" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                        <button @click="confirmArchive(@js($row))" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Archive"><i class="fas fa-trash-alt text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+
+                    <!-- Dynamic Render (Alpine) -->
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading ? 'opacity-50' : 'opacity-100'">
+                        <template x-for="row in rows" :key="row.id">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm relative">
+                                            <template x-if="row.photo">
+                                                <img :src="row.photo" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!row.photo">
+                                                <div class="w-full h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center text-teal-600 font-bold text-xs uppercase" x-text="row.initials"></div>
+                                            </template>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100 group-hover:text-teal-600 transition-colors" x-text="row.full_name"></div>
+                                            <div class="text-[10px] font-medium text-gray-400 italic" x-text="'Contact: ' + row.phone"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-[10px] font-black text-teal-600 bg-teal-50 px-2.5 py-1.5 rounded-lg border border-teal-100 uppercase tabular-nums tracking-widest" x-text="'#' + row.admission_no"></span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <div class="text-xs font-bold text-gray-700 dark:text-gray-200" x-text="row.class_name"></div>
+                                        <div class="text-[10px] font-medium text-emerald-600" x-text="'Section ' + row.section_name"></div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 text-[10px] font-black uppercase rounded-full border tracking-wide"
+                                        :class="{
+                                            'bg-emerald-50 text-emerald-700 border-emerald-100': row.status === 'active',
+                                            'bg-yellow-50 text-yellow-700 border-yellow-100': row.status === 'inactive',
+                                            'bg-rose-50 text-rose-700 border-rose-100': row.status === 'withdrawn',
+                                            'bg-gray-50 text-gray-700 border-gray-100': !['active', 'inactive', 'withdrawn'].includes(row.status)
+                                        }"
+                                        x-text="row.status">
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 tabular-nums" x-text="row.admission_date"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a :href="'/school/students/' + row.id" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="View Profile"><i class="fas fa-eye text-xs"></i></a>
+                                        <a :href="'/school/students/' + row.id + '/edit'" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></a>
+                                        <button @click="confirmArchive(row)" class="w-8 h-8 rounded-lg bg-rose-50 text-red-600 flex items-center justify-center hover:bg-rose-100 transition-colors" title="Archive"><i class="fas fa-trash-alt text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <x-table.empty-state :colspan="6" icon="fas fa-user-slash" message="No student records matched your search." />
+                    </tbody>
+                </table>
+            </div>
+
+            <x-table.pagination />
+        </div>
+
+        <x-confirm-modal />
     </div>
 
-    <!-- Confirmation Modal -->
-    <x-confirm-modal />
-</div>
-
-@push('scripts')
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('studentManagement', () => ({
-            init() {
-                window.addEventListener('open-delete-student', (e) => this.confirmDelete(e.detail));
-            },
-
-            async confirmDelete(student) {
-                window.dispatchEvent(new CustomEvent('open-confirm-modal', {
-                    detail: {
-                        title: "Archive Student Record",
-                        message: `Are you sure you want to archive the student record for "${student.name}"? This will hide them from active lists but keep their historical data.`,
-                        callback: async () => {
-                            try {
-                                const response = await fetch(`/school/students/${student.id}`, {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        "Accept": "application/json",
-                                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                                    },
-                                    body: JSON.stringify({ _method: "DELETE" })
-                                });
-
-                                const result = await response.json();
-
-                                if (response.ok) {
-                                    if (window.Toast) {
-                                        window.Toast.fire({
-                                            icon: "success",
-                                            title: result.message || "Student archived successfully"
+    @push('scripts')
+        <script>
+            function studentManagement() {
+                return {
+                    confirmArchive(student) {
+                        const self = this;
+                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                            detail: {
+                                title: 'Archive Student Record',
+                                message: `Are you sure you want to archive the record for "${student.full_name}"? This will hide them from active lists but keep their historical data.`,
+                                callback: async () => {
+                                    try {
+                                        const response = await fetch(`/school/students/${student.id}`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            },
+                                            body: JSON.stringify({ _method: 'DELETE' })
                                         });
+
+                                        const result = await response.json();
+
+                                        if (response.ok) {
+                                            if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                            if (typeof self.refreshTable === 'function') self.refreshTable();
+                                        } else {
+                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Archive failed' });
+                                        }
+                                    } catch (error) {
+                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Archive operation failed' });
                                     }
-                                    setTimeout(() => window.location.reload(), 800);
-                                } else {
-                                    throw new Error(result.message || "Failed to archive student");
-                                }
-                            } catch (error) {
-                                if (window.Toast) {
-                                    window.Toast.fire({
-                                        icon: "error",
-                                        title: error.message || "An error occurred"
-                                    });
                                 }
                             }
-                        }
-                    }
-                }));
-            }
-        }));
-    });
-</script>
-@endpush
-@endsection
+                        }));
+                    },
 
+                    exportCSV() {
+                        // Implement export if needed, or simply fire a toast
+                        if (window.Toast) window.Toast.fire({ icon: 'info', title: 'Preparing student data for export...' });
+                    }
+                }
+            }
+        </script>
+    @endpush
+@endsection

@@ -6,16 +6,54 @@ use App\Http\Controllers\TenantController;
 use App\Models\ExamType;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAjaxDataTable;
+
 class ExamTypeController extends TenantController
 {
-    public function index()
-    {
-        $school = auth()->user()->school;
-        $examTypes = ExamType::where('school_id', $school->id)
-            ->orderBy('name')
-            ->paginate(15);
+    use HasAjaxDataTable {
+        handleAjaxTable as traitHandleAjaxTable;
+    }
 
-        return view('school.examination.exam-types.index', compact('examTypes'));
+    public function index(Request $request)
+    {
+        $this->ensureSchoolActive();
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function($row) {
+            return [
+                'id' => $row->id,
+                'name' => $row->name,
+                'updated_at' => $row->updated_at->diffForHumans(),
+            ];
+        };
+
+        $query = ExamType::where('school_id', $schoolId);
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $stats = $this->getTableStats();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.examination.exam-types.index', [
+            'initialData' => $initialData,
+            'stats' => $stats,
+        ]);
+    }
+
+    protected function getTableStats()
+    {
+        return [
+            'total_types' => ExamType::where('school_id', $this->getSchoolId())->count(),
+        ];
     }
 
     public function store(Request $request)

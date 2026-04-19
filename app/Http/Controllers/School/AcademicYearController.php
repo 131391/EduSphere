@@ -7,10 +7,13 @@ use App\Http\Requests\School\StoreAcademicYearRequest;
 use App\Http\Requests\School\UpdateAcademicYearRequest;
 use App\Models\AcademicYear;
 use App\Services\School\AcademicYearService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class AcademicYearController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected AcademicYearService $academicYearService;
 
     public function __construct(AcademicYearService $academicYearService)
@@ -21,25 +24,38 @@ class AcademicYearController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'start_date'),
-                'direction' => $request->input('direction', 'desc'),
-            ];
+        $schoolId = $this->getSchoolId();
 
-            $academicYears = $this->academicYearService->getPaginatedAcademicYears(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $transformer = fn($row) => [
+            'id'         => $row->id,
+            'name'       => $row->name,
+            'start_date' => $row->start_date?->format('Y-m-d'),
+            'end_date'   => $row->end_date?->format('Y-m-d'),
+            'duration'   => $row->start_date?->format('M d, Y') . ' — ' . $row->end_date?->format('M d, Y'),
+            'is_current' => $row->is_current === \App\Enums\YesNo::Yes,
+            'created_at' => $row->created_at?->format('M d, Y'),
+        ];
 
-            $stats = $this->academicYearService->getStatistics($this->getSchool());
+        $query = AcademicYear::where('school_id', $schoolId);
 
-            return view('school.academic-years.index', compact('academicYears', 'stats'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load academic years.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
+
+        $sort = in_array($request->input('sort'), ['name', 'start_date', 'end_date', 'created_at'])
+            ? $request->input('sort') : 'start_date';
+        $query->orderBy($sort, $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc');
+
+        $stats = ['total' => AcademicYear::where('school_id', $schoolId)->count(),
+                  'current' => AcademicYear::where('school_id', $schoolId)->where('is_current', \App\Enums\YesNo::Yes)->count()];
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, ['stats' => $stats]);
+
+        return view('school.academic-years.index', ['initialData' => $initialData, 'stats' => $stats]);
     }
 
     public function create()

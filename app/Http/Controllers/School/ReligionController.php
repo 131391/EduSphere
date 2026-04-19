@@ -7,10 +7,13 @@ use App\Http\Requests\School\StoreReligionRequest;
 use App\Http\Requests\School\UpdateReligionRequest;
 use App\Models\Religion;
 use App\Services\School\ReligionService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class ReligionController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected ReligionService $service;
 
     public function __construct(ReligionService $service)
@@ -21,23 +24,47 @@ class ReligionController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($religion) {
+            return [
+                'id' => $religion->id,
+                'name' => $religion->name,
+                'created_at' => $religion->created_at?->format('M d, Y'),
+                'created_at_human' => $religion->created_at?->diffForHumans(),
             ];
+        };
 
-            $religions = $this->service->getPaginatedReligions(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = Religion::where('school_id', $schoolId);
 
-            return view('school.religions.index', compact('religions'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load religions.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+        if (\in_array($sort, ['name', 'created_at'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, [
+                'total' => Religion::where('school_id', $schoolId)->count(),
+            ]);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => Religion::where('school_id', $schoolId)->count(),
+            ],
+        ]);
+
+        return view('school.religions.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+        ]);
     }
 
     public function store(StoreReligionRequest $request)

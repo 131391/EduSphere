@@ -7,10 +7,13 @@ use App\Http\Requests\School\StoreFeeNameRequest;
 use App\Http\Requests\School\UpdateFeeNameRequest;
 use App\Models\FeeName;
 use App\Services\School\FeeNameService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class FeeNameController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected FeeNameService $service;
 
     public function __construct(FeeNameService $service)
@@ -21,23 +24,48 @@ class FeeNameController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($feeName) {
+            return [
+                'id' => $feeName->id,
+                'name' => $feeName->name,
+                'description' => $feeName->description,
+                'created_at' => $feeName->created_at?->format('M d, Y'),
+                'created_at_human' => $feeName->created_at?->diffForHumans(),
             ];
+        };
 
-            $feeNames = $this->service->getPaginatedFeeNames(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = FeeName::where('school_id', $schoolId);
 
-            return view('school.fee-names.index', compact('feeNames'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load fee names.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
+
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+        if (\in_array($sort, ['name', 'created_at'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, [
+                'total' => FeeName::where('school_id', $schoolId)->count(),
+            ]);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => FeeName::where('school_id', $schoolId)->count(),
+            ],
+        ]);
+
+        return view('school.fee-names.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+        ]);
     }
 
     public function store(StoreFeeNameRequest $request)

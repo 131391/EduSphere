@@ -7,10 +7,13 @@ use App\Http\Requests\School\StoreSchoolBankRequest;
 use App\Http\Requests\School\UpdateSchoolBankRequest;
 use App\Models\SchoolBank;
 use App\Services\School\SchoolBankService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class SchoolBankController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected SchoolBankService $service;
 
     public function __construct(SchoolBankService $service)
@@ -21,23 +24,46 @@ class SchoolBankController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'created_at' => $item->created_at?->format('M d, Y'),
             ];
+        };
 
-            $banks = $this->service->getPaginatedBanks(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = SchoolBank::where('school_id', $schoolId);
 
-            return view('school.school-banks.index', compact('banks'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load school banks.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
+
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
+        if (\in_array($sort, ['id', 'name', 'created_at'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $stats = [
+            'total' => SchoolBank::where('school_id', $schoolId)->count(),
+        ];
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.school-banks.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+        ]);
     }
 
     public function store(StoreSchoolBankRequest $request)

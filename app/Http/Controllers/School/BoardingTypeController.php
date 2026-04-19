@@ -7,10 +7,13 @@ use App\Http\Requests\School\StoreBoardingTypeRequest;
 use App\Http\Requests\School\UpdateBoardingTypeRequest;
 use App\Models\BoardingType;
 use App\Services\School\BoardingTypeService;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 
 class BoardingTypeController extends TenantController
 {
+    use HasAjaxDataTable;
+
     protected BoardingTypeService $service;
 
     public function __construct(BoardingTypeService $service)
@@ -21,23 +24,47 @@ class BoardingTypeController extends TenantController
 
     public function index(Request $request)
     {
-        try {
-            $filters = [
-                'search' => $request->input('search'),
-                'sort' => $request->input('sort', 'id'),
-                'direction' => $request->input('direction', 'asc'),
+        $schoolId = $this->getSchoolId();
+
+        $transformer = function ($type) {
+            return [
+                'id' => $type->id,
+                'name' => $type->name,
+                'description' => $type->description,
+                'created_at' => $type->created_at?->format('M d, Y'),
             ];
+        };
 
-            $types = $this->service->getPaginatedTypes(
-                $this->getSchool(),
-                $this->validatePerPage(),
-                $filters
-            );
+        $query = BoardingType::where('school_id', $schoolId);
 
-            return view('school.boarding-types.index', compact('types'));
-        } catch (\Exception $e) {
-            return $this->backWithError('Failed to load boarding types.');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
+
+        $sort = $request->input('sort', 'name');
+        $direction = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
+        if (\in_array($sort, ['id', 'name', 'created_at'], true)) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $stats = [
+            'total' => BoardingType::where('school_id', $schoolId)->count(),
+        ];
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $stats);
+        }
+
+        $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => $stats,
+        ]);
+
+        return view('school.boarding-types.index', [
+            'initialData' => $initialData,
+            'stats' => $initialData['stats'],
+        ]);
     }
 
     public function store(StoreBoardingTypeRequest $request)

@@ -3,7 +3,7 @@
 @section('title', 'Student Registration Registry')
 
 @section('content')
-    <div x-data="ajaxDataTable({
+    <div x-data="Object.assign(ajaxDataTable({
         fetchUrl: '{{ route('school.student-registrations.fetch') }}',
         defaultSort: 'created_at',
         defaultDirection: 'desc',
@@ -20,7 +20,7 @@
                 @foreach($classes as $c) '{{ $c->id }}': '{{ $c->name }}', @endforeach
             }
         }
-    })" class="space-y-6">
+    }), studentRegistration())" class="space-y-6">
         
         <!-- Institutional Analytics -->
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -43,13 +43,8 @@
                 <i class="fas fa-plus mr-2 text-xs"></i>
                 New Registration
             </a>
-            <button @click="exportData('csv')" :disabled="exporting"
-                class="min-w-[140px] justify-center inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50">
-                <span x-show="exporting" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block" x-cloak></span>
-                <i x-show="!exporting" class="fas fa-file-excel mr-2 text-xs"></i>
-                <span x-text="exporting ? 'Exporting...' : 'Excel Export'">Excel Export</span>
-            </button>
         </x-page-header>
+
 
         <!-- AJAX Data Table -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -330,6 +325,50 @@
             </form>
         </x-modal>
     </div>
+
+    @push('scripts')
+        <script>
+            function studentRegistration() {
+                return {
+
+                    async quickAction(url, title, method = 'POST', message = 'Are you sure you want to proceed with this action?') {
+                        const self = this;
+                        window.dispatchEvent(new CustomEvent('open-confirm-modal', {
+                            detail: {
+                                title: title,
+                                message: message,
+                                callback: async () => {
+                                    try {
+                                        const response = await fetch(url, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            },
+                                            body: JSON.stringify({ _method: method })
+                                        });
+
+                                        const result = await response.json();
+
+                                        if (response.ok) {
+                                            if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Action completed successfully' });
+                                            if (typeof self.refreshTable === 'function') self.refreshTable();
+                                        } else {
+                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Action failed' });
+                                        }
+                                    } catch (error) {
+                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });
+                                    }
+                                }
+                            }
+                        }));
+                    }
+                }
+            }
+        </script>
+    @endpush
 @endsection
+
 
 
