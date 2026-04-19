@@ -34,7 +34,7 @@
                        class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white pr-36">
                 <button type="button"
                         @click="formData.whatsapp_no = formData.contact_no; clearError('whatsapp_no')"
-                        x-show="formData.contact_no && formData.whatsapp_no !== formData.contact_no" x-cloak
+                        x-show="formData.contact_no && formData.whatsapp_no !== formData.contact_no"
                         class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-teal-600 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-1 rounded-md transition-colors whitespace-nowrap">
                     <i class="fas fa-copy mr-1"></i>Same as Contact
                 </button>
@@ -61,10 +61,11 @@
                    class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
         </div>
 
-        <div x-show="contactExpanded" x-cloak class="contents"
+        <div x-show="contactExpanded"
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100">
+             x-transition:enter-end="opacity-100"
+             class="grid grid-cols-1 md:grid-cols-2 gap-5 col-span-full">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">SMS No</label>
                 <input type="text" name="sms_no" x-model="formData.sms_no" placeholder="SMS number"

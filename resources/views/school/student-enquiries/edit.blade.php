@@ -61,12 +61,8 @@
                         : currentStep > {{ $n }}
                             ? 'bg-emerald-500 border-emerald-500 text-white'
                             : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400 group-hover:border-teal-400'">
-                    <template x-if="currentStep > {{ $n }}">
-                        <i class="fas fa-check text-xs"></i>
-                    </template>
-                    <template x-if="currentStep <= {{ $n }}">
-                        <i class="fas {{ $step['icon'] }} text-xs"></i>
-                    </template>
+                    <i class="fas fa-check text-xs" x-show="currentStep > {{ $n }}"></i>
+                    <i class="fas {{ $step['icon'] }} text-xs" x-show="currentStep <= {{ $n }}"></i>
                 </div>
                 <span class="text-[10px] font-semibold hidden sm:block transition-colors"
                       :class="currentStep === {{ $n }} ? 'text-teal-600' : currentStep > {{ $n }} ? 'text-emerald-500' : 'text-gray-400'">
@@ -88,42 +84,54 @@
         @method('PUT')
 
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
-            <div class="p-6 md:p-8">
+            <div class="p-6 md:p-8 min-h-[420px]">
 
-                {{-- Step 1 --}}
-                <div x-show="currentStep === 1" x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                    @include('school.student-enquiries.partials.step1')
-                </div>
+                {{-- Only the active step is in the DOM at any time (x-if removes others instantly) --}}
+                <template x-if="currentStep === 1">
+                    <div x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        @include('school.student-enquiries.partials.step1')
+                    </div>
+                </template>
 
-                {{-- Step 2 --}}
-                <div x-show="currentStep === 2" x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                    @include('school.student-enquiries.partials.step2')
-                </div>
+                <template x-if="currentStep === 2">
+                    <div x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        @include('school.student-enquiries.partials.step2')
+                    </div>
+                </template>
 
-                {{-- Step 3 --}}
-                <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                    @include('school.student-enquiries.partials.step3')
-                </div>
+                <template x-if="currentStep === 3">
+                    <div x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        @include('school.student-enquiries.partials.step3')
+                    </div>
+                </template>
 
-                {{-- Step 4 --}}
-                <div x-show="currentStep === 4" x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                    @include('school.student-enquiries.partials.step4')
-                </div>
+                <template x-if="currentStep === 4">
+                    <div x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        @include('school.student-enquiries.partials.step4')
+                    </div>
+                </template>
 
             </div>
 
             {{-- Step Navigation Footer --}}
             <div class="px-6 md:px-8 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl flex items-center justify-between gap-4">
-                <button type="button" @click="prevStep()"
-                        x-show="currentStep > 1"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                    <i class="fas fa-arrow-left text-xs"></i> Previous
-                </button>
-                <div x-show="currentStep === 1"></div>
+                <template x-if="currentStep > 1">
+                    <button type="button" @click="prevStep()"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-arrow-left text-xs"></i> Previous
+                    </button>
+                </template>
+                <template x-if="currentStep === 1">
+                    <span aria-hidden="true"></span>
+                </template>
 
                 <div class="flex items-center gap-3">
                     <a href="{{ route('school.student-enquiries.index') }}"
@@ -131,21 +139,23 @@
                         Cancel
                     </a>
 
-                    <button type="button" @click="nextStep()"
-                            x-show="currentStep < 4"
-                            class="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all">
-                        Next <i class="fas fa-arrow-right text-xs"></i>
-                    </button>
+                    <template x-if="currentStep < 4">
+                        <button type="button" @click="nextStep()"
+                                class="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all">
+                            Next <i class="fas fa-arrow-right text-xs"></i>
+                        </button>
+                    </template>
 
-                    <button type="submit"
-                            x-show="currentStep === 4"
-                            :disabled="submitting"
-                            :class="submitting ? 'opacity-75 cursor-wait' : ''"
-                            class="inline-flex items-center gap-2 px-8 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-bold rounded-lg shadow-md transition-all">
-                        <template x-if="!submitting"><i class="fas fa-save text-xs"></i></template>
-                        <template x-if="submitting"><i class="fas fa-circle-notch animate-spin text-xs"></i></template>
-                        <span x-text="submitting ? 'Saving...' : 'Save Changes'"></span>
-                    </button>
+                    <template x-if="currentStep === 4">
+                        <button type="submit"
+                                :disabled="submitting"
+                                :class="submitting ? 'opacity-75 cursor-wait' : ''"
+                                class="inline-flex items-center gap-2 px-8 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-bold rounded-lg shadow-md transition-all">
+                            <template x-if="!submitting"><i class="fas fa-save text-xs"></i></template>
+                            <template x-if="submitting"><i class="fas fa-circle-notch animate-spin text-xs"></i></template>
+                            <span x-text="submitting ? 'Saving...' : 'Save Changes'"></span>
+                        </button>
+                    </template>
                 </div>
             </div>
         </div>
@@ -283,13 +293,32 @@ function enquiryManagement() {
             this.submitting = true;
             this.errors = {};
 
-            const fd = new FormData(document.getElementById('enquiryForm'));
+            // Build FormData from the Alpine formData object (not the DOM form)
+            // because x-if removes inactive step inputs from the DOM.
+            const fd = new FormData();
+            fd.append('_token', document.querySelector('input[name="_token"]').value);
+            fd.append('_method', 'PUT');
+
+            // Append all scalar formData fields
+            // Skip only null/undefined/empty-string; keep 0, false, '0'
+            Object.entries(this.formData).forEach(([key, value]) => {
+                if (value === null || value === undefined || value === '') return;
+                fd.append(key, value === true ? '1' : value === false ? '0' : value);
+            });
+
+            // Append file inputs separately (they can't live in formData object)
+            ['student_photo', 'father_photo', 'mother_photo'].forEach(name => {
+                const input = document.querySelector(`input[name="${name}"]`);
+                if (input && input.files && input.files[0]) {
+                    fd.append(name, input.files[0]);
+                }
+            });
 
             try {
                 const response = await fetch("{{ route('school.student-enquiries.update', $studentEnquiry->id) }}", {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
