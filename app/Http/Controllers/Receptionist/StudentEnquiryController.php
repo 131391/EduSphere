@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Enums\EnquiryStatus;
 use App\Enums\Gender;
+use App\Models\Religion;
+use App\Models\Category;
+use App\Models\Qualification;
+use App\Models\BloodGroup;
 
 use App\Traits\HasAjaxDataTable;
 
@@ -167,8 +171,12 @@ class StudentEnquiryController extends TenantController
         $academicYears = AcademicYear::where('school_id', $schoolId)->get();
         $classes = ClassModel::where('school_id', $schoolId)->get();
         $countries = Country::all();
+        $religions = Religion::where('school_id', $schoolId)->get();
+        $categories = Category::where('school_id', $schoolId)->get();
+        $qualifications = Qualification::where('school_id', $schoolId)->get();
+        $bloodGroups = BloodGroup::where('school_id', $schoolId)->get();
 
-        return view('receptionist.student-enquiries.create', compact('academicYears', 'classes', 'countries'));
+        return view('receptionist.student-enquiries.create', compact('academicYears', 'classes', 'countries', 'religions', 'categories', 'qualifications', 'bloodGroups'));
     }
 
     public function store(Request $request)
@@ -228,8 +236,12 @@ class StudentEnquiryController extends TenantController
         $academicYears = AcademicYear::where('school_id', $schoolId)->get();
         $classes = ClassModel::where('school_id', $schoolId)->get();
         $countries = Country::all();
+        $religions = Religion::where('school_id', $schoolId)->get();
+        $categories = Category::where('school_id', $schoolId)->get();
+        $qualifications = Qualification::where('school_id', $schoolId)->get();
+        $bloodGroups = BloodGroup::where('school_id', $schoolId)->get();
 
-        return view('receptionist.student-enquiries.edit', compact('studentEnquiry', 'academicYears', 'classes', 'countries'));
+        return view('receptionist.student-enquiries.edit', compact('studentEnquiry', 'academicYears', 'classes', 'countries', 'religions', 'categories', 'qualifications', 'bloodGroups'));
     }
 
     public function update(Request $request, StudentEnquiry $studentEnquiry)
@@ -318,6 +330,9 @@ class StudentEnquiryController extends TenantController
 
         // Block deletion if enquiry has progressed to registration or admission
         if (in_array($studentEnquiry->form_status, [EnquiryStatus::Completed, EnquiryStatus::Admitted])) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Cannot delete an enquiry that has been converted to a registration or admission.'], 422);
+            }
             return redirect()->route('receptionist.student-enquiries.index')
                 ->with('error', 'Cannot delete an enquiry that has been converted to a registration or admission.');
         }
@@ -358,7 +373,10 @@ class StudentEnquiryController extends TenantController
             'father_name' => 'required|string|max:255',
             'father_contact' => 'required|string|max:20',
             'father_email' => 'nullable|email|max:255',
-            'father_qualification' => 'nullable|string|max:255',
+            'father_qualification_id' => [
+                'nullable',
+                Rule::exists('qualifications', 'id')->where('school_id', $this->getSchoolId())
+            ],
             'father_occupation' => 'nullable|string|max:255',
             'father_annual_income' => 'nullable|numeric|min:0',
             'father_organization' => 'nullable|string|max:255',
@@ -370,7 +388,10 @@ class StudentEnquiryController extends TenantController
             'mother_name' => 'required|string|max:255',
             'mother_contact' => 'required|string|max:20',
             'mother_email' => 'nullable|email|max:255',
-            'mother_qualification' => 'nullable|string|max:255',
+            'mother_qualification_id' => [
+                'nullable',
+                Rule::exists('qualifications', 'id')->where('school_id', $this->getSchoolId())
+            ],
             'mother_occupation' => 'nullable|string|max:255',
             'mother_annual_income' => 'nullable|numeric|min:0',
             'mother_organization' => 'nullable|string|max:255',
@@ -394,9 +415,31 @@ class StudentEnquiryController extends TenantController
             'annual_income' => 'nullable|numeric|min:0',
             'no_of_brothers' => 'nullable|integer|min:0',
             'no_of_sisters' => 'nullable|integer|min:0',
-            'category' => 'nullable|in:General,OBC,SC,ST,Other',
+            'category_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where('school_id', $this->getSchoolId())
+            ],
             'minority' => 'nullable|in:Yes,No',
-            'religion' => 'nullable|in:Hindu,Muslim,Christian,Sikh,Other',
+            'blood_group_id' => [
+                'nullable',
+                Rule::exists('blood_groups', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'religion_id' => [
+                'nullable',
+                Rule::exists('religions', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'student_type_id' => [
+                'nullable',
+                Rule::exists('student_types', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'corresponding_relative_id' => [
+                'nullable',
+                Rule::exists('corresponding_relatives', 'id')->where('school_id', $this->getSchoolId())
+            ],
+            'boarding_type_id' => [
+                'nullable',
+                Rule::exists('boarding_types', 'id')->where('school_id', $this->getSchoolId())
+            ],
             'transport_facility' => 'nullable|in:Yes,No',
             'hostel_facility' => 'nullable|in:Yes,No',
             'previous_class' => 'nullable|string|max:255',

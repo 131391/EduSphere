@@ -14,6 +14,8 @@ use App\Enums\StudentStatus;
 use App\Enums\Gender;
 use App\Enums\GeneralStatus;
 use App\Enums\YesNo;
+use App\Models\StudentRegistration;
+use App\Models\StudentEnquiry;
 
 class Student extends Model
 {
@@ -25,6 +27,8 @@ class Student extends Model
         'academic_year_id',
         'admission_no',
         'registration_no',
+        'enquiry_id',
+        'admission_payment_method_id',
         'roll_no',
         'receipt_no',
         'admission_fee',
@@ -36,9 +40,9 @@ class Student extends Model
         'mother_name',
         'dob',
         'gender',
-        'blood_group',
-        'religion',
-        'category',
+        'blood_group_id',
+        'religion_id',
+        'category_id',
         'address',
         'permanent_address',
         'permanent_country_id',
@@ -57,7 +61,7 @@ class Student extends Model
         'mother_signature',
         'class_id',
         'section_id',
-        'student_type',
+        'student_type_id',
         'status',
         'admission_date',
         'additional_info',
@@ -71,24 +75,24 @@ class Student extends Model
         'number_of_brothers',
         'number_of_sisters',
         'is_single_parent',
-        'corresponding_relative',
+        'corresponding_relative_id',
         'is_transport_required',
         'bus_stop',
         'other_stop',
-        'boarding_type',
+        'boarding_type_id',
         'father_aadhaar_no',
         'father_pan',
         'father_email',
         'father_mobile_no',
         'father_occupation',
-        'father_qualification',
+        'father_qualification_id',
         'father_annual_income',
         'mother_aadhaar_no',
         'mother_pan',
         'mother_email',
         'mother_mobile_no',
         'mother_occupation',
-        'mother_qualification',
+        'mother_qualification_id',
         'mother_annual_income',
         'state_of_domicile',
         'railway_airport',
@@ -115,6 +119,14 @@ class Student extends Model
         'gender' => Gender::class,
         'is_single_parent' => YesNo::class,
         'is_transport_required' => YesNo::class,
+        'blood_group_id' => 'integer',
+        'religion_id' => 'integer',
+        'category_id' => 'integer',
+        'student_type_id' => 'integer',
+        'corresponding_relative_id' => 'integer',
+        'boarding_type_id' => 'integer',
+        'father_qualification_id' => 'integer',
+        'mother_qualification_id' => 'integer',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -150,6 +162,46 @@ class Student extends Model
         return $this->belongsTo(Section::class);
     }
 
+    public function bloodGroup()
+    {
+        return $this->belongsTo(\App\Models\BloodGroup::class, 'blood_group_id');
+    }
+
+    public function religion()
+    {
+        return $this->belongsTo(\App\Models\Religion::class, 'religion_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(\App\Models\Category::class, 'category_id');
+    }
+
+    public function studentType()
+    {
+        return $this->belongsTo(\App\Models\StudentType::class, 'student_type_id');
+    }
+
+    public function correspondingRelative()
+    {
+        return $this->belongsTo(\App\Models\CorrespondingRelative::class, 'corresponding_relative_id');
+    }
+
+    public function boardingType()
+    {
+        return $this->belongsTo(\App\Models\BoardingType::class, 'boarding_type_id');
+    }
+
+    public function fatherQualification()
+    {
+        return $this->belongsTo(\App\Models\Qualification::class, 'father_qualification_id');
+    }
+
+    public function motherQualification()
+    {
+        return $this->belongsTo(\App\Models\Qualification::class, 'mother_qualification_id');
+    }
+
     public function parents()
     {
         return $this->belongsToMany(StudentParent::class, 'student_parent')
@@ -173,9 +225,14 @@ class Student extends Model
         return $this->hasMany(Result::class);
     }
 
-    public function registrations()
+    public function registration()
     {
-        return $this->hasMany(Registration::class, 'admission_no', 'admission_no');
+        return $this->hasOne(StudentRegistration::class, 'registration_no', 'registration_no');
+    }
+
+    public function enquiry()
+    {
+        return $this->belongsTo(StudentEnquiry::class, 'enquiry_id');
     }
 
     public function transportAssignment()

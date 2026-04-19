@@ -165,16 +165,23 @@ function admissionManagement() {
             mobile_no: '{{ old('mobile_no') }}',
             email: '{{ old('email') }}',
             blood_group: '{{ old('blood_group') }}',
+            blood_group_id: '{{ old('blood_group_id') }}',
             aadhaar_no: '{{ old('aadhaar_no') }}',
             dob_certificate_no: '{{ old('dob_certificate_no') }}',
             place_of_birth: '{{ old('place_of_birth') }}',
             nationality: '{{ old('nationality', 'Indian') }}',
             religion: '{{ old('religion') }}',
+            religion_id: '{{ old('religion_id') }}',
             category: '{{ old('category') }}',
+            category_id: '{{ old('category_id') }}',
             student_type: '{{ old('student_type') }}',
+            student_type_id: '{{ old('student_type_id') }}',
             corresponding_relative: '{{ old('corresponding_relative') }}',
+            corresponding_relative_id: '{{ old('corresponding_relative_id') }}',
             mother_tongue: '{{ old('mother_tongue') }}',
             special_needs: '{{ old('special_needs') }}',
+            boarding_type: '{{ old('boarding_type') }}',
+            boarding_type_id: '{{ old('boarding_type_id') }}',
             number_of_brothers: '{{ old('number_of_brothers', 0) }}',
             number_of_sisters: '{{ old('number_of_sisters', 0) }}',
             remarks: '{{ old('remarks') }}',
@@ -339,11 +346,21 @@ function admissionManagement() {
                 this.formData.mobile_no    = d.mobile_no   || '';
                 this.formData.email        = d.email       || '';
                 this.formData.aadhaar_no    = d.aadhaar_no   || '';
+                this.formData.blood_group   = d.blood_group  || '';
+                this.formData.blood_group_id = d.blood_group_id || '';
                 this.formData.religion     = d.religion    || '';
+                this.formData.religion_id  = d.religion_id || '';
                 this.formData.category     = d.category    || '';
+                this.formData.category_id  = d.category_id || '';
+                this.formData.student_type = d.student_type || '';
+                this.formData.student_type_id = d.student_type_id || '';
                 this.formData.nationality  = d.nationality || 'Indian';
                 this.formData.place_of_birth = d.place_of_birth || '';
                 this.formData.mother_tongue  = d.mother_tongue  || '';
+                this.formData.corresponding_relative = d.corresponding_relative || '';
+                this.formData.corresponding_relative_id = d.corresponding_relative_id || '';
+                this.formData.boarding_type = d.boarding_type || '';
+                this.formData.boarding_type_id = d.boarding_type_id || '';
                 this.formData.number_of_brothers = d.number_of_brothers ?? 0;
                 this.formData.number_of_sisters  = d.number_of_sisters  ?? 0;
 
@@ -354,7 +371,6 @@ function admissionManagement() {
                 this.formData.permanent_pin        = d.permanent_pin        || '';
 
                 // Split father name from registration
-                const fp = (d.father_first_name || '');
                 this.formData.father_first_name  = d.father_first_name  || '';
                 this.formData.father_middle_name = d.father_middle_name || '';
                 this.formData.father_last_name   = d.father_last_name   || '';
@@ -362,6 +378,7 @@ function admissionManagement() {
                 this.formData.father_email       = d.father_email       || '';
                 this.formData.father_occupation  = d.father_occupation  || '';
                 this.formData.father_qualification = d.father_qualification || '';
+                this.formData.father_qualification_id = d.father_qualification_id || '';
                 this.formData.father_annual_income = d.father_annual_income || '';
                 this.formData.father_aadhaar_no   = d.father_aadhaar_no   || '';
 
@@ -369,9 +386,10 @@ function admissionManagement() {
                 this.formData.mother_middle_name = d.mother_middle_name || '';
                 this.formData.mother_last_name   = d.mother_last_name   || '';
                 this.formData.mother_mobile_no   = d.mother_mobile_no   || '';
-                this.formData.mother_email       = d.mother_email       || '';
+                this.formData.email             = d.mother_email       || '';
                 this.formData.mother_occupation  = d.mother_occupation  || '';
                 this.formData.mother_qualification = d.mother_qualification || '';
+                this.formData.mother_qualification_id = d.mother_qualification_id || '';
                 this.formData.mother_annual_income = d.mother_annual_income || '';
                 this.formData.mother_aadhaar_no   = d.mother_aadhaar_no   || '';
 

@@ -37,7 +37,7 @@
                 :class="errors.gender ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                 class="no-select2 w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <option value="">Choose Gender</option>
-            @foreach(\App\Constants\Gender::getOptions() as $value => $label)
+            @foreach(Gender::getOptions() as $value => $label)
                 <option value="{{ $value }}">{{ $label }}</option>
             @endforeach
         </select>
@@ -69,11 +69,11 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Blood Group</label>
-        <select name="blood_group" x-model="formData.blood_group"
+        <select name="blood_group_id" x-model="formData.blood_group_id"
                 class="no-select2 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <option value="">Choose Blood Group</option>
             @foreach($bloodGroups as $group)
-                <option value="{{ $group->name }}">{{ $group->name }}</option>
+                <option value="{{ $group->id }}">{{ $group->name }}</option>
             @endforeach
         </select>
     </div>
@@ -108,29 +108,29 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Religion</label>
-        <select name="religion" x-model="formData.religion"
+        <select name="religion_id" x-model="formData.religion_id"
                 class="no-select2 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <option value="">Choose Religion</option>
             @foreach($religions as $rel)
-                <option value="{{ $rel->name }}">{{ $rel->name }}</option>
+                <option value="{{ $rel->id }}">{{ $rel->name }}</option>
             @endforeach
         </select>
     </div>
 
     <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Category</label>
-        <select name="category" x-model="formData.category"
+        <select name="category_id" x-model="formData.category_id"
                 class="no-select2 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <option value="">Choose Category</option>
             @foreach($categories as $cat)
-                <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
             @endforeach
         </select>
     </div>
 
     <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Student Type</label>
-        <select name="student_type" x-model="formData.student_type"
+        <select name="student_type_id" x-model="formData.student_type_id"
                 class="no-select2 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <option value="">Choose Student Type</option>
             @foreach($studentTypes as $type)
@@ -141,11 +141,11 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Corresponding Relative</label>
-        <select name="corresponding_relative" x-model="formData.corresponding_relative"
+        <select name="corresponding_relative_id" x-model="formData.corresponding_relative_id"
                 class="no-select2 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <option value="">Choose Relative</option>
             @foreach($correspondingRelatives as $rel)
-                <option value="{{ $rel->name }}">{{ $rel->name }}</option>
+                <option value="{{ $rel->id }}">{{ $rel->name }}</option>
             @endforeach
         </select>
     </div>

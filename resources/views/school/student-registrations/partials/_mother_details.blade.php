@@ -159,12 +159,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Qualification
                 </label>
-                <select name="mother_qualification" x-model="formData.mother_qualification" @change="clearError('mother_qualification')"
+                <select name="mother_qualification_id" x-model="formData.mother_qualification_id" @change="clearError('mother_qualification_id')"
                         class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                        :class="errors.mother_qualification ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        :class="errors.mother_qualification_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Qualification</option>
                     @foreach($qualifications as $qual)
-                        <option value="{{ $qual->name }}">{{ $qual->name }}</option>
+                        <option value="{{ $qual->id }}">{{ $qual->name }}</option>
                     @endforeach
                 </select>
                 <template x-if="errors.mother_qualification">

@@ -177,11 +177,14 @@ class StudentRegistrationController extends TenantController
 
     public function create()
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
         $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
         $academicYears = AcademicYear::where('school_id', $school->id)->get();
         $enquiries = StudentEnquiry::where('school_id', $school->id)
-            ->pending()
+            ->whereIn('form_status', [
+                \App\Enums\EnquiryStatus::Pending,
+                \App\Enums\EnquiryStatus::Completed,
+            ])
             ->get();
 
         $studentTypes = StudentType::where('school_id', $school->id)->get();
@@ -210,12 +213,7 @@ class StudentRegistrationController extends TenantController
 
     public function store(Request $request)
     {
-        \Illuminate\Support\Facades\Log::info('StudentRegistrationController@store reached', [
-            'request' => $request->all(),
-            'session' => session()->all()
-        ]);
-
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
 
         try {
             $validated = $request->validate([
@@ -268,9 +266,17 @@ class StudentRegistrationController extends TenantController
                 'father_photo' => 'nullable|image|max:2048',
                 'mother_photo' => 'nullable|image|max:2048',
                 'student_photo' => 'nullable|image|max:2048',
-                'father_signature' => 'nullable|image|max:2048',
-                'mother_signature' => 'nullable|image|max:2048',
                 'student_signature' => 'nullable|image|max:2048',
+
+                // Normalized Master Data IDs
+                'blood_group_id' => ['nullable', Rule::exists('blood_groups', 'id')->where('school_id', $school->id)],
+                'religion_id' => ['nullable', Rule::exists('religions', 'id')->where('school_id', $school->id)],
+                'category_id' => ['nullable', Rule::exists('categories', 'id')->where('school_id', $school->id)],
+                'student_type_id' => ['nullable', Rule::exists('student_types', 'id')->where('school_id', $school->id)],
+                'corresponding_relative_id' => ['nullable', Rule::exists('corresponding_relatives', 'id')->where('school_id', $school->id)],
+                'boarding_type_id' => ['nullable', Rule::exists('boarding_types', 'id')->where('school_id', $school->id)],
+                'father_qualification_id' => ['nullable', Rule::exists('qualifications', 'id')->where('school_id', $school->id)],
+                'mother_qualification_id' => ['nullable', Rule::exists('qualifications', 'id')->where('school_id', $school->id)],
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -297,6 +303,32 @@ class StudentRegistrationController extends TenantController
 
         DB::beginTransaction();
         try {
+            // Duplicate detection — Aadhaar and mobile across existing registrations
+            if ($request->aadhaar_no) {
+                $exists = \App\Models\StudentRegistration::where('school_id', $school->id)
+                    ->where('aadhaar_no', $request->aadhaar_no)
+                    ->exists();
+                if ($exists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation Failed',
+                        'errors' => ['aadhaar_no' => ["A registration with Aadhaar number [{$request->aadhaar_no}] already exists."]]
+                    ], 422);
+                }
+            }
+            if ($request->mobile_no) {
+                $exists = \App\Models\StudentRegistration::where('school_id', $school->id)
+                    ->where('mobile_no', $request->mobile_no)
+                    ->exists();
+                if ($exists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation Failed',
+                        'errors' => ['mobile_no' => ["A registration with mobile number [{$request->mobile_no}] already exists."]]
+                    ], 422);
+                }
+            }
+
             $data = $request->all();
             $data['school_id'] = $school->id;
 
@@ -397,7 +429,7 @@ class StudentRegistrationController extends TenantController
 
     public function edit(StudentRegistration $studentRegistration)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
         $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
         $academicYears = AcademicYear::where('school_id', $school->id)->get();
         $enquiries = StudentEnquiry::where('school_id', $school->id)->get();
@@ -428,7 +460,7 @@ class StudentRegistrationController extends TenantController
 
     public function update(Request $request, StudentRegistration $studentRegistration)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
 
         try {
             $validated = $request->validate([
@@ -444,6 +476,16 @@ class StudentRegistrationController extends TenantController
                 'correspondence_country_id' => 'nullable|exists:countries,id',
                 'correspondence_state_id' => 'nullable|exists:states,id',
                 'correspondence_city_id' => 'nullable|exists:cities,id',
+
+                // Normalized Master Data IDs
+                'blood_group_id' => ['nullable', Rule::exists('blood_groups', 'id')->where('school_id', $school->id)],
+                'religion_id' => ['nullable', Rule::exists('religions', 'id')->where('school_id', $school->id)],
+                'category_id' => ['nullable', Rule::exists('categories', 'id')->where('school_id', $school->id)],
+                'student_type_id' => ['nullable', Rule::exists('student_types', 'id')->where('school_id', $school->id)],
+                'corresponding_relative_id' => ['nullable', Rule::exists('corresponding_relatives', 'id')->where('school_id', $school->id)],
+                'boarding_type_id' => ['nullable', Rule::exists('boarding_types', 'id')->where('school_id', $school->id)],
+                'father_qualification_id' => ['nullable', Rule::exists('qualifications', 'id')->where('school_id', $school->id)],
+                'mother_qualification_id' => ['nullable', Rule::exists('qualifications', 'id')->where('school_id', $school->id)],
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -499,8 +541,10 @@ class StudentRegistrationController extends TenantController
     {
         $this->authorizeTenant($studentRegistration);
 
-        // Block deletion if already admitted
         if ($studentRegistration->admission_status === AdmissionStatus::Admitted) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Cannot delete a registration that has already been admitted.'], 422);
+            }
             return redirect()->route('receptionist.student-registrations.index')
                 ->with('error', 'Cannot delete a registration that has already been admitted.');
         }
@@ -514,12 +558,16 @@ class StudentRegistrationController extends TenantController
 
         $studentRegistration->delete();
 
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Registration deleted successfully.']);
+        }
+
         return redirect()->route('receptionist.student-registrations.index')->with('success', 'Registration deleted successfully.');
     }
 
     public function getEnquiryData($id)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
         $enquiry = StudentEnquiry::where('school_id', $school->id)
             ->where('id', $id)
             ->first();
@@ -553,7 +601,7 @@ class StudentRegistrationController extends TenantController
 
     public function downloadPdf($id)
     {
-        $school = Auth::user()->school;
+        $school = $this->getSchool();
 
         $studentRegistration = StudentRegistration::with(['class', 'academicYear'])
             ->where('school_id', $school->id)

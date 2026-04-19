@@ -104,10 +104,10 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Qualification
                         </label>
-                        <select name="mother_qualification" x-model="formData.mother_qualification" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="mother_qualification_id" x-model="formData.mother_qualification_id" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Choose Qualification</option>
                             @foreach($qualifications as $qualification)
-                                <option value="{{ $qualification->name }}">{{ $qualification->name }}</option>
+                                <option value="{{ $qualification->id }}">{{ $qualification->name }}</option>
                             @endforeach
                         </select>
                     </div>

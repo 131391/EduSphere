@@ -101,7 +101,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Student Type
                         </label>
-                        <select name="student_type" x-model="formData.student_type" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="student_type_id" x-model="formData.student_type_id" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Choose Student Type</option>
                             @foreach($studentTypes as $type)
                                 <option value="{{ $type->id }}">{{ $type->name }}</option>
@@ -113,10 +113,10 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Blood Group
                         </label>
-                        <select name="blood_group" x-model="formData.blood_group" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="blood_group_id" x-model="formData.blood_group_id" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Choose Blood Group</option>
                             @foreach($bloodGroups as $group)
-                                <option value="{{ $group->name }}">{{ $group->name }}</option>
+                                <option value="{{ $group->id }}">{{ $group->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -157,10 +157,10 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Religion
                         </label>
-                        <select name="religion" x-model="formData.religion" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="religion_id" x-model="formData.religion_id" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Choose Religion</option>
                             @foreach($religions as $religion)
-                                <option value="{{ $religion->name }}">{{ $religion->name }}</option>
+                                <option value="{{ $religion->id }}">{{ $religion->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -169,10 +169,10 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Category
                         </label>
-                        <select name="category" x-model="formData.category" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="category_id" x-model="formData.category_id" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Choose Category</option>
                             @foreach($categories as $category)
-                                <option value="{{ $category->name }}">{{ $category->name }}</option>
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -197,10 +197,10 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Corresponding Relative
                         </label>
-                        <select name="corresponding_relative" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
+                        <select name="corresponding_relative_id" x-model="formData.corresponding_relative_id" class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white">
                             <option value="">Choose Corresponding Relative</option>
                             @foreach($correspondingRelatives as $relative)
-                                <option value="{{ $relative->name }}" {{ old('corresponding_relative', isset($student) ? $student->corresponding_relative : '') == $relative->name ? 'selected' : '' }}>{{ $relative->name }}</option>
+                                <option value="{{ $relative->id }}">{{ $relative->name }}</option>
                             @endforeach
                         </select>
                     </div>

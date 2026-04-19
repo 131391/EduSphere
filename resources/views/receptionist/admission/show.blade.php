@@ -99,10 +99,10 @@
                             <i class="fas fa-venus-mars text-gray-400 text-xs"></i>
                             {{ $student->gender_label }}
                         </span>
-                        @if($student->blood_group)
+                        @if($student->bloodGroup)
                         <span class="flex items-center gap-1.5">
                             <i class="fas fa-tint text-rose-400 text-xs"></i>
-                            {{ $student->blood_group }}
+                            {{ $student->bloodGroup->name }}
                         </span>
                         @endif
                         @if($student->mobile_no)
@@ -139,11 +139,11 @@
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-user',        'label' => 'Full Name',            'value' => $student->full_name])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-birthday-cake','label' => 'Date of Birth',       'value' => $student->dob?->format('d F Y') ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-venus-mars',  'label' => 'Gender',               'value' => $student->gender_label])
-                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-tint',        'label' => 'Blood Group',          'value' => $student->blood_group ?? 'N/A'])
+                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-tint',        'label' => 'Blood Group',          'value' => $student->bloodGroup?->name ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',               'value' => $student->mobile_no ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',                'value' => $student->email ?? 'N/A'])
-                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-pray',        'label' => 'Religion',             'value' => $student->religion ?? 'N/A'])
-                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-layer-group', 'label' => 'Category',             'value' => $student->category ?? 'N/A'])
+                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-pray',        'label' => 'Religion',             'value' => $student->religion?->name ?? 'N/A'])
+                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-layer-group', 'label' => 'Category',             'value' => $student->category?->name ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-id-badge',    'label' => 'Aadhaar No',           'value' => $student->aadhaar_no ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-globe',       'label' => 'Nationality',          'value' => $student->nationality ?? 'N/A'])
                 </div>
@@ -162,7 +162,7 @@
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',        'value' => $student->father_mobile_no ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',         'value' => $student->father_email ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-briefcase',   'label' => 'Occupation',    'value' => $student->father_occupation ?? 'N/A'])
-                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification','value' => $student->father_qualification ?? 'N/A'])
+                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification','value' => $student->fatherQualification?->name ?? 'N/A'])
                 </div>
             </div>
 
@@ -179,7 +179,7 @@
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-phone',       'label' => 'Mobile',        'value' => $student->mother_mobile_no ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-envelope',    'label' => 'Email',         'value' => $student->mother_email ?? 'N/A'])
                     @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-briefcase',   'label' => 'Occupation',    'value' => $student->mother_occupation ?? 'N/A'])
-                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification','value' => $student->mother_qualification ?? 'N/A'])
+                    @include('receptionist.admission.partials._detail_row', ['icon' => 'fa-graduation-cap','label' => 'Qualification','value' => $student->motherQualification?->name ?? 'N/A'])
                 </div>
             </div>
 

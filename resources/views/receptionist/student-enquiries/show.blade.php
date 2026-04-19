@@ -316,7 +316,7 @@
                 <i class="fas fa-tags w-5 text-gray-400 mr-3 mt-1"></i>
                 <div>
                     <p class="text-xs text-gray-500">Category</p>
-                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->category }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->category?->name ?? 'N/A' }}</p>
                 </div>
             </div>
             @endif
@@ -325,7 +325,7 @@
                 <i class="fas fa-pray w-5 text-gray-400 mr-3 mt-1"></i>
                 <div>
                     <p class="text-xs text-gray-500">Religion</p>
-                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->religion }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->religion?->name ?? 'N/A' }}</p>
                 </div>
             </div>
             @endif

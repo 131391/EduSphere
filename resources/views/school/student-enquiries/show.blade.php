@@ -23,7 +23,7 @@
                     <i class="fas fa-arrow-left mr-2"></i>
                     Back
                 </a>
-                @if($studentEnquiry->form_status !== \App\Enums\EnquiryStatus::Admitted)
+                @if($studentEnquiry->form_status !== EnquiryStatus::Admitted)
                 <a href="{{ route('school.student-enquiries.edit', $studentEnquiry) }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm">
                     <i class="fas fa-edit mr-2"></i>
@@ -39,10 +39,10 @@
                     </button>
                     <div x-show="open" @click.outside="open = false" x-cloak
                          class="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-20 py-1">
-                        @foreach(\App\Enums\EnquiryStatus::cases() as $s)
+                        @foreach(EnquiryStatus::cases() as $s)
                         @php
                             $isCurrent = $studentEnquiry->form_status === $s;
-                            $isLocked  = $studentEnquiry->form_status === \App\Enums\EnquiryStatus::Admitted && $s !== \App\Enums\EnquiryStatus::Admitted;
+                            $isLocked  = $studentEnquiry->form_status === EnquiryStatus::Admitted && $s !== EnquiryStatus::Admitted;
                         @endphp
                         <form method="POST" action="{{ route('school.student-enquiries.update-status', $studentEnquiry) }}" class="{{ $isLocked ? 'opacity-40 pointer-events-none' : '' }}">
                             @csrf @method('PATCH')
@@ -50,10 +50,10 @@
                             <button type="submit"
                                     class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 {{ $isCurrent ? 'font-bold text-teal-600' : 'text-gray-700 dark:text-gray-300' }}">
                                 <i class="fas {{ match($s) {
-                                    \App\Enums\EnquiryStatus::Pending   => 'fa-clock text-yellow-500',
-                                    \App\Enums\EnquiryStatus::Completed => 'fa-check-circle text-blue-500',
-                                    \App\Enums\EnquiryStatus::Cancelled => 'fa-times-circle text-red-500',
-                                    \App\Enums\EnquiryStatus::Admitted  => 'fa-user-check text-green-500',
+                                    EnquiryStatus::Pending   => 'fa-clock text-yellow-500',
+                                    EnquiryStatus::Completed => 'fa-check-circle text-blue-500',
+                                    EnquiryStatus::Cancelled => 'fa-times-circle text-red-500',
+                                    EnquiryStatus::Admitted  => 'fa-user-check text-green-500',
                                 } }} text-xs"></i>
                                 {{ $s->label() }}
                                 @if($isCurrent) <i class="fas fa-check ml-auto text-teal-500 text-xs"></i> @endif
@@ -316,7 +316,7 @@
                 <i class="fas fa-tags w-5 text-gray-400 mr-3 mt-1"></i>
                 <div>
                     <p class="text-xs text-gray-500">Category</p>
-                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->category }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->category?->name ?? 'N/A' }}</p>
                 </div>
             </div>
             @endif
@@ -325,7 +325,7 @@
                 <i class="fas fa-pray w-5 text-gray-400 mr-3 mt-1"></i>
                 <div>
                     <p class="text-xs text-gray-500">Religion</p>
-                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->religion }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ $studentEnquiry->religion?->name ?? 'N/A' }}</p>
                 </div>
             </div>
             @endif

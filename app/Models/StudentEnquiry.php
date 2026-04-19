@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Cache;
 use App\Traits\Tenantable;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,7 +30,7 @@ class StudentEnquiry extends Model
         'father_name',
         'father_contact',
         'father_email',
-        'father_qualification',
+        'father_qualification_id',
         'father_occupation',
         'father_annual_income',
         'father_organization',
@@ -40,7 +41,7 @@ class StudentEnquiry extends Model
         'mother_name',
         'mother_contact',
         'mother_email',
-        'mother_qualification',
+        'mother_qualification_id',
         'mother_occupation',
         'mother_annual_income',
         'mother_organization',
@@ -58,13 +59,14 @@ class StudentEnquiry extends Model
         // Personal Details
         'dob',
         'aadhaar_no',
+        'blood_group_id',
         'grand_father_name',
         'annual_income',
         'no_of_brothers',
         'no_of_sisters',
-        'category',
+        'category_id',
         'minority',
-        'religion',
+        'religion_id',
         'transport_facility',
         'hostel_facility',
         'previous_class',
@@ -124,22 +126,19 @@ class StudentEnquiry extends Model
      */
     public static function generateEnquiryNo($schoolId): string
     {
-        $year = date('Y');
-        $prefix = 'ENQ';
-        
-        $lastEnquiry = self::where('school_id', $schoolId)
-            ->where('enquiry_no', 'like', "{$prefix}-{$year}-%")
-            ->orderBy('id', 'desc')
-            ->first();
+        return Cache::lock("enquiry_no_generation_{$schoolId}", 10)->block(5, function () use ($schoolId) {
+            $year = date('Y');
+            $prefix = 'ENQ';
 
-        if ($lastEnquiry) {
-            $lastNumber = (int) substr($lastEnquiry->enquiry_no, -5);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
+            $lastEnquiry = self::where('school_id', $schoolId)
+                ->where('enquiry_no', 'like', "{$prefix}-{$year}-%")
+                ->orderBy('id', 'desc')
+                ->first();
 
-        return sprintf('%s-%s-%05d', $prefix, $year, $newNumber);
+            $newNumber = $lastEnquiry ? ((int) substr($lastEnquiry->enquiry_no, -5)) + 1 : 1;
+
+            return sprintf('%s-%s-%05d', $prefix, $year, $newNumber);
+        });
     }
 
     /**
@@ -158,6 +157,46 @@ class StudentEnquiry extends Model
     public function class(): BelongsTo
     {
         return $this->belongsTo(ClassModel::class, 'class_id');
+    }
+
+    public function bloodGroup(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\BloodGroup::class, 'blood_group_id');
+    }
+
+    public function religion(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Religion::class, 'religion_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Category::class, 'category_id');
+    }
+
+    public function studentType(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\StudentType::class, 'student_type_id');
+    }
+
+    public function correspondingRelative(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\CorrespondingRelative::class, 'corresponding_relative_id');
+    }
+
+    public function boardingType(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\BoardingType::class, 'boarding_type_id');
+    }
+
+    public function fatherQualification(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Qualification::class, 'father_qualification_id');
+    }
+
+    public function motherQualification(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Qualification::class, 'mother_qualification_id');
     }
 
     /**

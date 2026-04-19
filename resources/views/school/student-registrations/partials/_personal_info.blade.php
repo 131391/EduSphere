@@ -107,12 +107,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Student Type
                 </label>
-                <select name="student_type" x-model="formData.student_type" @change="clearError('student_type')"
+                <select name="student_type_id" x-model="formData.student_type_id" @change="clearError('student_type_id')"
                         class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                        :class="errors.student_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        :class="errors.student_type_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Student Type</option>
                     @foreach($studentTypes as $type)
-                        <option value="{{ $type->name }}">{{ $type->name }}</option>
+                        <option value="{{ $type->id }}">{{ $type->name }}</option>
                     @endforeach
                 </select>
                 <template x-if="errors.student_type">
@@ -166,12 +166,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Religion
                 </label>
-                <select name="religion" x-model="formData.religion" @change="clearError('religion')"
+                <select name="religion_id" x-model="formData.religion_id" @change="clearError('religion_id')"
                         class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                        :class="errors.religion ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        :class="errors.religion_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Religion</option>
                     @foreach($religions as $rel)
-                        <option value="{{ $rel->name }}">{{ $rel->name }}</option>
+                        <option value="{{ $rel->id }}">{{ $rel->name }}</option>
                     @endforeach
                 </select>
                 <template x-if="errors.religion">
@@ -183,12 +183,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Category
                 </label>
-                <select name="category" x-model="formData.category" @change="clearError('category')"
+                <select name="category_id" x-model="formData.category_id" @change="clearError('category_id')"
                         class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                        :class="errors.category ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        :class="errors.category_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Category</option>
                     @foreach($categories as $cat)
-                        <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                     @endforeach
                 </select>
                 <template x-if="errors.category">
@@ -280,12 +280,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Corresponding Relative
                 </label>
-                <select name="corresponding_relative" x-model="formData.corresponding_relative" @change="clearError('corresponding_relative')"
+                <select name="corresponding_relative_id" x-model="formData.corresponding_relative_id" @change="clearError('corresponding_relative_id')"
                         class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                        :class="errors.corresponding_relative ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        :class="errors.corresponding_relative_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Corresponding Relative</option>
                     @foreach($correspondingRelatives as $rel)
-                        <option value="{{ $rel->name }}">{{ $rel->name }}</option>
+                        <option value="{{ $rel->id }}">{{ $rel->name }}</option>
                     @endforeach
                 </select>
                 <template x-if="errors.corresponding_relative">
@@ -339,12 +339,12 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Boarding Type
                 </label>
-                <select name="boarding_type" x-model="formData.boarding_type" @change="clearError('boarding_type')"
+                <select name="boarding_type_id" x-model="formData.boarding_type_id" @change="clearError('boarding_type_id')"
                         class="no-select2 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:text-white transition-all shadow-sm"
-                        :class="errors.boarding_type ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
+                        :class="errors.boarding_type_id ? 'border-red-500 ring-red-500/5 bg-red-50/20' : 'border-gray-300 dark:border-gray-600'">
                     <option value="">Choose Boarding Type</option>
                     @foreach($boardingTypes as $type)
-                        <option value="{{ $type->name }}">{{ $type->name }}</option>
+                        <option value="{{ $type->id }}">{{ $type->name }}</option>
                     @endforeach
                 </select>
                 <template x-if="errors.boarding_type">

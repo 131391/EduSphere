@@ -158,16 +158,23 @@ function admissionManagement() {
             mobile_no: '{{ old('mobile_no') }}',
             email: '{{ old('email') }}',
             blood_group: '{{ old('blood_group') }}',
+            blood_group_id: '{{ old('blood_group_id') }}',
             aadhaar_no: '{{ old('aadhaar_no') }}',
             dob_certificate_no: '{{ old('dob_certificate_no') }}',
             place_of_birth: '{{ old('place_of_birth') }}',
             nationality: '{{ old('nationality', 'Indian') }}',
             religion: '{{ old('religion') }}',
+            religion_id: '{{ old('religion_id') }}',
             category: '{{ old('category') }}',
+            category_id: '{{ old('category_id') }}',
             student_type: '{{ old('student_type') }}',
+            student_type_id: '{{ old('student_type_id') }}',
             corresponding_relative: '{{ old('corresponding_relative') }}',
+            corresponding_relative_id: '{{ old('corresponding_relative_id') }}',
             mother_tongue: '{{ old('mother_tongue') }}',
             special_needs: '{{ old('special_needs') }}',
+            boarding_type: '{{ old('boarding_type') }}',
+            boarding_type_id: '{{ old('boarding_type_id') }}',
             number_of_brothers: '{{ old('number_of_brothers', 0) }}',
             number_of_sisters: '{{ old('number_of_sisters', 0) }}',
             remarks: '{{ old('remarks') }}',
@@ -180,6 +187,7 @@ function admissionManagement() {
             father_email: '{{ old('father_email') }}',
             father_occupation: '{{ old('father_occupation') }}',
             father_qualification: '{{ old('father_qualification') }}',
+            father_qualification_id: '{{ old('father_qualification_id') }}',
             father_annual_income: '{{ old('father_annual_income') }}',
             father_aadhaar_no: '{{ old('father_aadhaar_no') }}',
             father_pan: '{{ old('father_pan') }}',
@@ -192,6 +200,7 @@ function admissionManagement() {
             mother_email: '{{ old('mother_email') }}',
             mother_occupation: '{{ old('mother_occupation') }}',
             mother_qualification: '{{ old('mother_qualification') }}',
+            mother_qualification_id: '{{ old('mother_qualification_id') }}',
             mother_annual_income: '{{ old('mother_annual_income') }}',
             mother_aadhaar_no: '{{ old('mother_aadhaar_no') }}',
             mother_pan: '{{ old('mother_pan') }}',
@@ -330,10 +339,20 @@ function admissionManagement() {
                 this.formData.email        = d.email        || '';
                 this.formData.aadhaar_no    = d.aadhaar_no    || '';
                 this.formData.religion     = d.religion     || '';
+                this.formData.religion_id  = d.religion_id  || '';
                 this.formData.category     = d.category     || '';
+                this.formData.category_id  = d.category_id  || '';
                 this.formData.nationality  = d.nationality  || 'Indian';
                 this.formData.place_of_birth   = d.place_of_birth   || '';
                 this.formData.mother_tongue    = d.mother_tongue    || '';
+                this.formData.student_type     = d.student_type     || '';
+                this.formData.student_type_id  = d.student_type_id  || '';
+                this.formData.corresponding_relative    = d.corresponding_relative    || '';
+                this.formData.corresponding_relative_id = d.corresponding_relative_id || '';
+                this.formData.boarding_type    = d.boarding_type    || '';
+                this.formData.boarding_type_id = d.boarding_type_id || '';
+                this.formData.blood_group      = d.blood_group      || '';
+                this.formData.blood_group_id   = d.blood_group_id   || '';
                 this.formData.number_of_brothers = d.number_of_brothers ?? 0;
                 this.formData.number_of_sisters  = d.number_of_sisters  ?? 0;
 
@@ -349,8 +368,9 @@ function admissionManagement() {
                 this.formData.father_mobile_no     = d.father_mobile_no     || '';
                 this.formData.father_email         = d.father_email         || '';
                 this.formData.father_occupation    = d.father_occupation    || '';
-                this.formData.father_qualification = d.father_qualification || '';
-                this.formData.father_annual_income = d.father_annual_income || '';
+                this.formData.father_qualification    = d.father_qualification    || '';
+                this.formData.father_qualification_id = d.father_qualification_id || '';
+                this.formData.father_annual_income    = d.father_annual_income    || '';
                 this.formData.father_aadhaar_no     = d.father_aadhaar_no     || '';
 
                 this.formData.mother_first_name    = d.mother_first_name    || '';
@@ -359,8 +379,9 @@ function admissionManagement() {
                 this.formData.mother_mobile_no     = d.mother_mobile_no     || '';
                 this.formData.mother_email         = d.mother_email         || '';
                 this.formData.mother_occupation    = d.mother_occupation    || '';
-                this.formData.mother_qualification = d.mother_qualification || '';
-                this.formData.mother_annual_income = d.mother_annual_income || '';
+                this.formData.mother_qualification    = d.mother_qualification    || '';
+                this.formData.mother_qualification_id = d.mother_qualification_id || '';
+                this.formData.mother_annual_income    = d.mother_annual_income    || '';
                 this.formData.mother_aadhaar_no     = d.mother_aadhaar_no     || '';
 
                 ['student_photo','father_photo','mother_photo','student_signature','father_signature','mother_signature'].forEach(f => {

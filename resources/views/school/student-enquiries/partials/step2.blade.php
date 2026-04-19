@@ -57,9 +57,13 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Qualification</label>
-                    <input type="text" name="father_qualification" x-model="formData.father_qualification"
-                           placeholder="Highest qualification"
-                           class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
+                    <select name="father_qualification_id" x-model="formData.father_qualification_id"
+                            class="no-select2 w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
+                        <option value="">Select Qualification</option>
+                        @foreach($qualifications as $qualification)
+                            <option value="{{ $qualification->id }}">{{ $qualification->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Annual Income</label>
@@ -151,9 +155,13 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Qualification</label>
-                    <input type="text" name="mother_qualification" x-model="formData.mother_qualification"
-                           placeholder="Highest qualification"
-                           class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
+                    <select name="mother_qualification_id" x-model="formData.mother_qualification_id"
+                            class="no-select2 w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
+                        <option value="">Select Qualification</option>
+                        @foreach($qualifications as $qualification)
+                            <option value="{{ $qualification->id }}">{{ $qualification->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Annual Income</label>

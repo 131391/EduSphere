@@ -23,24 +23,33 @@ class StudentRegistration extends Model
         
         // Personal Information
         'first_name', 'middle_name', 'last_name', 'gender', 'dob', 'email', 'mobile_no',
-        'student_type', 'blood_group', 'dob_certificate_no', 'aadhaar_no', 'place_of_birth',
-        'nationality', 'religion', 'category', 'special_needs', 'mother_tongue', 'remarks',
-        
+        'student_type_id',
+        'blood_group_id',
+        'dob_certificate_no', 'aadhaar_no', 'place_of_birth',
+        'nationality',
+        'religion_id',
+        'category_id',
+        'special_needs', 'mother_tongue', 'remarks',
+
         // Family Information
-        'number_of_brothers', 'number_of_sisters', 'is_single_parent', 'corresponding_relative',
-        'is_transport_required', 'bus_stop', 'other_stop', 'boarding_type',
-        
+        'number_of_brothers', 'number_of_sisters', 'is_single_parent',
+        'corresponding_relative_id',
+        'is_transport_required', 'bus_stop', 'other_stop',
+        'boarding_type_id',
+
         // Father's Details
         'father_name_prefix', 'father_first_name', 'father_middle_name', 'father_last_name',
         'father_email', 'father_mobile_no', 'father_landline_no', 'father_occupation',
-        'father_organization', 'father_office_address', 'father_qualification',
+        'father_organization', 'father_office_address',
+        'father_qualification_id',
         'father_department', 'father_designation', 'father_aadhaar_no', 'father_annual_income',
         'father_age',
-        
+
         // Mother's Details
         'mother_name_prefix', 'mother_first_name', 'mother_middle_name', 'mother_last_name',
         'mother_email', 'mother_mobile_no', 'mother_landline_no', 'mother_occupation',
-        'mother_organization', 'mother_office_address', 'mother_qualification',
+        'mother_organization', 'mother_office_address',
+        'mother_qualification_id',
         'mother_department', 'mother_designation', 'mother_aadhaar_no', 'mother_annual_income',
         'mother_age',
         
@@ -84,6 +93,14 @@ class StudentRegistration extends Model
         'correspondence_city_id' => 'integer',
         'admission_status' => AdmissionStatus::class,
         'gender' => Gender::class,
+        'blood_group_id' => 'integer',
+        'religion_id' => 'integer',
+        'category_id' => 'integer',
+        'student_type_id' => 'integer',
+        'corresponding_relative_id' => 'integer',
+        'boarding_type_id' => 'integer',
+        'father_qualification_id' => 'integer',
+        'mother_qualification_id' => 'integer',
     ];
 
     /**
@@ -149,6 +166,46 @@ class StudentRegistration extends Model
     public function class(): BelongsTo
     {
         return $this->belongsTo(ClassModel::class, 'class_id');
+    }
+
+    public function bloodGroup(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\BloodGroup::class, 'blood_group_id');
+    }
+
+    public function religion(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Religion::class, 'religion_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Category::class, 'category_id');
+    }
+
+    public function studentType(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\StudentType::class, 'student_type_id');
+    }
+
+    public function correspondingRelative(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\CorrespondingRelative::class, 'corresponding_relative_id');
+    }
+
+    public function boardingType(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\BoardingType::class, 'boarding_type_id');
+    }
+
+    public function fatherQualification(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Qualification::class, 'father_qualification_id');
+    }
+
+    public function motherQualification(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Qualification::class, 'mother_qualification_id');
     }
 
     // Location Relationships

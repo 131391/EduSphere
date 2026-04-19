@@ -143,9 +143,9 @@ function registrationManagement() {
             @endforeach
         },
 
-        categoryOptions: @json($categories->pluck('name')->values()),
-        religionOptions: @json($religions->pluck('name')->values()),
-        qualificationOptions: @json($qualifications->pluck('name')->values()),
+        categoryOptions: @json($categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values()),
+        religionOptions: @json($religions->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values()),
+        qualificationOptions: @json($qualifications->map(fn($q) => ['id' => $q->id, 'name' => $q->name])->values()),
 
         previews: {
             father_photo: '', mother_photo: '', student_photo: '',
@@ -165,11 +165,14 @@ function registrationManagement() {
             email: '{{ old('email') }}',
             mobile_no: '{{ old('mobile_no') }}',
             student_type: '{{ old('student_type') }}',
+            student_type_id: '{{ old('student_type_id') }}',
             aadhaar_no: '{{ old('aadhaar_no') }}',
             place_of_birth: '{{ old('place_of_birth') }}',
             nationality: '{{ old('nationality', 'Indian') }}',
             religion: '{{ old('religion') }}',
+            religion_id: '{{ old('religion_id') }}',
             category: '{{ old('category') }}',
+            category_id: '{{ old('category_id') }}',
             special_needs: '{{ old('special_needs') }}',
             mother_tongue: '{{ old('mother_tongue') }}',
             remarks: '{{ old('remarks') }}',
@@ -177,10 +180,13 @@ function registrationManagement() {
             number_of_sisters: '{{ old('number_of_sisters', 0) }}',
             is_single_parent: '{{ old('is_single_parent', 0) }}',
             corresponding_relative: '{{ old('corresponding_relative') }}',
+            corresponding_relative_id: '{{ old('corresponding_relative_id') }}',
             is_transport_required: '{{ old('is_transport_required', 0) }}',
             bus_stop: '{{ old('bus_stop') }}',
             other_stop: '{{ old('other_stop') }}',
             boarding_type: '{{ old('boarding_type') }}',
+            boarding_type_id: '{{ old('boarding_type_id') }}',
+            blood_group_id: '{{ old('blood_group_id') }}',
             father_name_prefix: 'Mr',
             father_first_name: '{{ old('father_first_name') }}',
             father_middle_name: '{{ old('father_middle_name') }}',
@@ -191,6 +197,7 @@ function registrationManagement() {
             father_organization: '{{ old('father_organization') }}',
             father_office_address: '{{ old('father_office_address') }}',
             father_qualification: '{{ old('father_qualification') }}',
+            father_qualification_id: '{{ old('father_qualification_id') }}',
             father_department: '{{ old('father_department') }}',
             father_designation: '{{ old('father_designation') }}',
             father_annual_income: '{{ old('father_annual_income') }}',
@@ -207,6 +214,7 @@ function registrationManagement() {
             mother_organization: '{{ old('mother_organization') }}',
             mother_office_address: '{{ old('mother_office_address') }}',
             mother_qualification: '{{ old('mother_qualification') }}',
+            mother_qualification_id: '{{ old('mother_qualification_id') }}',
             mother_department: '{{ old('mother_department') }}',
             mother_designation: '{{ old('mother_designation') }}',
             mother_annual_income: '{{ old('mother_annual_income') }}',
@@ -319,17 +327,12 @@ function registrationManagement() {
         // Enquiry uses fixed enums (e.g. "General") while registration uses DB-seeded
         // names (e.g. "GEN") — we try exact, case-insensitive, then prefix match.
         matchOption(value, options) {
-            if (value === null || value === undefined || value === '') return '';
-            const v = String(value);
-            if (options.includes(v)) return v;
-            const lv = v.toLowerCase();
-            const ci = options.find(o => String(o).toLowerCase() === lv);
-            if (ci) return ci;
-            const prefix = options.find(o => {
-                const lo = String(o).toLowerCase();
-                return lv.startsWith(lo) || lo.startsWith(lv);
-            });
-            return prefix || '';
+            // options is now [{id, name}] — returns the matching object or null
+            if (value === null || value === undefined || value === '') return null;
+            const v = String(value).toLowerCase();
+            return options.find(o => String(o.name).toLowerCase() === v ||
+                String(o.name).toLowerCase().startsWith(v) ||
+                v.startsWith(String(o.name).toLowerCase())) || null;
         },
 
         async fetchEnquiryData() {
@@ -355,8 +358,8 @@ function registrationManagement() {
                 }
                 this.formData.email     = q.email_id || '';
                 this.formData.mobile_no = q.contact_no || '';
-                if (q.religion) this.formData.religion = this.matchOption(q.religion, this.religionOptions);
-                if (q.category) this.formData.category = this.matchOption(q.category, this.categoryOptions);
+                if (q.religion) { const m = this.matchOption(q.religion, this.religionOptions); if (m) { this.formData.religion_id = m.id; this.formData.religion = m.name; } }
+                if (q.category) { const m = this.matchOption(q.category, this.categoryOptions); if (m) { this.formData.category_id = m.id; this.formData.category = m.name; } }
                 if (q.aadhaar_no) this.formData.aadhaar_no = q.aadhaar_no;
                 if (q.no_of_brothers !== undefined && q.no_of_brothers !== null) this.formData.number_of_brothers = q.no_of_brothers;
                 if (q.no_of_sisters !== undefined && q.no_of_sisters !== null)   this.formData.number_of_sisters   = q.no_of_sisters;
@@ -376,7 +379,7 @@ function registrationManagement() {
                 this.formData.father_department   = q.father_department || '';
                 this.formData.father_designation  = q.father_designation || '';
                 this.formData.father_annual_income = q.father_annual_income || '';
-                if (q.father_qualification) this.formData.father_qualification = this.matchOption(q.father_qualification, this.qualificationOptions);
+                if (q.father_qualification) { const m = this.matchOption(q.father_qualification, this.qualificationOptions); if (m) { this.formData.father_qualification_id = m.id; this.formData.father_qualification = m.name; } }
 
                 const mp = (q.mother_name || '').split(' ');
                 this.formData.mother_first_name   = mp[0] || '';
@@ -390,7 +393,7 @@ function registrationManagement() {
                 this.formData.mother_department   = q.mother_department || '';
                 this.formData.mother_designation  = q.mother_designation || '';
                 this.formData.mother_annual_income = q.mother_annual_income || '';
-                if (q.mother_qualification) this.formData.mother_qualification = this.matchOption(q.mother_qualification, this.qualificationOptions);
+                if (q.mother_qualification) { const m = this.matchOption(q.mother_qualification, this.qualificationOptions); if (m) { this.formData.mother_qualification_id = m.id; this.formData.mother_qualification = m.name; } }
 
                 // Auto-expand collapsibles when extended parent data arrived from enquiry
                 if (q.father_organization || q.father_qualification || q.father_designation || q.father_department || q.father_annual_income) this.fatherExpanded = true;

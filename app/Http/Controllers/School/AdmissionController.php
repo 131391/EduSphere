@@ -35,13 +35,16 @@ use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Traits\HasAjaxDataTable;
 use App\Services\LocationService;
+use App\Services\School\AdmissionService;
 
 class AdmissionController extends TenantController
 {
     use HandlesFileCopies, HasAjaxDataTable, \App\Traits\HandlesFinancialNumbers;
 
-    public function __construct(protected LocationService $locationService)
-    {
+    public function __construct(
+        protected LocationService $locationService,
+        protected AdmissionService $admissionService,
+    ) {
         parent::__construct();
     }
 
@@ -201,190 +204,31 @@ class AdmissionController extends TenantController
     public function store(StoreAdmissionRequest $request)
     {
         $school = $this->getSchool();
-        $validated = $request->validated();
 
         DB::beginTransaction();
         try {
-            $student = new Student();
-            $student->school_id = $school->id;
-            
-            // Generate Admission No atomically with a cache lock to prevent race conditions
-            $admissionNo = $request->admission_no;
-            if (!$admissionNo) {
-                $lockKey = 'admission_no_seq_' . $school->id;
-                $admissionNo = Cache::lock($lockKey, 10)->block(5, function () use ($school) {
-                    $maxNo = Student::where('school_id', $school->id)->max('admission_no');
-                    return $maxNo ? (intval($maxNo) + 1) : 100001;
-                });
-            }
-            $student->admission_no = $admissionNo;
-
-            // Create Student User Account
-            $studentRole = Role::where('slug', Role::STUDENT)->first();
-            $userEmail = $request->email ?: 'student.' . $admissionNo . '@' . $school->subdomain . '.edusphere.local';
-            $tempPassword = Str::password(12);
-
-            $user = User::create([
-                'name'     => trim($request->first_name . ' ' . $request->last_name),
-                'email'    => $userEmail,
-                'password' => Hash::make($tempPassword),
-                'role_id'  => $studentRole ? $studentRole->id : null,
-                'school_id' => $school->id,
-                'phone'    => $request->mobile_no,
-                'status'   => UserStatus::Active,
-                'must_change_password' => true,
-            ]);
-            // TODO: dispatch a SendStudentCredentials notification with $tempPassword
-            
-            $student->user_id = $user->id;
-            
-            // Exclude non-model fields
-            $excludedFields = [
-                'student_photo', 'father_photo', 'mother_photo',
-                'student_signature', 'father_signature', 'mother_signature',
-                'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
-                'student_signature_path', 'father_signature_path', 'mother_signature_path',
-                'admission_fee', 'transport_route_id', 'hostel_id'
-            ];
-            
-            $student->fill($request->except($excludedFields));
-
-            $student->student_photo = $this->storeTenantFile($request->file('student_photo'), "students/{$school->id}/photos", $request->student_photo_path);
-            $student->father_photo  = $this->storeTenantFile($request->file('father_photo'),  "parents/{$school->id}/photos",  $request->father_photo_path);
-            $student->mother_photo  = $this->storeTenantFile($request->file('mother_photo'),  "parents/{$school->id}/photos",  $request->mother_photo_path);
-            $student->student_signature = $this->storeTenantFile($request->file('student_signature'), "students/{$school->id}/signatures", $request->student_signature_path);
-            $student->father_signature  = $this->storeTenantFile($request->file('father_signature'),  "parents/{$school->id}/signatures",  $request->father_signature_path);
-            $student->mother_signature  = $this->storeTenantFile($request->file('mother_signature'),  "parents/{$school->id}/signatures",  $request->mother_signature_path);
-
-            if (!$student->father_name) {
-                $student->father_name = trim(implode(' ', array_filter([$request->father_first_name, $request->father_middle_name, $request->father_last_name])));
-            }
-            if (!$student->mother_name) {
-                $student->mother_name = trim(implode(' ', array_filter([$request->mother_first_name, $request->mother_middle_name, $request->mother_last_name])));
-            }
-
-            $student->save();
-
-            // --- FINANCIAL INTEGRATION ---
-            // 1. Find the 'Admission Fee' name for this school
-            $admissionFeeName = FeeName::where('school_id', $school->id)
-                ->where('name', 'Admission Fee')
-                ->first();
-
-            if ($admissionFeeName) {
-                $cashPaymentMethod = \App\Models\PaymentMethod::where('school_id', $school->id)
-                    ->where('name', 'Cash')
-                    ->first();
-
-                if (!$cashPaymentMethod) {
-                    throw new \Exception('No Cash payment method configured for this school. Please add one in Payment Methods settings.');
-                }
-
-                $fee = Fee::create([
-                    'school_id'        => $school->id,
-                    'student_id'       => $student->id,
-                    'academic_year_id' => $student->academic_year_id,
-                    'fee_type_id'      => $admissionFeeName->fee_type_id,
-                    'fee_name_id'      => $admissionFeeName->id,
-                    'class_id'         => $student->class_id,
-                    'bill_no'          => $this->generateBillNumber($school->id),
-                    'fee_period'       => 'Admission',
-                    'payable_amount'   => $request->admission_fee,
-                    'paid_amount'      => $request->admission_fee,
-                    'due_amount'       => 0,
-                    'due_date'         => now(),
-                    'payment_date'     => now(),
-                    'payment_status'   => FeeStatus::Paid,
-                    'payment_mode'     => strtolower($cashPaymentMethod->name),
-                    'remarks'          => 'Admission Fee paid during intake',
-                ]);
-
-                FeePayment::create([
-                    'school_id'         => $school->id,
-                    'student_id'        => $student->id,
-                    'fee_id'            => $fee->id,
-                    'academic_year_id'  => $student->academic_year_id,
-                    'amount'            => $request->admission_fee,
-                    'payment_date'      => now(),
-                    'payment_method_id' => $cashPaymentMethod->id,
-                    'receipt_no'        => $this->generateReceiptNumber($school->id),
-                    'created_by'        => Auth::id(),
-                ]);
-            }
-
-            // --- FACILITY INTEGRATION (PHASE 2 PREP) ---
-            if ($request->transport_route_id) {
-                StudentTransportAssignment::create([
-                    'school_id'  => $school->id,
-                    'student_id' => $student->id,
-                    'route_id'   => $request->transport_route_id,
-                    'status'     => GeneralStatus::Active,
-                    'start_date' => now(),
-                ]);
-            }
-
-            if ($request->hostel_id && $request->hostel_room_id && $request->hostel_bed_id) {
-                HostelBedAssignment::create([
-                    'school_id'      => $school->id,
-                    'student_id'     => $student->id,
-                    'hostel_id'      => $request->hostel_id,
-                    'hostel_room_id' => $request->hostel_room_id,
-                    'hostel_bed_id'  => $request->hostel_bed_id,
-                    'status'         => GeneralStatus::Active,
-                    'start_date'     => now(),
-                ]);
-            }
-
-            // If linked to a registration, update its status and the underlying Enquiry
-            if ($request->registration_no) {
-                $registration = StudentRegistration::where('registration_no', $request->registration_no)
-                    ->where('school_id', $school->id)
-                    ->first();
-                if ($registration) {
-                    $registration->update(['admission_status' => AdmissionStatus::Admitted]);
-                    
-                    // Transition Registration Fees and Payments to this student's ledger
-                    $registrationFees = Fee::where('school_id', $school->id)
-                        ->where('registration_id', $registration->id)
-                        ->whereNull('student_id')
-                        ->pluck('id');
-
-                    if ($registrationFees->isNotEmpty()) {
-                        Fee::whereIn('id', $registrationFees)->update(['student_id' => $student->id]);
-                        FeePayment::whereIn('fee_id', $registrationFees)->whereNull('student_id')->update(['student_id' => $student->id]);
-                    }
-
-                    if ($registration->enquiry_id) {
-                        StudentEnquiry::where('school_id', $school->id)
-                            ->where('id', $registration->enquiry_id)
-                            ->update(['form_status' => EnquiryStatus::Admitted]);
-                    }
-                }
-            }
+            $this->admissionService->admit($request, $school);
 
             DB::commit();
 
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Student admitted successfully and fee records generated.',
+                    'message' => 'Student admitted successfully.',
                     'redirect' => route('school.admission.index')
                 ]);
             }
 
-            return redirect()->route('school.admission.index')->with('success', 'Student admitted successfully and fee records generated.');
+            return redirect()->route('school.admission.index')->with('success', 'Student admitted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error("Admission Error: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Admission Error: ' . $e->getMessage());
 
             if (request()->ajax() || request()->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Admission failed: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
             }
 
-            return back()->with('error', 'Error admitting student: ' . $e->getMessage())->withInput();
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
 
@@ -468,7 +312,8 @@ class AdmissionController extends TenantController
                 'student_signature_path', 'father_signature_path', 'mother_signature_path'
             ];
             
-            $student->fill($request->except($excludedFields));
+            $data = $request->except($excludedFields);
+            $student->fill($data);
 
             $student->father_name = trim(implode(' ', array_filter([$request->father_first_name, $request->father_middle_name, $request->father_last_name])));
             $student->mother_name = trim(implode(' ', array_filter([$request->mother_first_name, $request->mother_middle_name, $request->mother_last_name])));
@@ -667,16 +512,5 @@ class AdmissionController extends TenantController
         return response()->json($data);
     }
 
-    public function downloadPdf($id)
-    {
-        $school = $this->getSchool();
-        
-        $student = Student::with(['class', 'section', 'academicYear'])
-            ->where('school_id', $this->getSchoolId())
-            ->findOrFail($id);
-        
-        $pdf = Pdf::loadView('pdf.student-admission', compact('student', 'school'));
-        
-        return $pdf->download('student-admission-' . $student->admission_no . '.pdf');
-    }
 }
+

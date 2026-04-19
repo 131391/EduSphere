@@ -43,6 +43,19 @@ class StoreAdmissionRequest extends FormRequest
             'admission_date' => 'required|date',
             'dob' => 'required|date',
             'gender' => ['required', 'integer', Rule::enum(Gender::class)],
+            'aadhaar_no' => 'nullable|string|max:12',
+            'father_aadhaar_no' => 'nullable|string|max:12',
+            'mother_aadhaar_no' => 'nullable|string|max:12',
+
+            // Master Data IDs
+            'blood_group_id'           => ['nullable', Rule::exists('blood_groups', 'id')->where('school_id', $schoolId)],
+            'religion_id'              => ['nullable', Rule::exists('religions', 'id')->where('school_id', $schoolId)],
+            'category_id'              => ['nullable', Rule::exists('categories', 'id')->where('school_id', $schoolId)],
+            'student_type_id'          => ['nullable', Rule::exists('student_types', 'id')->where('school_id', $schoolId)],
+            'corresponding_relative_id'=> ['nullable', Rule::exists('corresponding_relatives', 'id')->where('school_id', $schoolId)],
+            'boarding_type_id'         => ['nullable', Rule::exists('boarding_types', 'id')->where('school_id', $schoolId)],
+            'father_qualification_id'  => ['nullable', Rule::exists('qualifications', 'id')->where('school_id', $schoolId)],
+            'mother_qualification_id'  => ['nullable', Rule::exists('qualifications', 'id')->where('school_id', $schoolId)],
             'permanent_address' => 'required|string',
             'permanent_country_id' => 'required|exists:countries,id',
             'permanent_state_id' => 'required|exists:states,id',
@@ -72,9 +85,9 @@ class StoreAdmissionRequest extends FormRequest
             'father_photo' => 'nullable|image|max:2048',
             'mother_photo' => 'nullable|image|max:2048',
             
-            // Reference Data — registration is required for every admission
+            // Reference Data — registration is optional (supports walk-in / data-migration admissions)
             'registration_no' => [
-                'required',
+                'nullable',
                 Rule::exists('student_registrations', 'registration_no')->where('school_id', $schoolId)
             ],
             
@@ -92,6 +105,14 @@ class StoreAdmissionRequest extends FormRequest
                 'nullable',
                 'required_with:hostel_id',
                 Rule::exists('hostel_rooms', 'id')->where('school_id', $schoolId)
+            ],
+            // bed_no is a string field on hostel_bed_assignments, not a separate table
+            'hostel_bed_no' => ['nullable', 'string', 'max:50'],
+
+            // Payment method for admission fee
+            'admission_payment_method_id' => [
+                'nullable',
+                Rule::exists('payment_methods', 'id')->where('school_id', $schoolId)
             ],
         ];
     }
