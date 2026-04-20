@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->tinyInteger('status')->default(1)->comment('0=Inactive, 1=Active, 2=Suspended, 3=Pending');
+            $table->boolean('must_change_password')->default(false);
             $table->string('phone')->nullable();
             $table->string('avatar')->nullable();
             $table->timestamp('last_login_at')->nullable();
@@ -29,6 +30,8 @@ return new class extends Migration
             $table->index('email');
             $table->index('role_id');
             $table->index('status');
+            $table->index(['school_id', 'email'], 'idx_users_school_email');
+            $table->index(['school_id', 'role_id'], 'idx_users_school_role');
         });
     }
 

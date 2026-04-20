@@ -49,7 +49,7 @@ class AcademicYearController extends TenantController
         $stats = ['total' => AcademicYear::where('school_id', $schoolId)->count(),
                   'current' => AcademicYear::where('school_id', $schoolId)->where('is_current', \App\Enums\YesNo::Yes)->count()];
 
-        if ($request->expectsJson() || $request->ajax()) {
+        if ($request->expectsJson() || $request->ajax() || $request->has('page') || $request->filled('filters')) {
             return $this->handleAjaxTable($query, $transformer, $stats);
         }
 

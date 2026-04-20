@@ -11,6 +11,7 @@ use App\Enums\FeeStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Facades\CauserTrait;
 
 class FeePaymentService
 {
@@ -92,6 +93,17 @@ class FeePaymentService
             }
 
             DB::commit();
+
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($student)
+                ->withProperties([
+                    'receipt_no' => $receiptNo,
+                    'total_amount' => $totalCollected,
+                    'payment_date' => $paymentDate,
+                    'payment_method_id' => $paymentMethodId,
+                ])
+                ->log("Fee payment collected: {$receiptNo}");
 
             return [
                 'success' => true,

@@ -129,6 +129,67 @@ class Student extends Model
         'mother_qualification_id' => 'integer',
     ];
 
+    protected function initializeEncryption(): void
+    {
+        $this->encryptable = [
+            'aadhaar_no',
+            'father_aadhaar_no',
+            'mother_aadhaar_no',
+            'father_pan',
+            'mother_pan',
+        ];
+    }
+
+    public function getAadhaarNoAttribute($value): ?string
+    {
+        return $value ? decrypt($value) : null;
+    }
+
+    public function setAadhaarNoAttribute($value): void
+    {
+        $this->attributes['aadhaar_no'] = $value ? encrypt($value) : null;
+    }
+
+    public function getFatherAadhaarNoAttribute($value): ?string
+    {
+        return $value ? decrypt($value) : null;
+    }
+
+    public function setFatherAadhaarNoAttribute($value): void
+    {
+        $this->attributes['father_aadhaar_no'] = $value ? encrypt($value) : null;
+    }
+
+    public function getMotherAadhaarNoAttribute($value): ?string
+    {
+        return $value ? decrypt($value) : null;
+    }
+
+    public function setMotherAadhaarNoAttribute($value): void
+    {
+        $this->attributes['mother_aadhaar_no'] = $value ? encrypt($value) : null;
+    }
+
+    public function getFatherPanAttribute($value): ?string
+    {
+        return $value ? decrypt($value) : null;
+    }
+
+    public function setFatherPanAttribute($value): void
+    {
+        $this->attributes['father_pan'] = $value ? encrypt($value) : null;
+    }
+
+    public function getMotherPanAttribute($value): ?string
+    {
+        return $value ? decrypt($value) : null;
+    }
+
+    public function setMotherPanAttribute($value): void
+    {
+        $this->attributes['mother_pan'] = $value ? encrypt($value) : null;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

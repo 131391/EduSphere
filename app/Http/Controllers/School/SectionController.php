@@ -66,7 +66,7 @@ class SectionController extends TenantController
 
         $stats = $this->sectionService->getSectionStatistics($this->getSchool());
 
-        if ($request->expectsJson() || $request->ajax()) {
+        if ($request->expectsJson() || $request->ajax() || $request->has('page') || $request->filled('filters')) {
             return $this->handleAjaxTable($query, $transformer, $stats);
         }
 

@@ -25,7 +25,7 @@ return new class extends Migration
 
             $table->unique(['school_id', 'student_id', 'from_academic_year_id', 'to_academic_year_id'], 'unique_student_promotion');
             $table->index(['school_id', 'student_id']);
-            $table->index(['from_academic_year_id', 'to_academic_year_id']);
+            $table->index(['from_academic_year_id', 'to_academic_year_id'], 'idx_promo_acad_years');
         });
     }
 

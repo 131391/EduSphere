@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('student_transport_assignments', function (Blueprint $table) {
@@ -20,18 +17,16 @@ return new class extends Migration
             $table->foreignId('vehicle_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('fee_per_month', 10, 2);
             $table->foreignId('academic_year_id')->constrained()->onDelete('cascade');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->tinyInteger('status')->default(1)->comment('1=Active, 0=Inactive, 2=Pending, 3=Completed, 4=Cancelled');
             $table->timestamps();
             $table->softDeletes();
 
-            // Ensure a student can only have one assignment per academic year
             $table->unique(['student_id', 'academic_year_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('student_transport_assignments');

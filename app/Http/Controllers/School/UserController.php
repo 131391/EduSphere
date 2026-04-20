@@ -86,7 +86,7 @@ class UserController extends TenantController
             $query->where('status', (int) $request->status);
         }
 
-        if ($request->expectsJson() || $request->ajax()) {
+        if ($request->expectsJson() || $request->ajax() || $request->filled('filters') || $request->has('page')) {
             return $this->handleAjaxTable($query, $transformer, $this->getStats($schoolId));
         }
 

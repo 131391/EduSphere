@@ -75,23 +75,33 @@ class StudentController extends TenantController
         ]));
     }
 
-    protected function getTableStats()
+    protected function getTableStats(): array
     {
+        $schoolId = $this->getSchoolId();
+        $startOfMonth = now()->startOfMonth();
+
+        $stats = \App\Models\Student::where('school_id', $schoolId)
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as inactive,
+                SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as admissions_this_month
+            ', [
+                StudentStatus::Active->value,
+                StudentStatus::Inactive->value,
+                $startOfMonth
+            ])
+            ->first();
+
         return [
-            'total'    => \App\Models\Student::where('school_id', $this->getSchoolId())->count(),
-            'total_formatted' => number_format(\App\Models\Student::where('school_id', $this->getSchoolId())->count()),
-            'active'   => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Active)->count(),
-            'active_formatted' => number_format(\App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Active)->count()),
-            'inactive' => \App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Inactive)->count(),
-            'inactive_formatted' => number_format(\App\Models\Student::where('school_id', $this->getSchoolId())->where('status', StudentStatus::Inactive)->count()),
-            'admissions_this_month' => \App\Models\Student::where('school_id', $this->getSchoolId())
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->count(),
-            'admissions_this_month_formatted' => number_format(\App\Models\Student::where('school_id', $this->getSchoolId())
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->count()),
+            'total' => $stats->total ?? 0,
+            'total_formatted' => number_format($stats->total ?? 0),
+            'active' => $stats->active ?? 0,
+            'active_formatted' => number_format($stats->active ?? 0),
+            'inactive' => $stats->inactive ?? 0,
+            'inactive_formatted' => number_format($stats->inactive ?? 0),
+            'admissions_this_month' => $stats->admissions_this_month ?? 0,
+            'admissions_this_month_formatted' => number_format($stats->admissions_this_month ?? 0),
         ];
     }
 
