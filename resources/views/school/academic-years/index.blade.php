@@ -184,16 +184,23 @@
                         </div>
                     </div>
 
-                    <div class="bg-indigo-50/50 dark:bg-gray-700/50 p-4 rounded-xl border border-indigo-100 dark:border-gray-600">
-                        <label class="flex items-center cursor-pointer select-none">
-                            <div class="relative">
-                                <input type="checkbox" name="is_current" x-model="formData.is_current" class="sr-only peer">
-                                <div class="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                    <div class="flex items-center justify-between p-4 rounded-xl border transition-colors"
+                         :class="formData.is_current ? 'bg-indigo-50 border-indigo-100' : 'bg-gray-50 border-gray-100'">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm border transition-colors"
+                                 :class="formData.is_current ? 'bg-indigo-100 border-indigo-200 text-indigo-600' : 'bg-white border-gray-200 text-gray-400'">
+                                <i class="fas text-sm" :class="formData.is_current ? 'fa-calendar-check' : 'fa-calendar'"></i>
                             </div>
-                            <div class="ml-3">
-                                <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Set as current session</span>
-                                <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Makes this the active academic year for all operations</p>
+                            <div>
+                                <p class="text-sm font-bold transition-colors"
+                                   :class="formData.is_current ? 'text-indigo-800' : 'text-gray-700'"
+                                   x-text="formData.is_current ? 'Active Session' : 'Inactive Session'"></p>
+                                <p class="text-xs text-gray-500">Makes this the active academic year for all operations</p>
                             </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_current" x-model="formData.is_current" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                         </label>
                     </div>
                 </div>

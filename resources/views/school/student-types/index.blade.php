@@ -150,19 +150,23 @@
                     </div>
 
                     <!-- Default Toggle -->
-                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center justify-between p-4 rounded-xl border transition-colors"
+                         :class="formData.is_default ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center text-indigo-600 shadow-sm border border-gray-100 dark:border-gray-700">
-                                <i class="fas fa-star"></i>
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm border transition-colors"
+                                 :class="formData.is_default ? 'bg-amber-100 border-amber-200 text-amber-600' : 'bg-white border-gray-200 text-gray-400'">
+                                <i class="fas text-sm" :class="formData.is_default ? 'fa-star' : 'fa-star'"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-gray-800 dark:text-white">Make Default?</p>
+                                <p class="text-sm font-bold transition-colors"
+                                   :class="formData.is_default ? 'text-amber-800' : 'text-gray-700'"
+                                   x-text="formData.is_default ? 'Set as Default Type' : 'Not Default'"></p>
                                 <p class="text-xs text-gray-500">Assign this type by default to new students</p>
                             </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" x-model="formData.is_default" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:width-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                         </label>
                     </div>
                 </div>
