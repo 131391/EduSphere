@@ -2,14 +2,22 @@
     'pagination' => 'pagination',
     'pages' => 'paginationPages',
     'showing' => 'showingText',
-    'action' => 'changePage'
+    'action' => 'changePage',
+    'initial' => null,
 ])
 
-<div x-show="{{ $pagination }}.last_page > 1 || {{ $pagination }}.total > 0" x-cloak
+@php
+    $hasInitial    = is_array($initial) && ($initial['total'] ?? 0) > 0;
+    $initialText   = $hasInitial
+        ? "Showing {$initial['from']} to {$initial['to']} of {$initial['total']} results"
+        : '';
+@endphp
+
+<div x-show="{{ $pagination }}.last_page > 1 || {{ $pagination }}.total > 0" @unless($hasInitial) x-cloak @endunless
      class="px-6 py-4 border-t border-gray-200 bg-gray-50">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <!-- Info -->
-        <div class="text-sm text-gray-700" x-text="{{ $showing }}"></div>
+        <div class="text-sm text-gray-700" x-text="{{ $showing }}">{{ $initialText }}</div>
 
         <!-- Pagination Links -->
         <div x-show="{{ $pagination }}.last_page > 1" class="flex items-center gap-1">
