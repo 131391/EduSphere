@@ -18,7 +18,8 @@ class SchoolSettingsController extends TenantController
     public function basicInfo()
     {
         $school = $this->getSchool();
-        return view('school.settings.basic-info', compact('school'));
+        $countries = app(\App\Services\LocationService::class)->getCountries();
+        return view('school.settings.basic-info', compact('school', 'countries'));
     }
 
     public function updateBasicInfo(Request $request)
@@ -38,6 +39,10 @@ class SchoolSettingsController extends TenantController
         $this->getSchool()->update($request->only([
             'name', 'email', 'phone', 'address', 'city_id', 'state_id', 'country_id', 'pincode', 'website'
         ]));
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Basic information updated successfully.']);
+        }
 
         return back()->with('success', 'Basic information updated successfully.');
     }
@@ -124,7 +129,11 @@ class SchoolSettingsController extends TenantController
 
         $school->update(['settings' => $settings]);
 
-        return back()->with('success', 'Settings updated successfully.');
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Settings saved successfully.']);
+        }
+
+        return back()->with('success', 'Settings saved successfully.');
     }
 
     public function session()
@@ -210,6 +219,10 @@ class SchoolSettingsController extends TenantController
 
         $school->update(['settings' => $settings]);
 
-        return back()->with('success', 'Receipt notes updated successfully.');
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Receipt notes saved successfully.']);
+        }
+
+        return back()->with('success', 'Receipt notes saved successfully.');
     }
 }

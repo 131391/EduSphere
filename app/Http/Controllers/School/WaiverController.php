@@ -61,7 +61,11 @@ class WaiverController extends TenantController
         return view('school.waivers.index', [
             'initialData' => $initialData,
             'stats' => $initialData['stats'],
-            'students' => \App\Models\Student::where('school_id', $schoolId)->get(),
+            'students' => \App\Models\Student::where('school_id', $schoolId)
+                ->with(['class', 'section'])
+                ->active()
+                ->orderBy('first_name')
+                ->get(),
             'academicYears' => \App\Models\AcademicYear::where('school_id', $schoolId)->get(),
             'academicYear' => \App\Models\AcademicYear::where('school_id', $schoolId)->where('is_current', 1)->first() 
                           ?? \App\Models\AcademicYear::where('school_id', $schoolId)->latest()->first(),
@@ -83,7 +87,11 @@ class WaiverController extends TenantController
     public function create()
     {
         $school = $this->getSchool();
-        $students = \App\Models\Student::where('school_id', $school->id)->get();
+        $students = \App\Models\Student::where('school_id', $school->id)
+            ->with(['class', 'section'])
+            ->active()
+            ->orderBy('first_name')
+            ->get();
         $academicYears = \App\Models\AcademicYear::where('school_id', $school->id)->get();
         
         return view('school.waivers.create', compact('students', 'academicYears'));

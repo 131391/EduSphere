@@ -1,10 +1,12 @@
 @extends('layouts.school')
 
-@section('title', 'Notes - ' . $school->name)
+@section('title', 'Receipt Notes - ' . $school->name)
 
 @section('content')
-<div class="w-full space-y-6 animate-in fade-in duration-500 text-gray-900">
-    <!-- Page Header (High Legibility) -->
+<div class="w-full space-y-6 animate-in fade-in duration-500"
+     x-data="receiptNoteSettings()">
+
+    {{-- Page Header --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
         <div>
             <nav class="flex mb-2" aria-label="Breadcrumb">
@@ -20,117 +22,158 @@
                     </li>
                 </ol>
             </nav>
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight">Receipt Customization</h1>
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight">Receipt Notes</h1>
             <p class="text-base text-gray-500 mt-1 flex items-center font-medium">
                 <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
-                Tailor legal disclaimers and footers
+                Footer text printed on each receipt type
             </p>
         </div>
     </div>
 
-
-
-    <form action="{{ route('school.settings.receipt-note.update') }}" method="POST" class="space-y-6">
+    <form @submit.prevent="submitForm()" novalidate class="space-y-6">
         @csrf
-        @method('PUT')
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- Main Content: Documentation sections (High Legibility) -->
-            <div class="lg:col-span-8 space-y-6">
-                <!-- Registration Note -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group">
-                    <div class="p-8">
-                        <div class="flex items-center mb-6">
-                            <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mr-4 flex-shrink-0">
-                                <i class="fas fa-user-plus text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900 tracking-tight">Registration Fee Receipt Note</h3>
-                                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest leading-none mt-1.5 opacity-70">DISPLAYED ON INQUIRY DOCUMENTS</p>
-                            </div>
-                        </div>
-                        <textarea name="registration_receipt_note" rows="4" class="w-full px-6 py-4 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-base text-gray-800 leading-relaxed">{{ old('registration_receipt_note', $settings['registration_receipt_note'] ?? '') }}</textarea>
+        {{-- Three note cards --}}
+        @php
+            $notes = [
+                [
+                    'key'         => 'registration_receipt_note',
+                    'label'       => 'Registration Receipt',
+                    'description' => 'Printed on registration fee receipts.',
+                    'icon'        => 'fas fa-user-plus',
+                    'color'       => 'indigo',
+                ],
+                [
+                    'key'         => 'admission_receipt_note',
+                    'label'       => 'Admission Receipt',
+                    'description' => 'Printed on admission fee receipts.',
+                    'icon'        => 'fas fa-graduation-cap',
+                    'color'       => 'blue',
+                ],
+                [
+                    'key'         => 'fee_receipt_note',
+                    'label'       => 'Tuition Fee Receipt',
+                    'description' => 'Printed on regular tuition fee receipts.',
+                    'icon'        => 'fas fa-wallet',
+                    'color'       => 'teal',
+                ],
+            ];
+        @endphp
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            @foreach($notes as $note)
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0
+                        @if($note['color'] === 'indigo') bg-indigo-50 @elseif($note['color'] === 'blue') bg-blue-50 @else bg-teal-50 @endif">
+                        <i class="{{ $note['icon'] }} text-sm
+                            @if($note['color'] === 'indigo') text-indigo-600 @elseif($note['color'] === 'blue') text-blue-600 @else text-teal-600 @endif"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-gray-900">{{ $note['label'] }}</h2>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ $note['description'] }}</p>
                     </div>
                 </div>
 
-                <!-- Admission Note -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group">
-                    <div class="p-8">
-                        <div class="flex items-center mb-6">
-                            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mr-4 flex-shrink-0">
-                                <i class="fas fa-graduation-cap text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900 tracking-tight">Admission Fee Receipt Note</h3>
-                                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest leading-none mt-1.5 opacity-70">DISPLAYED ON ENROLLMENT DOCUMENTS</p>
-                            </div>
-                        </div>
-                        <textarea name="admission_receipt_note" rows="4" class="w-full px-6 py-4 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-base text-gray-800 leading-relaxed">{{ old('admission_receipt_note', $settings['admission_receipt_note'] ?? '') }}</textarea>
-                    </div>
-                </div>
+                <div class="p-5 flex-1 flex flex-col gap-2">
+                    <textarea
+                        name="{{ $note['key'] }}"
+                        rows="5"
+                        maxlength="1000"
+                        x-model="formData.{{ $note['key'] }}"
+                        @input="clearError('{{ $note['key'] }}')"
+                        placeholder="e.g. This receipt is computer generated..."
+                        class="w-full flex-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm text-gray-800 leading-relaxed focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                        :class="errors.{{ $note['key'] }} ? 'border-red-500 bg-red-50' : 'border-gray-200'"></textarea>
 
-                <!-- Regular Fee Note -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group">
-                    <div class="p-8">
-                        <div class="flex items-center mb-6">
-                            <div class="w-11 h-11 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mr-4 flex-shrink-0">
-                                <i class="fas fa-wallet text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900 tracking-tight">Tuition Fee Receipt Note</h3>
-                                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest leading-none mt-1.5 opacity-70">DISPLAYED ON RECURRING BILLING</p>
-                            </div>
-                        </div>
-                        <textarea name="fee_receipt_note" rows="4" class="w-full px-6 py-4 bg-gray-50 border-gray-100 rounded-2xl focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all font-medium text-base text-gray-800 leading-relaxed">{{ old('fee_receipt_note', $settings['fee_receipt_note'] ?? '') }}</textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right: Action Center (High Legibility) -->
-            <div class="lg:col-span-4 space-y-8">
-                <!-- Action Card -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center group relative overflow-hidden">
-                    <div class="absolute -top-12 -right-12 w-32 h-32 bg-teal-50 rounded-full blur-2xl opacity-50"></div>
-                    
-                    <div class="relative z-10">
-                        <div class="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:rotate-6 transition-all shadow-teal-100 shadow-xl">
-                            <i class="fas fa-file-check text-teal-600 text-2xl"></i>
-                        </div>
-                        <h4 class="text-lg font-black mb-1 uppercase tracking-tight">Sync Documents</h4>
-                        <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-2 mb-8 leading-tight opacity-70">Update standard documentation.</p>
-                        
-                        <button type="submit" class="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white text-xs font-black rounded-xl transition-all shadow-xl shadow-teal-200 flex items-center justify-center gap-3 uppercase tracking-widest">
-                            <i class="fas fa-save text-[10px]"></i>
-                            Update Notes
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Info Card (High Legibility) -->
-                <div class="bg-indigo-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
-                    <h5 class="text-base font-black mb-6 flex items-center uppercase tracking-tight">
-                        <i class="fas fa-info-circle text-indigo-300 mr-3 text-sm"></i> Note Strategy
-                    </h5>
-                    <p class="text-xs text-indigo-100 font-medium leading-relaxed mb-6">
-                        These notes will reach parents at the <span class="text-white font-black underline decoration-indigo-400/50 underline-offset-4">footer</span> of the official receipts.
-                    </p>
-                    <div class="space-y-4 opacity-90">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-print text-indigo-300 text-sm"></i>
-                            </div>
-                            <span class="text-xs font-bold text-indigo-100 uppercase tracking-widest">Master PDF Output</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-paper-plane text-indigo-300 text-sm"></i>
-                            </div>
-                            <span class="text-xs font-bold text-indigo-100 uppercase tracking-widest">Digital E-Receipts</span>
-                        </div>
+                    <div class="flex items-center justify-between">
+                        <template x-if="errors.{{ $note['key'] }}">
+                            <p class="text-xs text-red-500 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span x-text="errors.{{ $note['key'] }}[0]"></span>
+                            </p>
+                        </template>
+                        <span x-show="!errors.{{ $note['key'] }}"></span>
+                        <span class="text-xs text-gray-400 ml-auto"
+                              :class="formData.{{ $note['key'] }}.length > 950 ? 'text-amber-500 font-semibold' : ''">
+                            <span x-text="formData.{{ $note['key'] }}.length"></span>/1000
+                        </span>
                     </div>
                 </div>
             </div>
+            @endforeach
         </div>
+
+        {{-- Save --}}
+        <div class="flex items-center justify-end pt-1">
+            <button type="submit" :disabled="submitting"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                <template x-if="submitting">
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                </template>
+                <template x-if="!submitting">
+                    <i class="fas fa-save text-xs"></i>
+                </template>
+                <span x-text="submitting ? 'Saving...' : 'Save Notes'"></span>
+            </button>
+        </div>
+
     </form>
 </div>
+
+@push('scripts')
+<script>
+function receiptNoteSettings() {
+    return {
+        submitting: false,
+        errors: {},
+        formData: {
+            registration_receipt_note: @js(old('registration_receipt_note', $settings['registration_receipt_note'] ?? '')),
+            admission_receipt_note:    @js(old('admission_receipt_note', $settings['admission_receipt_note'] ?? '')),
+            fee_receipt_note:          @js(old('fee_receipt_note', $settings['fee_receipt_note'] ?? '')),
+        },
+
+        clearError(field) {
+            if (this.errors[field]) delete this.errors[field];
+        },
+
+        async submitForm() {
+            if (this.submitting) return;
+            this.submitting = true;
+            this.errors = {};
+
+            try {
+                const response = await fetch('{{ route('school.settings.receipt-note.update') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ ...this.formData, _method: 'PUT' })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: result.message || 'Receipt notes saved.', type: 'success' }
+                    }));
+                } else if (response.status === 422) {
+                    this.errors = result.errors || {};
+                } else {
+                    throw new Error(result.message || 'Something went wrong.');
+                }
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { message: error.message, type: 'error' }
+                }));
+            } finally {
+                this.submitting = false;
+            }
+        }
+    }
+}
+</script>
+@endpush
 @endsection

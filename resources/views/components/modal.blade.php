@@ -36,23 +36,9 @@ $maxWidthClass = [
             {{ $focusable ? 'setTimeout(() => firstFocusable().focus(), 100)' : '' }}
         } else {
             document.body.classList.remove('overflow-y-hidden');
-            $el.querySelectorAll('.text-red-500, .text-red-600').forEach(el => {
-                if (el.tagName === 'P') {
-                    // Remove the element if it's an error message to ensure fresh state on re-open
-                    // In Alpine, the template will re-create it if needed
-                    el.remove();
-                }
-            });
-            $el.querySelectorAll('.border-red-500, .border-red-600').forEach(el => {
-                el.classList.remove('border-red-500', 'border-red-600');
-                el.classList.add('border-gray-300');
-            });
-            // Reset all Select2 dropdowns when modal closes
             if (typeof $ !== 'undefined') {
                 $el.querySelectorAll('select.select2-hidden-accessible').forEach(select => {
-                    const $select = $(select);
-                    // Reset to empty value (first option is usually empty/placeholder)
-                    $select.val('').trigger('change');
+                    $(select).val('').trigger('change');
                 });
             }
         }

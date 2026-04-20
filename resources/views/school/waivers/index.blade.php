@@ -177,111 +177,171 @@
         </div>
 
         <!-- Apply Waiver Modal -->
-        <x-modal name="waiver-modal" alpineTitle="'Issue Student Fee Waiver'" maxWidth="2xl">
-            <form @submit.prevent="submitForm()" method="POST" class="p-1">
+        <x-modal name="waiver-modal" alpineTitle="'Issue Fee Waiver'" maxWidth="2xl">
+            <form @submit.prevent="submitForm()" method="POST" novalidate class="p-1">
                 @csrf
-                <div class="space-y-6">
-                    <!-- Target Selection -->
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Target Student <span class="text-red-600 font-bold">*</span></label>
+                <div class="space-y-5">
+
+                    {{-- Student --}}
+                    <div class="space-y-1.5">
+                        <label class="modal-label-premium">Student <span class="text-red-500">*</span></label>
                         <div class="relative group">
-                            <select x-model="formData.student_id" @change="clearError('student_id')"
+                            <select x-model="formData.student_id" @change="errors.student_id = null"
                                 class="modal-input-premium appearance-none pr-10"
                                 :class="errors.student_id ? 'border-red-500' : 'border-slate-200'">
-                                <option value="">Choose a student...</option>
+                                <option value="">Select a student...</option>
                                 @foreach($students as $student)
-                                    <option value="{{ $student->id }}">{{ $student->full_name }} ({{ $student->admission_no }})</option>
+                                    <option value="{{ $student->id }}">
+                                        {{ $student->full_name }}
+                                        ({{ $student->admission_no }}{{ $student->class ? ' · ' . $student->class->name : '' }}{{ $student->section ? ' ' . $student->section->name : '' }})
+                                    </option>
                                 @endforeach
                             </select>
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:rotate-180 transition-transform">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                                 <i class="fas fa-chevron-down text-[10px]"></i>
                             </div>
                         </div>
-                        <template x-if="errors.student_id">
-                            <p class="modal-error-message" x-text="errors.student_id[0]"></p>
-                        </template>
+                        <p x-show="errors.student_id" x-cloak class="modal-error-message" x-text="errors.student_id ? errors.student_id[0] : ''"></p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Academic Session</label>
+                    {{-- Academic Year + Fee Period --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="modal-label-premium">Academic Year <span class="text-red-500">*</span></label>
                             <div class="relative group">
-                                <select x-model="formData.academic_year_id" class="modal-input-premium appearance-none pr-10">
+                                <select x-model="formData.academic_year_id" @change="errors.academic_year_id = null"
+                                    class="modal-input-premium appearance-none pr-10"
+                                    :class="errors.academic_year_id ? 'border-red-500' : 'border-slate-200'">
+                                    <option value="">Select academic year...</option>
                                     @foreach($academicYears as $year)
                                         <option value="{{ $year->id }}">{{ $year->name }}</option>
                                     @endforeach
                                 </select>
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:rotate-180 transition-transform">
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                                     <i class="fas fa-chevron-down text-[10px]"></i>
                                 </div>
                             </div>
+                            <p x-show="errors.academic_year_id" x-cloak class="modal-error-message" x-text="errors.academic_year_id ? errors.academic_year_id[0] : ''"></p>
                         </div>
 
-                        <div class="space-y-2">
-                            <label class="modal-label-premium">Billing Period</label>
+                        <div class="space-y-1.5">
+                            <label class="modal-label-premium">Fee Period <span class="text-red-500">*</span></label>
                             <div class="relative group">
-                                <input type="text" x-model="formData.fee_period" placeholder="e.g., Monthly" class="modal-input-premium pr-10 font-bold text-slate-800 dark:text-gray-100">
-                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
-                                    <i class="fas fa-clock text-xs"></i>
+                                <select x-model="formData.fee_period" @change="errors.fee_period = null"
+                                    class="modal-input-premium appearance-none pr-10"
+                                    :class="errors.fee_period ? 'border-red-500' : 'border-slate-200'">
+                                    <option value="">Select fee period...</option>
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Quarterly">Quarterly</option>
+                                    <option value="Half-Yearly">Half-Yearly</option>
+                                    <option value="Annually">Annually</option>
+                                    <option value="One-Time">One-Time</option>
+                                </select>
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-[10px]"></i>
                                 </div>
+                            </div>
+                            <p x-show="errors.fee_period" x-cloak class="modal-error-message" x-text="errors.fee_period ? errors.fee_period[0] : ''"></p>
+                        </div>
+                    </div>
+
+                    {{-- Actual Fee + Duration --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="modal-label-premium">Actual Fee per Period <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 font-semibold text-sm pointer-events-none">₹</span>
+                                <input type="number" step="0.01" min="0.01"
+                                    x-model.number="formData.actual_fee"
+                                    @input="recalculate('actual'); errors.actual_fee = null"
+                                    placeholder="0.00"
+                                    class="modal-input-premium pl-8"
+                                    :class="errors.actual_fee ? 'border-red-500' : 'border-slate-200'">
+                            </div>
+                            <p x-show="errors.actual_fee" x-cloak class="modal-error-message" x-text="errors.actual_fee ? errors.actual_fee[0] : ''"></p>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="modal-label-premium">Duration (Months)</label>
+                            <input type="number" min="1" max="120"
+                                x-model.number="formData.upto_months"
+                                placeholder="e.g. 12"
+                                class="modal-input-premium border-slate-200">
+                        </div>
+                    </div>
+
+                    {{-- Waiver % / Amount --}}
+                    <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-4">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Waiver Amount — enter percentage or fixed amount</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="modal-label-premium">Percentage <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <input type="number" step="0.01" min="0.01" max="100"
+                                        x-model.number="formData.waiver_percentage"
+                                        @input="recalculate('percent'); errors.waiver_percentage = null"
+                                        placeholder="0.00"
+                                        class="modal-input-premium pr-8"
+                                        :class="errors.waiver_percentage ? 'border-red-500' : 'border-slate-200'">
+                                    <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 font-semibold text-sm pointer-events-none">%</span>
+                                </div>
+                                <p x-show="errors.waiver_percentage" x-cloak class="modal-error-message" x-text="errors.waiver_percentage ? errors.waiver_percentage[0] : ''"></p>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="modal-label-premium">Fixed Amount <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 font-semibold text-sm pointer-events-none">₹</span>
+                                    <input type="number" step="0.01" min="0.01"
+                                        x-model.number="formData.waiver_amount"
+                                        @input="recalculate('amount'); errors.waiver_amount = null"
+                                        placeholder="0.00"
+                                        class="modal-input-premium pl-8"
+                                        :class="errors.waiver_amount ? 'border-red-500' : 'border-slate-200'">
+                                </div>
+                                <p x-show="errors.waiver_amount" x-cloak class="modal-error-message" x-text="errors.waiver_amount ? errors.waiver_amount[0] : ''"></p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Calculation Details -->
-                    <div class="p-6 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-2xl space-y-6 shadow-inner">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Standard Fee Amount</label>
-                                <div class="relative group">
-                                    <input type="number" step="0.01" x-model.number="formData.actual_fee" @input="recalculate('actual')" class="modal-input-premium !bg-white dark:!bg-gray-700 !shadow-none pr-10 font-black text-slate-800 dark:text-gray-100">
-                                    <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs font-mono">₹</div>
-                                </div>
+                    {{-- Live Summary --}}
+                    <template x-if="formData.actual_fee > 0 && formData.waiver_amount > 0">
+                        <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-calculator text-emerald-600 text-xs"></i>
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Tenure (Months)</label>
-                                <div class="relative group">
-                                    <input type="number" x-model="formData.upto_months" class="modal-input-premium !bg-white dark:!bg-gray-700 !shadow-none font-bold text-slate-800 dark:text-gray-100">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
-                            <div class="flex flex-col md:flex-row items-center gap-6">
-                                <div class="w-full md:flex-1 space-y-2">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Reduction (Percentage)</label>
-                                    <div class="relative group">
-                                        <input type="number" step="0.01" x-model.number="formData.waiver_percentage" @input="recalculate('percent')" class="modal-input-premium !bg-white dark:!bg-gray-700 !shadow-none font-black text-indigo-600 dark:text-indigo-400 pr-8">
-                                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xs">%</div>
-                                    </div>
-                                </div>
-                                <div class="hidden md:block font-black text-slate-300 italic text-[10px] uppercase tracking-tighter">OR</div>
-                                <div class="w-full md:flex-1 space-y-2">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Reduction (Fixed Amount)</label>
-                                    <div class="relative group">
-                                        <input type="number" step="0.01" x-model.number="formData.waiver_amount" @input="recalculate('amount')" class="modal-input-premium !bg-white dark:!bg-gray-700 !shadow-none pr-10 font-black text-emerald-600 dark:text-emerald-400">
-                                        <div class="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-300 font-bold text-xs font-mono">₹</div>
-                                    </div>
-                                </div>
+                            <div class="text-sm text-emerald-800 leading-relaxed">
+                                Student saves <strong x-text="'₹' + parseFloat(formData.waiver_amount).toFixed(2)"></strong>
+                                per <span x-text="formData.fee_period.toLowerCase()"></span>
+                                (<span x-text="parseFloat(formData.waiver_percentage).toFixed(1) + '%'"></span> off ₹<span x-text="parseFloat(formData.actual_fee).toFixed(2)"></span>)
+                                <template x-if="formData.upto_months > 0">
+                                    <span> — total relief over <span x-text="formData.upto_months"></span> months:
+                                        <strong x-text="'₹' + (formData.waiver_amount * formData.upto_months).toFixed(2)"></strong>
+                                    </span>
+                                </template>
                             </div>
                         </div>
+                    </template>
+
+                    {{-- Reason --}}
+                    <div class="space-y-1.5">
+                        <label class="modal-label-premium">Reason <span class="text-red-500">*</span></label>
+                        <textarea x-model="formData.reason" @input="errors.reason = null" rows="3"
+                            placeholder="e.g. Merit scholarship, financial hardship, staff ward concession..."
+                            class="modal-input-premium resize-none !h-auto"
+                            :class="errors.reason ? 'border-red-500' : 'border-slate-200'"></textarea>
+                        <p x-show="errors.reason" x-cloak class="modal-error-message" x-text="errors.reason ? errors.reason[0] : ''"></p>
                     </div>
 
-                    <!-- Justification -->
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Concession Justification <span class="text-red-600 font-bold">*</span></label>
-                        <textarea x-model="formData.reason" @input="clearError('reason')" rows="3" placeholder="Define the eligibility criteria or scholarship details..." class="modal-input-premium border-slate-200 resize-none !h-auto" :class="errors.reason ? 'border-red-500' : ''"></textarea>
-                        <template x-if="errors.reason">
-                            <p class="modal-error-message" x-text="errors.reason[0]"></p>
-                        </template>
-                    </div>
                 </div>
 
                 <x-slot name="footer">
-                    <button type="button" @click="$dispatch('close-modal', 'waiver-modal')" class="btn-premium-cancel px-10">Discard</button>
-                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[180px] !from-emerald-600 !to-teal-600 shadow-emerald-200">
-                        <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
-                        <span x-text="submitting ? 'Processing...' : 'Issue Waiver'"></span>
+                    <button type="button" @click="$dispatch('close-modal', 'waiver-modal')" class="btn-premium-cancel px-10">Cancel</button>
+                    <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[160px] !from-emerald-600 !to-teal-600 shadow-emerald-200">
+                        <template x-if="submitting">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"></span>
+                        </template>
+                        <span x-text="submitting ? 'Saving...' : 'Issue Waiver'"></span>
                     </button>
                 </x-slot>
             </form>
@@ -298,8 +358,8 @@
                     errors: {},
                     formData: {
                         student_id: '',
-                        academic_year_id: '{{ $academicYear->id ?? '' }}',
-                        fee_period: 'Monthly',
+                        academic_year_id: '',
+                        fee_period: '',
                         actual_fee: 0,
                         upto_months: 12,
                         waiver_percentage: 0,
@@ -307,18 +367,20 @@
                         reason: ''
                     },
 
-                    clearError(field) {
-                        if (this.errors[field]) delete this.errors[field];
-                    },
+
 
                     recalculate(source) {
                         const actual = parseFloat(this.formData.actual_fee) || 0;
                         if (source === 'percent' || source === 'actual') {
-                            const percent = parseFloat(this.formData.waiver_percentage) || 0;
+                            const percent = Math.min(parseFloat(this.formData.waiver_percentage) || 0, 100);
+                            this.formData.waiver_percentage = percent;
                             this.formData.waiver_amount = parseFloat((actual * percent / 100).toFixed(2));
                         } else if (source === 'amount') {
-                            const amount = parseFloat(this.formData.waiver_amount) || 0;
-                            this.formData.waiver_percentage = actual > 0 ? parseFloat((amount / actual * 100).toFixed(2)) : 0;
+                            const amount = Math.min(parseFloat(this.formData.waiver_amount) || 0, actual);
+                            this.formData.waiver_amount = amount;
+                            this.formData.waiver_percentage = actual > 0
+                                ? parseFloat((amount / actual * 100).toFixed(2))
+                                : 0;
                         }
                     },
 
@@ -326,8 +388,8 @@
                         this.errors = {};
                         this.formData = {
                             student_id: '',
-                            academic_year_id: '{{ $academicYear->id ?? '' }}',
-                            fee_period: 'Monthly',
+                            academic_year_id: '',
+                            fee_period: '',
                             actual_fee: 0,
                             upto_months: 12,
                             waiver_percentage: 0,
@@ -355,16 +417,20 @@
 
                             const result = await response.json();
                             if (response.ok) {
-                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                window.dispatchEvent(new CustomEvent('show-toast', {
+                                    detail: { message: result.message || 'Waiver issued successfully.', type: 'success' }
+                                }));
                                 this.$dispatch('close-modal', 'waiver-modal');
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
                             } else {
-                                throw new Error(result.message || 'Failed to apply waiver');
+                                throw new Error(result.message || 'Failed to apply waiver.');
                             }
                         } catch (e) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                detail: { message: e.message, type: 'error' }
+                            }));
                         } finally {
                             this.submitting = false;
                         }
@@ -375,7 +441,7 @@
                         window.dispatchEvent(new CustomEvent('open-confirm-modal', {
                             detail: {
                                 title: 'Remove Fee Waiver',
-                                message: `Are you sure you want to remove the waiver for "${row.student_name}"? This action cannot be undone and may restart full billing for the student.`,
+                                message: `Are you sure you want to remove the waiver for "${row.student_name}"? This cannot be undone.`,
                                 callback: async () => {
                                     try {
                                         const response = await fetch(`/school/waivers/${row.id}`, {
@@ -387,16 +453,21 @@
                                             },
                                             body: JSON.stringify({ _method: 'DELETE' })
                                         });
-
                                         const result = await response.json();
                                         if (response.ok) {
-                                            if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Removed successfully' });
+                                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                                detail: { message: result.message || 'Waiver removed.', type: 'success' }
+                                            }));
                                             if (typeof self.refreshTable === 'function') self.refreshTable();
                                         } else {
-                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Removal failed' });
+                                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                                detail: { message: result.message || 'Removal failed.', type: 'error' }
+                                            }));
                                         }
                                     } catch (error) {
-                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Removal failed' });
+                                        window.dispatchEvent(new CustomEvent('show-toast', {
+                                            detail: { message: 'Removal failed.', type: 'error' }
+                                        }));
                                     }
                                 }
                             }
