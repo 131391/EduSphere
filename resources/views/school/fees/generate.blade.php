@@ -1,167 +1,252 @@
 @extends('layouts.school')
 
-@section('title', 'Bulk Fee Generation')
+@section('title', 'Generate Class Fees')
 
 @section('content')
 <div x-data="feeGenerator()">
-    <!-- Header Section -->
-    <div class="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('school.fees.index') }}" class="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm group">
-                <i class="fas fa-chevron-left group-hover:-translate-x-0.5 transition-transform"></i>
-            </a>
-            <div>
-                <h1 class="text-2xl font-black text-gray-800 tracking-tight">Bulk Fee Generation</h1>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 ml-0.5">Automated Financial Allocation Engine</p>
-            </div>
+
+    {{-- Page Header --}}
+    <div class="mb-6 flex items-center gap-3">
+        <a href="{{ route('school.fees.index') }}"
+           class="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:border-emerald-300 transition-all shadow-sm">
+            <i class="fas fa-arrow-left text-sm"></i>
+        </a>
+        <div>
+            <h1 class="text-xl font-bold text-gray-800">Generate Class Fees</h1>
+            <p class="text-xs text-gray-400 mt-0.5">Create fee records for all active students in a class at once.</p>
         </div>
     </div>
 
-    <form @submit.prevent="generateFees" method="POST" class="space-y-8">
+    {{-- Info Banner --}}
+    <div class="mb-6 flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700">
+        <i class="fas fa-info-circle mt-0.5 flex-shrink-0"></i>
+        <span>This will create individual fee records for every <strong>active student</strong> in the selected class. Duplicate records for the same period are automatically skipped.</span>
+    </div>
+
+    <form @submit.prevent="generateFees" method="POST" class="space-y-6">
         @csrf
-        
-        <!-- Configuration Card -->
-        <div class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-            <div class="bg-emerald-600 px-10 py-4 flex items-center justify-between">
-                <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Mandatory Parameters</h3>
-                <i class="fas fa-cogs text-white/30 text-lg"></i>
+
+        {{-- Section 1: Fee Configuration --}}
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
+                <h2 class="text-sm font-semibold text-gray-700">Fee Configuration</h2>
             </div>
-            
-            <div class="p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Class Selection -->
+
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                {{-- Class --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-2 ml-1">Target Class <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                            <i class="fas fa-school text-sm"></i>
-                        </div>
-                        <select name="class_id" x-model="formData.class_id" required 
+                    <label for="class_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Class <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <select id="class_id" name="class_id"
+                                x-model="formData.class_id"
+                                required
                                 @change="if(errors.class_id) delete errors.class_id"
-                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-medium text-gray-700 appearance-none shadow-sm"
-                                :class="{'border-red-500 ring-red-500/10': errors.class_id}">
-                            <option value="">-- Choose Class --</option>
+                                class="w-full pl-9 pr-4 py-2.5 bg-white border rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition appearance-none"
+                                :class="errors.class_id ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'">
+                            <option value="">Select a class</option>
                             @foreach($classes as $class)
                                 <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
-                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-300">
-                            <i class="fas fa-chevron-down text-[10px]"></i>
-                        </div>
+                        <i class="fas fa-school absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
                     </div>
                     <template x-if="errors.class_id">
-                        <p class="text-[10px] font-bold text-red-500 mt-1 ml-1" x-text="errors.class_id[0]"></p>
+                        <p class="mt-1 text-xs text-red-500 flex items-center gap-1">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span x-text="errors.class_id[0]"></span>
+                        </p>
                     </template>
                 </div>
 
-                <!-- Academic Year -->
+                {{-- Academic Year --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-2 ml-1">Academic Calendar <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                            <i class="fas fa-calendar-check text-sm"></i>
-                        </div>
-                        <select name="academic_year_id" x-model="formData.academic_year_id" required class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-medium text-gray-700 appearance-none shadow-sm">
+                    <label for="academic_year_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Academic Year <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <select id="academic_year_id" name="academic_year_id"
+                                x-model="formData.academic_year_id"
+                                required
+                                class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition appearance-none">
+                            <option value="">Select academic year</option>
                             @foreach($academicYears as $year)
-                                <option value="{{ $year->id }}">{{ $year->name }}</option>
+                                <option value="{{ $year->id }}" @if($year->is_current) selected @endif>
+                                    {{ $year->name }}@if($year->is_current) (Current)@endif
+                                </option>
                             @endforeach
                         </select>
+                        <i class="fas fa-calendar-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
                     </div>
                 </div>
 
-                <!-- Fee Type -->
+                {{-- Fee Type --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-2 ml-1">Fee Category <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                            <i class="fas fa-tag text-sm"></i>
-                        </div>
-                        <select name="fee_type_id" x-model="formData.fee_type_id" required 
+                    <label for="fee_type_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Fee Type <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <select id="fee_type_id" name="fee_type_id"
+                                x-model="formData.fee_type_id"
+                                required
                                 @change="if(errors.fee_type_id) delete errors.fee_type_id"
-                                class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-medium text-gray-700 appearance-none shadow-sm"
-                                :class="{'border-red-500 ring-red-500/10': errors.fee_type_id}">
-                            <option value="">-- Choose Type --</option>
+                                class="w-full pl-9 pr-4 py-2.5 bg-white border rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition appearance-none"
+                                :class="errors.fee_type_id ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'">
+                            <option value="">Select fee type</option>
                             @foreach($feeTypes as $type)
                                 <option value="{{ $type->id }}">{{ $type->name }}</option>
                             @endforeach
                         </select>
+                        <i class="fas fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
                     </div>
                     <template x-if="errors.fee_type_id">
-                        <p class="text-[10px] font-bold text-red-500 mt-1 ml-1" x-text="errors.fee_type_id[0]"></p>
+                        <p class="mt-1 text-xs text-red-500 flex items-center gap-1">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span x-text="errors.fee_type_id[0]"></span>
+                        </p>
                     </template>
                 </div>
 
-                <!-- Fee Period -->
+                {{-- Fee Period --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-2 ml-1">Billing Period <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                            <i class="fas fa-clock text-sm"></i>
-                        </div>
-                        <input type="text" name="fee_period" x-model="formData.fee_period" placeholder="e.g. {{ date('F Y') }}" required class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-gray-700 shadow-sm">
-                    </div>
-                </div>
-
-                <!-- Due Date -->
-                <div>
-                    <label class="block text-sm font-semibold text-gray-800 mb-2 ml-1">Due Date <span class="text-red-500">*</span></label>
-                    <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
-                            <i class="fas fa-hourglass-half text-sm"></i>
-                        </div>
-                        <input type="date" name="due_date" x-model="formData.due_date" required class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-gray-700 shadow-sm">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Selection Card -->
-        <div class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-            <div class="bg-indigo-600 px-10 py-5 flex items-center justify-between">
-                <div>
-                    <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Select Applicable Heads</h3>
-                    <p class="text-[10px] text-white/60 font-medium uppercase mt-1">Check all fee components to include in this generation</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-[10px] font-bold text-white/50 uppercase tracking-widest">Select All</span>
-                    <input type="checkbox" @change="toggleAll" x-model="allSelected" class="rounded-lg w-5 h-5 border-transparent text-indigo-400 focus:ring-indigo-500/50">
-                </div>
-            </div>
-            
-            <div class="p-10">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    @foreach($feeNames as $name)
-                    <label class="relative group cursor-pointer">
-                        <input type="checkbox" name="fee_name_ids[]" value="{{ $name->id }}" x-model="formData.fee_name_ids" 
-                               class="peer hidden">
-                        <div class="p-5 flex items-center gap-4 bg-gray-50 border border-gray-100 rounded-[1.5rem] transition-all duration-300 peer-checked:bg-indigo-50 peer-checked:border-indigo-200 peer-checked:ring-4 peer-checked:ring-indigo-500/5 group-hover:bg-white group-hover:shadow-lg group-hover:shadow-gray-100 group-hover:scale-[1.02]">
-                            <div class="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 transition-all peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 shadow-sm">
-                                <i class="fas fa-receipt text-sm"></i>
-                            </div>
-                            <div>
-                                <div class="text-sm font-bold text-gray-700 transition-colors peer-checked:text-indigo-900">{{ $name->name }}</div>
-                                <div class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Applicable Head</div>
-                            </div>
-                        </div>
+                    <label for="fee_period" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Fee Period <span class="text-red-500">*</span>
                     </label>
-                    @endforeach
+                    <div class="relative">
+                        <input type="text"
+                               id="fee_period"
+                               name="fee_period"
+                               x-model="formData.fee_period"
+                               placeholder="e.g. {{ date('F Y') }}"
+                               required
+                               class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                        <i class="fas fa-calendar-week absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-400">Enter the month and year, e.g. "April 2025"</p>
                 </div>
+
+                {{-- Due Date --}}
+                <div>
+                    <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Due Date <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="date"
+                               id="due_date"
+                               name="due_date"
+                               x-model="formData.due_date"
+                               min="{{ date('Y-m-d') }}"
+                               required
+                               class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                        <i class="fas fa-hourglass-half absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-400">Must be today or a future date.</p>
+                </div>
+
             </div>
         </div>
 
-        <div class="flex items-center justify-end gap-6 pt-4">
-            <p class="text-xs text-center text-gray-400 italic font-medium">This process will create records for all active students in the target class.</p>
-            <button 
-                type="submit" 
-                :disabled="submitting || formData.fee_name_ids.length === 0"
-                class="px-12 py-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-100 hover:from-emerald-700 hover:to-teal-800 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-3 min-w-[240px] justify-center text-sm uppercase tracking-widest"
-            >
-                <template x-if="submitting">
-                    <span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                </template>
-                <i x-show="!submitting" class="fas fa-magic"></i>
-                <span x-text="submitting ? 'Processing...' : 'Generate and Apply'"></span>
-            </button>
+        {{-- Section 2: Fee Components --}}
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
+                    <h2 class="text-sm font-semibold text-gray-700">Fee Components</h2>
+                    <span class="text-xs text-gray-400">— select all that apply to this class</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500" x-show="formData.fee_name_ids.length > 0">
+                        <span class="font-semibold text-indigo-600" x-text="formData.fee_name_ids.length"></span> selected
+                    </span>
+                    <label class="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-gray-600 hover:text-indigo-600 transition select-none">
+                        <input type="checkbox"
+                               @change="toggleAll"
+                               x-model="allSelected"
+                               class="rounded w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                        Select all
+                    </label>
+                </div>
+            </div>
+
+            <div class="p-6">
+                @if($feeNames->isEmpty())
+                    <div class="text-center py-10 text-gray-400">
+                        <i class="fas fa-receipt text-3xl mb-3 block"></i>
+                        <p class="text-sm font-medium">No fee components found.</p>
+                        <p class="text-xs mt-1">Please add fee names first before generating fees.</p>
+                    </div>
+                @else
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        @foreach($feeNames as $name)
+                        <label x-data="{ checked: formData.fee_name_ids.includes('{{ $name->id }}') }"
+                               @change="checked = formData.fee_name_ids.includes('{{ $name->id }}')"
+                               class="cursor-pointer">
+                            <input type="checkbox"
+                                   name="fee_name_ids[]"
+                                   value="{{ $name->id }}"
+                                   x-model="formData.fee_name_ids"
+                                   @change="checked = formData.fee_name_ids.includes('{{ $name->id }}')"
+                                   class="sr-only">
+                            <div class="flex items-center gap-3 p-3.5 rounded-lg border transition-all duration-150 hover:shadow-sm"
+                                 :class="checked
+                                    ? 'bg-indigo-50 border-indigo-300'
+                                    : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-indigo-200'">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
+                                     :class="checked
+                                        ? 'bg-indigo-600 text-white border-indigo-600 border'
+                                        : 'bg-white text-gray-400 border border-gray-200'">
+                                    <i class="fas text-xs" :class="checked ? 'fa-check' : 'fa-receipt'"></i>
+                                </div>
+                                <span class="text-sm font-medium leading-tight"
+                                      :class="checked ? 'text-indigo-800' : 'text-gray-700'">{{ $name->name }}</span>
+                            </div>
+                        </label>
+                        @endforeach
+                    </div>
+
+                    {{-- Validation error for fee_name_ids --}}
+                    <template x-if="errors.fee_name_ids">
+                        <p class="mt-3 text-xs text-red-500 flex items-center gap-1">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span x-text="errors.fee_name_ids[0]"></span>
+                        </p>
+                    </template>
+
+                    <p class="mt-3 text-xs text-gray-400" x-show="formData.fee_name_ids.length === 0">
+                        <i class="fas fa-hand-pointer mr-1"></i> Select at least one fee component to continue.
+                    </p>
+                @endif
+            </div>
         </div>
+
+        {{-- Action Bar --}}
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-xl border border-gray-200 shadow-sm px-6 py-4">
+            <p class="text-xs text-gray-500 flex items-center gap-1.5">
+                <i class="fas fa-shield-alt text-amber-500"></i>
+                Fee records already generated for the same period will be skipped automatically.
+            </p>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('school.fees.index') }}"
+                   class="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                <button
+                    type="submit"
+                    :disabled="submitting || formData.fee_name_ids.length === 0 || !formData.class_id || !formData.fee_type_id"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+                >
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    </template>
+                    <i x-show="!submitting" class="fas fa-bolt text-xs"></i>
+                    <span x-text="submitting ? 'Generating...' : 'Generate Fees'"></span>
+                </button>
+            </div>
+        </div>
+
     </form>
 </div>
 
@@ -174,7 +259,7 @@ document.addEventListener('alpine:init', () => {
         errors: {},
         formData: {
             class_id: '{{ old('class_id') }}',
-            academic_year_id: '{{ $academicYears->where('is_active', true)->first()->id ?? '' }}',
+            academic_year_id: '{{ $academicYears->where('is_current', true)->first()->id ?? ($academicYears->first()->id ?? '') }}',
             fee_type_id: '',
             fee_period: '{{ date('F Y') }}',
             due_date: '{{ date('Y-m-d', strtotime('+10 days')) }}',
@@ -183,7 +268,7 @@ document.addEventListener('alpine:init', () => {
 
         async generateFees() {
             if (!this.formData.class_id || this.formData.fee_name_ids.length === 0) return;
-            
+
             this.submitting = true;
             this.errors = {};
             try {
@@ -196,9 +281,9 @@ document.addEventListener('alpine:init', () => {
                     },
                     body: JSON.stringify(this.formData)
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok) {
                     if (window.Toast) {
                         window.Toast.fire({ icon: 'success', title: result.message });
