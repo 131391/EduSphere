@@ -117,9 +117,9 @@ class School extends Model
         return $this->hasMany(Exam::class);
     }
 
-    public function registrations()
+    public function studentRegistrations()
     {
-        return $this->hasMany(Registration::class);
+        return $this->hasMany(\App\Models\StudentRegistration::class);
     }
 
     // Scopes

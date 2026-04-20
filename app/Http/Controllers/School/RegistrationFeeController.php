@@ -96,9 +96,10 @@ class RegistrationFeeController extends TenantController
     public function update(UpdateRegistrationFeeRequest $request, RegistrationFee $registrationFee)
     {
         $this->authorizeTenant($registrationFee);
+        $validated = $request->validated();
 
         $registrationFee->update([
-            'amount' => $request->amount,
+            'amount' => $validated['amount'],
         ]);
 
         if (request()->wantsJson()) {
@@ -109,7 +110,8 @@ class RegistrationFeeController extends TenantController
             ]);
         }
 
-        return back()->with('success', 'Registration fee updated successfully.');
+        return redirect()->route('school.settings.registration-fee.index')
+            ->with('success', 'Registration fee updated successfully.');
     }
 
     public function destroy(RegistrationFee $registrationFee)
@@ -124,6 +126,7 @@ class RegistrationFeeController extends TenantController
             ]);
         }
 
-        return back()->with('success', 'Registration fee deleted successfully.');
+        return redirect()->route('school.settings.registration-fee.index')
+            ->with('success', 'Registration fee deleted successfully.');
     }
 }

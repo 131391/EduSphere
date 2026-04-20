@@ -142,8 +142,8 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('school.registrations.index') }}"
-                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                        <a href="{{ route('school.student-registrations.index') }}"
+                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
                             <i class="fas fa-file-import w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
                             <span class="whitespace-nowrap sidebar-text" x-show="!sidebarCollapsed">Import

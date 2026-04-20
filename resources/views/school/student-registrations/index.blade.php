@@ -270,7 +270,7 @@
 
         <!-- Import Modal (Preserved Protocol) -->
         <x-modal name="import-modal" title="Bulk Registration Interface" max-width="lg">
-            <form action="{{ route('school.registrations.import') }}" method="POST" enctype="multipart/form-data" class="p-0">
+            <form action="{{ route('school.student-registrations.import') }}" method="POST" enctype="multipart/form-data" class="p-0">
                 @csrf
                 <div class="p-8 space-y-8">
                     <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 flex flex-col gap-4">
@@ -286,7 +286,7 @@
                         <p class="text-xs text-indigo-700/70 font-medium leading-relaxed">
                             To ensure institutional data integrity, please utilize the standardized CSV template. Map all required student nodes before initiating the transmission.
                         </p>
-                        <a href="{{ route('school.registrations.download-template') }}" 
+                        <a href="{{ route('school.student-registrations.download-template') }}" 
                             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm w-full">
                             <i class="fas fa-download text-[8px]"></i>
                             Download Registry Template

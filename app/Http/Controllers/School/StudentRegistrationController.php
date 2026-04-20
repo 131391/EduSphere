@@ -590,11 +590,81 @@ class StudentRegistrationController extends TenantController
 
     public function downloadTemplate()
     {
-        return back()->with('info', 'The CSV template for registration import is being prepared. Please check back shortly.');
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="registration_template.csv"',
+        ];
+        $callback = function () {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Student Name', 'Father Name', 'Mother Name', 'Date of Birth (YYYY-MM-DD)', 'Gender (Male/Female/Other)', 'Class ID', 'Registration Fee']);
+            fputcsv($file, ['John Doe', 'Richard Doe', 'Jane Doe', '2015-05-15', 'Male', '1', '500']);
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
     }
 
     public function import(Request $request)
     {
-        return back()->with('info', 'Bulk import feature for student registrations is currently under maintenance. Please register students individually for now.');
+        $request->validate(['file' => 'required|file|mimes:csv,txt|max:2048']);
+
+        $school = $this->getSchool();
+        $validClassIds = ClassModel::where('school_id', $school->id)->pluck('id')->toArray();
+        $rows = array_map('str_getcsv', file($request->file('file')->getRealPath()));
+
+        if (empty($rows)) {
+            return back()->withErrors(['file' => 'The CSV file is empty.']);
+        }
+        array_shift($rows); // remove header
+
+        $imported = 0;
+        $skipped  = 0;
+        $rowErrors = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($rows as $i => $row) {
+                $line = $i + 2;
+                if (count($row) < 7) {
+                    $rowErrors[] = "Line {$line}: insufficient columns."; $skipped++; continue;
+                }
+                [$studentName, $fatherName, $motherName, $dob, $genderStr, $classId, $fee] = $row;
+                $classIdInt = (int) trim($classId);
+
+                if (!in_array($classIdInt, $validClassIds)) {
+                    $rowErrors[] = "Line {$line}: class_id {$classIdInt} not valid for this school."; $skipped++; continue;
+                }
+                if (StudentRegistration::where('school_id', $school->id)->where('first_name', trim($studentName))->where('dob', trim($dob))->where('class_id', $classIdInt)->exists()) {
+                    $rowErrors[] = "Line {$line}: duplicate — " . trim($studentName) . " already registered."; $skipped++; continue;
+                }
+
+                $genderValue = match (strtolower(trim($genderStr))) {
+                    'male'   => Gender::Male->value,
+                    'female' => Gender::Female->value,
+                    default  => null,
+                };
+
+                StudentRegistration::create([
+                    'school_id'         => $school->id,
+                    'first_name'        => trim($studentName),
+                    'father_first_name' => trim($fatherName),
+                    'mother_first_name' => trim($motherName),
+                    'dob'               => trim($dob),
+                    'gender'            => $genderValue,
+                    'class_id'          => $classIdInt,
+                    'registration_fee'  => is_numeric(trim($fee)) ? trim($fee) : 0,
+                    'registration_date' => now(),
+                ]);
+                $imported++;
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['file' => 'Import failed: ' . $e->getMessage()]);
+        }
+
+        $message = "{$imported} registration(s) imported." . ($skipped ? " {$skipped} skipped." : '');
+        return redirect()->route('school.student-registrations.index')
+            ->with('success', $message)
+            ->with('import_errors', $rowErrors);
     }
 }

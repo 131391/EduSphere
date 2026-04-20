@@ -13,7 +13,7 @@ use Spatie\Activitylog\LogOptions;
 
 class ClassModel extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity, Searchable, Sortable, Cacheable;
+    use HasFactory, SoftDeletes, LogsActivity, Searchable, Sortable, Cacheable, Tenantable;
 
     protected $table = 'classes';
 

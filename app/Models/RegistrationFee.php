@@ -12,7 +12,7 @@ use Spatie\Activitylog\LogOptions;
 
 class RegistrationFee extends Model
 {
-    use HasFactory, LogsActivity, Searchable, Sortable, Cacheable;
+    use HasFactory, LogsActivity, Searchable, Sortable, Cacheable, Tenantable;
 
     protected $fillable = [
         'school_id',

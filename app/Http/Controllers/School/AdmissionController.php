@@ -8,38 +8,22 @@ use App\Models\ClassModel;
 use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\StudentRegistration;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
+use App\Models\StudentEnquiry;
 use App\Enums\AdmissionStatus;
-use App\Enums\Gender;
-use App\Enums\FeeStatus;
 use App\Http\Requests\School\StoreAdmissionRequest;
 use App\Http\Requests\School\UpdateAdmissionRequest;
-use App\Models\Fee;
-use App\Models\FeeName;
-use App\Models\FeePayment;
-use App\Models\StudentTransportAssignment;
-use App\Models\HostelBedAssignment;
 use App\Traits\HandlesFileCopies;
-use App\Enums\GeneralStatus;
-use App\Enums\UserStatus;
-use App\Enums\EnquiryStatus;
-use App\Models\Role;
-use App\Models\User;
-use App\Models\StudentEnquiry;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Cache;
-use Barryvdh\DomPDF\Facade\Pdf;
 use App\Traits\HasAjaxDataTable;
 use App\Services\LocationService;
 use App\Services\School\AdmissionService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdmissionController extends TenantController
 {
-    use HandlesFileCopies, HasAjaxDataTable, \App\Traits\HandlesFinancialNumbers;
+    use HasAjaxDataTable;
 
     public function __construct(
         protected LocationService $locationService,

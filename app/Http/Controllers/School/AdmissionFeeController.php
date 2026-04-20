@@ -5,6 +5,8 @@ namespace App\Http\Controllers\School;
 use App\Http\Controllers\TenantController;
 use App\Models\AdmissionFee;
 use App\Models\ClassModel;
+use App\Http\Requests\School\StoreAdmissionFeeRequest;
+use App\Http\Requests\School\UpdateAdmissionFeeRequest;
 use Illuminate\Http\Request;
 
 use App\Traits\HasAjaxDataTable;
@@ -75,12 +77,9 @@ class AdmissionFeeController extends TenantController
         //
     }
 
-    public function store(Request $request)
+    public function store(StoreAdmissionFeeRequest $request)
     {
-        $validated = $request->validate([
-            'class_id' => 'required|exists:classes,id',
-            'amount' => 'required|numeric|min:0',
-        ]);
+        $validated = $request->validated();
 
         $fee = AdmissionFee::create([
             'school_id' => $this->getSchoolId(),
@@ -88,7 +87,7 @@ class AdmissionFeeController extends TenantController
             'amount' => $validated['amount'],
         ]);
 
-        if ($request->wantsJson()) {
+        if (request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Admission fee added successfully!',
@@ -110,22 +109,17 @@ class AdmissionFeeController extends TenantController
         //
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateAdmissionFeeRequest $request, AdmissionFee $admissionFee)
     {
-        $validated = $request->validate([
-            'class_id' => 'required|exists:classes,id',
-            'amount' => 'required|numeric|min:0',
-        ]);
-
-        $admissionFee = AdmissionFee::findOrFail($id);
         $this->authorizeTenant($admissionFee);
+        $validated = $request->validated();
         
         $admissionFee->update([
             'class_id' => $validated['class_id'],
             'amount' => $validated['amount'],
         ]);
 
-        if ($request->wantsJson()) {
+        if (request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Admission fee updated successfully!',
@@ -137,9 +131,8 @@ class AdmissionFeeController extends TenantController
             ->with('success', 'Admission fee updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(AdmissionFee $admissionFee)
     {
-        $admissionFee = AdmissionFee::findOrFail($id);
         $this->authorizeTenant($admissionFee);
         $admissionFee->delete();
 

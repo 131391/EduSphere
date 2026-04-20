@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\School\DashboardController;
 use App\Http\Controllers\School\StudentController;
 use App\Http\Controllers\School\FeeController;
-use App\Http\Controllers\School\RegistrationController;
 use App\Http\Controllers\School\ClassController;
 use App\Http\Controllers\School\SectionController;
 use App\Http\Controllers\School\AcademicYearController;
@@ -53,10 +52,8 @@ use App\Http\Controllers\School\AttendanceReportController;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// Registration Management
-Route::get('/registrations', [RegistrationController::class, 'index'])->name('registrations.index');
-Route::post('/registrations/import', [RegistrationController::class, 'import'])->name('registrations.import');
-Route::get('/registrations/download-template', [RegistrationController::class, 'downloadTemplate'])->name('registrations.download-template');
+// Registration routes redirect to student-registrations (kept for backward-compat nav links)
+Route::get('/registrations', fn() => redirect()->route('school.student-registrations.index'))->name('registrations.index');
 
 // Registration Code Management
 Route::post('registration-codes/fetch', [RegistrationCodeController::class, 'index'])->name('registration-codes.fetch');

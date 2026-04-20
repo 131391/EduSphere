@@ -26,9 +26,9 @@ class DashboardController extends TenantController
             ->whereDate('admission_date', today())
             ->count();
         
-        $totalEnquiry = \App\Models\Registration::where('school_id', $this->getSchoolId())->count();
-        $todayEnquiry = \App\Models\Registration::where('school_id', $this->getSchoolId())
-            ->whereDate('registration_date', today())
+        $totalEnquiry = \App\Models\StudentEnquiry::where('school_id', $this->getSchoolId())->count();
+        $todayEnquiry = \App\Models\StudentEnquiry::where('school_id', $this->getSchoolId())
+            ->whereDate('enquiry_date', today())
             ->count();
         
         $runningClasses = \App\Models\ClassModel::where('school_id', $this->getSchoolId())
