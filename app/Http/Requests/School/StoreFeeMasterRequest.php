@@ -24,9 +24,14 @@ class StoreFeeMasterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'amounts.*.required' => 'The fee amount is required.',
-            'amounts.*.numeric' => 'The amount must be a number.',
-            'amounts.*.min' => 'The amount must be at least 0.',
+            'class_id.required'    => 'Please select a class.',
+            'class_id.exists'      => 'The selected class is invalid.',
+            'fee_type_id.required' => 'Please select an installment type.',
+            'fee_type_id.exists'   => 'The selected installment type is invalid.',
+            'amounts.required'     => 'Please enter at least one fee amount.',
+            'amounts.array'        => 'Fee amounts must be provided as a list.',
+            'amounts.*.numeric'    => 'Each fee amount must be a number.',
+            'amounts.*.min'        => 'Fee amounts cannot be negative.',
         ];
     }
 }

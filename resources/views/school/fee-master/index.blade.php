@@ -327,19 +327,25 @@
                                 <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
+                        <template x-if="errors.class_id">
+                            <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                        </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Fee Component <span class="text-red-500">*</span></label>
                         <select x-model="miscData.fee_name_id"
-                                @change="errors = {}"
+                                @change="clearMiscFeeNameError()"
                                 class="no-select2 modal-input-premium"
-                                :class="errors.amounts ? 'border-red-500' : 'border-slate-200'">
+                                :class="miscFeeNameError ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select fee component</option>
                             @foreach($feeNames as $fn)
                                 <option value="{{ $fn->id }}">{{ $fn->name }}</option>
                             @endforeach
                         </select>
+                        <template x-if="miscFeeNameError">
+                            <p class="modal-error-message" x-text="miscFeeNameError"></p>
+                        </template>
                     </div>
                 </div>
 
@@ -366,12 +372,15 @@
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">₹</span>
                             <input type="number"
                                    x-model="miscData.amount"
-                                   @input="errors = {}"
+                                   @input="miscAmountError = null"
                                    placeholder="0.00"
                                    step="0.01" min="0"
                                    class="modal-input-premium pl-8 font-semibold text-gray-800"
-                                   :class="Object.keys(errors).some(k => k.startsWith('amounts.')) ? 'border-red-500' : 'border-slate-200'">
+                                   :class="miscAmountError ? 'border-red-500' : 'border-slate-200'">
                         </div>
+                        <template x-if="miscAmountError">
+                            <p class="modal-error-message" x-text="miscAmountError"></p>
+                        </template>
                     </div>
                 </div>
 
@@ -408,6 +417,9 @@
                 return {
                     submitting: false,
                     errors: {},
+                    // Separate error state for misc modal fields not in errors{}
+                    miscFeeNameError: null,
+                    miscAmountError: null,
                     bulkData: { class_id: '', fee_type_id: '', amounts: {} },
                     miscData: { class_id: '', fee_type_id: '', fee_name_id: '', amount: '' },
                     editData: { id: '', class_name: '', fee_name: '', fee_type: '', amount: '' },
@@ -416,8 +428,14 @@
                         if (this.errors[field]) delete this.errors[field];
                     },
 
+                    clearMiscFeeNameError() {
+                        this.miscFeeNameError = null;
+                    },
+
                     resetForms() {
                         this.errors = {};
+                        this.miscFeeNameError = null;
+                        this.miscAmountError = null;
                         this.bulkData = { class_id: '', fee_type_id: '', amounts: {} };
                         this.miscData = { class_id: '', fee_type_id: '', fee_name_id: '', amount: '' };
                     },
@@ -515,6 +533,22 @@
 
                     async submitMiscForm() {
                         if (this.submitting) return;
+
+                        // Client-side guard: fee_name_id empty = key becomes '' which breaks payload
+                        this.miscFeeNameError = null;
+                        this.miscAmountError = null;
+                        let hasClientError = false;
+
+                        if (!this.miscData.fee_name_id) {
+                            this.miscFeeNameError = 'Please select a fee component.';
+                            hasClientError = true;
+                        }
+                        if (!this.miscData.amount && this.miscData.amount !== 0) {
+                            this.miscAmountError = 'Please enter an amount.';
+                            hasClientError = true;
+                        }
+                        if (hasClientError) return;
+
                         this.submitting = true;
                         this.errors = {};
 
