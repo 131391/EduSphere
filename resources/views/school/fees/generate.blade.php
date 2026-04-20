@@ -40,20 +40,17 @@
                     <label for="class_id" class="block text-sm font-medium text-gray-700 mb-1.5">
                         Class <span class="text-red-500">*</span>
                     </label>
-                    <div class="relative">
-                        <select id="class_id" name="class_id"
-                                x-model="formData.class_id"
-                                required
-                                @change="if(errors.class_id) delete errors.class_id"
-                                class="w-full pl-9 pr-4 py-2.5 bg-white border rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition appearance-none"
-                                :class="errors.class_id ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'">
-                            <option value="">Select a class</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                            @endforeach
-                        </select>
-                        <i class="fas fa-school absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-                    </div>
+                    <select id="class_id" name="class_id"
+                            x-model="formData.class_id"
+                            required
+                            @change="if(errors.class_id) delete errors.class_id"
+                            class="no-select2 w-full px-3 py-2.5 bg-white border rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                            :class="errors.class_id ? 'border-red-400' : 'border-gray-300'">
+                        <option value="">Select a class</option>
+                        @foreach($classes as $class)
+                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                        @endforeach
+                    </select>
                     <template x-if="errors.class_id">
                         <p class="mt-1 text-xs text-red-500 flex items-center gap-1">
                             <i class="fas fa-exclamation-circle"></i>
@@ -67,20 +64,17 @@
                     <label for="academic_year_id" class="block text-sm font-medium text-gray-700 mb-1.5">
                         Academic Year <span class="text-red-500">*</span>
                     </label>
-                    <div class="relative">
-                        <select id="academic_year_id" name="academic_year_id"
-                                x-model="formData.academic_year_id"
-                                required
-                                class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition appearance-none">
-                            <option value="">Select academic year</option>
-                            @foreach($academicYears as $year)
-                                <option value="{{ $year->id }}" @if($year->is_current) selected @endif>
-                                    {{ $year->name }}@if($year->is_current) (Current)@endif
-                                </option>
-                            @endforeach
-                        </select>
-                        <i class="fas fa-calendar-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-                    </div>
+                    <select id="academic_year_id" name="academic_year_id"
+                            x-model="formData.academic_year_id"
+                            required
+                            class="no-select2 w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                        <option value="">Select academic year</option>
+                        @foreach($academicYears as $year)
+                            <option value="{{ $year->id }}" @if($year->is_current) selected @endif>
+                                {{ $year->name }}@if($year->is_current) (Current)@endif
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 {{-- Fee Type --}}
@@ -88,20 +82,17 @@
                     <label for="fee_type_id" class="block text-sm font-medium text-gray-700 mb-1.5">
                         Fee Type <span class="text-red-500">*</span>
                     </label>
-                    <div class="relative">
-                        <select id="fee_type_id" name="fee_type_id"
-                                x-model="formData.fee_type_id"
-                                required
-                                @change="if(errors.fee_type_id) delete errors.fee_type_id"
-                                class="w-full pl-9 pr-4 py-2.5 bg-white border rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition appearance-none"
-                                :class="errors.fee_type_id ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'">
-                            <option value="">Select fee type</option>
-                            @foreach($feeTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
-                        </select>
-                        <i class="fas fa-tag absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-                    </div>
+                    <select id="fee_type_id" name="fee_type_id"
+                            x-model="formData.fee_type_id"
+                            required
+                            @change="if(errors.fee_type_id) delete errors.fee_type_id"
+                            class="no-select2 w-full px-3 py-2.5 bg-white border rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                            :class="errors.fee_type_id ? 'border-red-400' : 'border-gray-300'">
+                        <option value="">Select fee type</option>
+                        @foreach($feeTypes as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @endforeach
+                    </select>
                     <template x-if="errors.fee_type_id">
                         <p class="mt-1 text-xs text-red-500 flex items-center gap-1">
                             <i class="fas fa-exclamation-circle"></i>
@@ -115,16 +106,13 @@
                     <label for="fee_period" class="block text-sm font-medium text-gray-700 mb-1.5">
                         Fee Period <span class="text-red-500">*</span>
                     </label>
-                    <div class="relative">
-                        <input type="text"
-                               id="fee_period"
-                               name="fee_period"
-                               x-model="formData.fee_period"
-                               placeholder="e.g. {{ date('F Y') }}"
-                               required
-                               class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                        <i class="fas fa-calendar-week absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-                    </div>
+                    <input type="text"
+                           id="fee_period"
+                           name="fee_period"
+                           x-model="formData.fee_period"
+                           placeholder="e.g. {{ date('F Y') }}"
+                           required
+                           class="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                     <p class="mt-1 text-xs text-gray-400">Enter the month and year, e.g. "April 2025"</p>
                 </div>
 
@@ -133,16 +121,13 @@
                     <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1.5">
                         Due Date <span class="text-red-500">*</span>
                     </label>
-                    <div class="relative">
-                        <input type="date"
-                               id="due_date"
-                               name="due_date"
-                               x-model="formData.due_date"
-                               min="{{ date('Y-m-d') }}"
-                               required
-                               class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                        <i class="fas fa-hourglass-half absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-                    </div>
+                    <input type="date"
+                           id="due_date"
+                           name="due_date"
+                           x-model="formData.due_date"
+                           min="{{ date('Y-m-d') }}"
+                           required
+                           class="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                     <p class="mt-1 text-xs text-gray-400">Must be today or a future date.</p>
                 </div>
 
@@ -181,27 +166,27 @@
                 @else
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                         @foreach($feeNames as $name)
-                        <label x-data="{ checked: formData.fee_name_ids.includes('{{ $name->id }}') }"
-                               @change="checked = formData.fee_name_ids.includes('{{ $name->id }}')"
-                               class="cursor-pointer">
+                        <label class="cursor-pointer">
                             <input type="checkbox"
                                    name="fee_name_ids[]"
                                    value="{{ $name->id }}"
                                    x-model="formData.fee_name_ids"
-                                   @change="checked = formData.fee_name_ids.includes('{{ $name->id }}')"
+                                   @change="syncSelectAll()"
                                    class="sr-only">
                             <div class="flex items-center gap-3 p-3.5 rounded-lg border transition-all duration-150 hover:shadow-sm"
-                                 :class="checked
+                                 :class="formData.fee_name_ids.includes('{{ $name->id }}')
                                     ? 'bg-indigo-50 border-indigo-300'
                                     : 'bg-gray-50 border-gray-200 hover:bg-white hover:border-indigo-200'">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
-                                     :class="checked
-                                        ? 'bg-indigo-600 text-white border-indigo-600 border'
+                                     :class="formData.fee_name_ids.includes('{{ $name->id }}')
+                                        ? 'bg-indigo-600 text-white border border-indigo-600'
                                         : 'bg-white text-gray-400 border border-gray-200'">
-                                    <i class="fas text-xs" :class="checked ? 'fa-check' : 'fa-receipt'"></i>
+                                    <i class="fas text-xs"
+                                       :class="formData.fee_name_ids.includes('{{ $name->id }}') ? 'fa-check' : 'fa-receipt'"></i>
                                 </div>
                                 <span class="text-sm font-medium leading-tight"
-                                      :class="checked ? 'text-indigo-800' : 'text-gray-700'">{{ $name->name }}</span>
+                                      :class="formData.fee_name_ids.includes('{{ $name->id }}') ? 'text-indigo-800' : 'text-gray-700'"
+                                >{{ $name->name }}</span>
                             </div>
                         </label>
                         @endforeach
@@ -308,10 +293,15 @@ document.addEventListener('alpine:init', () => {
 
         toggleAll() {
             if (this.allSelected) {
-                this.formData.fee_name_ids = [@foreach($feeNames as $n)'{{$n->id}}',@endforeach];
+                this.formData.fee_name_ids = [@foreach($feeNames as $n)'{{ $n->id }}',@endforeach];
             } else {
                 this.formData.fee_name_ids = [];
             }
+        },
+
+        syncSelectAll() {
+            const total = {{ $feeNames->count() }};
+            this.allSelected = this.formData.fee_name_ids.length === total;
         }
     }));
 });
