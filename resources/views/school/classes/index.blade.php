@@ -197,7 +197,7 @@
                     classId: null,
                     formData: {
                         name: '',
-                        order: 0
+                        order: ''
                     },
 
                     clearError(field) {
@@ -210,7 +210,7 @@
                         this.errors = {};
                         this.formData = { 
                             name: '',
-                            order: 0
+                            order: ''
                         };
                     },
 
@@ -225,7 +225,7 @@
                         this.errors = {};
                         this.formData = { 
                             name: classData.name || '',
-                            order: classData.order || 0
+                            order: classData.order || ''
                         };
                         this.$dispatch('open-modal', 'class-modal');
                     },

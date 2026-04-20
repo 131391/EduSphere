@@ -14,28 +14,18 @@ class StoreSectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'class_id' => [
-                'required',
-                'exists:classes,id',
-            ],
-            'name' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-            'capacity' => 'required|integer|min:1|max:500',
+            'class_id' => ['required', 'exists:classes,id'],
+            'name'     => ['required', 'string', 'max:100'],
+            'capacity' => 'nullable|integer|min:1|max:500',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'class_id.required' => 'Please select a class',
-            'class_id.exists' => 'Selected class does not exist',
-            'name.required' => 'Section name is required',
-            'capacity.required' => 'Student max length is required',
-            'capacity.min' => 'Capacity must be at least 1',
-            'capacity.max' => 'Capacity cannot exceed 500',
+            'class_id.required' => 'Please select a class.',
+            'class_id.exists'   => 'The selected class does not exist.',
+            'name.required'     => 'Section name is required.',
         ];
     }
 }

@@ -165,7 +165,7 @@
                         <label class="modal-label-premium">Assign to Class <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select name="class_id" x-model="formData.class_id" @change="clearError('class_id')"
-                                class="modal-input-premium appearance-none pr-10"
+                                class="no-select2 modal-input-premium appearance-none pr-10"
                                 :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Choose a class</option>
                                 @foreach($classes as $class)
@@ -199,19 +199,22 @@
                     </div>
 
                     <!-- Availability Toggle -->
-                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700"
+                         :class="formData.is_available ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 border-gray-100'">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center text-indigo-600 shadow-sm border border-gray-100 dark:border-gray-700">
-                                <i class="fas fa-toggle-on"></i>
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm border transition-colors"
+                                 :class="formData.is_available ? 'bg-emerald-100 border-emerald-200 text-emerald-600' : 'bg-white border-gray-200 text-gray-400'">
+                                <i class="fas text-sm" :class="formData.is_available ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-gray-800 dark:text-white">Is Available?</p>
+                                <p class="text-sm font-bold" :class="formData.is_available ? 'text-emerald-800' : 'text-gray-700'"
+                                   x-text="formData.is_available ? 'Available for Assignment' : 'Not Available'"></p>
                                 <p class="text-xs text-gray-500">Students can be assigned if available</p>
                             </div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" x-model="formData.is_available" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:width-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                         </label>
                     </div>
                 </div>
