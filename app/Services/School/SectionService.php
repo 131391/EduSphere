@@ -51,10 +51,11 @@ class SectionService
 
         try {
             $section = Section::create([
-                'school_id' => $school->id,
-                'class_id' => $data['class_id'],
-                'name' => $data['name'],
-                'capacity' => $data['capacity'],
+                'school_id'        => $school->id,
+                'class_id'         => $data['class_id'],
+                'name'             => $data['name'],
+                'capacity'         => $data['capacity'] ?? null,
+                'is_available'     => $data['is_available'] ?? true,
                 'current_strength' => 0,
             ]);
 
@@ -87,9 +88,10 @@ class SectionService
 
         try {
             $section->update([
-                'class_id' => $data['class_id'] ?? $section->class_id,
-                'name' => $data['name'] ?? $section->name,
-                'capacity' => $data['capacity'] ?? $section->capacity,
+                'class_id'     => $data['class_id']     ?? $section->class_id,
+                'name'         => $data['name']         ?? $section->name,
+                'capacity'     => $data['capacity']     ?? $section->capacity,
+                'is_available' => $data['is_available'] ?? $section->is_available,
             ]);
 
             Log::info('Section updated', [

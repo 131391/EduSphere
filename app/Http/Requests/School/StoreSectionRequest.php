@@ -14,9 +14,10 @@ class StoreSectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'class_id' => ['required', 'exists:classes,id'],
-            'name'     => ['required', 'string', 'max:100'],
-            'capacity' => 'nullable|integer|min:1|max:500',
+            'class_id'     => ['required', 'exists:classes,id'],
+            'name'         => ['required', 'string', 'max:100'],
+            'capacity'     => 'nullable|integer|min:1|max:500',
+            'is_available' => 'nullable|boolean',
         ];
     }
 
