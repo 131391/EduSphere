@@ -172,108 +172,102 @@
 
         <!-- Bulk Assignment Modal -->
         <x-modal name="bulk-fee-master-modal" alpineTitle="'Bulk Fee Master Assignment'" maxWidth="2xl">
-            <form @submit.prevent="submitBulkForm" method="POST" class="p-1">
-                @csrf
-                <div class="space-y-5">
+            <div class="space-y-5">
 
-                    {{-- Section 1: Class & Installment --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="modal-label-premium">Class <span class="text-red-500">*</span></label>
-                            <select x-model="bulkData.class_id"
-                                    @change="clearError('class_id')"
-                                    class="no-select2 modal-input-premium"
-                                    :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
-                                <option value="">Select a class</option>
-                                @foreach($classes as $class)
-                                    <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                @endforeach
-                            </select>
-                            <template x-if="errors.class_id">
-                                <p class="modal-error-message" x-text="errors.class_id[0]"></p>
-                            </template>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="modal-label-premium">Installment Type <span class="text-red-500">*</span></label>
-                            <select x-model="bulkData.fee_type_id"
-                                    @change="clearError('fee_type_id')"
-                                    class="no-select2 modal-input-premium"
-                                    :class="errors.fee_type_id ? 'border-red-500' : 'border-slate-200'">
-                                <option value="">Select installment type</option>
-                                @foreach($feeTypes as $feeType)
-                                    <option value="{{ $feeType->id }}">{{ $feeType->name }}</option>
-                                @endforeach
-                            </select>
-                            <template x-if="errors.fee_type_id">
-                                <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
-                            </template>
-                        </div>
-                    </div>
-
-                    {{-- Section 2: Fee Components --}}
-                    <div class="rounded-xl border border-gray-200 overflow-hidden">
-                        {{-- Table header --}}
-                        <div class="grid grid-cols-[1fr_160px] bg-gray-50 border-b border-gray-200 px-4 py-2">
-                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fee Component</span>
-                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right pr-1">Amount (₹)</span>
-                        </div>
-
-                        {{-- Rows --}}
-                        <div class="max-h-[300px] overflow-y-auto divide-y divide-gray-100 custom-scrollbar">
-                            @foreach($feeNames as $feeName)
-                            <div class="grid grid-cols-[1fr_160px] items-center px-4 py-2.5 hover:bg-indigo-50/40 transition-colors"
-                                 :class="bulkData.amounts[{{ $feeName->id }}] > 0 ? 'bg-emerald-50/30' : ''">
-                                <span class="text-sm font-medium text-gray-700">{{ $feeName->name }}</span>
-                                <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium pointer-events-none">₹</span>
-                                    <input
-                                        type="number"
-                                        x-model="bulkData.amounts[{{ $feeName->id }}]"
-                                        step="0.01"
-                                        min="0"
-                                        placeholder="0.00"
-                                        class="w-full pl-7 pr-2 py-1.5 text-sm font-semibold text-right bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition"
-                                        :class="bulkData.amounts[{{ $feeName->id }}] > 0 ? 'border-emerald-300 text-emerald-700' : 'text-gray-700'"
-                                    >
-                                </div>
-                            </div>
+                {{-- Section 1: Class & Installment --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="modal-label-premium">Class <span class="text-red-500">*</span></label>
+                        <select x-model="bulkData.class_id"
+                                @change="clearError('class_id')"
+                                class="no-select2 modal-input-premium"
+                                :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
+                            <option value="">Select a class</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
-                        </div>
-
-                        {{-- Total row --}}
-                        <div class="grid grid-cols-[1fr_160px] items-center px-4 py-2.5 bg-indigo-50 border-t border-indigo-100">
-                            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wide">Total</span>
-                            <span class="text-sm font-bold text-indigo-700 text-right pr-1"
-                                  x-text="'₹ ' + Object.values(bulkData.amounts).reduce((s, v) => s + (parseFloat(v) || 0), 0).toFixed(2)">
-                            </span>
-                        </div>
+                        </select>
+                        <template x-if="errors.class_id">
+                            <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                        </template>
                     </div>
 
-                    {{-- Helper note --}}
-                    <p class="text-xs text-gray-400 flex items-center gap-1.5">
-                        <i class="fas fa-info-circle text-indigo-400"></i>
-                        Leave a field at 0.00 to skip that component. Only non-zero amounts will be saved.
-                    </p>
-
+                    <div class="space-y-1.5">
+                        <label class="modal-label-premium">Installment Type <span class="text-red-500">*</span></label>
+                        <select x-model="bulkData.fee_type_id"
+                                @change="clearError('fee_type_id')"
+                                class="no-select2 modal-input-premium"
+                                :class="errors.fee_type_id ? 'border-red-500' : 'border-slate-200'">
+                            <option value="">Select installment type</option>
+                            @foreach($feeTypes as $feeType)
+                                <option value="{{ $feeType->id }}">{{ $feeType->name }}</option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.fee_type_id">
+                            <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
+                        </template>
+                    </div>
                 </div>
 
-                <x-slot name="footer">
-                    <button type="button"
-                            @click="$dispatch('close-modal', 'bulk-fee-master-modal')"
-                            class="btn-premium-cancel px-8">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                            :disabled="submitting || !bulkData.class_id || !bulkData.fee_type_id"
-                            class="btn-premium-primary min-w-[180px] !from-indigo-600 !to-violet-600 shadow-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100">
-                        <template x-if="submitting">
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"></span>
-                        </template>
-                        <span x-text="submitting ? 'Saving...' : 'Assign Class Fees'"></span>
-                    </button>
-                </x-slot>
-            </form>
+                {{-- Section 2: Fee Components --}}
+                <div class="rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="grid grid-cols-[1fr_160px] bg-gray-50 border-b border-gray-200 px-4 py-2">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fee Component</span>
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right pr-1">Amount (₹)</span>
+                    </div>
+
+                    <div class="max-h-[300px] overflow-y-auto divide-y divide-gray-100 custom-scrollbar">
+                        @foreach($feeNames as $feeName)
+                        <div class="grid grid-cols-[1fr_160px] items-center px-4 py-2.5 hover:bg-indigo-50/40 transition-colors"
+                             :class="bulkData.amounts[{{ $feeName->id }}] > 0 ? 'bg-emerald-50/30' : ''">
+                            <span class="text-sm font-medium text-gray-700">{{ $feeName->name }}</span>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium pointer-events-none">₹</span>
+                                <input
+                                    type="number"
+                                    x-model="bulkData.amounts[{{ $feeName->id }}]"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="0.00"
+                                    class="w-full pl-7 pr-2 py-1.5 text-sm font-semibold text-right bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition"
+                                    :class="bulkData.amounts[{{ $feeName->id }}] > 0 ? 'border-emerald-300 text-emerald-700' : 'text-gray-700'"
+                                >
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <div class="grid grid-cols-[1fr_160px] items-center px-4 py-2.5 bg-indigo-50 border-t border-indigo-100">
+                        <span class="text-xs font-bold text-indigo-600 uppercase tracking-wide">Total</span>
+                        <span class="text-sm font-bold text-indigo-700 text-right pr-1"
+                              x-text="'₹ ' + Object.values(bulkData.amounts).reduce((s, v) => s + (parseFloat(v) || 0), 0).toFixed(2)">
+                        </span>
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-400 flex items-center gap-1.5">
+                    <i class="fas fa-info-circle text-indigo-400"></i>
+                    Leave a field at 0.00 to skip that component. Only non-zero amounts will be saved.
+                </p>
+
+            </div>
+
+            <x-slot name="footer">
+                <button type="button"
+                        @click="$dispatch('close-modal', 'bulk-fee-master-modal')"
+                        class="btn-premium-cancel px-8">
+                    Cancel
+                </button>
+                <button type="button"
+                        @click="submitBulkForm()"
+                        :disabled="submitting || !bulkData.class_id || !bulkData.fee_type_id"
+                        class="btn-premium-primary min-w-[180px] !from-indigo-600 !to-violet-600 shadow-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"></span>
+                    </template>
+                    <span x-text="submitting ? 'Saving...' : 'Assign Class Fees'"></span>
+                </button>
+            </x-slot>
         </x-modal>
 
         <!-- Single Edit Modal -->
@@ -320,91 +314,89 @@
 
         <!-- Single Entry Modal -->
         <x-modal name="misc-fee-master-modal" alpineTitle="'Single Fee Entry'" maxWidth="2xl">
-            <form @submit.prevent="submitMiscForm" method="POST" class="p-1">
-                @csrf
-                <div class="space-y-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="modal-label-premium">Class <span class="text-red-500">*</span></label>
-                            <select x-model="miscData.class_id"
-                                    @change="clearError('class_id')"
-                                    class="no-select2 modal-input-premium"
-                                    :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
-                                <option value="">Select a class</option>
-                                @foreach($classes as $class)
-                                    <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="modal-label-premium">Fee Component <span class="text-red-500">*</span></label>
-                            <select x-model="miscData.fee_name_id"
-                                    @change="errors = {}"
-                                    class="no-select2 modal-input-premium"
-                                    :class="errors.amounts ? 'border-red-500' : 'border-slate-200'">
-                                <option value="">Select fee component</option>
-                                @foreach($feeNames as $fn)
-                                    <option value="{{ $fn->id }}">{{ $fn->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+            <div class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="modal-label-premium">Class <span class="text-red-500">*</span></label>
+                        <select x-model="miscData.class_id"
+                                @change="clearError('class_id')"
+                                class="no-select2 modal-input-premium"
+                                :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
+                            <option value="">Select a class</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="modal-label-premium">Installment Type <span class="text-red-500">*</span></label>
-                            <select x-model="miscData.fee_type_id"
-                                    @change="clearError('fee_type_id')"
-                                    class="no-select2 modal-input-premium"
-                                    :class="errors.fee_type_id ? 'border-red-500' : 'border-slate-200'">
-                                <option value="">Select installment type</option>
-                                @foreach($feeTypes as $ft)
-                                    <option value="{{ $ft->id }}">{{ $ft->name }}</option>
-                                @endforeach
-                            </select>
-                            <template x-if="errors.fee_type_id">
-                                <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
-                            </template>
-                        </div>
-
-                        <div class="space-y-1.5">
-                            <label class="modal-label-premium">Amount (₹) <span class="text-red-500">*</span></label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">₹</span>
-                                <input type="number"
-                                       x-model="miscData.amount"
-                                       @input="errors = {}"
-                                       placeholder="0.00"
-                                       step="0.01" min="0"
-                                       class="modal-input-premium pl-8 font-semibold text-gray-800"
-                                       :class="Object.keys(errors).some(k => k.startsWith('amounts.')) ? 'border-red-500' : 'border-slate-200'">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700">
-                        <i class="fas fa-info-circle mt-0.5 flex-shrink-0 text-blue-400"></i>
-                        <span class="text-xs">This sets the standard rate for the selected class and component. It will be used during automated fee generation.</span>
+                    <div class="space-y-1.5">
+                        <label class="modal-label-premium">Fee Component <span class="text-red-500">*</span></label>
+                        <select x-model="miscData.fee_name_id"
+                                @change="errors = {}"
+                                class="no-select2 modal-input-premium"
+                                :class="errors.amounts ? 'border-red-500' : 'border-slate-200'">
+                            <option value="">Select fee component</option>
+                            @foreach($feeNames as $fn)
+                                <option value="{{ $fn->id }}">{{ $fn->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
-                <x-slot name="footer">
-                    <button type="button"
-                            @click="$dispatch('close-modal', 'misc-fee-master-modal')"
-                            class="btn-premium-cancel px-8">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                            :disabled="submitting"
-                            class="btn-premium-primary min-w-[160px] !from-emerald-600 !to-teal-600 shadow-emerald-200">
-                        <template x-if="submitting">
-                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"></span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="modal-label-premium">Installment Type <span class="text-red-500">*</span></label>
+                        <select x-model="miscData.fee_type_id"
+                                @change="clearError('fee_type_id')"
+                                class="no-select2 modal-input-premium"
+                                :class="errors.fee_type_id ? 'border-red-500' : 'border-slate-200'">
+                            <option value="">Select installment type</option>
+                            @foreach($feeTypes as $ft)
+                                <option value="{{ $ft->id }}">{{ $ft->name }}</option>
+                            @endforeach
+                        </select>
+                        <template x-if="errors.fee_type_id">
+                            <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
                         </template>
-                        <span x-text="submitting ? 'Saving...' : 'Save Configuration'"></span>
-                    </button>
-                </x-slot>
-            </form>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="modal-label-premium">Amount (₹) <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">₹</span>
+                            <input type="number"
+                                   x-model="miscData.amount"
+                                   @input="errors = {}"
+                                   placeholder="0.00"
+                                   step="0.01" min="0"
+                                   class="modal-input-premium pl-8 font-semibold text-gray-800"
+                                   :class="Object.keys(errors).some(k => k.startsWith('amounts.')) ? 'border-red-500' : 'border-slate-200'">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                    <i class="fas fa-info-circle mt-0.5 flex-shrink-0 text-blue-400"></i>
+                    <span class="text-xs text-blue-700">This sets the standard rate for the selected class and component. It will be used during automated fee generation.</span>
+                </div>
+            </div>
+
+            <x-slot name="footer">
+                <button type="button"
+                        @click="$dispatch('close-modal', 'misc-fee-master-modal')"
+                        class="btn-premium-cancel px-8">
+                    Cancel
+                </button>
+                <button type="button"
+                        @click="submitMiscForm()"
+                        :disabled="submitting"
+                        class="btn-premium-primary min-w-[160px] !from-emerald-600 !to-teal-600 shadow-emerald-200">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"></span>
+                    </template>
+                    <span x-text="submitting ? 'Saving...' : 'Save Configuration'"></span>
+                </button>
+            </x-slot>
         </x-modal>
 
         <x-confirm-modal />
@@ -475,6 +467,9 @@
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
+                                if (Object.keys(this.errors).length === 0 && window.Toast) {
+                                    window.Toast.fire({ icon: 'error', title: result.message || 'Please check your inputs.' });
+                                }
                             } else {
                                 throw new Error(result.message || 'Bulk assignment failed');
                             }
@@ -547,6 +542,9 @@
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
+                                if (Object.keys(this.errors).length === 0 && window.Toast) {
+                                    window.Toast.fire({ icon: 'error', title: result.message || 'Please check your inputs.' });
+                                }
                             } else {
                                 throw new Error(result.message || 'Single entry failed');
                             }

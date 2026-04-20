@@ -14,10 +14,10 @@ class StoreFeeMasterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'class_id' => 'required|exists:classes,id',
+            'class_id'    => 'required|exists:classes,id',
             'fee_type_id' => 'required|exists:fee_types,id',
-            'amounts' => 'required|array',
-            'amounts.*' => 'required|numeric|min:0',
+            'amounts'     => 'required|array',
+            'amounts.*'   => 'nullable|numeric|min:0',
         ];
     }
 
