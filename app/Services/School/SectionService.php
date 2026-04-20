@@ -54,7 +54,6 @@ class SectionService
                 'school_id'        => $school->id,
                 'class_id'         => $data['class_id'],
                 'name'             => $data['name'],
-                'capacity'         => $data['capacity'] ?? null,
                 'is_available'     => $data['is_available'] ?? true,
                 'current_strength' => 0,
             ]);
