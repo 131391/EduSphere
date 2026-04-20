@@ -319,23 +319,23 @@
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Class <span class="text-red-500">*</span></label>
                         <select x-model="miscData.class_id"
-                                @change="clearError('class_id')"
+                                @change="miscClassError = null"
                                 class="no-select2 modal-input-premium"
-                                :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
+                                :class="miscClassError ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select a class</option>
                             @foreach($classes as $class)
                                 <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
-                        <template x-if="errors.class_id">
-                            <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                        <template x-if="miscClassError">
+                            <p class="modal-error-message" x-text="miscClassError"></p>
                         </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Fee Component <span class="text-red-500">*</span></label>
                         <select x-model="miscData.fee_name_id"
-                                @change="clearMiscFeeNameError()"
+                                @change="miscFeeNameError = null"
                                 class="no-select2 modal-input-premium"
                                 :class="miscFeeNameError ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select fee component</option>
@@ -353,16 +353,16 @@
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Installment Type <span class="text-red-500">*</span></label>
                         <select x-model="miscData.fee_type_id"
-                                @change="clearError('fee_type_id')"
+                                @change="miscFeeTypeError = null"
                                 class="no-select2 modal-input-premium"
-                                :class="errors.fee_type_id ? 'border-red-500' : 'border-slate-200'">
+                                :class="miscFeeTypeError ? 'border-red-500' : 'border-slate-200'">
                             <option value="">Select installment type</option>
                             @foreach($feeTypes as $ft)
                                 <option value="{{ $ft->id }}">{{ $ft->name }}</option>
                             @endforeach
                         </select>
-                        <template x-if="errors.fee_type_id">
-                            <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
+                        <template x-if="miscFeeTypeError">
+                            <p class="modal-error-message" x-text="miscFeeTypeError"></p>
                         </template>
                     </div>
 
@@ -375,7 +375,7 @@
                                    @input="miscAmountError = null"
                                    placeholder="0.00"
                                    step="0.01" min="0"
-                                   class="modal-input-premium pl-8 font-semibold text-gray-800"
+                                   class="modal-input-premium !pl-10 font-semibold text-gray-800"
                                    :class="miscAmountError ? 'border-red-500' : 'border-slate-200'">
                         </div>
                         <template x-if="miscAmountError">
@@ -417,7 +417,9 @@
                 return {
                     submitting: false,
                     errors: {},
-                    // Separate error state for misc modal fields not in errors{}
+                    // Separate error state for misc modal fields
+                    miscClassError: null,
+                    miscFeeTypeError: null,
                     miscFeeNameError: null,
                     miscAmountError: null,
                     bulkData: { class_id: '', fee_type_id: '', amounts: {} },
@@ -428,12 +430,10 @@
                         if (this.errors[field]) delete this.errors[field];
                     },
 
-                    clearMiscFeeNameError() {
-                        this.miscFeeNameError = null;
-                    },
-
                     resetForms() {
                         this.errors = {};
+                        this.miscClassError = null;
+                        this.miscFeeTypeError = null;
                         this.miscFeeNameError = null;
                         this.miscAmountError = null;
                         this.bulkData = { class_id: '', fee_type_id: '', amounts: {} };
@@ -534,11 +534,21 @@
                     async submitMiscForm() {
                         if (this.submitting) return;
 
-                        // Client-side guard: fee_name_id empty = key becomes '' which breaks payload
+                        // Client-side validation for all fields
+                        this.miscClassError = null;
+                        this.miscFeeTypeError = null;
                         this.miscFeeNameError = null;
                         this.miscAmountError = null;
                         let hasClientError = false;
 
+                        if (!this.miscData.class_id) {
+                            this.miscClassError = 'Please select a class.';
+                            hasClientError = true;
+                        }
+                        if (!this.miscData.fee_type_id) {
+                            this.miscFeeTypeError = 'Please select an installment type.';
+                            hasClientError = true;
+                        }
                         if (!this.miscData.fee_name_id) {
                             this.miscFeeNameError = 'Please select a fee component.';
                             hasClientError = true;
