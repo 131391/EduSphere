@@ -120,15 +120,6 @@
         </div>
     </div>
 
-    <!-- Livewire Connectivity Test -->
-    <div class="py-12 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="max-w-3xl mx-auto">
-                <livewire:counter />
-            </div>
-        </div>
-    </div>
-
     <!-- Features Section -->
     <div id="features" class="py-8 sm:py-12 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
