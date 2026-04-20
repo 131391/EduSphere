@@ -21,6 +21,11 @@ class Section extends Model
         'name',
         'capacity',
         'current_strength',
+        'is_available',
+    ];
+
+    protected $casts = [
+        'is_available' => 'boolean',
     ];
 
     protected $searchable = ['name'];
