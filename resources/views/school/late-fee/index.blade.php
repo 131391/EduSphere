@@ -153,8 +153,9 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium">Select Late Fine Date <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
-                            <select name="fine_date" x-model="formData.fine_date" @change="clearError('fine_date')"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold appearance-none focus:ring-2 focus:ring-emerald-500/20 transition-all pr-10"
+                            <select name="fine_date" x-model="formData.fine_date"
+                                @change="clearError('fine_date')"
+                                class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold appearance-none focus:ring-2 focus:ring-emerald-500/20 transition-all pr-10"
                                 :class="errors.fine_date ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Day of Month</option>
                                 @for($i = 1; $i <= 31; $i++)
