@@ -30,7 +30,7 @@ Route::resource('schools', SchoolController::class);
 Route::match(['get', 'post'], '/users', [UserController::class, 'index'])->name('users.index');
 
 // Audit Logs
-Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+Route::match(['get', 'post'], '/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
 // Settings
 Route::get('/change-password', [SettingController::class, 'changePassword'])->name('change-password');

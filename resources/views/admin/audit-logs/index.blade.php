@@ -3,273 +3,265 @@
 @section('title', 'System Audit Registry')
 
 @section('content')
-<div x-data="{ searchOpen: true }" class="space-y-6">
+<div x-data="ajaxDataTable({
+    fetchUrl: '{{ route('admin.audit-logs.index') }}',
+    defaultSort: 'created_at',
+    defaultDirection: 'desc',
+    defaultPerPage: 25,
+    defaultFilters: { event: '', from_date: '', to_date: '' },
+    initialRows: @js($initialData['rows']),
+    initialPagination: @js($initialData['pagination']),
+    initialStats: @js($initialData['stats']),
+    filterLabels: {
+        event: {
+            'created': 'Created',
+            'updated': 'Updated',
+            'deleted': 'Deleted'
+        }
+    }
+})" class="space-y-6">
+
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <!-- Global Events -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-blue-500 transition-all duration-300 hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Global Events</p>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($stats['total']) }}</h3>
-                </div>
-                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-database text-blue-600 dark:text-blue-400 text-lg"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Today Activity -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-emerald-500 transition-all duration-300 hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Today Activity</p>
-                    <h3 class="text-2xl font-bold text-emerald-600 mt-1">{{ number_format($stats['today']) }}</h3>
-                </div>
-                <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-bolt text-emerald-600 dark:text-emerald-400 text-lg"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Creations -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-green-500 transition-all duration-300 hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Creations</p>
-                    <h3 class="text-2xl font-bold text-green-600 mt-1">{{ number_format($stats['created']) }}</h3>
-                </div>
-                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-plus-circle text-green-600 dark:text-green-400 text-lg"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Updates -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-indigo-500 transition-all duration-300 hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Updates</p>
-                    <h3 class="text-2xl font-bold text-indigo-600 mt-1">{{ number_format($stats['updated']) }}</h3>
-                </div>
-                <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-edit text-indigo-600 dark:text-indigo-400 text-lg"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Deletions -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-t-4 border-rose-500 transition-all duration-300 hover:shadow-md">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">Deletions</p>
-                    <h3 class="text-2xl font-bold text-rose-600 mt-1">{{ number_format($stats['deleted']) }}</h3>
-                </div>
-                <div class="w-10 h-10 bg-rose-100 dark:bg-rose-900/20 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
-                    <i class="fas fa-trash-alt text-rose-600 dark:text-rose-400 text-lg"></i>
-                </div>
-            </div>
-        </div>
+        <x-stat-card label="Global Events"  :value="$stats['total']"   icon="fas fa-database"    color="blue"   alpine-text="stats.total" />
+        <x-stat-card label="Today Activity" :value="$stats['today']"   icon="fas fa-bolt"        color="emerald" alpine-text="stats.today" />
+        <x-stat-card label="Creations"      :value="$stats['created']" icon="fas fa-plus-circle" color="green"  alpine-text="stats.created" />
+        <x-stat-card label="Updates"        :value="$stats['updated']" icon="fas fa-edit"        color="indigo" alpine-text="stats.updated" />
+        <x-stat-card label="Deletions"      :value="$stats['deleted']" icon="fas fa-trash-alt"   color="rose"   alpine-text="stats.deleted" />
     </div>
 
-    <!-- Header Section -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-blue-100/50 dark:border-gray-700">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                    <i class="fas fa-history text-xs"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">System Audit Registry</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monitoring application activity and historical state changes across the network</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <button type="button" @click="searchOpen = !searchOpen" 
-                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm">
-                    <i class="fas fa-filter mr-2 text-blue-500"></i>
-                    Advanced Filters
-                </button>
-            </div>
-        </div>
-    </div>
+    <!-- Page Header -->
+    <x-page-header title="System Audit Registry" description="Monitor application activity and historical state changes across the network" icon="fas fa-history" />
 
-    <!-- Filters Section -->
-    <div x-show="searchOpen" x-collapse x-cloak
-         class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <form action="{{ route('admin.audit-logs.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            <div class="lg:col-span-2">
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5">Search Activity</label>
-                <div class="relative group">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Action description, model name..." 
-                           class="w-full h-11 pl-10 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none">
-                    <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
-                        <i class="fas fa-search text-xs"></i>
+    <!-- Data Table Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+
+        <!-- Table Header with Search and Filters -->
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <!-- Left: Title and Search -->
+                <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white whitespace-nowrap">Audit Log</h2>
+                    <x-table.search placeholder="Search action, model name..." />
+                </div>
+
+                <!-- Right: Filters -->
+                <div class="flex items-center gap-3 flex-wrap">
+                    <x-table.filter-select
+                        model="filters.event"
+                        action="applyFilter('event', $event.target.value)"
+                        placeholder="Event Type"
+                        :options="['created' => 'Created', 'updated' => 'Updated', 'deleted' => 'Deleted']"
+                    />
+
+                    <!-- From Date -->
+                    <div class="flex items-center gap-2">
+                        <input type="date" x-model="filters.from_date" @change="applyFilter('from_date', $event.target.value)"
+                            class="h-9 px-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none">
+                        <span class="text-xs text-gray-400 font-medium">to</span>
+                        <input type="date" x-model="filters.to_date" @change="applyFilter('to_date', $event.target.value)"
+                            class="h-9 px-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none">
                     </div>
+
+                    <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
                 </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5">Event Start Date</label>
-                <input type="date" name="from_date" value="{{ request('from_date') }}"
-                       class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5">Event End Date</label>
-                <input type="date" name="to_date" value="{{ request('to_date') }}"
-                       class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none">
-            </div>
-            <div class="flex items-end gap-2 lg:col-span-2">
-                <button type="submit" 
-                        class="flex-1 h-11 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 shadow-md hover:shadow-lg active:scale-95">
-                    <i class="fas fa-filter text-[10px]"></i>
-                    Execute Filter
-                </button>
-                @if(request()->hasAny(['search', 'from_date', 'to_date']))
-                <a href="{{ route('admin.audit-logs.index') }}" 
-                   class="h-11 px-4 flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl hover:bg-gray-200 transition-all shadow-sm">
-                    <i class="fas fa-times text-xs"></i>
-                </a>
-                @endif
-            </div>
-        </form>
-    </div>
 
-    @php
-        $tableColumns = [
-            [
-                'key' => 'timestamp',
-                'label' => 'Event Timestamp',
-                'sortable' => true,
-                'render' => function($row) {
-                    return '
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-gray-800">'.e($row->created_at->format('M d, Y')).'</span>
-                            <span class="text-[10px] font-semibold text-blue-500">'.e($row->created_at->format('H:i:s')).' ('.e($row->created_at->diffForHumans()).')</span>
-                        </div>';
-                }
-            ],
-            [
-                'key' => 'user',
-                'label' => 'Executing Agent',
-                'sortable' => false,
-                'render' => function($row) {
-                    $name = $row->causer?->name ?? 'System Process';
-                    $role = $row->causer?->role->name ?? 'Core';
-                    return '
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 border border-gray-100 dark:border-gray-600">
-                                <i class="fas fa-user-shield text-[10px]"></i>
-                            </div>
-                            <div>
-                                <div class="text-sm font-bold text-gray-800">'.e($name).'</div>
-                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">'.e($role).'</div>
-                            </div>
-                        </div>';
-                }
-            ],
-            [
-                'key' => 'action',
-                'label' => 'Event Type',
-                'sortable' => true,
-                'render' => function($row) {
-                    $desc = $row->description;
-                    $config = match($desc) {
-                        'created' => ['bg' => 'bg-green-50', 'text' => 'text-green-700', 'border' => 'border-green-100', 'icon' => 'fa-plus-circle'],
-                        'updated' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-700', 'border' => 'border-blue-100', 'icon' => 'fa-edit'],
-                        'deleted' => ['bg' => 'bg-rose-50', 'text' => 'text-rose-700', 'border' => 'border-rose-100', 'icon' => 'fa-trash-alt'],
-                        default   => ['bg' => 'bg-gray-50', 'text' => 'text-gray-700', 'border' => 'border-gray-100', 'icon' => 'fa-info-circle'],
-                    };
-                    return '
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full '.$config['bg'].' '.$config['text'].' '.$config['border'].' border text-[10px] font-bold uppercase tracking-wider shadow-sm">
-                            <i class="fas '.$config['icon'].' text-[8px]"></i>
-                            '.ucfirst($desc).'
-                        </span>';
-                }
-            ],
-            [
-                'key' => 'entity',
-                'label' => 'Target Entity',
-                'sortable' => false,
-                'render' => function($row) {
-                    $model = class_basename($row->subject_type ?? 'N/A');
-                    $id = $row->subject_id ? " #{$row->subject_id}" : "";
-                    return '
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-link text-gray-300 text-[10px]"></i>
-                            <span class="text-xs font-semibold text-gray-600">'.e($model).e($id).'</span>
-                        </div>';
-                }
-            ],
-            [
-                'key' => 'properties',
-                'label' => 'Delta Attributes',
-                'sortable' => false,
-                'render' => function($row) {
-                    if (!$row->properties || !$row->properties->has('attributes')) {
-                        return '<span class="text-[10px] font-semibold text-gray-300 uppercase tracking-widest italic">No Data Delta</span>';
-                    }
-                    
-                    return '
-                        <div x-data="{ open: false }">
-                            <button @click="open = !open" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-100 transition-all hover:shadow-sm active:scale-95">
-                                <i class="fas fa-eye text-[8px]"></i>
-                                View Delta
-                            </button>
-                            <div x-show="open" x-cloak 
-                                 class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-                                 @click.self="open = false">
-                                <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl ring-1 ring-black/10">
-                                    <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/50">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                                                <i class="fas fa-project-diagram text-xs"></i>
-                                            </div>
-                                            <h3 class="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wider">Activity Delta Analysis</h3>
-                                        </div>
-                                        <button @click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-                                            <i class="fas fa-times text-lg"></i>
-                                        </button>
-                                    </div>
-                                    <div class="p-8 overflow-y-auto font-mono text-xs space-y-6">
-                                        '.($row->properties->has('old') ? '
-                                        <div>
-                                            <div class="flex items-center gap-2 mb-3">
-                                                <div class="w-2 h-2 rounded-full bg-gray-400"></div>
-                                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Original State</div>
-                                            </div>
-                                            <pre class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-x-auto text-[11px] leading-relaxed">'.json_encode($row->properties['old'], JSON_PRETTY_PRINT).'</pre>
-                                        </div>' : '').'
-                                        <div>
-                                            <div class="flex items-center gap-2 mb-3">
-                                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                                <div class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Modified State</div>
-                                            </div>
-                                            <pre class="bg-emerald-50/30 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/50 overflow-x-auto text-[11px] leading-relaxed text-emerald-900">'.json_encode($row->properties['attributes'], JSON_PRETTY_PRINT).'</pre>
-                                        </div>
-                                    </div>
-                                    <div class="px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 text-right">
-                                        <button @click="open = false" class="px-8 py-2.5 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-black transition-all shadow-lg active:scale-95">Dismiss View</button>
-                                    </div>
+            <!-- Active Filter Tags -->
+            <div class="mt-3 flex flex-wrap gap-2" x-show="hasActiveFilters() || search !== ''" x-cloak>
+                <div x-show="search !== ''" class="flex items-center gap-1 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs">
+                    <span>Search: <span x-text="search" class="font-semibold"></span></span>
+                    <button @click="search = ''" class="ml-1 hover:text-purple-600"><i class="fas fa-times"></i></button>
+                </div>
+                <template x-for="(value, key) in filters" :key="key">
+                    <div x-show="value" class="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs">
+                        <span x-text="getFilterLabel(key, value)"></span>
+                        <button @click="removeFilter(key)" class="ml-1 hover:text-blue-600"><i class="fas fa-times"></i></button>
+                    </div>
+                </template>
+                <button @click="clearAllFilters()" class="flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs hover:bg-red-200 transition-colors">
+                    <i class="fas fa-times-circle"></i> Clear All
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto relative ajax-table-wrapper">
+            <x-table.loading-overlay message="Loading audit logs..." />
+
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                    <tr>
+                        <x-table.sort-header column="created_at" label="Event Timestamp" sort-var="sort" direction-var="direction" />
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Executing Agent</th>
+                        <x-table.sort-header column="description" label="Event Type" sort-var="sort" direction-var="direction" />
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Target Entity</th>
+                        <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Delta Attributes</th>
+                    </tr>
+                </thead>
+
+                {{-- Server-rendered rows --}}
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                    @if(empty($initialData['rows']))
+                    <tr>
+                        <td colspan="5" class="px-6 py-16 text-center">
+                            <i class="fas fa-history text-4xl text-gray-300 mb-4 block"></i>
+                            <p class="text-gray-500">No system activity events found.</p>
+                        </td>
+                    </tr>
+                    @endif
+                    @foreach($initialData['rows'] as $row)
+                    <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-xs font-bold text-gray-800 dark:text-gray-100">{{ $row['date'] }}</div>
+                            <div class="text-[10px] font-semibold text-blue-500">{{ $row['time'] }} ({{ $row['diff'] }})</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-500 to-gray-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">{{ $row['causer_initials'] }}</div>
+                                <div>
+                                    <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['causer_name'] }}</div>
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{{ $row['causer_role'] }}</div>
                                 </div>
                             </div>
-                        </div>';
-                }
-            ],
-        ];
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @php $c = $row['event_config']; @endphp
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider {{ $c['bg'] }} {{ $c['text'] }} {{ $c['border'] }}">
+                                <i class="fas {{ $c['icon'] }} text-[8px]"></i>{{ $row['event'] }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                                <i class="fas fa-link text-[10px] text-gray-400"></i>
+                                {{ $row['model'] }} {{ $row['subject_id'] }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($row['has_delta'])
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl uppercase tracking-wider">
+                                <i class="fas fa-eye text-[8px]"></i> Has Delta
+                            </span>
+                            @else
+                            <span class="text-[10px] font-semibold text-gray-300 uppercase tracking-widest italic">No Data Delta</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
 
-        $tableActions = [];
-    @endphp
+                {{-- Alpine-managed rows --}}
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak
+                    :class="loading && rows.length > 0 ? 'opacity-50' : 'opacity-100'">
+                    <template x-for="row in rows" :key="row.id">
+                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                            <!-- Timestamp -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-100" x-text="row.date"></div>
+                                <div class="text-[10px] font-semibold text-blue-500">
+                                    <span x-text="row.time"></span> (<span x-text="row.diff"></span>)
+                                </div>
+                            </td>
 
-    <div>
-        <x-data-table 
-            :columns="$tableColumns" 
-            :data="$logs" 
-            :actions="$tableActions"
-            empty-message="No system activity events found matching the specified parameters." 
-            empty-icon="fas fa-history"
-        >
-            Historical Activity Audit Trail
-        </x-data-table>
+                            <!-- Executing Agent -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-500 to-gray-600 flex items-center justify-center text-white font-bold text-xs shadow-sm" x-text="row.causer_initials"></div>
+                                    <div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.causer_name"></div>
+                                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider" x-text="row.causer_role"></div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Event Type -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider"
+                                    :class="`${row.event_config.bg} ${row.event_config.text} ${row.event_config.border}`">
+                                    <i class="fas text-[8px]" :class="row.event_config.icon"></i>
+                                    <span x-text="row.event"></span>
+                                </span>
+                            </td>
+
+                            <!-- Target Entity -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+                                    <i class="fas fa-link text-[10px] text-gray-400"></i>
+                                    <span x-text="row.model + ' ' + row.subject_id"></span>
+                                </div>
+                            </td>
+
+                            <!-- Delta Attributes -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <template x-if="row.has_delta">
+                                    <div x-data="{ open: false }">
+                                        <button @click="open = true"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-all active:scale-95 uppercase tracking-wider">
+                                            <i class="fas fa-eye text-[8px]"></i> View Delta
+                                        </button>
+
+                                        <div x-show="open" x-cloak
+                                            class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                                            @click.self="open = false">
+                                            <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl ring-1 ring-black/10">
+                                                <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/50">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                                                            <i class="fas fa-project-diagram text-xs"></i>
+                                                        </div>
+                                                        <h3 class="text-sm font-bold text-gray-800 dark:text-white uppercase tracking-wider">Activity Delta Analysis</h3>
+                                                    </div>
+                                                    <button @click="open = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                                        <i class="fas fa-times text-lg"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="p-8 overflow-y-auto font-mono text-xs space-y-6">
+                                                    <template x-if="row.old_state">
+                                                        <div>
+                                                            <div class="flex items-center gap-2 mb-3">
+                                                                <div class="w-2 h-2 rounded-full bg-gray-400"></div>
+                                                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Original State</div>
+                                                            </div>
+                                                            <pre class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-x-auto text-[11px] leading-relaxed" x-text="row.old_state"></pre>
+                                                        </div>
+                                                    </template>
+                                                    <div>
+                                                        <div class="flex items-center gap-2 mb-3">
+                                                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                                            <div class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Modified State</div>
+                                                        </div>
+                                                        <pre class="bg-emerald-50/30 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/50 overflow-x-auto text-[11px] leading-relaxed text-emerald-900" x-text="row.new_state"></pre>
+                                                    </div>
+                                                </div>
+                                                <div class="px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 text-right">
+                                                    <button @click="open = false" class="px-8 py-2.5 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-black transition-all shadow-lg active:scale-95">Dismiss</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="!row.has_delta">
+                                    <span class="text-[10px] font-semibold text-gray-300 uppercase tracking-widest italic">No Data Delta</span>
+                                </template>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <x-table.empty-state :colspan="5" icon="fas fa-history" message="No system activity events found matching the specified parameters." />
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Server-rendered pagination fallback -->
+        @if($initialData['pagination']['total'] > 0)
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
+            <div class="text-sm text-gray-700 dark:text-gray-300">
+                Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
+            </div>
+        </div>
+        @endif
+
+        <x-table.pagination />
     </div>
 </div>
 @endsection
