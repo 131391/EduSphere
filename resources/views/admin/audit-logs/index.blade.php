@@ -22,7 +22,7 @@
 })" class="space-y-6">
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         <x-stat-card label="Global Events"  :value="$stats['total']"   icon="fas fa-database"    color="blue"   alpine-text="stats.total" />
         <x-stat-card label="Today Activity" :value="$stats['today']"   icon="fas fa-bolt"        color="emerald" alpine-text="stats.today" />
         <x-stat-card label="Creations"      :value="$stats['created']" icon="fas fa-plus-circle" color="green"  alpine-text="stats.created" />

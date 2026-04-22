@@ -7,8 +7,8 @@
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Change Password</h1>
-            <p class="text-gray-500 mt-1 flex items-center">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Change Password</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1 flex items-center">
                 <i class="fas fa-shield-alt mr-2 text-indigo-500"></i>
                 Secure your account with a strong password
             </p>
@@ -42,11 +42,11 @@
                 </ul>
             </div>
 
-            <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-                <h4 class="font-bold text-gray-900 mb-2">Last Changed</h4>
-                <p class="text-sm text-gray-500 mb-4">Keep your account secure by changing your password periodically.</p>
-                <div class="flex items-center text-sm font-medium text-gray-700">
-                    <i class="far fa-clock mr-2 text-gray-400"></i>
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h4 class="font-bold text-gray-900 dark:text-white mb-2">Last Changed</h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Keep your account secure by changing your password periodically.</p>
+                <div class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <i class="far fa-clock mr-2 text-gray-400 dark:text-gray-500"></i>
                     Updated: {{ Auth::user()->updated_at->diffForHumans() }}
                 </div>
             </div>
@@ -54,12 +54,12 @@
 
         <!-- Right Column: Form -->
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="px-6 py-5 border-b border-gray-50 bg-gray-50/50 flex items-center">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mr-4">
-                        <i class="fas fa-lock text-indigo-600"></i>
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                <div class="px-6 py-5 border-b border-gray-50 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/50 flex items-center">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mr-4">
+                        <i class="fas fa-lock text-indigo-600 dark:text-indigo-400"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900">Update Credentials</h3>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Update Credentials</h3>
                 </div>
 
                 <form @submit.prevent="submitForm" class="p-8 space-y-6" novalidate>
@@ -67,15 +67,15 @@
                     
                     <!-- Current Password -->
                     <div class="space-y-2">
-                        <label for="current_password" class="text-sm font-bold text-gray-700 ml-1">Current Password <span class="text-red-500">*</span></label>
+                        <label for="current_password" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Current Password <span class="text-red-500">*</span></label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fas fa-key text-gray-400 group-focus-within:text-indigo-500 transition-colors"></i>
                             </div>
                             <input type="password" name="current_password" id="current_password" x-model="formData.current_password"
                                 @input="clearError('current_password')"
-                                :class="hasError('current_password') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
-                                class="w-full pl-11 pr-4 py-3 bg-white border rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                :class="hasError('current_password') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
+                                class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 border rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
                                 placeholder="Enter your current password">
                         </div>
                         <template x-if="hasError('current_password')">
@@ -85,15 +85,15 @@
 
                     <!-- New Password -->
                     <div class="space-y-2">
-                        <label for="password" class="text-sm font-bold text-gray-700 ml-1">New Password <span class="text-red-500">*</span></label>
+                        <label for="password" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">New Password <span class="text-red-500">*</span></label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fas fa-shield-alt text-gray-400 group-focus-within:text-indigo-500 transition-colors"></i>
                             </div>
                             <input type="password" name="password" id="password" x-model="formData.password"
                                 @input="clearError('password')"
-                                :class="hasError('password') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
-                                class="w-full pl-11 pr-4 py-3 bg-white border rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                :class="hasError('password') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
+                                class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 border rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
                                 placeholder="Min. 8 characters with numbers">
                         </div>
                         <template x-if="hasError('password')">
@@ -103,14 +103,14 @@
 
                     <!-- Confirm Password -->
                     <div class="space-y-2">
-                        <label for="password_confirmation" class="text-sm font-bold text-gray-700 ml-1">Confirm New Password <span class="text-red-500">*</span></label>
+                        <label for="password_confirmation" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Confirm New Password <span class="text-red-500">*</span></label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fas fa-check-double text-gray-400 group-focus-within:text-indigo-500 transition-colors"></i>
                             </div>
                             <input type="password" name="password_confirmation" id="password_confirmation" x-model="formData.password_confirmation"
                                 @input="clearError('password')"
-                                class="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
                                 placeholder="Repeat your new password">
                         </div>
                     </div>

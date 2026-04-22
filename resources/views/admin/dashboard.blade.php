@@ -9,7 +9,7 @@
         <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">System Overview</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time platform metrics and management console</p>
     </div>
-    <div class="mt-4 sm:mt-0 flex items-center space-x-3">
+    <div class="mt-4 sm:mt-0 flex items-center flex-wrap gap-3">
         <div class="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
             <span class="relative flex h-3 w-3">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -211,7 +211,7 @@
                     <i class="fas fa-chart-line mr-1"></i> +8.5%
                 </div>
             </div>
-            <div class="flex items-end justify-between h-48 gap-3 sm:gap-6 px-2">
+            <div class="flex items-end justify-between h-48 gap-2 sm:gap-6 px-2 overflow-x-auto">
                 @php
                     $months = array_keys($schoolGrowth);
                     $counts = array_values($schoolGrowth);
@@ -251,7 +251,7 @@
         </a>
     </div>
     <div class="overflow-x-auto">
-        <table class="min-w-full">
+        <table class="min-w-full min-w-[600px]">
             <thead class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
                 <tr>
                     <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">User Identity</th>

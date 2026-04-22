@@ -3,7 +3,7 @@
 @section('title', 'Create New School')
 
 @section('content')
-<div class="w-full mx-auto px-6" x-data="adminSchoolCreate()">
+<div class="w-full mx-auto" x-data="adminSchoolCreate()">
     <!-- Page Header -->
     <x-page-header title="Create New School" description="Add a new school to the system and set up its administrator." icon="fas fa-school">
         <a href="{{ route('admin.schools.index') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-semibold rounded-xl border border-gray-200 dark:border-gray-600 transition-all shadow-sm">

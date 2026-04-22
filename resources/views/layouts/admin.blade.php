@@ -50,6 +50,11 @@
 
             <!-- Logo Section -->
             <div class="px-4 pt-5 pb-4 border-b border-blue-800 relative">
+                <!-- Mobile close button -->
+                <button @click="sidebarOpen = false"
+                    class="lg:hidden absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-blue-300 hover:text-white hover:bg-blue-800 rounded-lg transition-colors">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
                 <div class="flex items-center justify-center">
                     <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 logo-container shrink-0"
                         style="width: 4rem; height: 4rem;"
@@ -158,10 +163,10 @@
                     <!-- Left: Menu & Search -->
                     <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
                         <button @click="sidebarOpen = !sidebarOpen"
-                            class="text-gray-500 hover:text-gray-700 lg:hidden focus:outline-none">
+                            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 lg:hidden focus:outline-none rounded-lg">
                             <i class="fas fa-bars text-xl sm:text-2xl"></i>
                         </button>
-                        <div class="relative flex-1 max-w-md" x-data="{ 
+                        <div class="relative flex-1 max-w-[180px] sm:max-w-md" x-data="{ 
                             searchQuery: '', 
                             results: [], 
                             loading: false, 
@@ -245,7 +250,7 @@
                     <div class="flex items-center space-x-2 sm:space-x-4" x-data="headerActions()">
                         <!-- Star/Favorite Button -->
                         <button @click="toggleFavorite()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
+                            class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden sm:block"
                             :class="{ 'text-yellow-500': isFavorited }" title="Add to favorites">
                             <i class="text-xl" :class="isFavorited ? 'fas fa-star' : 'far fa-star'" x-cloak></i>
                             <i class="text-xl far fa-star ssr-icon-fallback"></i>
@@ -253,7 +258,7 @@
 
                         <!-- Bookmark Button -->
                         <button @click="toggleBookmark()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
+                            class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden sm:block"
                             :class="{ 'text-blue-500': isBookmarked }" title="Bookmark this page">
                             <i class="text-xl" :class="isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'" x-cloak></i>
                             <i class="text-xl far fa-bookmark ssr-icon-fallback"></i>
@@ -261,15 +266,15 @@
 
                         <!-- Fullscreen Toggle -->
                         <button @click="toggleFullscreen()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
+                            class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden md:block"
                             title="Toggle fullscreen">
                             <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
                             <i class="text-xl fas fa-expand ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Dark Mode Toggle -->
-                        <button @click="toggleDarkMode()" class="text-gray-500 hover:text-gray-700 transition-colors"
-                            :class="{ 'text-yellow-400': isDarkMode }" title="Toggle dark mode">
+                        <button @click="toggleDarkMode()" class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors"
+                            :class="{ 'text-yellow-400 dark:text-yellow-400': isDarkMode }" title="Toggle dark mode">
                             <i class="text-xl" :class="isDarkMode ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
                             <i class="text-xl far fa-moon ssr-icon-fallback"></i>
                         </button>

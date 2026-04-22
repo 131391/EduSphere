@@ -32,7 +32,7 @@
     })" class="space-y-6">
 
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             <x-stat-card label="Total Users" :value="$stats['total']" icon="fas fa-users" color="blue" alpine-text="stats.total" />
             <x-stat-card label="Active" :value="$stats['active']" icon="fas fa-check-circle" color="emerald" alpine-text="stats.active" />
             <x-stat-card label="Inactive" :value="$stats['inactive']" icon="fas fa-pause-circle" color="gray" alpine-text="stats.inactive" />

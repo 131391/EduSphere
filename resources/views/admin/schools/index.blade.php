@@ -24,7 +24,7 @@
      })">
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <x-stat-card label="Total Schools"     :value="$stats['total'] ?? '—'"     icon="fas fa-university"          color="blue"   alpine-text="stats.total ?? '—'" />
         <x-stat-card label="Active Schools"    :value="$stats['active'] ?? '—'"    icon="fas fa-check-double"        color="emerald" alpine-text="stats.active ?? '—'" />
         <x-stat-card label="Inactive Schools"  :value="$stats['inactive'] ?? '—'"  icon="fas fa-times-circle"        color="rose"   alpine-text="stats.inactive ?? '—'" />

@@ -63,7 +63,7 @@ $maxWidthClass = [
     </div>
 
     <!-- Modal -->
-    <div x-show="show" class="mb-6 bg-white rounded-3xl shadow-2xl editorial-shadow transform transition-all sm:w-full sm:mx-auto {{ $maxWidthClass }} mt-12 flex flex-col"
+    <div x-show="show" class="mb-6 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl editorial-shadow transform transition-all w-full mx-4 sm:mx-auto {{ $maxWidthClass }} mt-8 sm:mt-12 flex flex-col"
                     x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -72,7 +72,7 @@ $maxWidthClass = [
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
         
         @if(isset($alpineTitle) || (isset($title) && !empty($title)))
-        <div class="modal-header-premium !rounded-t-3xl px-10 py-6">
+        <div class="modal-header-premium !rounded-t-3xl px-5 sm:px-10 py-4 sm:py-6">
             <h3 class="modal-title-premium text-xl">
                 @if(isset($title) && !empty($title))
                     {{ $title }}
@@ -86,12 +86,12 @@ $maxWidthClass = [
         </div>
         @endif
 
-        <div class="px-10 py-8 modal-premium-content">
+        <div class="px-5 sm:px-10 py-6 sm:py-8 modal-premium-content">
             {{ $slot }}
         </div>
 
         @if(isset($footer))
-            <div class="modal-footer-premium px-10 py-6 !rounded-b-3xl">
+            <div class="modal-footer-premium px-5 sm:px-10 py-4 sm:py-6 !rounded-b-3xl">
                 {{ $footer }}
             </div>
         @endif
