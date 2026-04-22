@@ -45,7 +45,7 @@
                                     </div>
                                     <input type="text" name="name" id="name" x-model="formData.name" required
                                         @input="clearError('name')"
-                                        :class="hasError('name') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        :class="hasError('name') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                         placeholder="Enter school name">
                                 </div>
@@ -62,7 +62,7 @@
                                     </div>
                                     <input type="text" name="code" id="code" x-model="formData.code" required
                                         @input="clearError('code')"
-                                        :class="hasError('code') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        :class="hasError('code') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                         placeholder="e.g. SCH001">
                                 </div>
@@ -80,7 +80,7 @@
                                         </div>
                                         <input type="text" name="subdomain" id="subdomain" x-model="formData.subdomain" required
                                             @input="clearError('subdomain')"
-                                            :class="hasError('subdomain') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                            :class="hasError('subdomain') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                             class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-l-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                             placeholder="subdomain">
                                     </div>
@@ -101,7 +101,7 @@
                                     </div>
                                     <input type="text" name="domain" id="domain" x-model="formData.domain"
                                         @input="clearError('domain')"
-                                        :class="hasError('domain') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        :class="hasError('domain') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                                         placeholder="e.g. school.com">
                                 </div>
@@ -131,7 +131,7 @@
                                     </div>
                                     <input type="text" name="email" id="email" x-model="formData.email"
                                         @input="clearError('email')"
-                                        :class="hasError('email') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        :class="hasError('email') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                         placeholder="school@example.com">
                                 </div>
@@ -145,7 +145,7 @@
                                 <div class="relative group">
                                     <x-phone-input name="phone" id="phone" x-model="formData.phone" 
                                         @input="clearError('phone')"
-                                        :class="hasError('phone') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        :class="hasError('phone') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full pl-[70px] pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                     />
                                 </div>
@@ -162,7 +162,7 @@
                                     </div>
                                     <textarea name="address" id="address" rows="3" x-model="formData.address"
                                         @input="clearError('address')"
-                                        :class="hasError('address') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        :class="hasError('address') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                         placeholder="Enter full address"></textarea>
                                 </div>
@@ -176,7 +176,7 @@
                                 <div class="relative">
                                     <select name="country_id" id="country_id" x-model="formData.country_id"
                                         @change="clearError('country_id'); $nextTick(() => { formData.state_id = ''; formData.city_id = ''; })"
-                                        :class="hasError('country_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        :class="hasError('country_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none appearance-none cursor-pointer no-select2"
                                         data-location-cascade="true"
                                         data-country-select="true"
@@ -194,7 +194,7 @@
                                 <label for="state_id" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">State</label>
                                 <select name="state_id" id="state_id" x-model="formData.state_id"
                                     @change="clearError('state_id'); $nextTick(() => { formData.city_id = ''; })"
-                                    :class="hasError('state_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    :class="hasError('state_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none no-select2"
                                     data-state-select="true"
                                     :data-selected="formData.state_id">
@@ -209,7 +209,7 @@
                                 <label for="city_id" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">City</label>
                                 <select name="city_id" id="city_id" x-model="formData.city_id"
                                     @change="clearError('city_id')"
-                                    :class="hasError('city_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    :class="hasError('city_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none no-select2"
                                     data-city-select="true"
                                     :data-selected="formData.city_id">
@@ -224,7 +224,7 @@
                                 <label for="pincode" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Pincode</label>
                                 <input type="text" name="pincode" id="pincode" x-model="formData.pincode"
                                     @input="clearError('pincode')"
-                                    :class="hasError('pincode') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    :class="hasError('pincode') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                     placeholder="Enter pincode">
                                 <template x-if="hasError('pincode')">
@@ -240,7 +240,7 @@
                                     </div>
                                     <input type="url" name="website" id="website" x-model="formData.website"
                                         @input="clearError('website')"
-                                        :class="hasError('website') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                        :class="hasError('website') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                         placeholder="https://www.school.com">
                                 </div>
@@ -268,7 +268,7 @@
                             <label for="status" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Account Status <span class="text-red-500">*</span></label>
                             <select name="status" id="status" x-model="formData.status" required
                                 @change="clearError('status')"
-                                :class="hasError('status') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                :class="hasError('status') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                 class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none appearance-none cursor-pointer no-select2">
                                 @foreach(\App\Enums\SchoolStatus::cases() as $status)
                                     <option value="{{ $status->value }}">{{ $status->label() }}</option>
@@ -283,7 +283,7 @@
                             <label for="subscription_start_date" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Subscription Start</label>
                             <input type="date" name="subscription_start_date" id="subscription_start_date" x-model="formData.subscription_start_date"
                                 @input="clearError('subscription_start_date')"
-                                :class="hasError('subscription_start_date') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                :class="hasError('subscription_start_date') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                 class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
                             <template x-if="hasError('subscription_start_date')">
                                 <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('subscription_start_date')"></p>
@@ -294,7 +294,7 @@
                             <label for="subscription_end_date" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Subscription End</label>
                             <input type="date" name="subscription_end_date" id="subscription_end_date" x-model="formData.subscription_end_date"
                                 @input="clearError('subscription_end_date')"
-                                :class="hasError('subscription_end_date') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                :class="hasError('subscription_end_date') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                 class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
                              <template x-if="hasError('subscription_end_date')">
                                 <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('subscription_end_date')"></p>
@@ -318,7 +318,7 @@
                                 <label for="admin_name" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Admin Name</label>
                                 <input type="text" name="admin_name" id="admin_name" x-model="formData.admin_name"
                                     @input="clearError('admin_name')"
-                                    :class="hasError('admin_name') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    :class="hasError('admin_name') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
                                 <template x-if="hasError('admin_name')">
                                     <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('admin_name')"></p>
@@ -328,7 +328,7 @@
                                 <label for="admin_email" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Admin Email</label>
                                 <input type="email" name="admin_email" id="admin_email" x-model="formData.admin_email"
                                     @input="clearError('admin_email')"
-                                    :class="hasError('admin_email') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                    :class="hasError('admin_email') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
                                 <template x-if="hasError('admin_email')">
                                     <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('admin_email')"></p>
@@ -342,7 +342,7 @@
                                         <input type="password" name="admin_password" id="admin_password" placeholder="Leave blank to keep current"
                                             x-model="formData.admin_password"
                                             @input="clearError('admin_password')"
-                                            :class="hasError('admin_password') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
+                                            :class="hasError('admin_password') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                             class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
                                         <template x-if="hasError('admin_password')">
                                             <p class="text-xs text-red-600 ml-1" x-text="getError('admin_password')"></p>
@@ -374,7 +374,7 @@
                             <label class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">School Logo</label>
                             
                             <div class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-3xl bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer relative group"
-                                :class="hasError('logo') ? 'border-red-500' : 'border-gray-200'">
+                                :class="hasError('logo') ? 'border-red-500' : 'border-gray-200 dark:border-gray-600'">
                                 @if($school->logo)
                                 <img id="logo-preview" src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name }}" class="w-32 h-32 rounded-2xl object-cover shadow-md mb-4">
                                 @else
