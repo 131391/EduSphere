@@ -46,7 +46,7 @@
         <aside
             class="fixed inset-y-0 left-0 z-50 bg-blue-900 text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
             style="width: 16rem;" :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'"
-            :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen, 'sidebar-collapsed': sidebarCollapsed }">
+            :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0 mobile-open': sidebarOpen, 'sidebar-collapsed': sidebarCollapsed }">
 
             <!-- Logo Section -->
             <div class="px-4 pt-5 pb-4 border-b border-blue-800 relative">

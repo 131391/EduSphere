@@ -52,12 +52,8 @@
     
     /* Hide sidebar on mobile by default to prevent FOUC */
     @media (max-width: 1023px) {
-        aside {
-            transform: translateX(-100%) !important;
-        }
-        /* Only show when Alpine.js adds the open state */
-        aside[x-show="isMobileMenuOpen"] {
-            transform: translateX(0) !important;
+        aside:not(.mobile-open) {
+            transform: translateX(-100%);
         }
     }
     
