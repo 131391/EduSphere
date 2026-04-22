@@ -146,7 +146,7 @@
                                     <x-phone-input name="phone" id="phone" x-model="formData.phone" 
                                         @input="clearError('phone')"
                                         :class="hasError('phone') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200'"
-                                        class="w-full pl-[70px] pr-4 py-3 bg-white border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
+                                        class="w-full pl-[70px] pr-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                     />
                                 </div>
                                 <template x-if="hasError('phone')">

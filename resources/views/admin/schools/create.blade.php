@@ -56,10 +56,10 @@
                         <div class="flex rounded-lg shadow-sm">
                             <input type="text" name="subdomain" id="subdomain" x-model="formData.subdomain"
                                 @input="clearError('subdomain')"
-                                :class="hasError('subdomain') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-300'"
-                                class="flex-1 min-w-0 block w-full px-4 py-2 bg-white border rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                :class="hasError('subdomain') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-300 dark:border-gray-600'"
+                                class="flex-1 min-w-0 block w-full px-4 py-2 bg-white dark:bg-gray-700 dark:text-gray-200 border rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                 placeholder="springfield">
-                            <span class="inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-lg">
+                            <span class="inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 text-sm rounded-r-lg">
                                 .edusphere.local
                             </span>
                         </div>
@@ -169,7 +169,7 @@
                     <div class="col-span-2 md:col-span-1">
                         <label for="admin_password_confirmation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password <span class="text-red-500">*</span></label>
                         <input type="password" name="admin_password_confirmation" id="admin_password_confirmation" x-model="formData.admin_password_confirmation"
-                            class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors">
+                            class="w-full px-4 py-2 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors outline-none">
                     </div>
                 </div>
             </div>
@@ -202,7 +202,7 @@
                             <x-phone-input name="phone" id="phone" x-model="formData.phone" 
                                 @input="clearError('phone')"
                                 :class="hasError('phone') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-300'"
-                                class="w-full pl-[70px] pr-4 py-2 bg-white border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                class="w-full pl-[70px] pr-4 py-2 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                             />
                         </div>
                         <template x-if="hasError('phone')">
