@@ -44,13 +44,17 @@ class SettingController extends Controller
     {
         $user = Auth::user();
 
-        $request->validate([
-            'name' => 'required|string|max:255',
+        $validated = $request->validate([
+            'name'  => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
         ]);
 
-        $user->update($request->only(['name', 'email', 'phone']));
+        $user->update($validated);
+
+        if ($request->ajax()) {
+            return response()->json(['message' => 'Profile updated successfully.']);
+        }
 
         return back()->with('success', 'Profile updated successfully.');
     }

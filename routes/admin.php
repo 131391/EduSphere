@@ -36,7 +36,7 @@ Route::match(['get', 'post'], '/audit-logs', [AuditLogController::class, 'index'
 Route::get('/change-password', [SettingController::class, 'changePassword'])->name('change-password');
 Route::post('/change-password', [SettingController::class, 'updatePassword'])->name('update-password');
 Route::get('/profile', [SettingController::class, 'profile'])->name('profile');
-Route::put('/profile', [SettingController::class, 'updateProfile'])->name('update-profile');
+Route::match(['post', 'put'], '/profile', [SettingController::class, 'updateProfile'])->name('update-profile');
 Route::get('/settings/system', [SettingController::class, 'systemSettings'])->name('settings.system');
 Route::post('/settings/system', [SettingController::class, 'updateSystemSettings'])->name('settings.update-system');
 
