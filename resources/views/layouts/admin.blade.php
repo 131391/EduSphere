@@ -23,15 +23,12 @@
 </head>
 
 <body class="bg-gray-100 h-screen overflow-hidden dark:bg-gray-900 transition-colors">
-    <div class="flex h-screen overflow-hidden" x-data="{ 
-        sidebarOpen: false, 
+    <div class="flex h-screen overflow-hidden" x-data="{
+        sidebarOpen: false,
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         init() {
             document.documentElement.classList.remove('sidebar-collapsed');
-            // Remove no-transition class after a small delay to allow initial paint
-            setTimeout(() => {
-                document.querySelector('aside').classList.remove('no-transition');
-            }, 100);
+            setTimeout(() => document.querySelector('aside').classList.remove('no-transition'), 100);
         },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
@@ -48,109 +45,107 @@
         <!-- Sidebar -->
         <aside
             class="fixed inset-y-0 left-0 z-50 bg-blue-900 text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
-            style="width: 16rem;" :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'" :class="{ 
-                   '-translate-x-full': !sidebarOpen, 
-                   'translate-x-0': sidebarOpen,
-                   'sidebar-collapsed': sidebarCollapsed
-               }">
+            style="width: 16rem;" :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'"
+            :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen, 'sidebar-collapsed': sidebarCollapsed }">
+
             <!-- Logo Section -->
-            <div class="p-4 border-b border-blue-800 relative group">
-                <div class="flex items-center justify-center mb-2">
-                    <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 logo-container"
+            <div class="px-4 pt-5 pb-4 border-b border-blue-800 relative">
+                <div class="flex items-center justify-center">
+                    <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 logo-container shrink-0"
                         style="width: 4rem; height: 4rem;"
                         :style="sidebarCollapsed ? 'width: 2.5rem; height: 2.5rem;' : 'width: 4rem; height: 4rem;'">
-                        <i class="fas fa-book text-blue-900 logo-img"
-                            :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
+                        <i class="fas fa-book text-blue-900 logo-img" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
                     </div>
                 </div>
-
                 <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="sidebar-text">
-                    <h2 class="text-sm font-bold text-center">EDUSPHERE</h2>
-                    <p class="text-xs text-blue-200 text-center mt-1">School ERP System</p>
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    class="sidebar-text mt-2 text-center">
+                    <h2 class="text-sm font-bold tracking-wide">EDUSPHERE</h2>
+                    <p class="text-[11px] text-blue-300 mt-0.5">School ERP System</p>
                 </div>
-
-                <!-- Toggle Button -->
+                <!-- Collapse Toggle -->
                 <button @click="toggleSidebar()"
-                    class="absolute top-6 -right-4 w-8 h-8 flex items-center justify-center bg-teal-50 text-teal-600 rounded-full shadow-lg hover:bg-white hover:text-teal-700 transition-all duration-200 hidden lg:flex focus:outline-none z-50 border border-gray-200">
-                    <i class="fas fa-chevron-left" x-show="!sidebarCollapsed"></i>
-                    <i class="fas fa-chevron-right" x-show="sidebarCollapsed" style="display: none;"></i>
+                    class="absolute top-5 -right-3.5 w-7 h-7 flex items-center justify-center bg-white text-blue-700 rounded-full shadow-md hover:bg-blue-50 transition-all duration-200 hidden lg:flex focus:outline-none z-50 border border-gray-200">
+                    <i class="fas fa-chevron-left text-[10px]" x-show="!sidebarCollapsed"></i>
+                    <i class="fas fa-chevron-right text-[10px]" x-show="sidebarCollapsed" style="display:none;"></i>
                 </button>
             </div>
 
-            <!-- Sidebar divider -->
-            <div class="border-b border-blue-800 mx-4 mb-4"></div>
-
             <!-- Navigation Menu -->
-            <nav class="flex-1 overflow-y-auto py-4 sidebar-scroll" x-data="{ 
-                    openMenus: {
-                        examination: false,
-                        setting: {{ request()->routeIs('admin.settings.*') ? 'true' : 'false' }}
-                    }
-                 }">
-                <ul class="space-y-1 px-2">
+            <nav class="flex-1 overflow-y-auto py-3 sidebar-scroll">
+                <!-- Main Nav -->
+                <div x-show="!sidebarCollapsed" class="px-3 mb-1">
+                    <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest px-2">Main</p>
+                </div>
+                <ul class="space-y-0.5 px-2">
                     <li>
                         <a href="{{ route('admin.dashboard') }}"
-                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.dashboard') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                            class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
-                            <i class="fas fa-tachometer-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed" class="sidebar-text">Dashboards</span>
+                            <i class="fas fa-tachometer-alt text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">Dashboards</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('admin.schools.index') }}"
-                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.schools.*') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                            class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.schools.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
-                            <i class="fas fa-school w-5 text-center" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed">Schools</span>
+                            <i class="fas fa-school text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">Schools</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('admin.users.index') }}"
-                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.users.*') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                            class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
-                            <i class="fas fa-users-cog w-5 text-center" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed">All Users</span>
+                            <i class="fas fa-users-cog text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">All Users</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('admin.audit-logs.index') }}"
-                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.audit-logs.*') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
+                            class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.audit-logs.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
-                            <i class="fas fa-history w-5 text-center" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed">Audit Logs</span>
+                            <i class="fas fa-history text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                            <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">Audit Logs</span>
                         </a>
-                    </li>
-
-
-                    <!-- Change Password -->
-                    <li>
-                        <a href="{{ route('admin.change-password') }}"
-                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('admin.change-password') ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-800' }}"
-                            :class="{ 'justify-center': sidebarCollapsed }">
-                            <i class="fas fa-key w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed">Change Password</span>
-                        </a>
-                    </li>
-
-                    <!-- LogOut -->
-                    <li>
-                        <form method="POST" action="{{ route('logout') }}" class="w-full">
-                            @csrf
-                            <button type="submit"
-                                class="w-full flex items-center px-4 py-2 rounded-lg text-blue-200 hover:bg-blue-800"
-                                :class="{ 'justify-center': sidebarCollapsed }">
-                                <i class="fas fa-sign-out-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                <span x-show="!sidebarCollapsed">LogOut</span>
-                            </button>
-                        </form>
                     </li>
                 </ul>
+
+                <!-- Account Section -->
+                <div class="mt-4">
+                    <div x-show="!sidebarCollapsed" class="px-3 mb-1">
+                        <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest px-2">Account</p>
+                    </div>
+                    <div x-show="sidebarCollapsed" class="border-t border-blue-800 mx-3 mb-2"></div>
+                    <ul class="space-y-0.5 px-2">
+                        <li>
+                            <a href="{{ route('admin.change-password') }}"
+                                class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.change-password') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
+                                :class="{ 'justify-center': sidebarCollapsed }">
+                                <i class="fas fa-key text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">Change Password</span>
+                            </a>
+                        </li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}" class="w-full">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full flex items-center px-3 py-2.5 rounded-lg transition-colors text-blue-200 hover:bg-red-600/30 hover:text-red-300"
+                                    :class="{ 'justify-center': sidebarCollapsed }">
+                                    <i class="fas fa-sign-out-alt text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                    <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">LogOut</span>
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </nav>
 
             <!-- Footer -->
-            <div class="p-4 border-t border-blue-800 text-xs text-blue-200 text-center">
-                <p>{{ date('Y') }} © EduSphere</p>
+            <div class="px-4 py-3 border-t border-blue-800">
+                <p x-show="!sidebarCollapsed" class="sidebar-text text-[11px] text-blue-400 text-center">{{ date('Y') }} © EduSphere</p>
+                <p x-show="sidebarCollapsed" class="text-[10px] text-blue-500 text-center" style="display:none;">©</p>
             </div>
         </aside>
 
@@ -159,7 +154,7 @@
             <!-- Top Header -->
             <header
                 class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
-                <div class="flex items-center justify-between px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between px-4 sm:px-6 py-3">
                     <!-- Left: Menu & Search -->
                     <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
                         <button @click="sidebarOpen = !sidebarOpen"
@@ -322,7 +317,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 transition-colors">
+            <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-5 transition-colors">
                 @yield('content')
             </main>
         </div>

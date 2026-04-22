@@ -95,33 +95,18 @@
     }
     
     /* Sidebar Navigation Global Styles */
-    /* Default expanded state: ensure margin is present immediately */
-    aside nav a i, 
-    aside nav button i,
-    aside nav .nav-icon {
-        margin-right: 0.75rem;
-    }
-    
-    /* Collapsed state overrides */
+    /* Collapsed state: center items */
     html.sidebar-collapsed aside nav a,
     html.sidebar-collapsed aside nav button,
     aside.sidebar-collapsed nav a,
     aside.sidebar-collapsed nav button {
         justify-content: center !important;
     }
-    
+
     html.sidebar-collapsed aside nav a i,
     html.sidebar-collapsed aside nav button i,
     aside.sidebar-collapsed nav a i,
-    aside.sidebar-collapsed nav button i,
-    html.sidebar-collapsed aside nav .nav-icon,
-    aside.sidebar-collapsed nav .nav-icon {
+    aside.sidebar-collapsed nav button i {
         margin-right: 0 !important;
-    }
-    
-    /* Handle the nested div in dropdown buttons */
-    html.sidebar-collapsed aside nav button div,
-    aside.sidebar-collapsed nav button div {
-        justify-content: center;
     }
 </style>
