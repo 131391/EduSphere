@@ -19,6 +19,10 @@ class SchoolAccessMiddleware
         $user = Auth::user();
 
         if (!$user) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
             return redirect()->route('login');
         }
 
@@ -31,14 +35,21 @@ class SchoolAccessMiddleware
         $currentSchool = app('currentSchool');
         
         if (!$currentSchool) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'School not found.'], 404);
+            }
+
             abort(404, 'School not found');
         }
 
         if (!$user->canAccessSchool($currentSchool->id)) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'You do not have access to this school.'], 403);
+            }
+
             abort(403, 'You do not have access to this school');
         }
 
         return $next($request);
     }
 }
-

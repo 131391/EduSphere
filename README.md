@@ -1,6 +1,6 @@
 # EduSphere - School ERP SaaS Platform
 
-Enterprise-level multi-tenant School ERP SaaS platform built with Laravel 11.
+Enterprise-level multi-tenant School ERP SaaS platform built with Laravel 12.
 
 ## 🚀 Quick Start
 
@@ -46,8 +46,8 @@ npm run dev             # Terminal 2
 
 - **Multi-Tenant**: Subdomain-based routing with data isolation
 - **Roles**: Super Admin, School Admin, Teacher, Student, Parent
-- **Frontend**: Vue.js 3 + Inertia.js + Tailwind CSS
-- **Backend**: Laravel 11 with MySQL
+- **Frontend**: Livewire 3 + Tailwind CSS
+- **Backend**: Laravel 12 with MySQL
 - **Cache**: Redis
 - **Queue**: Laravel Horizon
 
@@ -121,14 +121,72 @@ Data is automatically isolated by `school_id` using global scopes.
 
 ## 🧪 Testing
 
+### Fast unit checks
+
+These do not require a database connection and are the quickest way to verify the
+policy-based security hardening work.
+
 ```bash
-php8.2 artisan test
+php artisan test tests/Unit/Policies/AuthorizationPolicyTest.php
 ```
+
+### Full application test suite
+
+Most feature and service tests use `RefreshDatabase`, so they require a real test
+database. By default `phpunit.xml` expects:
+
+```bash
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=edusphere_test
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Recommended setup:
+
+```bash
+cp .env.testing.example .env.testing
+php artisan key:generate --env=testing
+```
+
+Then create the `edusphere_test` database and run:
+
+```bash
+php artisan test
+```
+
+If you want to override the test database at runtime, you can do that too:
+
+```bash
+DB_CONNECTION=mysql \
+DB_HOST=127.0.0.1 \
+DB_PORT=3306 \
+DB_DATABASE=edusphere_test \
+DB_USERNAME=root \
+DB_PASSWORD=root \
+php artisan test tests/Feature/TenantIsolationTest.php
+```
+
+### Security-focused test targets
+
+```bash
+php artisan test tests/Unit/Policies/AuthorizationPolicyTest.php
+php artisan test tests/Feature/TenantIsolationTest.php
+php artisan test tests/Feature/SchoolAccessTest.php
+php artisan test tests/Feature/TenantMiddlewareTest.php
+php artisan test tests/Unit/Services/FeePaymentServiceTest.php
+```
+
+If the suite fails immediately with `SQLSTATE[HY000] [2002]`, the test database is
+not reachable from the current environment yet.
 
 ## 📚 Documentation
 
 - See `ARCHITECTURE.md` for system design
 - See `DEPLOYMENT.md` for production setup
+- See `.env.testing.example` for a database-backed PHPUnit template
 
 ## 📄 License
 

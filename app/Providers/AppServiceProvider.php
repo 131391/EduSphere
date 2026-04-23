@@ -2,7 +2,22 @@
 
 namespace App\Providers;
 
+use App\Models\FeeType;
+use App\Models\FeePayment;
+use App\Models\PaymentMethod;
+use App\Models\School;
+use App\Models\Student;
+use App\Models\StudentRegistration;
+use App\Models\User;
+use App\Policies\FeeTypePolicy;
+use App\Policies\FeePaymentPolicy;
+use App\Policies\PaymentMethodPolicy;
+use App\Policies\SchoolPolicy;
+use App\Policies\StudentPolicy;
+use App\Policies\StudentRegistrationPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
@@ -26,6 +41,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(FeeType::class, FeeTypePolicy::class);
+        Gate::policy(FeePayment::class, FeePaymentPolicy::class);
+        Gate::policy(PaymentMethod::class, PaymentMethodPolicy::class);
+        Gate::policy(School::class, SchoolPolicy::class);
+        Gate::policy(Student::class, StudentPolicy::class);
+        Gate::policy(StudentRegistration::class, StudentRegistrationPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+
         // Set default string length for MySQL
         Schema::defaultStringLength(191);
 

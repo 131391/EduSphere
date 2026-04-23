@@ -150,12 +150,26 @@ class AdmissionService
 
     private function handleStudentFiles(StoreAdmissionRequest $request, Student $student, $school): void
     {
-        $student->student_photo     = $this->storeTenantFile($request->file('student_photo'),     "students/{$school->id}/photos",     $request->student_photo_path);
-        $student->father_photo      = $this->storeTenantFile($request->file('father_photo'),      "parents/{$school->id}/photos",      $request->father_photo_path);
-        $student->mother_photo      = $this->storeTenantFile($request->file('mother_photo'),      "parents/{$school->id}/photos",      $request->mother_photo_path);
-        $student->student_signature = $this->storeTenantFile($request->file('student_signature'), "students/{$school->id}/signatures", $request->student_signature_path);
-        $student->father_signature  = $this->storeTenantFile($request->file('father_signature'),  "parents/{$school->id}/signatures",  $request->father_signature_path);
-        $student->mother_signature  = $this->storeTenantFile($request->file('mother_signature'),  "parents/{$school->id}/signatures",  $request->mother_signature_path);
+        $photoSourcePrefixes = ["registrations/{$school->id}/photos"];
+        $signatureSourcePrefixes = ["registrations/{$school->id}/signatures"];
+
+        $student->student_photo = $this->storeTenantFile($request->file('student_photo'), "students/{$school->id}/photos")
+            ?? $this->copyTenantFile($request->student_photo_path, "students/{$school->id}/photos", $photoSourcePrefixes);
+
+        $student->father_photo = $this->storeTenantFile($request->file('father_photo'), "parents/{$school->id}/photos")
+            ?? $this->copyTenantFile($request->father_photo_path, "parents/{$school->id}/photos", $photoSourcePrefixes);
+
+        $student->mother_photo = $this->storeTenantFile($request->file('mother_photo'), "parents/{$school->id}/photos")
+            ?? $this->copyTenantFile($request->mother_photo_path, "parents/{$school->id}/photos", $photoSourcePrefixes);
+
+        $student->student_signature = $this->storeTenantFile($request->file('student_signature'), "students/{$school->id}/signatures")
+            ?? $this->copyTenantFile($request->student_signature_path, "students/{$school->id}/signatures", $signatureSourcePrefixes);
+
+        $student->father_signature = $this->storeTenantFile($request->file('father_signature'), "parents/{$school->id}/signatures")
+            ?? $this->copyTenantFile($request->father_signature_path, "parents/{$school->id}/signatures", $signatureSourcePrefixes);
+
+        $student->mother_signature = $this->storeTenantFile($request->file('mother_signature'), "parents/{$school->id}/signatures")
+            ?? $this->copyTenantFile($request->mother_signature_path, "parents/{$school->id}/signatures", $signatureSourcePrefixes);
     }
 
     /**

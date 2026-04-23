@@ -18,12 +18,15 @@ class SchoolSettingsController extends TenantController
     public function basicInfo()
     {
         $school = $this->getSchool();
+        $this->authorize('viewSettings', $school);
         $countries = app(\App\Services\LocationService::class)->getCountries();
         return view('school.settings.basic-info', compact('school', 'countries'));
     }
 
     public function updateBasicInfo(Request $request)
     {
+        $this->authorize('updateSettings', $this->getSchool());
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
@@ -50,11 +53,14 @@ class SchoolSettingsController extends TenantController
     public function logo()
     {
         $school = $this->getSchool();
+        $this->authorize('viewSettings', $school);
         return view('school.settings.logo', compact('school'));
     }
 
     public function updateLogo(Request $request)
     {
+        $this->authorize('updateSettings', $this->getSchool());
+
         $request->validate([
             'logo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -77,11 +83,14 @@ class SchoolSettingsController extends TenantController
     public function siteIcon()
     {
         $school = $this->getSchool();
+        $this->authorize('viewSettings', $school);
         return view('school.settings.site-icon', compact('school'));
     }
 
     public function updateSiteIcon(Request $request)
     {
+        $this->authorize('updateSettings', $this->getSchool());
+
         $request->validate([
             'site_icon' => 'required|image|mimes:png,ico,jpg|max:512',
         ]);
@@ -104,12 +113,15 @@ class SchoolSettingsController extends TenantController
     public function generalSettings()
     {
         $school = $this->getSchool();
+        $this->authorize('viewSettings', $school);
         $settings = $school->settings ?? [];
         return view('school.settings.general', compact('school', 'settings'));
     }
 
     public function updateGeneralSettings(Request $request)
     {
+        $this->authorize('updateSettings', $this->getSchool());
+
         $request->validate([
             'registration_fee' => 'nullable|numeric|min:0',
             'admission_fee' => 'nullable|numeric|min:0',
@@ -139,6 +151,7 @@ class SchoolSettingsController extends TenantController
     public function session()
     {
         $school = $this->getSchool();
+        $this->authorize('viewSettings', $school);
         $academicYears = AcademicYear::where('school_id', $school->id)->orderBy('start_date', 'desc')->get();
         $currentSession = AcademicYear::where('school_id', $school->id)->where('is_current', true)->first();
         $currentSessionId = $currentSession?->id;
@@ -148,6 +161,8 @@ class SchoolSettingsController extends TenantController
 
     public function updateSession(Request $request)
     {
+        $this->authorize('updateSettings', $this->getSchool());
+
         $request->validate([
             'current_session_id' => [
                 'required',
@@ -198,12 +213,15 @@ class SchoolSettingsController extends TenantController
     public function receiptNote()
     {
         $school = $this->getSchool();
+        $this->authorize('viewSettings', $school);
         $settings = $school->settings ?? [];
         return view('school.settings.receipt-note', compact('school', 'settings'));
     }
 
     public function updateReceiptNote(Request $request)
     {
+        $this->authorize('updateSettings', $this->getSchool());
+
         $request->validate([
             'registration_receipt_note' => 'nullable|string|max:1000',
             'admission_receipt_note' => 'nullable|string|max:1000',

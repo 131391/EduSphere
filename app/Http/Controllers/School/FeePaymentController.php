@@ -30,6 +30,7 @@ class FeePaymentController extends TenantController
     public function index(Request $request)
     {
         $this->ensureSchoolActive();
+        $this->authorize('viewAny', FeePayment::class);
 
         if ($request->expectsJson()) {
             return $this->handleAjaxTable($request);
@@ -116,6 +117,7 @@ class FeePaymentController extends TenantController
     {
         $this->authorizeTenant($student);
         $this->ensureSchoolActive();
+        $this->authorize('collect', [FeePayment::class, $student]);
 
         $pendingFees = $this->paymentService->getStudentPendingFees($student);
         $paymentMethods = PaymentMethod::where('school_id', $this->getSchoolId())->active()->get();
@@ -131,6 +133,7 @@ class FeePaymentController extends TenantController
     {
         $this->authorizeTenant($student);
         $this->ensureSchoolActive();
+        $this->authorize('collect', [FeePayment::class, $student]);
 
         $validated = $request->validate([
             'payment_date'       => 'required|date',
@@ -176,6 +179,7 @@ class FeePaymentController extends TenantController
     public function receipt($receipt_no)
     {
         $this->ensureSchoolActive();
+        $this->authorize('viewAny', FeePayment::class);
 
         $payments = FeePayment::where('school_id', $this->getSchoolId())
             ->where('receipt_no', $receipt_no)
@@ -185,6 +189,8 @@ class FeePaymentController extends TenantController
         if ($payments->isEmpty()) {
             abort(404, 'Receipt not found');
         }
+
+        $this->authorize('view', $payments->first());
 
         $student = $payments->first()->student;
         $school = $this->school;

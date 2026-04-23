@@ -44,6 +44,7 @@ class StudentRegistrationController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', StudentRegistration::class);
         $schoolId = $this->getSchoolId();
 
         // 1. Row Transformer (Gold Standard UI consistency)
@@ -177,6 +178,7 @@ class StudentRegistrationController extends TenantController
 
     public function create()
     {
+        $this->authorize('create', StudentRegistration::class);
         $school = $this->getSchool();
         $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
         $academicYears = AcademicYear::where('school_id', $school->id)->get();
@@ -213,6 +215,7 @@ class StudentRegistrationController extends TenantController
 
     public function store(Request $request)
     {
+        $this->authorize('create', StudentRegistration::class);
         $school = $this->getSchool();
 
         try {
@@ -331,14 +334,18 @@ class StudentRegistrationController extends TenantController
 
             $data = $request->all();
             $data['school_id'] = $school->id;
+            $registrationPhotoSourcePrefixes = ['enquiries/photos'];
 
             // Handle File Uploads or Copies using Trait
-            $data['father_photo'] = $this->storeTenantFile($request->file('father_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_father_photo'));
-            $data['mother_photo'] = $this->storeTenantFile($request->file('mother_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_mother_photo'));
-            $data['student_photo'] = $this->storeTenantFile($request->file('student_photo'), "registrations/{$school->id}/photos", $request->input('enquiry_student_photo'));
-            $data['father_signature'] = $this->storeTenantFile($request->file('father_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_father_signature'));
-            $data['mother_signature'] = $this->storeTenantFile($request->file('mother_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_mother_signature'));
-            $data['student_signature'] = $this->storeTenantFile($request->file('student_signature'), "registrations/{$school->id}/signatures", $request->input('enquiry_student_signature'));
+            $data['father_photo'] = $this->storeTenantFile($request->file('father_photo'), "registrations/{$school->id}/photos")
+                ?? $this->copyTenantFile($request->input('enquiry_father_photo'), "registrations/{$school->id}/photos", $registrationPhotoSourcePrefixes);
+            $data['mother_photo'] = $this->storeTenantFile($request->file('mother_photo'), "registrations/{$school->id}/photos")
+                ?? $this->copyTenantFile($request->input('enquiry_mother_photo'), "registrations/{$school->id}/photos", $registrationPhotoSourcePrefixes);
+            $data['student_photo'] = $this->storeTenantFile($request->file('student_photo'), "registrations/{$school->id}/photos")
+                ?? $this->copyTenantFile($request->input('enquiry_student_photo'), "registrations/{$school->id}/photos", $registrationPhotoSourcePrefixes);
+            $data['father_signature'] = $this->storeTenantFile($request->file('father_signature'), "registrations/{$school->id}/signatures");
+            $data['mother_signature'] = $this->storeTenantFile($request->file('mother_signature'), "registrations/{$school->id}/signatures");
+            $data['student_signature'] = $this->storeTenantFile($request->file('student_signature'), "registrations/{$school->id}/signatures");
 
             $registration = StudentRegistration::create($data);
 
@@ -424,11 +431,15 @@ class StudentRegistrationController extends TenantController
 
     public function show(StudentRegistration $studentRegistration)
     {
+        $this->authorizeTenant($studentRegistration);
+        $this->authorize('view', $studentRegistration);
         return view('receptionist.student-registrations.show', compact('studentRegistration'));
     }
 
     public function edit(StudentRegistration $studentRegistration)
     {
+        $this->authorizeTenant($studentRegistration);
+        $this->authorize('update', $studentRegistration);
         $school = $this->getSchool();
         $classes = ClassModel::where('school_id', $school->id)->with('registrationFee')->get();
         $academicYears = AcademicYear::where('school_id', $school->id)->get();
@@ -460,6 +471,8 @@ class StudentRegistrationController extends TenantController
 
     public function update(Request $request, StudentRegistration $studentRegistration)
     {
+        $this->authorizeTenant($studentRegistration);
+        $this->authorize('update', $studentRegistration);
         $school = $this->getSchool();
 
         try {
@@ -496,34 +509,31 @@ class StudentRegistrationController extends TenantController
         }
 
         $data = $request->all();
+        $registrationPhotoDirectory = "registrations/{$school->id}/photos";
+        $registrationSignatureDirectory = "registrations/{$school->id}/signatures";
+        $registrationPhotoPrefixes = [$registrationPhotoDirectory];
+        $registrationSignaturePrefixes = [$registrationSignatureDirectory];
 
         // Handle File Uploads
         $fileFields = ['father_photo', 'mother_photo', 'student_photo', 'father_signature', 'mother_signature', 'student_signature'];
         foreach ($fileFields as $field) {
             if ($request->hasFile($field)) {
-                // New file uploaded - store it
-                if ($studentRegistration->$field) {
-                    Storage::disk('public')->delete($studentRegistration->$field);
-                }
-                $path = $request->file($field)->store("registrations/{$school->id}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures'), 'public');
+                $directory = Str::contains($field, 'photo') ? $registrationPhotoDirectory : $registrationSignatureDirectory;
+                $allowedExistingPrefixes = Str::contains($field, 'photo') ? $registrationPhotoPrefixes : $registrationSignaturePrefixes;
+                $path = $this->replaceTenantFile($request->file($field), $directory, $studentRegistration->$field, $allowedExistingPrefixes);
                 $data[$field] = $path;
             } elseif ($request->filled("enquiry_{$field}")) {
-                // Photo from enquiry - copy it to registration storage
-                $enquiryPath = $request->input("enquiry_{$field}");
-                if ($enquiryPath && Storage::disk('public')->exists($enquiryPath)) {
-                    // Delete old file if exists
-                    if ($studentRegistration->$field) {
+                $destinationDir = Str::contains($field, 'photo') ? $registrationPhotoDirectory : $registrationSignatureDirectory;
+                $allowedExistingPrefixes = Str::contains($field, 'photo') ? $registrationPhotoPrefixes : $registrationSignaturePrefixes;
+                $allowedSourcePrefixes = Str::contains($field, 'photo') ? ['enquiries/photos'] : [];
+                $copiedPath = $this->copyTenantFile($request->input("enquiry_{$field}"), $destinationDir, $allowedSourcePrefixes);
+
+                if ($copiedPath) {
+                    if ($this->isAllowedPublicPath($studentRegistration->$field, $allowedExistingPrefixes)) {
                         Storage::disk('public')->delete($studentRegistration->$field);
                     }
-                    // Determine destination directory
-                    $destinationDir = "registrations/{$school->id}/" . (Str::contains($field, 'photo') ? 'photos' : 'signatures');
-                    // Generate new filename to avoid conflicts
-                    $filename = basename($enquiryPath);
-                    $newPath = $destinationDir . '/' . time() . '_' . $filename;
 
-                    // Copy file from enquiry storage to registration storage
-                    Storage::disk('public')->copy($enquiryPath, $newPath);
-                    $data[$field] = $newPath;
+                    $data[$field] = $copiedPath;
                 }
             }
         }
@@ -540,6 +550,7 @@ class StudentRegistrationController extends TenantController
     public function destroy(StudentRegistration $studentRegistration)
     {
         $this->authorizeTenant($studentRegistration);
+        $this->authorize('delete', $studentRegistration);
 
         if ($studentRegistration->admission_status === AdmissionStatus::Admitted) {
             if (request()->ajax() || request()->wantsJson()) {

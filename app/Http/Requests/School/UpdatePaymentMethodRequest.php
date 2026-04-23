@@ -8,7 +8,16 @@ class UpdatePaymentMethodRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $id = $this->route('payment_method') ?? $this->route('id');
+
+        if (!$this->user() || !$id) {
+            return false;
+        }
+
+        $paymentMethod = \App\Models\PaymentMethod::where('school_id', app('currentSchool')->id)
+            ->find($id);
+
+        return $paymentMethod ? $this->user()->can('update', $paymentMethod) : false;
     }
 
     public function rules(): array

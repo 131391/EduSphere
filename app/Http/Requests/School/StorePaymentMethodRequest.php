@@ -8,7 +8,7 @@ class StorePaymentMethodRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return (bool) $this->user()?->can('create', \App\Models\PaymentMethod::class);
     }
 
     public function rules(): array

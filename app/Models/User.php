@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -15,7 +16,7 @@ use App\Models\StudentParent;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, LogsActivity;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, LogsActivity, Tenantable;
 
     // Status constants
     const STATUS_INACTIVE = 0;
@@ -196,4 +197,3 @@ class User extends Authenticatable
         return $this->school_id === $schoolId;
     }
 }
-

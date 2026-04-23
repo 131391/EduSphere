@@ -18,6 +18,7 @@ class UserController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', User::class);
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($user) {
@@ -133,6 +134,7 @@ class UserController extends TenantController
     public function store(\App\Http\Requests\School\StoreUserRequest $request)
     {
         try {
+            $this->authorize('create', User::class);
             $validated = $request->validated();
             $school = auth()->user()->school;
 
@@ -180,6 +182,7 @@ class UserController extends TenantController
     public function update(\App\Http\Requests\School\UpdateUserRequest $request, User $user)
     {
         $this->authorizeTenant($user);
+        $this->authorize('update', $user);
 
         try {
             $validated = $request->validated();
@@ -237,6 +240,7 @@ class UserController extends TenantController
     public function destroy(Request $request, User $user)
     {
         $this->authorizeTenant($user);
+        $this->authorize('delete', $user);
 
         if ($user->isSchoolAdmin()) {
             if ($request->wantsJson() || $request->ajax()) {

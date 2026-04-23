@@ -17,12 +17,13 @@ use App\Http\Controllers\Api\FeeController;
 |
 */
 
-// Public API routes
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+// Tenant-scoped authentication routes
+Route::middleware('tenant')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
 // Protected API routes
-Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
+Route::middleware(['auth:sanctum', 'tenant', 'school.access'])->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user()->load('role');
     });

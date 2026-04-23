@@ -8,7 +8,16 @@ class UpdateFeeTypeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $feeTypeId = $this->route('fee_type') ?? $this->route('id');
+
+        if (!$this->user() || !$feeTypeId) {
+            return false;
+        }
+
+        $feeType = \App\Models\FeeType::where('school_id', app('currentSchool')->id)
+            ->find($feeTypeId);
+
+        return $feeType ? $this->user()->can('update', $feeType) : false;
     }
 
     public function rules(): array

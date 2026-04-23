@@ -8,7 +8,7 @@ class StoreFeeTypeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return (bool) $this->user()?->can('create', \App\Models\FeeType::class);
     }
 
     public function rules(): array

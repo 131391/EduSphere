@@ -6,12 +6,9 @@ use App\Models\Fee;
 use App\Models\FeePayment;
 use App\Models\School;
 use App\Models\Student;
-use App\Models\AcademicYear;
 use App\Enums\FeeStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Spatie\Activitylog\Facades\CauserTrait;
 
 class FeePaymentService
 {
@@ -32,6 +29,9 @@ class FeePaymentService
 
         DB::beginTransaction();
         try {
+            $student = Student::where('school_id', $school->id)
+                ->findOrFail($studentId);
+
             $totalCollected = 0;
 
             foreach ($payments as $payment) {
@@ -42,6 +42,10 @@ class FeePaymentService
 
                 if (!$fee) {
                     throw new \Exception("Fee record not found: " . $payment['fee_id']);
+                }
+
+                if ((int) $fee->student_id !== (int) $student->id) {
+                    throw new \Exception("Fee record does not belong to student: " . $payment['fee_id']);
                 }
 
                 $amountToPay = floatval($payment['amount']);
@@ -94,24 +98,34 @@ class FeePaymentService
 
             DB::commit();
 
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($student)
-                ->withProperties([
+            try {
+                activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($student)
+                    ->withProperties([
+                        'receipt_no' => $receiptNo,
+                        'total_amount' => $totalCollected,
+                        'payment_date' => $paymentDate,
+                        'payment_method_id' => $paymentMethodId,
+                    ])
+                    ->log("Fee payment collected: {$receiptNo}");
+            } catch (\Throwable $logException) {
+                Log::warning('Payment collected but activity logging failed: ' . $logException->getMessage(), [
+                    'school_id' => $school->id,
+                    'student_id' => $student->id,
                     'receipt_no' => $receiptNo,
-                    'total_amount' => $totalCollected,
-                    'payment_date' => $paymentDate,
-                    'payment_method_id' => $paymentMethodId,
-                ])
-                ->log("Fee payment collected: {$receiptNo}");
+                ]);
+            }
 
             return [
                 'success' => true,
                 'message' => "Payment collected successfully. Receipt No: {$receiptNo}",
+                'receipt_no' => $receiptNo,
+                'total_amount' => $totalCollected,
                 'data' => [
                     'receipt_no' => $receiptNo,
-                    'total_amount' => $totalCollected
-                ]
+                    'total_amount' => $totalCollected,
+                ],
             ];
 
         } catch (\Exception $e) {

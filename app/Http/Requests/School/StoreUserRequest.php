@@ -12,7 +12,7 @@ class StoreUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user()->isSchoolAdmin();
+        return auth()->check() && auth()->user()->can('create', \App\Models\User::class);
     }
 
     /**

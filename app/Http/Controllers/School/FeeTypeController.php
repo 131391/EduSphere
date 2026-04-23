@@ -24,6 +24,8 @@ class FeeTypeController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', FeeType::class);
+
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($feeType) {
@@ -69,6 +71,8 @@ class FeeTypeController extends TenantController
 
     public function store(StoreFeeTypeRequest $request)
     {
+        $this->authorize('create', FeeType::class);
+
         try {
             $feeType = $this->feeTypeService->createFeeType(
                 $this->getSchool(),
@@ -104,6 +108,8 @@ class FeeTypeController extends TenantController
             $feeType = FeeType::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
+            $this->authorize('update', $feeType);
+
             $feeType = $this->feeTypeService->updateFeeType($feeType, $request->validated());
 
             if ($request->wantsJson()) {
@@ -134,6 +140,8 @@ class FeeTypeController extends TenantController
         try {
             $feeType = FeeType::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
+
+            $this->authorize('delete', $feeType);
 
             $this->feeTypeService->deleteFeeType($feeType);
 

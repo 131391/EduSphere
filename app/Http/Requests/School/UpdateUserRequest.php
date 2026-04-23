@@ -12,7 +12,11 @@ class UpdateUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user()->isSchoolAdmin();
+        $user = $this->route('user');
+
+        return auth()->check()
+            && $user
+            && auth()->user()->can('update', $user);
     }
 
     /**

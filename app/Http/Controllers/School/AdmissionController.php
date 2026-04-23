@@ -23,7 +23,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdmissionController extends TenantController
 {
-    use HasAjaxDataTable;
+    use HasAjaxDataTable, HandlesFileCopies;
 
     public function __construct(
         protected LocationService $locationService,
@@ -34,6 +34,7 @@ class AdmissionController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Student::class);
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($student) {
@@ -141,6 +142,7 @@ class AdmissionController extends TenantController
 
     public function create()
     {
+        $this->authorize('create', Student::class);
         $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
         $sections = Section::where('school_id', $this->getSchoolId())->get();
         $academicYears = AcademicYear::where('school_id', $this->getSchoolId())->get();
@@ -187,6 +189,7 @@ class AdmissionController extends TenantController
 
     public function store(StoreAdmissionRequest $request)
     {
+        $this->authorize('create', Student::class);
         $school = $this->getSchool();
 
         DB::beginTransaction();
@@ -219,11 +222,15 @@ class AdmissionController extends TenantController
 
     public function show(Student $student)
     {
+        $this->authorizeTenant($student);
+        $this->authorize('view', $student);
         return view('school.admission.show', compact('student'));
     }
 
     public function edit(Student $student)
     {
+        $this->authorizeTenant($student);
+        $this->authorize('update', $student);
         $student->load(['permanentState', 'permanentCity', 'correspondenceState', 'correspondenceCity']);
         $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
         $sections = Section::where('school_id', $this->getSchoolId())->get();
@@ -274,6 +281,7 @@ class AdmissionController extends TenantController
         // Authorization: ensure this student belongs to the current school.
         // UpdateAdmissionRequest already validates all foreign keys are tenant-scoped.
         $this->authorizeTenant($student);
+        $this->authorize('update', $student);
 
         $validated = $request->validated();
 
@@ -301,98 +309,92 @@ class AdmissionController extends TenantController
 
             $student->father_name = trim(implode(' ', array_filter([$request->father_first_name, $request->father_middle_name, $request->father_last_name])));
             $student->mother_name = trim(implode(' ', array_filter([$request->mother_first_name, $request->mother_middle_name, $request->mother_last_name])));
+            $registrationPhotoPrefixes = ["registrations/{$this->getSchoolId()}/photos"];
+            $registrationSignaturePrefixes = ["registrations/{$this->getSchoolId()}/signatures"];
+            $existingPhotoPrefixes = ['student_photos', 'parent_photos'];
+            $existingSignaturePrefixes = ['student_signatures', 'parent_signatures'];
 
             // Handle Student Photo
             if ($request->hasFile('student_photo')) {
-                if ($student->student_photo) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->student_photo);
-                }
-                $path = $request->file('student_photo')->store('student_photos', 'public');
+                $path = $this->replaceTenantFile($request->file('student_photo'), 'student_photos', $student->student_photo, $existingPhotoPrefixes);
                 $student->student_photo = $path;
+            } elseif ($request->filled('student_photo_path') && $request->input('student_photo_path') !== $student->student_photo) {
+                $path = $this->copyTenantFile($request->input('student_photo_path'), 'student_photos', $registrationPhotoPrefixes);
+                if ($path) {
+                    if ($this->isAllowedPublicPath($student->student_photo, $existingPhotoPrefixes)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($student->student_photo);
+                    }
+                    $student->student_photo = $path;
+                }
             }
 
             // Handle Father Photo
             if ($request->hasFile('father_photo')) {
-                if ($student->father_photo) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->father_photo);
-                }
-                $path = $request->file('father_photo')->store('parent_photos', 'public');
+                $path = $this->replaceTenantFile($request->file('father_photo'), 'parent_photos', $student->father_photo, $existingPhotoPrefixes);
                 $student->father_photo = $path;
-            } elseif ($request->filled('father_photo_path')) {
-                $sourcePath = $request->father_photo_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'parent_photos/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->father_photo = $newPath;
+            } elseif ($request->filled('father_photo_path') && $request->input('father_photo_path') !== $student->father_photo) {
+                $path = $this->copyTenantFile($request->input('father_photo_path'), 'parent_photos', $registrationPhotoPrefixes);
+                if ($path) {
+                    if ($this->isAllowedPublicPath($student->father_photo, $existingPhotoPrefixes)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($student->father_photo);
+                    }
+                    $student->father_photo = $path;
                 }
             }
 
             // Handle Mother Photo
             if ($request->hasFile('mother_photo')) {
-                if ($student->mother_photo) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->mother_photo);
-                }
-                $path = $request->file('mother_photo')->store('parent_photos', 'public');
+                $path = $this->replaceTenantFile($request->file('mother_photo'), 'parent_photos', $student->mother_photo, $existingPhotoPrefixes);
                 $student->mother_photo = $path;
-            } elseif ($request->filled('mother_photo_path')) {
-                $sourcePath = $request->mother_photo_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'parent_photos/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->mother_photo = $newPath;
+            } elseif ($request->filled('mother_photo_path') && $request->input('mother_photo_path') !== $student->mother_photo) {
+                $path = $this->copyTenantFile($request->input('mother_photo_path'), 'parent_photos', $registrationPhotoPrefixes);
+                if ($path) {
+                    if ($this->isAllowedPublicPath($student->mother_photo, $existingPhotoPrefixes)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($student->mother_photo);
+                    }
+                    $student->mother_photo = $path;
                 }
             }
 
             // Handle Student Signature
             if ($request->hasFile('student_signature')) {
-                if ($student->student_signature) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->student_signature);
-                }
-                $path = $request->file('student_signature')->store('student_signatures', 'public');
+                $path = $this->replaceTenantFile($request->file('student_signature'), 'student_signatures', $student->student_signature, $existingSignaturePrefixes);
                 $student->student_signature = $path;
-            } elseif ($request->filled('student_signature_path')) {
-                $sourcePath = $request->student_signature_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'student_signatures/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->student_signature = $newPath;
+            } elseif ($request->filled('student_signature_path') && $request->input('student_signature_path') !== $student->student_signature) {
+                $path = $this->copyTenantFile($request->input('student_signature_path'), 'student_signatures', $registrationSignaturePrefixes);
+                if ($path) {
+                    if ($this->isAllowedPublicPath($student->student_signature, $existingSignaturePrefixes)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($student->student_signature);
+                    }
+                    $student->student_signature = $path;
                 }
             }
 
             // Handle Father Signature
             if ($request->hasFile('father_signature')) {
-                if ($student->father_signature) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->father_signature);
-                }
-                $path = $request->file('father_signature')->store('parent_signatures', 'public');
+                $path = $this->replaceTenantFile($request->file('father_signature'), 'parent_signatures', $student->father_signature, $existingSignaturePrefixes);
                 $student->father_signature = $path;
-            } elseif ($request->filled('father_signature_path')) {
-                $sourcePath = $request->father_signature_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'parent_signatures/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->father_signature = $newPath;
+            } elseif ($request->filled('father_signature_path') && $request->input('father_signature_path') !== $student->father_signature) {
+                $path = $this->copyTenantFile($request->input('father_signature_path'), 'parent_signatures', $registrationSignaturePrefixes);
+                if ($path) {
+                    if ($this->isAllowedPublicPath($student->father_signature, $existingSignaturePrefixes)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($student->father_signature);
+                    }
+                    $student->father_signature = $path;
                 }
             }
 
             // Handle Mother Signature
             if ($request->hasFile('mother_signature')) {
-                if ($student->mother_signature) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->mother_signature);
-                }
-                $path = $request->file('mother_signature')->store('parent_signatures', 'public');
+                $path = $this->replaceTenantFile($request->file('mother_signature'), 'parent_signatures', $student->mother_signature, $existingSignaturePrefixes);
                 $student->mother_signature = $path;
-            } elseif ($request->filled('mother_signature_path')) {
-                $sourcePath = $request->mother_signature_path;
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($sourcePath)) {
-                    $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-                    $newPath = 'parent_signatures/' . Str::random(40) . '.' . $extension;
-                    \Illuminate\Support\Facades\Storage::disk('public')->copy($sourcePath, $newPath);
-                    $student->mother_signature = $newPath;
+            } elseif ($request->filled('mother_signature_path') && $request->input('mother_signature_path') !== $student->mother_signature) {
+                $path = $this->copyTenantFile($request->input('mother_signature_path'), 'parent_signatures', $registrationSignaturePrefixes);
+                if ($path) {
+                    if ($this->isAllowedPublicPath($student->mother_signature, $existingSignaturePrefixes)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($student->mother_signature);
+                    }
+                    $student->mother_signature = $path;
                 }
             }
 
@@ -426,6 +428,7 @@ class AdmissionController extends TenantController
     public function destroy(Student $student)
     {
         $this->authorizeTenant($student);
+        $this->authorize('delete', $student);
         try {
             if ($student->fees()->whereHas('payments')->exists()) {
                 if (request()->ajax() || request()->wantsJson()) {
@@ -497,4 +500,3 @@ class AdmissionController extends TenantController
     }
 
 }
-

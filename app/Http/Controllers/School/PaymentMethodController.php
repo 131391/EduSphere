@@ -24,6 +24,8 @@ class PaymentMethodController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', PaymentMethod::class);
+
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($method) {
@@ -74,6 +76,8 @@ class PaymentMethodController extends TenantController
 
     public function store(StorePaymentMethodRequest $request)
     {
+        $this->authorize('create', PaymentMethod::class);
+
         try {
             $method = $this->service->createMethod(
                 $this->getSchool(),
@@ -109,6 +113,8 @@ class PaymentMethodController extends TenantController
             $method = PaymentMethod::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
 
+            $this->authorize('update', $method);
+
             $method = $this->service->updateMethod($method, $request->validated());
 
             if ($request->wantsJson()) {
@@ -139,6 +145,8 @@ class PaymentMethodController extends TenantController
         try {
             $method = PaymentMethod::where('school_id', $this->getSchoolId())
                 ->findOrFail($id);
+
+            $this->authorize('delete', $method);
 
             $this->service->deleteMethod($method);
 

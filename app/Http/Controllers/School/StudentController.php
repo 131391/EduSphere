@@ -139,7 +139,6 @@ class StudentController extends TenantController
 
     public function update(Request $request, $id)
     {
-        $school = $this->getSchool();
         $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
 
         $validated = $request->validate([
@@ -161,6 +160,19 @@ class StudentController extends TenantController
         if (!$sectionValid) {
             return back()->withErrors(['section_id' => 'The selected section does not belong to the chosen class.'])->withInput();
         }
+
+        $student->update([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'email' => $validated['email'] ?? null,
+            'mobile_no' => $validated['phone'] ?? null,
+            'class_id' => $validated['class_id'],
+            'section_id' => $validated['section_id'],
+            'status' => $validated['status'],
+            'address' => $validated['address'] ?? null,
+        ]);
+
+        $student->refresh();
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -192,4 +204,3 @@ class StudentController extends TenantController
             ->with('success', 'Student record moved to archives.');
     }
 }
-
