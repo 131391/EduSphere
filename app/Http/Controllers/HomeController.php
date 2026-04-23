@@ -12,7 +12,9 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('welcome');
+        return view('welcome', [
+            'school' => app()->bound('currentSchool') ? app('currentSchool') : null,
+        ]);
     }
 
     /**
@@ -42,4 +44,3 @@ class HomeController extends Controller
         };
     }
 }
-

@@ -16,13 +16,16 @@ use App\Http\Controllers\HomeController;
 */
 
 // Public routes
-Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware('auth')->name('dashboard');
+Route::middleware('public.tenant')->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+    Route::middleware('guest')->group(function () {
+        Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+        Route::post('/login', [LoginController::class, 'login']);
+    });
 });
+
+Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware('auth')->name('dashboard');
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
@@ -64,5 +67,4 @@ Route::prefix('parent')->name('parent.')->middleware(['auth', 'tenant', 'school.
 Route::prefix('receptionist')->name('receptionist.')->middleware(['auth', 'tenant', 'school.access', 'role:receptionist'])->group(function () {
     require __DIR__.'/receptionist.php';
 });
-
 

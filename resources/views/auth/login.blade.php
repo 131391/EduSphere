@@ -3,19 +3,30 @@
 @section('title', 'Login - ' . config('app.name'))
 
 @section('content')
+@php
+    $tenantSchool = $school ?? null;
+    $tenantLogo = $tenantSchool?->logo ? asset('storage/' . $tenantSchool->logo) : null;
+    $tenantName = $tenantSchool?->name ?: config('app.name', 'EduSphere');
+@endphp
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-6 sm:space-y-8">
         <!-- Logo/Header -->
         <div class="text-center">
             <div class="flex justify-center mb-3 sm:mb-4">
-                <div class="bg-blue-600 p-2 sm:p-3 rounded-lg">
-                    <svg class="w-10 h-10 sm:w-12 sm:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
+                <div class="{{ $tenantLogo ? 'bg-white border border-blue-100 p-1.5' : 'bg-blue-600 p-2 sm:p-3' }} rounded-lg shadow-sm">
+                    @if($tenantLogo)
+                        <img src="{{ $tenantLogo }}" alt="{{ $tenantName }} logo" class="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-md">
+                    @else
+                        <svg class="w-10 h-10 sm:w-12 sm:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    @endif
                 </div>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">EduSphere</h2>
-            <p class="mt-2 text-xs sm:text-sm text-gray-600">School ERP Management System</p>
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ $tenantName }}</h2>
+            <p class="mt-2 text-xs sm:text-sm text-gray-600">
+                {{ $tenantSchool ? 'Sign in to the ' . $tenantSchool->name . ' workspace' : 'School ERP Management System' }}
+            </p>
         </div>
 
         <!-- Login Card -->
@@ -120,16 +131,15 @@
             <!-- Additional Options -->
             <div class="mt-5 sm:mt-6">
                 <p class="text-center text-xs sm:text-sm text-gray-600">
-                    Please use your official Email Id
+                    {{ $tenantSchool ? 'Use your official ' . $tenantSchool->name . ' account to continue' : 'Please use your official Email Id' }}
                 </p>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="text-center text-xs sm:text-sm text-gray-500">
-            <p>{{ date('Y') }} © EduSphere - School ERP System</p>
+            <p>{{ date('Y') }} © {{ $tenantName }}{{ $tenantSchool ? ' tenant portal' : ' - School ERP System' }}</p>
         </div>
     </div>
 </div>
 @endsection
-
