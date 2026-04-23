@@ -5,6 +5,14 @@
         if (collapsed) {
             document.documentElement.classList.add('sidebar-collapsed');
         }
+
+        var currentPath = window.location.pathname;
+        if (localStorage.getItem('favorited_' + currentPath) === 'true') {
+            document.documentElement.classList.add('page-favorited');
+        }
+        if (localStorage.getItem('bookmarked_' + currentPath) === 'true') {
+            document.documentElement.classList.add('page-bookmarked');
+        }
     })();
 
     // Pre-load header action states to prevent icon blinking
@@ -133,10 +141,27 @@
         content: "\f185"; /* fa-sun codepoint */
         font-weight: 900; /* solid (fas) weight */
     }
+    html.page-favorited .ssr-icon-fallback.fa-star::before {
+        content: "\f005"; /* fa-star codepoint */
+        font-weight: 900; /* solid (fas) weight */
+    }
+    html.page-bookmarked .ssr-icon-fallback.fa-bookmark::before {
+        content: "\f02e"; /* fa-bookmark codepoint */
+        font-weight: 900; /* solid (fas) weight */
+    }
     /* Match the yellow tint Alpine applies post-hydration
        (:class="{ 'text-yellow-400': isDarkMode }") so the colour doesn't
        flicker gray→yellow on the dark-mode button. */
-    html.dark [title="Toggle dark mode"] {
+    html.dark [title="Toggle dark mode"],
+    html.dark [title="Toggle Dark Mode"] {
         color: #fbbf24; /* text-yellow-400 */
+    }
+    html.page-favorited [title="Add to favorites"],
+    html.page-favorited [title="Add to Favorites"] {
+        color: #eab308; /* yellow-500 */
+    }
+    html.page-bookmarked [title="Bookmark this page"],
+    html.page-bookmarked [title="Saved Pages"] {
+        color: #3b82f6; /* blue-500 */
     }
 </style>

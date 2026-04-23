@@ -1,5 +1,5 @@
 {{-- Step 2: Student Details --}}
-@php use App\Constants\Gender; @endphp
+@php use App\Enums\Gender; @endphp
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
 
@@ -31,7 +31,7 @@
                 :class="errors.gender ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                 class="no-select2 w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <option value="">Choose Gender</option>
-            @foreach(Gender::getOptions() as $value => $label)
+            @foreach(Gender::options() as $value => $label)
                 <option value="{{ $value }}">{{ $label }}</option>
             @endforeach
         </select>

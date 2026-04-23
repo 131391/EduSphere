@@ -16,8 +16,6 @@
         </a>
     </div>
 
-    <div x-cloak>
-
         @include('school.admission.partials.stepper_header')
 
         <form id="admissionForm" @submit.prevent="submitForm()" enctype="multipart/form-data">
@@ -35,13 +33,9 @@
                 <div class="p-6 md:p-8 min-h-[480px]">
 
                     {{-- Step 1: Admission Info --}}
-                    <template x-if="currentStep === 1">
-                        <div x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 translate-y-1"
-                             x-transition:enter-end="opacity-100 translate-y-0">
-                            @include('school.admission.partials.step1_admission')
-                        </div>
-                    </template>
+                    <div x-show="currentStep === 1">
+                        @include('school.admission.partials.step1_admission')
+                    </div>
 
                     {{-- Step 2: Student Details --}}
                     <template x-if="currentStep === 2">
@@ -82,15 +76,12 @@
 
                 {{-- Footer navigation --}}
                 <div class="px-6 md:px-8 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl flex items-center justify-between gap-4">
-                    <template x-if="currentStep > 1">
-                        <button type="button" @click="prevStep()"
+                    <div class="min-w-[118px]">
+                        <button type="button" @click="prevStep()" x-show="currentStep > 1" x-cloak
                                 class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
                             <i class="fas fa-arrow-left text-xs"></i> Previous
                         </button>
-                    </template>
-                    <template x-if="currentStep === 1">
-                        <span aria-hidden="true"></span>
-                    </template>
+                    </div>
 
                     <div class="flex items-center gap-3">
                         <a href="{{ route('school.admission.index') }}"
@@ -98,31 +89,25 @@
                             Cancel
                         </a>
 
-                        <template x-if="currentStep < 5">
-                            <button type="button" @click="nextStep()"
-                                    :disabled="currentStep === 1 && !formData.registration_id"
-                                    :class="(currentStep === 1 && !formData.registration_id) ? 'opacity-50 cursor-not-allowed' : ''"
-                                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all">
-                                Next <i class="fas fa-arrow-right text-xs"></i>
-                            </button>
-                        </template>
+                        <button type="button" @click="nextStep()" x-show="currentStep < 5"
+                                :disabled="currentStep === 1 && !formData.registration_id"
+                                :class="(currentStep === 1 && !formData.registration_id) ? 'opacity-50 cursor-not-allowed' : ''"
+                                class="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all">
+                            Next <i class="fas fa-arrow-right text-xs"></i>
+                        </button>
 
-                        <template x-if="currentStep === 5">
-                            <button type="submit"
-                                    :disabled="submitting"
-                                    :class="submitting ? 'opacity-75 cursor-wait' : ''"
-                                    class="inline-flex items-center gap-2 px-8 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-bold rounded-lg shadow-md transition-all">
-                                <template x-if="!submitting"><i class="fas fa-check-circle text-xs"></i></template>
-                                <template x-if="submitting"><i class="fas fa-circle-notch animate-spin text-xs"></i></template>
-                                <span x-text="submitting ? 'Processing...' : 'Complete Admission'"></span>
-                            </button>
-                        </template>
+                        <button type="submit" x-show="currentStep === 5" x-cloak
+                                :disabled="submitting"
+                                :class="submitting ? 'opacity-75 cursor-wait' : ''"
+                                class="inline-flex items-center gap-2 px-8 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-bold rounded-lg shadow-md transition-all">
+                            <template x-if="!submitting"><i class="fas fa-check-circle text-xs"></i></template>
+                            <template x-if="submitting"><i class="fas fa-circle-notch animate-spin text-xs"></i></template>
+                            <span x-text="submitting ? 'Processing...' : 'Complete Admission'"></span>
+                        </button>
                     </div>
                 </div>
             </div>
         </form>
-
-    </div>
 </div>
 @endsection
 

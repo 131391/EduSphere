@@ -1061,18 +1061,18 @@
                     }
                 },
 
-                toggleDarkMode() {
-                    this.isDark = !this.isDark;
-                    localStorage.setItem('darkMode', this.isDark);
+	                toggleDarkMode() {
+	                    this.isDark = !this.isDark;
+	                    localStorage.setItem('darkMode', this.isDark);
                     if (this.isDark) {
                         document.documentElement.classList.add('dark');
                     } else {
                         document.documentElement.classList.remove('dark');
                     }
                 },
-                async toggleFavorite() {
-                    try {
-                        const response = await fetch("{{ route('school.favorites.toggle') }}", {
+	                async toggleFavorite() {
+	                    try {
+	                        const response = await fetch("{{ route('school.favorites.toggle') }}", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
@@ -1082,24 +1082,26 @@
                                 title: document.title,
                                 url: window.location.href
                             })
-                        });
-                        const data = await response.json();
-                        this.isFavorite = data.status === "added";
-                        this.loadFavorites();
-                    } catch (error) {
-                        console.error("Error toggling favorite:", error);
-                    }
-                },
+	                        });
+	                        const data = await response.json();
+	                        this.isFavorite = data.status === "added";
+                            localStorage.setItem('favorited_' + window.location.pathname, this.isFavorite);
+	                        this.loadFavorites();
+	                    } catch (error) {
+	                        console.error("Error toggling favorite:", error);
+	                    }
+	                },
 
-                async checkFavorite() {
-                    try {
-                        const response = await fetch("{{ route('school.favorites.check') }}?url=" + encodeURIComponent(window.location.href));
-                        const data = await response.json();
-                        this.isFavorite = data.is_favorite === true || data.is_favorite === "true";
-                    } catch (error) {
-                        console.error("Error checking favorite:", error);
-                    }
-                },
+	                async checkFavorite() {
+	                    try {
+	                        const response = await fetch("{{ route('school.favorites.check') }}?url=" + encodeURIComponent(window.location.href));
+	                        const data = await response.json();
+	                        this.isFavorite = data.is_favorite === true || data.is_favorite === "true";
+                            localStorage.setItem('favorited_' + window.location.pathname, this.isFavorite);
+	                    } catch (error) {
+	                        console.error("Error checking favorite:", error);
+	                    }
+	                },
 
                 async loadFavorites() {
                     try {
@@ -1118,14 +1120,15 @@
                                 "X-CSRF-TOKEN": "{{ csrf_token() }}"
                             }
                         });
-                        this.loadFavorites();
-                        // If we are on the page we just removed, update the star icon
-                        const removedFav = this.favorites.find(f => f.id === id);
-                        if (removedFav && window.location.href === removedFav.url) {
-                            this.isFavorite = false;
-                        }
-                    } catch (error) {
-                        console.error("Error removing favorite:", error);
+	                        this.loadFavorites();
+	                        // If we are on the page we just removed, update the star icon
+	                        const removedFav = this.favorites.find(f => f.id === id);
+	                        if (removedFav && window.location.href === removedFav.url) {
+	                            this.isFavorite = false;
+                                localStorage.setItem('favorited_' + window.location.pathname, 'false');
+	                        }
+	                    } catch (error) {
+	                        console.error("Error removing favorite:", error);
                     }
                 }
             }));

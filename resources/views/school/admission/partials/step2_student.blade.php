@@ -1,6 +1,6 @@
 {{-- Step 2: Student Details --}}
 {{-- Fields are pre-filled from registration and read-only --}}
-@php use App\Constants\Gender; @endphp
+@php use App\Enums\Gender; @endphp
 
 <div class="mb-5 flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 px-4 py-3 rounded-xl text-sm">
     <i class="fas fa-lock text-gray-400"></i>
@@ -37,7 +37,7 @@
                 :class="errors.gender ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                 class="no-select2 w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <option value="">Choose Gender</option>
-            @foreach(Gender::getOptions() as $value => $label)
+            @foreach(Gender::options() as $value => $label)
                 <option value="{{ $value }}">{{ $label }}</option>
             @endforeach
         </select>
