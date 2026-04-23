@@ -108,6 +108,13 @@ class LoginController extends Controller
                 \Log::warning('Failed to update last login: ' . $e->getMessage());
             }
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Login successful.',
+                    'redirect' => $this->redirectPathByRole($user),
+                ]);
+            }
+
             // Redirect based on role
             return $this->redirectByRole($user);
         }
@@ -138,23 +145,31 @@ class LoginController extends Controller
      */
     protected function redirectByRole($user)
     {
+        return redirect($this->redirectPathByRole($user));
+    }
+
+    /**
+     * Resolve redirect path based on user role.
+     */
+    protected function redirectPathByRole($user): string
+    {
         // Ensure role relation is loaded
         if (!$user->relationLoaded('role')) {
             $user->load('role');
         }
 
         if (!$user->role) {
-            return redirect('/');
+            return '/';
         }
 
         return match ($user->role->slug) {
-            Role::SUPER_ADMIN => redirect()->route('admin.dashboard'),
-            Role::SCHOOL_ADMIN => redirect()->route('school.dashboard'),
-            Role::RECEPTIONIST => redirect()->route('receptionist.dashboard'),
-            Role::TEACHER => redirect()->route('teacher.dashboard'),
-            Role::STUDENT => redirect()->route('student.dashboard'),
-            Role::PARENT => redirect()->route('parent.dashboard'),
-            default => redirect('/'),
+            Role::SUPER_ADMIN => route('admin.dashboard'),
+            Role::SCHOOL_ADMIN => route('school.dashboard'),
+            Role::RECEPTIONIST => route('receptionist.dashboard'),
+            Role::TEACHER => route('teacher.dashboard'),
+            Role::STUDENT => route('student.dashboard'),
+            Role::PARENT => route('parent.dashboard'),
+            default => '/',
         };
     }
 }

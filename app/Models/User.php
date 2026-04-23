@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\TenantResetPassword;
 use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -195,5 +196,10 @@ class User extends Authenticatable
         }
 
         return $this->school_id === $schoolId;
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new TenantResetPassword($token));
     }
 }

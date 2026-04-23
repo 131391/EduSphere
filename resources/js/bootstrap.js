@@ -14,6 +14,7 @@ if (token) {
 
 // Import reusable Alpine.js components
 import './components/ajax-data-table';
+import './components/auth-form';
 
 // Initialize Alpine.js via Vite bundle (replaces CDN loading)
 Alpine.plugin(collapse);
@@ -33,4 +34,3 @@ window.axios.interceptors.response.use(
         return Promise.reject(error);
     }
 );
-
