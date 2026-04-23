@@ -21,5 +21,15 @@ enum Gender: int
     {
         return array_column(self::cases(), 'value');
     }
-}
 
+    public static function options(): array
+    {
+        $options = [];
+
+        foreach (self::cases() as $case) {
+            $options[$case->value] = $case->label();
+        }
+
+        return $options;
+    }
+}

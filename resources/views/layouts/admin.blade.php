@@ -7,6 +7,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Dashboard - ' . config('app.name'))</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
@@ -28,11 +35,16 @@
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         init() {
             document.documentElement.classList.remove('sidebar-collapsed');
-            setTimeout(() => document.querySelector('aside').classList.remove('no-transition'), 100);
+            // Remove no-transition after first paint so subsequent transitions are smooth
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const aside = document.querySelector('aside');
+                if (aside) aside.classList.remove('no-transition');
+            }));
         },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
             localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+            document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
         }
     }">
         <!-- Mobile Sidebar Overlay -->
@@ -45,7 +57,7 @@
         <!-- Sidebar -->
         <aside
             class="fixed inset-y-0 left-0 z-50 bg-blue-900 text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
-            style="width: 16rem;" :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'"
+            :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'"
             :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0 mobile-open': sidebarOpen, 'sidebar-collapsed': sidebarCollapsed }">
 
             <!-- Logo Section -->
@@ -62,9 +74,7 @@
                         <i class="fas fa-book text-blue-900 logo-img" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
                     </div>
                 </div>
-                <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                    class="sidebar-text mt-2 text-center">
+                <div class="sidebar-text mt-2 text-center">
                     <h2 class="text-sm font-bold tracking-wide">EDUSPHERE</h2>
                     <p class="text-[11px] text-blue-300 mt-0.5">School ERP System</p>
                 </div>
@@ -79,7 +89,7 @@
             <!-- Navigation Menu -->
             <nav class="flex-1 overflow-y-auto py-3 sidebar-scroll">
                 <!-- Main Nav -->
-                <div x-show="!sidebarCollapsed" class="px-3 mb-1">
+                <div class="sidebar-text px-3 mb-1">
                     <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest px-2">Main</p>
                 </div>
                 <ul class="space-y-0.5 px-2">
@@ -88,7 +98,7 @@
                             class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
                             <i class="fas fa-tachometer-alt text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">Dashboards</span>
+                            <span class="sidebar-text text-sm font-medium">Dashboards</span>
                         </a>
                     </li>
                     <li>
@@ -96,7 +106,7 @@
                             class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.schools.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
                             <i class="fas fa-school text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">Schools</span>
+                            <span class="sidebar-text text-sm font-medium">Schools</span>
                         </a>
                     </li>
                     <li>
@@ -104,7 +114,7 @@
                             class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
                             <i class="fas fa-users-cog text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">All Users</span>
+                            <span class="sidebar-text text-sm font-medium">All Users</span>
                         </a>
                     </li>
                     <li>
@@ -112,24 +122,24 @@
                             class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.audit-logs.*') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                             :class="{ 'justify-center': sidebarCollapsed }">
                             <i class="fas fa-history text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">Audit Logs</span>
+                            <span class="sidebar-text text-sm font-medium">Audit Logs</span>
                         </a>
                     </li>
                 </ul>
 
                 <!-- Account Section -->
                 <div class="mt-4">
-                    <div x-show="!sidebarCollapsed" class="px-3 mb-1">
+                    <div class="sidebar-text px-3 mb-1">
                         <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest px-2">Account</p>
                     </div>
-                    <div x-show="sidebarCollapsed" class="border-t border-blue-800 mx-3 mb-2"></div>
+                    <div x-show="sidebarCollapsed" class="sidebar-collapsed-only border-t border-blue-800 mx-3 mb-2" style="display:none;"></div>
                     <ul class="space-y-0.5 px-2">
                         <li>
                             <a href="{{ route('admin.change-password') }}"
                                 class="flex items-center px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('admin.change-password') ? 'bg-blue-700 text-white' : 'text-blue-200 hover:bg-blue-800 hover:text-white' }}"
                                 :class="{ 'justify-center': sidebarCollapsed }">
                                 <i class="fas fa-key text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">Change Password</span>
+                                <span class="sidebar-text text-sm font-medium">Change Password</span>
                             </a>
                         </li>
                         <li>
@@ -139,7 +149,7 @@
                                     class="w-full flex items-center px-3 py-2.5 rounded-lg transition-colors text-blue-200 hover:bg-red-600/30 hover:text-red-300"
                                     :class="{ 'justify-center': sidebarCollapsed }">
                                     <i class="fas fa-sign-out-alt text-sm w-5 text-center shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                    <span x-show="!sidebarCollapsed" class="sidebar-text text-sm font-medium">LogOut</span>
+                                    <span class="sidebar-text text-sm font-medium">LogOut</span>
                                 </button>
                             </form>
                         </li>
@@ -149,8 +159,8 @@
 
             <!-- Footer -->
             <div class="px-4 py-3 border-t border-blue-800">
-                <p x-show="!sidebarCollapsed" class="sidebar-text text-[11px] text-blue-400 text-center">{{ date('Y') }} © EduSphere</p>
-                <p x-show="sidebarCollapsed" class="text-[10px] text-blue-500 text-center" style="display:none;">©</p>
+                <p class="sidebar-text text-[11px] text-blue-400 text-center">{{ date('Y') }} © EduSphere</p>
+                <p x-show="sidebarCollapsed" class="sidebar-collapsed-only text-[10px] text-blue-500 text-center" style="display:none;">©</p>
             </div>
         </aside>
 
@@ -160,90 +170,12 @@
             <header
                 class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
                 <div class="flex items-center justify-between px-4 sm:px-6 py-3">
-                    <!-- Left: Menu & Search -->
+                    <!-- Left: Menu -->
                     <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
                         <button @click="sidebarOpen = !sidebarOpen"
                             class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 lg:hidden focus:outline-none rounded-lg">
                             <i class="fas fa-bars text-xl sm:text-2xl"></i>
                         </button>
-                        <div class="relative flex-1 max-w-[180px] sm:max-w-md" x-data="{ 
-                            searchQuery: '', 
-                            results: [], 
-                            loading: false, 
-                            showResults: false,
-                            async performSearch() {
-                                if (this.searchQuery.length < 2) {
-                                    this.results = [];
-                                    this.showResults = false;
-                                    return;
-                                }
-                                this.loading = true;
-                                try {
-                                    const response = await fetch(`{{ route('admin.global-search') }}?q=${encodeURIComponent(this.searchQuery)}`);
-                                    const data = await response.json();
-                                    this.results = data.results;
-                                    this.showResults = true;
-                                } catch (error) {
-                                    console.error('Search failed:', error);
-                                } finally {
-                                    this.loading = false;
-                                }
-                            }
-                        }" @click.outside="showResults = false">
-                            <div class="relative">
-                                <input type="text" x-model="searchQuery" @input.debounce.300ms="performSearch()"
-                                    @focus="if(results.length > 0) showResults = true"
-                                    placeholder="Search schools, users..."
-                                    class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                                <i
-                                    class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm"></i>
-                                <div x-show="loading" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                    <i class="fas fa-spinner fa-spin text-blue-500 text-xs text-sm"></i>
-                                </div>
-                            </div>
-
-                            <!-- Search Results Dropdown -->
-                            <div x-show="showResults" x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-y-2"
-                                x-transition:enter-end="opacity-100 translate-y-0"
-                                class="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[100] max-h-96 overflow-y-auto"
-                                style="display: none;">
-                                <template x-if="results.length > 0">
-                                    <div class="py-2">
-                                        <template x-for="result in results" :key="result.url + result.title">
-                                            <a :href="result.url"
-                                                class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b last:border-0 border-gray-100 dark:border-gray-700">
-                                                <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mr-3"
-                                                    :class="`bg-${result.color}-100 text-${result.color}-600`"
-                                                    x-html="`<i class='fas ${result.icon}'></i>`"
-                                                    style="color: unset; background-color: unset;"
-                                                    :style="`background-color: var(--tw-bg-opacity); color: var(--tw-text-opacity);`"
-                                                    :class="{
-                                                    'bg-blue-100 text-blue-600': result.color === 'blue',
-                                                    'bg-purple-100 text-purple-600': result.color === 'purple',
-                                                    'bg-green-100 text-green-600': result.color === 'green'
-                                                }">
-                                                </div>
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-semibold text-gray-900 dark:text-white truncate"
-                                                        x-text="result.title"></p>
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate"
-                                                        x-text="result.subtitle"></p>
-                                                </div>
-                                                <i class="fas fa-chevron-right text-gray-300 text-xs ml-2"></i>
-                                            </a>
-                                        </template>
-                                    </div>
-                                </template>
-                                <template x-if="results.length === 0 && searchQuery.length >= 2">
-                                    <div class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                                        <i class="fas fa-search text-3xl mb-3 opacity-20 block"></i>
-                                        <p class="text-sm">No results found for "<span class="font-semibold"
-                                                x-text="searchQuery"></span>"</p>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Right: Actions & User -->
