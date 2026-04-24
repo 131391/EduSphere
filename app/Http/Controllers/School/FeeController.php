@@ -29,6 +29,7 @@ class FeeController extends TenantController
     public function index(Request $request)
     {
         $this->ensureSchoolActive();
+        $this->authorize('viewAny', Fee::class);
 
         if ($request->expectsJson()) {
             return $this->handleAjaxTable($request);
@@ -110,6 +111,7 @@ class FeeController extends TenantController
     public function create()
     {
         $this->ensureSchoolActive();
+        $this->authorize('create', Fee::class);
 
         $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
         $feeTypes = FeeType::where('school_id', $this->getSchoolId())->active()->get();
@@ -122,6 +124,7 @@ class FeeController extends TenantController
     public function store(Request $request)
     {
         $this->ensureSchoolActive();
+        $this->authorize('create', Fee::class);
 
         $validated = $request->validate([
             'class_id' => [
@@ -173,7 +176,16 @@ class FeeController extends TenantController
     public function destroy(Fee $fee)
     {
         $this->authorizeTenant($fee);
-        
+        $this->authorize('delete', $fee);
+
+        if ($fee->payments()->exists()) {
+            $message = 'Cannot delete a fee with recorded payments. Reverse the payment first.';
+            if (request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->with('error', $message);
+        }
+
         try {
             $fee->delete();
 
@@ -186,19 +198,23 @@ class FeeController extends TenantController
 
             return redirect()->route('school.fees.index')->with('success', 'Fee deleted successfully.');
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Fee deletion failed', [
+                'fee_id' => $fee->id,
+                'error'  => $e->getMessage(),
+            ]);
+
+            $message = 'Failed to remove fee.';
             if (request()->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to remove fee: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => $message], 500);
             }
-            return back()->with('error', 'Failed to remove fee: ' . $e->getMessage());
+            return back()->with('error', $message);
         }
     }
 
     public function show(Fee $fee)
     {
         $this->authorizeTenant($fee);
+        $this->authorize('view', $fee);
         return view('school.fees.show', compact('fee'));
     }
 }

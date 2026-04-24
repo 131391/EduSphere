@@ -136,14 +136,21 @@ class FeePaymentController extends TenantController
         $this->authorize('collect', [FeePayment::class, $student]);
 
         $validated = $request->validate([
-            'payment_date'       => 'required|date',
+            'payment_date'       => 'required|date|before_or_equal:today|after:2000-01-01',
             'payment_method_id'  => ['required', \Illuminate\Validation\Rule::exists('payment_methods', 'id')->where('school_id', $this->getSchoolId())],
             'transaction_id'     => 'nullable|string|max:100',
             'remarks'            => 'nullable|string|max:500',
             'academic_year_id'   => ['required', \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())],
-            'payments'           => 'required|array|min:1',
-            'payments.*.fee_id'  => ['required', \Illuminate\Validation\Rule::exists('fees', 'id')->where('school_id', $this->getSchoolId())],
-            'payments.*.amount'  => 'required|numeric|min:0.01',
+            'payments'           => 'required|array|min:1|max:50',
+            'payments.*.fee_id'  => [
+                'required',
+                \Illuminate\Validation\Rule::exists('fees', 'id')->where(function ($q) use ($student) {
+                    $q->where('school_id', $this->getSchoolId())
+                      ->where('student_id', $student->id)
+                      ->where('payment_status', '!=', FeeStatus::Paid->value);
+                }),
+            ],
+            'payments.*.amount'  => 'required|numeric|min:0.01|max:10000000',
         ]);
 
         $data = $validated;

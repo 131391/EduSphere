@@ -31,16 +31,7 @@ class Fee extends Model
         'bill_no',
         'fee_period',
         'payable_amount',
-        'paid_amount',
-        'due_amount',
-        'waiver_amount',
-        'late_fee',
-        'discount_amount',
         'due_date',
-        'payment_date',
-        'payment_status',
-        'payment_mode',
-        'transaction_id',
         'remarks',
     ];
 
@@ -99,6 +90,11 @@ class Fee extends Model
         return $this->belongsTo(ClassModel::class, 'class_id');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(FeePayment::class);
+    }
+
     // Scopes
     public function scopeForSchool($query, $schoolId)
     {
@@ -124,16 +120,5 @@ class Fee extends Model
             });
     }
 
-    // Helper methods
-    public function markAsPaid($amount, $paymentMode, $transactionId = null): void
-    {
-        $this->paid_amount = $amount;
-        $this->due_amount = number_format($this->payable_amount - $amount - ($this->waiver_amount ?? 0) - ($this->discount_amount ?? 0), 2, '.', '');
-        $this->payment_status = $this->due_amount > 0 ? FeeStatus::Partial : FeeStatus::Paid;
-        $this->payment_date = now()->toDateString();
-        $this->payment_mode = $paymentMode;
-        $this->transaction_id = $transactionId;
-        $this->save();
-    }
 }
 

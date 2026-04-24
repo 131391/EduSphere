@@ -2,14 +2,13 @@
 
 namespace App\Services\School;
 
+use App\Enums\FeeStatus;
 use App\Models\Fee;
 use App\Models\FeeMaster;
 use App\Models\School;
 use App\Models\Student;
-use App\Models\AcademicYear;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class FeeService
 {
@@ -57,9 +56,13 @@ class FeeService
         try {
             foreach ($students as $student) {
                 foreach ($feeMasters as $feeMaster) {
-                    // Check if fee already generated for this student, name, and period
-                    $exists = Fee::where('school_id', $school->id)
+                    // Dedup matches the uq_fees_student_period unique index (includes soft-deleted rows
+                    // because MySQL enforces uniqueness across all rows regardless of deleted_at).
+                    $exists = Fee::withTrashed()
+                        ->where('school_id', $school->id)
                         ->where('student_id', $student->id)
+                        ->where('academic_year_id', $academicYearId)
+                        ->where('fee_type_id', $feeTypeId)
                         ->where('fee_name_id', $feeMaster->fee_name_id)
                         ->where('fee_period', $feePeriod)
                         ->exists();
@@ -69,7 +72,7 @@ class FeeService
                         continue;
                     }
 
-                    Fee::create([
+                    Fee::forceCreate([
                         'school_id' => $school->id,
                         'student_id' => $student->id,
                         'academic_year_id' => $academicYearId,
@@ -81,7 +84,7 @@ class FeeService
                         'payable_amount' => $feeMaster->amount,
                         'due_amount' => $feeMaster->amount,
                         'due_date' => $dueDate,
-                        'payment_status' => 1, // Pending
+                        'payment_status' => FeeStatus::Pending,
                     ]);
 
                     $generatedCount++;

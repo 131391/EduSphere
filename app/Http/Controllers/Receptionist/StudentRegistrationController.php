@@ -362,7 +362,7 @@ class StudentRegistrationController extends TenantController
             // --- FINANCIAL INTEGRATION ---
             if ($request->registration_fee > 0) {
                 // $regFeeName already found above
-                $fee = Fee::create([
+                $fee = Fee::forceCreate([
                     'school_id' => $school->id,
                     'registration_id' => $registration->id,
                     'academic_year_id' => $registration->academic_year_id,

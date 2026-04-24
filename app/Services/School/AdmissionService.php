@@ -269,7 +269,7 @@ class AdmissionService
             throw new \RuntimeException('No payment method configured for this school. Please add one in Payment Methods settings.');
         }
 
-        $fee = Fee::create([
+        $fee = Fee::forceCreate([
             'school_id'      => $school->id,
             'student_id'     => $student->id,
             'academic_year_id' => $student->academic_year_id,

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Fee;
 use App\Models\FeeType;
 use App\Models\FeePayment;
 use App\Models\PaymentMethod;
@@ -9,6 +10,7 @@ use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use App\Models\User;
+use App\Policies\FeePolicy;
 use App\Policies\FeeTypePolicy;
 use App\Policies\FeePaymentPolicy;
 use App\Policies\PaymentMethodPolicy;
@@ -41,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Fee::class, FeePolicy::class);
         Gate::policy(FeeType::class, FeeTypePolicy::class);
         Gate::policy(FeePayment::class, FeePaymentPolicy::class);
         Gate::policy(PaymentMethod::class, PaymentMethodPolicy::class);

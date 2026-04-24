@@ -8,7 +8,11 @@ class StoreLateFeeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        return $user
+            && $user->isActive()
+            && ($user->isSchoolAdmin() || $user->isReceptionist());
     }
 
     public function rules(): array
