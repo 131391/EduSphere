@@ -88,7 +88,7 @@
                     </thead>
 
                     <!-- Initial Blade Render (Zero Blink) -->
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
                         @if(empty($initialData['rows']))
                         <tr>
                             <td colspan="4" class="px-6 py-12 text-center">
@@ -191,7 +191,7 @@
 
             <!-- Server-rendered pagination: visible instantly, hidden once Alpine takes over -->
             @if($initialData['pagination']['total'] > 0)
-            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" x-show="!hydrated">
                 <div class="text-sm text-gray-700 dark:text-gray-300">
                     Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
                 </div>

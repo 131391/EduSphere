@@ -54,7 +54,7 @@
                     </thead>
 
                     {{-- Server-rendered rows --}}
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
                         @if(empty($initialData['rows']))
                             <tr>
                                 <td colspan="3" class="px-6 py-12 text-center">
