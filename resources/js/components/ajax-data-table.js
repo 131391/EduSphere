@@ -277,6 +277,17 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        // ─── Form Error Helpers ───────────────────────────────────────────
+        // Replaces the errors object reference so Alpine detects the change
+        // and x-if / x-show directives re-evaluate immediately.
+        clearError(field) {
+            if (this.errors && this.errors[field]) {
+                const e = { ...this.errors };
+                delete e[field];
+                this.errors = e;
+            }
+        },
+
         // ─── Refresh (alias for external callers) ────────────────────────
         refreshTable() {
             return this.fetchData();

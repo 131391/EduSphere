@@ -490,7 +490,9 @@ function admissionManagement() {
             }
         },
 
-        clearError(field) { delete this.errors[field]; },
+        clearError(field) {
+                if (this.errors && this.errors[field]) { const e = { ...this.errors }; delete e[field]; this.errors = e; }
+            },
     }
 }
 </script>

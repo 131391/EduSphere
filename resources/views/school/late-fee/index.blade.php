@@ -201,7 +201,11 @@
                     formData: { late_fee_amount: '', fine_date: '' },
 
                     clearError(field) {
-                        if (this.errors[field]) delete this.errors[field];
+                        if (this.errors && this.errors[field]) {
+                            const e = { ...this.errors };
+                            delete e[field];
+                            this.errors = e;
+                        }
                     },
 
                     resetForm() {
@@ -274,6 +278,7 @@
                             detail: {
                                 title: 'Delete Late Fee Rule',
                                 message: `Are you sure you want to delete the late fee rule for Day ${fee.fine_date}? This action cannot be undone.`,
+                                confirmText: 'Delete',
                                 callback: async () => {
                                     try {
                                         const response = await fetch(`/school/late-fee/${fee.id}`, {
