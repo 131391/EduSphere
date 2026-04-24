@@ -35,7 +35,7 @@
     @include('partials.sidebar-scripts')
 </head>
 
-<body class="bg-gray-100 dark:bg-gray-900 h-screen overflow-hidden">
+<body class="bg-gray-100 dark:bg-gray-900 h-screen overflow-hidden transition-colors">
     @php
         $school = auth()->user()->school;
         $currentAcademicYear = $school ? \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first() : null;
@@ -48,17 +48,48 @@
 
     <div class="flex h-screen overflow-hidden" x-data="{ 
         sidebarOpen: false, 
+        isMobile: window.innerWidth < 1024,
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+        scrollActiveItemIntoView() {
+            if (this.sidebarCollapsed) return;
+            const nav = document.querySelector('aside nav');
+            const activeItem = nav ? nav.querySelector('a.text-white') : null;
+            if (nav && activeItem) {
+                activeItem.scrollIntoView({ block: 'nearest' });
+            }
+        },
         init() {
-            document.documentElement.classList.remove('sidebar-collapsed');
-            // Remove no-transition class after a small delay to allow initial paint
-            setTimeout(() => {
-                document.querySelector('aside').classList.remove('no-transition');
-            }, 100);
+            if (this.isMobile) {
+                this.sidebarCollapsed = false;
+            }
+            document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+            window.addEventListener('resize', () => {
+                this.isMobile = window.innerWidth < 1024;
+                if (this.isMobile) {
+                    this.sidebarCollapsed = false;
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else {
+                    this.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                    document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+                }
+                if (!this.isMobile) {
+                    this.sidebarOpen = false;
+                }
+            });
+            // Remove no-transition after first paint so subsequent transitions are smooth
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const aside = document.querySelector('aside');
+                if (aside) aside.classList.remove('no-transition');
+                this.scrollActiveItemIntoView();
+            }));
         },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
             localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+            document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+            if (!this.sidebarCollapsed) {
+                this.$nextTick(() => this.scrollActiveItemIntoView());
+            }
         }
     }">
         <!-- Mobile Sidebar Overlay -->
@@ -71,10 +102,11 @@
         <!-- Sidebar -->
         <aside
             class="fixed inset-y-0 left-0 z-50 bg-[#1a237e] text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
-            style="width: 16rem;" :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'" :class="{ 
+            :style="(isMobile || sidebarOpen) ? 'width: 16rem;' : (sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;')" :class="{
                    '-translate-x-full': !sidebarOpen, 
-                   'translate-x-0': sidebarOpen,
-                   'sidebar-collapsed': sidebarCollapsed
+                    'translate-x-0': sidebarOpen,
+                   'sidebar-collapsed': sidebarCollapsed && !isMobile,
+                   'mobile-open': sidebarOpen
                }">
             <!-- Logo Section -->
             <div class="p-4 border-b border-[#283593] flex-shrink-0 relative group">
@@ -114,8 +146,8 @@
             <div class="px-4 py-2 bg-[#283593] text-xs flex-shrink-0 overflow-hidden whitespace-nowrap">
                 <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION:
                     {{ $currentAcademicYear?->name ?? '2025 - 2026' }}</p>
-                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;"
-                    :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">
+                <p class="font-semibold text-center" x-show="sidebarCollapsed && !isMobile" style="display: none;"
+                    :style="(sidebarCollapsed && !isMobile) ? 'display: block;' : 'display: none;'">
                     {{ preg_replace('/^.*?(\d{2})[^\d]*(\d{2})$/', '$1-$2', $currentAcademicYear?->name ?? '25-26') }}
                 </p>
             </div>
@@ -507,28 +539,22 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Header -->
-            <header class="bg-white shadow-sm border-b border-gray-200">
+            <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
                 <div class="flex items-center justify-between px-4 sm:px-6 py-4">
-                    <!-- Left: Menu & Search -->
+                    <!-- Left: Menu -->
                     <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
                         <button @click="sidebarOpen = !sidebarOpen"
-                            class="text-gray-500 hover:text-gray-700 lg:hidden focus:outline-none">
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 lg:hidden focus:outline-none transition-colors">
                             <i class="fas fa-bars text-xl sm:text-2xl"></i>
                         </button>
-                        <div class="relative flex-1 max-w-md">
-                            <input type="text" placeholder="Search..."
-                                class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                            <i
-                                class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                        </div>
                     </div>
 
                     <!-- Right: Actions & User -->
                     <div class="flex items-center space-x-2 sm:space-x-4" x-data="headerActions">
                         <!-- Star (Favorite) -->
                         <button @click="toggleFavorite()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
-                            :class="isFavorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-500 hover:text-gray-700'"
+                            class="hidden sm:block transition-colors"
+                            :class="isFavorite ? 'text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
                             title="Add to Favorites">
                             <i class="text-xl" :class="isFavorite ? 'fas fa-star' : 'far fa-star'" x-cloak></i>
                             <i class="text-xl far fa-star ssr-icon-fallback"></i>
@@ -537,7 +563,7 @@
                         <!-- Bookmark (Saved List) -->
                         <div class="relative hidden md:block">
                             <button @click="showFavorites = !showFavorites"
-                                class="text-gray-500 hover:text-gray-700 transition-colors" title="Saved Pages">
+                                class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors" title="Saved Pages">
                                 <i class="far fa-bookmark text-xl" x-cloak></i>
                                 <i class="text-xl far fa-bookmark ssr-icon-fallback"></i>
                             </button>
@@ -550,21 +576,21 @@
                                 x-transition:leave="transition ease-in duration-150"
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                                class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50"
                                 x-cloak>
-                                <div class="px-4 py-2 border-b border-gray-100">
-                                    <h3 class="text-sm font-semibold text-gray-700">Saved Pages</h3>
+                                <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Saved Pages</h3>
                                 </div>
                                 <div class="max-h-64 overflow-y-auto">
                                     <template x-if="favorites.length === 0">
-                                        <div class="px-4 py-4 text-center text-gray-500 text-sm">
+                                        <div class="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
                                             No saved pages yet.
                                         </div>
                                     </template>
                                     <template x-for="fav in favorites" :key="fav.id">
-                                        <div class="group flex items-center justify-between px-4 py-2 hover:bg-gray-50">
+                                        <div class="group flex items-center justify-between px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/60">
                                             <a :href="fav.url"
-                                                class="text-sm text-gray-700 hover:text-blue-600 truncate flex-1"
+                                                class="text-sm text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 truncate flex-1"
                                                 x-text="fav.title"></a>
                                             <button @click="removeFavorite(fav.id)"
                                                 class="ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -578,7 +604,7 @@
 
                         <!-- Fullscreen -->
                         <button @click="toggleFullscreen()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden md:block"
                             title="Toggle Fullscreen">
                             <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
                             <i class="text-xl fas fa-expand ssr-icon-fallback"></i>
@@ -586,7 +612,8 @@
 
                         <!-- Dark Mode -->
                         <button @click="toggleDarkMode()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
+                            class="transition-colors hidden sm:block"
+                            :class="isDark ? 'text-yellow-400 dark:text-yellow-400 hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
                             title="Toggle Dark Mode">
                             <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
                             <i class="text-xl far fa-moon ssr-icon-fallback"></i>
@@ -601,8 +628,8 @@
                                     <i class="fas fa-user text-sm"></i>
                                 </div>
                                 <span
-                                    class="text-gray-700 font-medium hidden sm:inline text-sm">{{ Auth::user()->name ?? 'Receptionist' }}</span>
-                                <i class="fas fa-chevron-down text-gray-500 text-xs hidden sm:inline"></i>
+                                    class="text-gray-700 dark:text-gray-200 font-medium hidden sm:inline text-sm">{{ Auth::user()->name ?? 'Receptionist' }}</span>
+                                <i class="fas fa-chevron-down text-gray-500 dark:text-gray-400 text-xs hidden sm:inline"></i>
                             </button>
 
                             <!-- Dropdown Menu -->
@@ -613,17 +640,17 @@
                                 x-transition:leave="transition ease-in duration-150"
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                                class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                                 <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                                    <i class="fas fa-user-circle mr-3 text-gray-500"></i>
+                                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
+                                    <i class="fas fa-user-circle mr-3 text-gray-500 dark:text-gray-400"></i>
                                     Profile
                                 </a>
-                                <div class="border-t border-gray-200 my-1"></div>
+                                <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit"
-                                        class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center">
+                                        class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center">
                                         <i class="fas fa-sign-out-alt mr-3"></i>
                                         Logout
                                     </button>
@@ -635,7 +662,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+            <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 transition-colors">
                 @yield('content')
             </main>
         </div>
@@ -774,8 +801,8 @@
 
                 init() {
                     this.$el.querySelectorAll('.ssr-icon-fallback').forEach(el => el.remove());
-                    this.checkFavorite();
                     this.loadFavorites();
+                    this.checkFavorite();
 
                     // Listen for fullscreen changes
                     document.addEventListener('fullscreenchange', () => {
@@ -825,6 +852,7 @@
 
                     // Save to localStorage
                     localStorage.setItem("receptionist_favorites", JSON.stringify(this.favorites));
+                    this.checkFavorite();
                 },
 
                 checkFavorite() {
@@ -845,10 +873,7 @@
                 removeFavorite(id) {
                     this.favorites = this.favorites.filter(f => f.id !== id);
                     localStorage.setItem("receptionist_favorites", JSON.stringify(this.favorites));
-
-                    // If we removed the current page, update the star icon
-                    const currentUrl = window.location.href;
-                    this.isFavorite = this.favorites.some(f => f.url === currentUrl);
+                    this.checkFavorite();
                 }
             }));
         });

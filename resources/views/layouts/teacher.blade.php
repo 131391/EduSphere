@@ -32,17 +32,36 @@
 <body class="bg-gray-100 h-screen overflow-hidden dark:bg-gray-900 transition-colors">
     <div class="flex h-screen overflow-hidden" x-data="{ 
         sidebarOpen: false, 
+        isMobile: window.innerWidth < 1024,
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         init() {
-            document.documentElement.classList.remove('sidebar-collapsed');
-            // Remove no-transition class after a small delay to allow initial paint
-            setTimeout(() => {
-                document.querySelector('aside').classList.remove('no-transition');
-            }, 100);
+            if (this.isMobile) {
+                this.sidebarCollapsed = false;
+            }
+            document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+            window.addEventListener('resize', () => {
+                this.isMobile = window.innerWidth < 1024;
+                if (this.isMobile) {
+                    this.sidebarCollapsed = false;
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else {
+                    this.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                    document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+                }
+                if (!this.isMobile) {
+                    this.sidebarOpen = false;
+                }
+            });
+            // Remove no-transition after first paint so subsequent transitions are smooth
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const aside = document.querySelector('aside');
+                if (aside) aside.classList.remove('no-transition');
+            }));
         },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
             localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+            document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
         }
     }">
         <!-- Mobile Sidebar Overlay -->
@@ -55,10 +74,11 @@
         <!-- Sidebar -->
         <aside
             class="fixed inset-y-0 left-0 z-50 bg-blue-900 text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
-            style="width: 16rem;" :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'" :class="{ 
+            :style="(isMobile || sidebarOpen) ? 'width: 16rem;' : (sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;')" :class="{
                    '-translate-x-full': !sidebarOpen, 
                    'translate-x-0': sidebarOpen,
-                   'sidebar-collapsed': sidebarCollapsed
+                   'sidebar-collapsed': sidebarCollapsed && !isMobile,
+                   'mobile-open': sidebarOpen
                }">
             <!-- Logo Section -->
             @php
@@ -156,76 +176,19 @@
             <header
                 class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
                 <div class="flex items-center justify-between px-4 sm:px-6 py-4">
-                    <!-- Left: Menu & Search -->
+                    <!-- Left: Menu -->
                     <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
                         <button @click="sidebarOpen = !sidebarOpen"
-                            class="text-gray-500 hover:text-gray-700 lg:hidden focus:outline-none">
+                            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 lg:hidden focus:outline-none rounded-lg transition-colors">
                             <i class="fas fa-bars text-xl sm:text-2xl"></i>
                         </button>
-                        <div class="relative flex-1 max-w-md" x-data="{ 
-                            searchQuery: '', 
-                            results: [], 
-                            loading: false, 
-                            showResults: false
-                        }" @click.outside="showResults = false">
-                            <div class="relative">
-                                <!-- Global Search disabled for teacher portal currently -->
-                                <input type="text" disabled readonly
-                                    placeholder="Search..."
-                                    class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 bg-gray-50 text-gray-400 dark:text-gray-500 rounded-lg focus:outline-none text-sm cursor-not-allowed">
-                                <i
-                                    class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300 dark:text-gray-600 text-sm"></i>
-                            </div>
-
-                            <!-- Search Results Dropdown -->
-                            <div x-show="showResults" x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-y-2"
-                                x-transition:enter-end="opacity-100 translate-y-0"
-                                class="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-[100] max-h-96 overflow-y-auto"
-                                style="display: none;">
-                                <template x-if="results.length > 0">
-                                    <div class="py-2">
-                                        <template x-for="result in results" :key="result.url + result.title">
-                                            <a :href="result.url"
-                                                class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b last:border-0 border-gray-100 dark:border-gray-700">
-                                                <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mr-3"
-                                                    :class="`bg-${result.color}-100 text-${result.color}-600`"
-                                                    x-html="`<i class='fas ${result.icon}'></i>`"
-                                                    style="color: unset; background-color: unset;"
-                                                    :style="`background-color: var(--tw-bg-opacity); color: var(--tw-text-opacity);`"
-                                                    :class="{
-                                                    'bg-blue-100 text-blue-600': result.color === 'blue',
-                                                    'bg-purple-100 text-purple-600': result.color === 'purple',
-                                                    'bg-green-100 text-green-600': result.color === 'green'
-                                                }">
-                                                </div>
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-semibold text-gray-900 dark:text-white truncate"
-                                                        x-text="result.title"></p>
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate"
-                                                        x-text="result.subtitle"></p>
-                                                </div>
-                                                <i class="fas fa-chevron-right text-gray-300 text-xs ml-2"></i>
-                                            </a>
-                                        </template>
-                                    </div>
-                                </template>
-                                <template x-if="results.length === 0 && searchQuery.length >= 2">
-                                    <div class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                                        <i class="fas fa-search text-3xl mb-3 opacity-20 block"></i>
-                                        <p class="text-sm">No results found for "<span class="font-semibold"
-                                                x-text="searchQuery"></span>"</p>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Right: Actions & User -->
                     <div class="flex items-center space-x-2 sm:space-x-4" x-data="headerActions()">
                         <!-- Star/Favorite Button -->
                         <button @click="toggleFavorite()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
+                            class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden sm:block"
                             :class="{ 'text-yellow-500': isFavorited }" title="Add to favorites">
                             <i class="text-xl" :class="isFavorited ? 'fas fa-star' : 'far fa-star'" x-cloak></i>
                             <i class="text-xl far fa-star ssr-icon-fallback"></i>
@@ -233,7 +196,7 @@
 
                         <!-- Bookmark Button -->
                         <button @click="toggleBookmark()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden sm:block"
+                            class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden sm:block"
                             :class="{ 'text-blue-500': isBookmarked }" title="Bookmark this page">
                             <i class="text-xl" :class="isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'" x-cloak></i>
                             <i class="text-xl far fa-bookmark ssr-icon-fallback"></i>
@@ -241,15 +204,15 @@
 
                         <!-- Fullscreen Toggle -->
                         <button @click="toggleFullscreen()"
-                            class="text-gray-500 hover:text-gray-700 transition-colors hidden md:block"
+                            class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden md:block"
                             title="Toggle fullscreen">
                             <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
                             <i class="text-xl fas fa-expand ssr-icon-fallback"></i>
                         </button>
 
                         <!-- Dark Mode Toggle -->
-                        <button @click="toggleDarkMode()" class="text-gray-500 hover:text-gray-700 transition-colors"
-                            :class="{ 'text-yellow-400': isDarkMode }" title="Toggle dark mode">
+                        <button @click="toggleDarkMode()" class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors"
+                            :class="{ 'text-yellow-400 dark:text-yellow-400': isDarkMode }" title="Toggle dark mode">
                             <i class="text-xl" :class="isDarkMode ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
                             <i class="text-xl far fa-moon ssr-icon-fallback"></i>
                         </button>
@@ -263,8 +226,8 @@
                                     <i class="fas fa-user text-sm"></i>
                                 </div>
                                 <span
-                                    class="text-gray-700 dark:text-gray-200 font-medium hidden sm:inline text-sm">{{ Auth::user()->name ?? 'Admin' }}</span>
-                                <i class="fas fa-chevron-down text-xs text-gray-500 transition-transform hidden sm:inline"
+                                    class="text-gray-700 dark:text-gray-200 font-medium hidden sm:inline text-sm">{{ Auth::user()->name ?? 'Teacher' }}</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-500 dark:text-gray-400 transition-transform hidden sm:inline"
                                     :class="{ 'rotate-180': open }"></i>
                             </button>
 

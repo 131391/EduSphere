@@ -45,6 +45,7 @@
 
     <div class="flex h-screen overflow-hidden" x-data="{ 
         sidebarOpen: false, 
+        isMobile: window.innerWidth < 1024,
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         scrollActiveItemIntoView() {
             if (this.sidebarCollapsed) return;
@@ -55,12 +56,29 @@
             }
         },
         init() {
+            if (this.isMobile) {
+                this.sidebarCollapsed = false;
+            }
             document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
-            // Remove no-transition class after a small delay to allow initial paint
-            setTimeout(() => {
-                document.querySelector('aside').classList.remove('no-transition');
+            window.addEventListener('resize', () => {
+                this.isMobile = window.innerWidth < 1024;
+                if (this.isMobile) {
+                    this.sidebarCollapsed = false;
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else {
+                    this.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                    document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+                }
+                if (!this.isMobile) {
+                    this.sidebarOpen = false;
+                }
+            });
+            // Remove no-transition after first paint so subsequent transitions are smooth
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const aside = document.querySelector('aside');
+                if (aside) aside.classList.remove('no-transition');
                 this.scrollActiveItemIntoView();
-            }, 100);
+            }));
         },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
@@ -80,10 +98,11 @@
         <!-- Sidebar -->
         <aside
             class="fixed inset-y-0 left-0 z-50 bg-[#1a237e] text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
-            :style="sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;'" :class="{ 
+            :style="(isMobile || sidebarOpen) ? 'width: 16rem;' : (sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;')" :class="{
                    '-translate-x-full': !sidebarOpen, 
                    'translate-x-0': sidebarOpen,
-                   'sidebar-collapsed': sidebarCollapsed
+                   'sidebar-collapsed': sidebarCollapsed && !isMobile,
+                   'mobile-open': sidebarOpen
                }">
             <!-- Logo Section -->
             <div class="p-4 border-b border-[#283593] flex-shrink-0 relative group">
@@ -126,8 +145,8 @@
                 <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION:
                     {{ $currentAcademicYear?->name ?? '2025 - 2026' }}
                 </p>
-                <p class="font-semibold text-center" x-show="sidebarCollapsed" style="display: none;"
-                    :style="sidebarCollapsed ? 'display: block;' : 'display: none;'">
+                <p class="font-semibold text-center" x-show="sidebarCollapsed && !isMobile" style="display: none;"
+                    :style="(sidebarCollapsed && !isMobile) ? 'display: block;' : 'display: none;'">
                     {{ preg_replace('/^.*?(\d{2})[^\d]*(\d{2})$/', '$1-$2', $currentAcademicYear?->name ?? '25-26') }}
                 </p>
             </div>
