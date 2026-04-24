@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Parent Portal - ' . config('app.name'))</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
+    <!-- Dark Mode Persistence -->
     <script>
         if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -13,134 +16,290 @@
             document.documentElement.classList.remove('dark');
         }
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     @stack('styles')
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 h-screen overflow-hidden">
 
-<div class="flex h-screen overflow-hidden" x-data="{
-    sidebarOpen: false,
-    sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
-    toggleSidebar() {
-        this.sidebarCollapsed = !this.sidebarCollapsed;
-        localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
-    }
-}">
-    <!-- Mobile Overlay -->
-    <div x-show="sidebarOpen" @click="sidebarOpen = false"
-         x-transition:enter="transition-opacity ease-linear duration-300"
-         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-linear duration-300"
-         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden" style="display:none;"></div>
-
-    <!-- Sidebar -->
-    <aside class="fixed inset-y-0 left-0 z-50 bg-[#1a237e] text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
-           :style="sidebarCollapsed ? 'width:5rem;' : 'width:16rem;'"
-           :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
-
-        <!-- Logo -->
-        <div class="p-4 border-b border-[#283593] flex-shrink-0 relative">
-            <div class="flex items-center justify-center mb-2">
-                <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300"
-                     :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem;' : 'width:4rem;height:4rem;'">
-                    <i class="fas fa-user-friends text-[#1a237e]" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
+<body class="bg-gray-100 dark:bg-gray-900 h-screen overflow-hidden transition-colors">
+    <div class="flex h-screen overflow-hidden" x-data="{ 
+        sidebarOpen: false, 
+        isMobile: window.innerWidth < 1024,
+        sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+        scrollActiveItemIntoView() {
+            if (this.sidebarCollapsed) return;
+            const nav = document.querySelector('aside nav');
+            const activeItem = nav ? nav.querySelector('a.text-white') : null;
+            if (nav && activeItem) {
+                activeItem.scrollIntoView({ block: 'nearest' });
+            }
+        },
+        init() {
+            if (this.isMobile) {
+                this.sidebarCollapsed = false;
+            }
+            document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+            window.addEventListener('resize', () => {
+                this.isMobile = window.innerWidth < 1024;
+                if (this.isMobile) {
+                    this.sidebarCollapsed = false;
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                } else {
+                    this.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                    document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+                }
+                if (!this.isMobile) {
+                    this.sidebarOpen = false;
+                }
+            });
+            // Remove no-transition after first paint so subsequent transitions are smooth
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const aside = document.querySelector('aside');
+                if (aside) aside.classList.remove('no-transition');
+                this.scrollActiveItemIntoView();
+            }));
+        },
+        toggleSidebar() {
+            this.sidebarCollapsed = !this.sidebarCollapsed;
+            localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+            document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
+            if (!this.sidebarCollapsed) {
+                this.$nextTick(() => this.scrollActiveItemIntoView());
+            }
+        }
+    }">
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="sidebarOpen" @click="sidebarOpen = false"
+            x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300"
+            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden" style="display: none;"></div>
+        
+        <!-- Sidebar -->
+        <aside
+            class="fixed inset-y-0 left-0 z-50 bg-[#1a237e] text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
+            :style="(isMobile || sidebarOpen) ? 'width: 16rem;' : (sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;')" :class="{
+                   '-translate-x-full': !sidebarOpen, 
+                   'translate-x-0': sidebarOpen,
+                   'sidebar-collapsed': sidebarCollapsed && !isMobile,
+                   'mobile-open': sidebarOpen
+               }">
+            <!-- Logo Section -->
+            <div class="p-4 border-b border-[#283593] flex-shrink-0 relative group">
+                <div class="flex items-center justify-center mb-2">
+                    <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 logo-container"
+                        style="width: 4rem; height: 4rem;"
+                        :style="sidebarCollapsed ? 'width: 2.5rem; height: 2.5rem;' : 'width: 4rem; height: 4rem;'">
+                        <i class="fas fa-user-friends text-[#1a237e]" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
+                    </div>
                 </div>
-            </div>
-            <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-                <h2 class="text-xs font-bold text-center leading-tight">PARENT PORTAL</h2>
-                <p class="text-xs text-indigo-200 text-center mt-1">{{ config('app.name') }}</p>
-            </div>
-            <button @click="toggleSidebar()" class="absolute top-6 -right-4 w-8 h-8 flex items-center justify-center bg-teal-50 text-teal-600 rounded-full shadow-lg hover:bg-white hover:text-teal-700 transition-all duration-200 hidden lg:flex focus:outline-none z-50 border border-gray-200">
-                <i class="fas" :class="sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'" style="font-size:0.65rem;"></i>
-            </button>
-        </div>
 
-        <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-            @php
-                $navItems = [
-                    ['route' => 'parent.dashboard', 'icon' => 'fa-home', 'label' => 'Dashboard'],
-                    ['route' => 'parent.children.index', 'icon' => 'fa-child', 'label' => 'My Children'],
-                    ['route' => 'parent.results.index', 'icon' => 'fa-trophy', 'label' => 'Results'],
-                    ['route' => 'parent.fees.index', 'icon' => 'fa-receipt', 'label' => 'Fee Details'],
-                ];
-            @endphp
-
-            @foreach($navItems as $item)
-                @if(Route::has($item['route']))
-                <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group
-                          {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) ? 'bg-white/20 text-white' : 'text-indigo-200 hover:bg-white/10 hover:text-white' }}">
-                    <i class="fas {{ $item['icon'] }} w-5 text-center flex-shrink-0" :class="sidebarCollapsed ? 'text-base' : 'text-sm'"></i>
-                    <span x-show="!sidebarCollapsed" x-transition class="text-sm font-medium whitespace-nowrap">{{ $item['label'] }}</span>
-                </a>
-                @endif
-            @endforeach
-        </nav>
-
-        <!-- User Info & Logout -->
-        <div class="border-t border-[#283593] p-3 flex-shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-indigo-400 flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                    {{ strtoupper(substr(Auth::user()->name ?? 'P', 0, 1)) }}
+                <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="sidebar-text">
+                    <h2 class="text-xs font-bold text-center leading-tight">
+                        PARENT PORTAL
+                    </h2>
+                    <p class="text-xs text-indigo-100 text-center mt-1">
+                        {{ config('app.name') }}
+                    </p>
                 </div>
-                <div x-show="!sidebarCollapsed" x-transition class="flex-1 min-w-0">
-                    <p class="text-xs font-medium truncate">{{ Auth::user()->name ?? 'Parent' }}</p>
-                    <p class="text-xs text-indigo-300 truncate">Parent</p>
-                </div>
-            </div>
-            <form method="POST" action="{{ route('logout') }}" class="mt-2">
-                @csrf
-                <button type="submit"
-                        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-indigo-200 hover:bg-white/10 hover:text-white transition-all duration-200 text-sm">
-                    <i class="fas fa-sign-out-alt w-5 text-center flex-shrink-0"></i>
-                    <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Logout</span>
+
+                <!-- Toggle Button -->
+                <button @click="toggleSidebar()"
+                    class="absolute top-6 -right-4 w-8 h-8 flex items-center justify-center bg-teal-50 text-teal-600 rounded-full shadow-lg hover:bg-white hover:text-teal-700 transition-all duration-200 hidden lg:flex focus:outline-none z-50 border border-gray-200">
+                    <i class="fas fa-chevron-left" x-show="!sidebarCollapsed"></i>
+                    <i class="fas fa-chevron-right" x-show="sidebarCollapsed" style="display: none;"></i>
                 </button>
-            </form>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Top Bar -->
-        <header class="bg-white dark:bg-gray-800 shadow-sm flex-shrink-0 z-30">
-            <div class="flex items-center justify-between h-14 px-4">
-                <div class="flex items-center gap-3">
-                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400">
-                        <i class="fas fa-bars text-lg"></i>
-                    </button>
-                    <h1 class="text-lg font-semibold text-gray-800 dark:text-white">@yield('page-title', 'Dashboard')</h1>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'))"
-                            class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors">
-                        <i class="fas fa-moon dark:hidden"></i>
-                        <i class="fas fa-sun hidden dark:inline"></i>
-                    </button>
-                    <span class="text-sm text-gray-600 dark:text-gray-300">{{ Auth::user()->name ?? '' }}</span>
-                </div>
             </div>
-        </header>
 
-        <!-- Page Content -->
-        <main class="flex-1 overflow-y-auto p-6 dark:bg-gray-900">
-            @if(session('success'))
-                <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg text-green-700 dark:text-green-400 text-sm">
-                    <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+            <!-- Navigation Menu -->
+            <nav class="flex-1 py-4 sidebar-scroll overflow-y-auto">
+                <ul class="space-y-1 px-2">
+                    @php
+                        $navItems = [
+                            ['route' => 'parent.dashboard', 'icon' => 'fa-tachometer-alt', 'label' => 'Dashboard'],
+                            ['route' => 'parent.children.index', 'icon' => 'fa-child', 'label' => 'My Children'],
+                            ['route' => 'parent.attendance.index', 'icon' => 'fa-calendar-check', 'label' => 'Attendance'],
+                            ['route' => 'parent.results.index', 'icon' => 'fa-trophy', 'label' => 'Results'],
+                            ['route' => 'parent.fees.index', 'icon' => 'fa-receipt', 'label' => 'Fee Details'],
+                        ];
+                    @endphp
+
+                    @foreach($navItems as $item)
+                        @if(Route::has($item['route']))
+                        <li>
+                            <a href="{{ route($item['route']) }}"
+                                class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs(str_replace('.index', '.*', $item['route'])) ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
+                                :class="{ 'justify-center': sidebarCollapsed }">
+                                <i class="fas {{ $item['icon'] }} w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed" class="sidebar-text whitespace-nowrap">{{ $item['label'] }}</span>
+                            </a>
+                        </li>
+                        @endif
+                    @endforeach
+                    
+                    <li class="mt-4 border-t border-[#283593] pt-4">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                class="w-full flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] text-left"
+                                :class="{ 'justify-center': sidebarCollapsed }">
+                                <i class="fas fa-sign-out-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Logout</span>
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center sidebar-text flex-shrink-0" x-show="!sidebarCollapsed" x-cloak>
+                <p>{{ Auth::user()->name ?? 'Parent' }}</p>
+                <p class="mt-1 opacity-75">{{ date('Y') }} ©</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
+                <div class="flex items-center justify-between px-4 sm:px-6 py-4">
+                    <!-- Left: Menu & Title -->
+                    <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
+                        <button @click="sidebarOpen = !sidebarOpen"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 lg:hidden focus:outline-none transition-colors">
+                            <i class="fas fa-bars text-xl sm:text-2xl"></i>
+                        </button>
+                        <h1 class="text-lg font-semibold text-gray-800 dark:text-white hidden sm:block">@yield('page-title', 'Parent Portal')</h1>
+                    </div>
+
+                    <!-- Right: Actions & User -->
+                    <div class="flex items-center space-x-2 sm:space-x-4" x-data="headerActions">
+                        
+                        <h1 class="text-lg font-semibold text-gray-800 dark:text-white block sm:hidden">@yield('page-title', 'Parent Portal')</h1>
+
+                        <!-- Fullscreen -->
+                        <button @click="toggleFullscreen()"
+                            class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden md:block"
+                            title="Toggle Fullscreen">
+                            <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
+                            <i class="text-xl fas fa-expand ssr-icon-fallback"></i>
+                        </button>
+
+                        <!-- Dark Mode -->
+                        <button @click="toggleDarkMode()"
+                            class="transition-colors hidden sm:block"
+                            :class="isDark ? 'text-yellow-400 dark:text-yellow-400 hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
+                            title="Toggle Dark Mode">
+                            <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
+                            <i class="text-xl far fa-moon ssr-icon-fallback"></i>
+                        </button>
+
+                        <!-- User Dropdown -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                class="flex items-center space-x-1 sm:space-x-2 focus:outline-none">
+                                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                                    {{ strtoupper(substr(Auth::user()->name ?? 'P', 0, 1)) }}
+                                </div>
+                                <span class="text-gray-700 dark:text-gray-200 font-medium hidden sm:inline text-sm">{{ Auth::user()->name ?? 'Parent' }}</span>
+                                <i class="fas fa-chevron-down text-gray-500 dark:text-gray-400 text-xs hidden sm:inline"></i>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="open" x-cloak @click.outside="open = false"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                                <a href="#"
+                                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
+                                    <i class="fas fa-user-circle mr-3 text-gray-500 dark:text-gray-400"></i>
+                                    Profile
+                                </a>
+                                <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center">
+                                        <i class="fas fa-sign-out-alt mr-3"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            @endif
-            @if(session('error'))
-                <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-red-700 dark:text-red-400 text-sm">
-                    <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
-                </div>
-            @endif
-            @yield('content')
-        </main>
+            </header>
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 transition-colors">
+                @if(session('success'))
+                    <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg text-green-700 dark:text-green-400 text-sm">
+                        <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-red-700 dark:text-red-400 text-sm">
+                        <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+                    </div>
+                @endif
+                
+                @yield('content')
+            </main>
+        </div>
     </div>
-</div>
 
-@stack('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data("headerActions", () => ({
+                isFullscreen: false,
+                isDark: localStorage.getItem("darkMode") === "true",
+
+                init() {
+                    this.$el.querySelectorAll('.ssr-icon-fallback').forEach(el => el.remove());
+
+                    // Listen for fullscreen changes
+                    document.addEventListener('fullscreenchange', () => {
+                        this.isFullscreen = !!document.fullscreenElement;
+                    });
+                },
+
+                toggleFullscreen() {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                        });
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                },
+
+                toggleDarkMode() {
+                    this.isDark = !this.isDark;
+                    localStorage.setItem('darkMode', this.isDark);
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                }
+            }));
+        });
+    </script>
+    
+    @stack('scripts')
 </body>
+
 </html>
