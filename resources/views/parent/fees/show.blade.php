@@ -61,6 +61,14 @@
                 </p>
             </div>
         </div>
+
+        @if(($fee->due_amount ?? 0) > 0)
+        <div class="mt-6 flex justify-end">
+            <button onclick="initiatePayment({{ $fee->id }})" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i class="fas fa-credit-card mr-2"></i> Pay Online Now
+            </button>
+        </div>
+        @endif
     </div>
 
     <!-- Payment History -->
@@ -97,3 +105,86 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    function initiatePayment(feeId) {
+        if (!confirm('Are you sure you want to initiate payment for this fee?')) return;
+
+        fetch(`/parent/payments/initiate/${feeId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                var options = {
+                    "key": data.key,
+                    "amount": data.amount, 
+                    "currency": "INR",
+                    "name": data.name,
+                    "description": data.description,
+                    "order_id": data.order_id,
+                    "handler": function (response) {
+                        verifyPayment(response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature, feeId);
+                    },
+                    "prefill": {
+                        "name": data.student_name,
+                        "email": data.email,
+                        "contact": data.contact
+                    },
+                    "theme": {
+                        "color": "#4F46E5"
+                    }
+                };
+                var rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response){
+                    alert("Payment failed! Reason: " + response.error.description);
+                });
+                rzp1.open();
+            } else {
+                alert(data.message || 'Error initiating payment');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Something went wrong. Please try again.');
+        });
+    }
+
+    function verifyPayment(payment_id, order_id, signature, feeId) {
+        fetch('/parent/payments/verify', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                razorpay_payment_id: payment_id,
+                razorpay_order_id: order_id,
+                razorpay_signature: signature,
+                fee_id: feeId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Payment Successful! Receipt No: ' + data.receipt_no);
+                window.location.reload();
+            } else {
+                alert(data.message || 'Payment verification failed.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error verifying payment.');
+        });
+    }
+</script>
+@endpush

@@ -26,6 +26,10 @@ Route::get('/children/{student}', [StudentController::class, 'show'])->name('chi
 Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
 Route::get('/fees/{fee}', [FeeController::class, 'show'])->name('fees.show');
 
+// Payments
+Route::post('/payments/initiate/{fee_id}', [\App\Http\Controllers\Parent\PaymentController::class, 'initiate'])->name('payments.initiate');
+Route::post('/payments/verify', [\App\Http\Controllers\Parent\PaymentController::class, 'verify'])->name('payments.verify');
+
 // Attendance
 Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
 

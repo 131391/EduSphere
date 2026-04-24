@@ -13,6 +13,7 @@ use App\Http\Requests\School\StoreAdmissionRequest;
 use App\Models\Fee;
 use App\Models\FeeName;
 use App\Models\FeePayment;
+use App\Services\School\FeePaymentService;
 use App\Models\HostelBedAssignment;
 use App\Models\PaymentMethod;
 use App\Models\Role;
@@ -269,36 +270,42 @@ class AdmissionService
             throw new \RuntimeException('No payment method configured for this school. Please add one in Payment Methods settings.');
         }
 
+        // Create the fee record as Pending (unpaid)
         $fee = Fee::forceCreate([
-            'school_id'      => $school->id,
-            'student_id'     => $student->id,
+            'school_id'        => $school->id,
+            'student_id'       => $student->id,
             'academic_year_id' => $student->academic_year_id,
-            'fee_type_id'    => $admissionFeeName->fee_type_id,
-            'fee_name_id'    => $admissionFeeName->id,
-            'class_id'       => $student->class_id,
-            'bill_no'        => $this->generateBillNumber($school->id),
-            'fee_period'     => 'Admission',
-            'payable_amount' => $request->admission_fee,
-            'paid_amount'    => $request->admission_fee,
-            'due_amount'     => 0,
-            'due_date'       => now(),
-            'payment_date'   => now(),
-            'payment_status' => FeeStatus::Paid,
-            'payment_mode'   => strtolower($paymentMethod->name),
-            'remarks'        => 'Admission Fee paid during intake',
+            'fee_type_id'      => $admissionFeeName->fee_type_id,
+            'fee_name_id'      => $admissionFeeName->id,
+            'class_id'         => $student->class_id,
+            'bill_no'          => $this->generateBillNumber($school->id),
+            'fee_period'       => 'Admission',
+            'payable_amount'   => $request->admission_fee,
+            'paid_amount'      => 0,
+            'due_amount'       => $request->admission_fee,
+            'due_date'         => now(),
+            'payment_status'   => FeeStatus::Pending,
+            'remarks'          => 'Admission Fee — generated during intake',
         ]);
 
-        FeePayment::create([
-            'school_id'         => $school->id,
+        // Delegate the actual payment to FeePaymentService (canonical path)
+        // This gives us: one receipt sequence, BCMath, idempotency, activity log.
+        $paymentService = app(FeePaymentService::class);
+        $result = $paymentService->collectPayment($school, [
             'student_id'        => $student->id,
-            'fee_id'            => $fee->id,
             'academic_year_id'  => $student->academic_year_id,
-            'amount'            => $request->admission_fee,
-            'payment_date'      => now(),
+            'payment_date'      => now()->toDateString(),
             'payment_method_id' => $paymentMethod->id,
-            'receipt_no'        => $this->generateReceiptNumber($school->id),
-            'created_by'        => Auth::id(),
+            'transaction_id'    => null,
+            'remarks'           => 'Admission Fee paid during intake',
+            'payments'          => [
+                ['fee_id' => $fee->id, 'amount' => $request->admission_fee],
+            ],
         ]);
+
+        if (!$result['success']) {
+            throw new \RuntimeException('Admission fee payment failed: ' . ($result['message'] ?? 'Unknown error'));
+        }
 
         // Store payment method on student for reference
         $student->admission_payment_method_id = $paymentMethod->id;

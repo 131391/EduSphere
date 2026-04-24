@@ -17,9 +17,9 @@
         <button onclick="window.print()" class="px-6 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-black transition-all shadow-lg flex items-center gap-2">
             <i class="fas fa-print"></i> Print Document
         </button>
-        <button class="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2">
+        <a href="{{ route('school.fee-payments.receipt.pdf', $receipt_no) }}" class="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2">
             <i class="fas fa-file-pdf"></i> Download PDF
-        </button>
+        </a>
     </div>
 </div>
 

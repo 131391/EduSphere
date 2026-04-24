@@ -4,20 +4,54 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Fee;
+use App\Models\Role;
+use App\Models\Student;
 use Illuminate\Http\Request;
 
 class FeeController extends Controller
 {
     /**
-     * List all fees for the current school.
+     * List fees scoped to the caller's role.
+     *
+     * - student: only their own fees
+     * - parent:  only their linked children's fees
+     * - school_admin / receptionist: all school fees
      */
     public function index(Request $request)
     {
         $school = app('currentSchool');
-        
+        $user   = $request->user();
+        $role   = $user->role?->slug;
+
         $query = Fee::where('school_id', $school->id)
             ->with(['student', 'feeName', 'feeType']);
 
+        // ── Role-based scoping ───────────────────────────────────────
+        if ($role === Role::STUDENT) {
+            $student = Student::where('school_id', $school->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$student) {
+                return response()->json(['data' => [], 'meta' => ['total' => 0]], 200);
+            }
+
+            $query->where('student_id', $student->id);
+
+        } elseif ($role === Role::PARENT) {
+            $childIds = Student::where('school_id', $school->id)
+                ->whereHas('parents', function ($q) use ($user) {
+                    $q->whereHas('user', fn ($u) => $u->where('id', $user->id));
+                })
+                ->pluck('id');
+
+            $query->whereIn('student_id', $childIds);
+
+        } elseif (!in_array($role, [Role::SCHOOL_ADMIN, Role::RECEPTIONIST], true)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // ── Filters ──────────────────────────────────────────────────
         if ($request->filled('student_id')) {
             $query->where('student_id', $request->student_id);
         }
@@ -59,15 +93,42 @@ class FeeController extends Controller
     }
 
     /**
-     * Get a specific fee.
+     * Get a specific fee, scoped to the caller's role.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $school = app('currentSchool');
-        
+        $user   = $request->user();
+        $role   = $user->role?->slug;
+
         $fee = Fee::where('school_id', $school->id)
             ->with(['student', 'feeName', 'feeType', 'academicYear'])
             ->findOrFail($id);
+
+        // ── Role-based guard ─────────────────────────────────────────
+        if ($role === Role::STUDENT) {
+            $student = Student::where('school_id', $school->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$student || $fee->student_id !== $student->id) {
+                abort(403, 'You can only view your own fees.');
+            }
+
+        } elseif ($role === Role::PARENT) {
+            $childIds = Student::where('school_id', $school->id)
+                ->whereHas('parents', function ($q) use ($user) {
+                    $q->whereHas('user', fn ($u) => $u->where('id', $user->id));
+                })
+                ->pluck('id');
+
+            if (!$childIds->contains($fee->student_id)) {
+                abort(403, 'You can only view fees for your children.');
+            }
+
+        } elseif (!in_array($role, [Role::SCHOOL_ADMIN, Role::RECEPTIONIST], true)) {
+            abort(403, 'Forbidden');
+        }
 
         return response()->json([
             'data' => [

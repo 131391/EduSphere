@@ -218,6 +218,18 @@
                             <i class="fas fa-plus-circle w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
                             <span x-show="!sidebarCollapsed">Create New Fee</span>
                         </a>
+
+                        <a href="{{ route('school.ad-hoc-fees.create') }}"
+                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.ad-hoc-fees.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="w-6 fas fa-file-invoice-dollar"></i>
+                            <span x-show="!sidebarCollapsed">Assign Ad-Hoc Fee</span>
+                        </a>
+
+                        <a href="{{ route('school.reports.fees.index') }}"
+                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('school.reports.fees.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                            <i class="w-6 fas fa-chart-pie"></i>
+                            <span x-show="!sidebarCollapsed">Fee Reports</span>
+                        </a>
                     </li>
 
                     <!-- Academic Setup -->

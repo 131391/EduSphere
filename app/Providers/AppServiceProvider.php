@@ -52,6 +52,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(StudentRegistration::class, StudentRegistrationPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
 
+        \App\Models\Waiver::observe(\App\Observers\WaiverObserver::class);
+
         // Set default string length for MySQL
         Schema::defaultStringLength(191);
 

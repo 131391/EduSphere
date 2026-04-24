@@ -24,6 +24,7 @@ class FeePayment extends Model
         'payment_method_id',
         'receipt_no',
         'transaction_id',
+        'idempotency_key',
         'remarks',
         'created_by',
     ];

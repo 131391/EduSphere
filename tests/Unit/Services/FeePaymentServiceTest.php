@@ -7,16 +7,13 @@ use App\Models\School;
 use App\Models\Student;
 use App\Models\Fee;
 use App\Models\AcademicYear;
-use App\Models\FeeType;
-use App\Models\FeeName;
 use App\Models\PaymentMethod;
 use App\Models\User;
 use App\Services\School\FeePaymentService;
+use App\Services\School\NumberingService;
 use App\Enums\FeeStatus;
 use App\Enums\StudentStatus;
-use App\Enums\Gender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
 
 class FeePaymentServiceTest extends TestCase
 {
@@ -33,7 +30,7 @@ class FeePaymentServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->service = new FeePaymentService();
+        $this->service = new FeePaymentService(new NumberingService());
 
         $this->school = School::factory()->create();
 
@@ -139,11 +136,12 @@ class FeePaymentServiceTest extends TestCase
 
         $result = $this->service->collectPayment($this->school, $data);
 
-        $this->assertTrue($result['success']);
-        $this->assertEquals(10000, $result['data']['total_amount']);
+        // Overpayment now returns failure (throws internally) instead of silently capping
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('Overpayment rejected', $result['message']);
 
         $this->fee->refresh();
-        $this->assertEquals(10000, $this->fee->paid_amount);
+        $this->assertEquals(0, $this->fee->paid_amount);
     }
 
     public function test_collect_payment_handles_zero_amount(): void

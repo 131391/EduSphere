@@ -40,6 +40,8 @@ use App\Http\Controllers\School\RegistrationCodeController;
 use App\Http\Controllers\School\FeePaymentController;
 use App\Http\Controllers\School\LibraryController;
 use App\Http\Controllers\School\AttendanceReportController;
+use App\Http\Controllers\School\AdhocFeeController;
+use App\Http\Controllers\School\FeeReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +74,8 @@ Route::delete('favorites/{userFavorite}', [UserFavoriteController::class, 'destr
 // Fee Management
 Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
 Route::get('/fees/create', [FeeController::class, 'create'])->name('fees.create');
+Route::get('/ad-hoc-fees/create', [AdhocFeeController::class, 'create'])->name('ad-hoc-fees.create');
+Route::post('/ad-hoc-fees', [AdhocFeeController::class, 'store'])->name('ad-hoc-fees.store');
 Route::post('/fees', [FeeController::class, 'store'])->name('fees.store');
 Route::get('/fees/{fee}', [FeeController::class, 'show'])->name('fees.show');
 Route::get('/fee-management', [FeeController::class, 'index'])->name('fee-management');
@@ -81,6 +85,8 @@ Route::get('/fee-payments', [FeePaymentController::class, 'index'])->name('fee-p
 Route::get('/fee-payments/collect/{student}', [FeePaymentController::class, 'collect'])->name('fee-payments.collect');
 Route::post('/fee-payments/collect/{student}', [FeePaymentController::class, 'store'])->name('fee-payments.store');
 Route::get('/fee-payments/receipt/{receipt_no}', [FeePaymentController::class, 'receipt'])->name('fee-payments.receipt');
+Route::get('/fee-payments/receipt/{receipt_no}/pdf', [FeePaymentController::class, 'downloadPdf'])->name('fee-payments.receipt.pdf');
+Route::delete('/fee-payments/{receipt_no}', [FeePaymentController::class, 'destroy'])->name('fee-payments.destroy');
 
 // Waiver Management
 Route::post('waivers/fetch', [WaiverController::class, 'index'])->name('waivers.fetch');
@@ -266,11 +272,19 @@ Route::prefix('library')->name('library.')->group(function () {
     Route::post('/return/{issue}', [LibraryController::class, 'returnBook'])->name('return');
 });
 
-// Attendance Reporting
-Route::prefix('reports/attendance')->name('reports.attendance.')->group(function () {
-    Route::get('/monthly', [AttendanceReportController::class, 'monthly'])->name('monthly');
-    Route::get('/student', [AttendanceReportController::class, 'student'])->name('student');
-    Route::get('/daily', [AttendanceReportController::class, 'daily'])->name('daily');
+// Reports
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::prefix('attendance')->name('attendance.')->group(function () {
+        Route::get('/monthly', [AttendanceReportController::class, 'monthly'])->name('monthly');
+        Route::get('/student', [AttendanceReportController::class, 'student'])->name('student');
+        Route::get('/daily', [AttendanceReportController::class, 'daily'])->name('daily');
+    });
+
+    Route::prefix('fees')->name('fees.')->group(function () {
+        Route::get('/', [FeeReportController::class, 'index'])->name('index');
+        Route::get('/daily-collection', [FeeReportController::class, 'dailyCollection'])->name('daily-collection');
+        Route::get('/defaulters', [FeeReportController::class, 'defaulters'])->name('defaulters');
+    });
 });
 
 // Facility Management

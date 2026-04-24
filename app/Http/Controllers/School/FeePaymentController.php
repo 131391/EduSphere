@@ -155,6 +155,8 @@ class FeePaymentController extends TenantController
 
         $data = $validated;
         $data['student_id'] = $student->id;
+        $data['idempotency_key'] = $request->header('Idempotency-Key')
+            ?? \Illuminate\Support\Str::uuid()->toString();
 
         $result = $this->paymentService->collectPayment($this->school, $data);
 
@@ -203,5 +205,53 @@ class FeePaymentController extends TenantController
         $school = $this->school;
 
         return view('school.fee-payments.receipt', compact('payments', 'student', 'school', 'receipt_no'));
+    }
+
+    /**
+     * Revert/void a specific receipt.
+     */
+    public function destroy($receipt_no)
+    {
+        $this->ensureSchoolActive();
+        $this->authorize('delete', FeePayment::class); // Assuming delete policy applies
+
+        $result = $this->paymentService->revertPayment($this->school, $receipt_no);
+
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => $result['success'],
+                'message' => $result['message']
+            ], $result['success'] ? 200 : 422);
+        }
+
+        if ($result['success']) {
+            return redirect()->route('school.fee-payments.index')->with('success', $result['message']);
+        }
+
+        return back()->with('error', $result['message']);
+    }
+
+    /**
+     * Download the receipt as a PDF.
+     */
+    public function downloadPdf($receipt_no)
+    {
+        $this->ensureSchoolActive();
+
+        $payments = FeePayment::with(['fee.feeType', 'fee.feeName'])
+            ->where('school_id', $this->school->id)
+            ->where('receipt_no', $receipt_no)
+            ->get();
+
+        if ($payments->isEmpty()) {
+            abort(404, 'Receipt not found.');
+        }
+
+        $student = $payments->first()->student;
+        $school = $this->school;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('school.fee-payments.receipt-pdf', compact('payments', 'student', 'school', 'receipt_no'));
+        
+        return $pdf->download("Receipt_{$receipt_no}.pdf");
     }
 }
