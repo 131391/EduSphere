@@ -107,6 +107,7 @@ class SchoolController extends Controller
                 'email'       => $school->email,
                 'phone'       => $school->phone,
                 'logo_url'    => $school->logo ? asset('storage/' . $school->logo) : null,
+                'initials'    => strtoupper(substr($school->name, 0, 2)),
                 'location'    => trim(($school->city->name ?? '') . ', ' . ($school->state->name ?? ''), ', '),
                 'status'      => $school->status->value,
                 'status_label' => $school->status->label(),

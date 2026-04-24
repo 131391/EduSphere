@@ -5,33 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="EduSphere - Enterprise School ERP Platform">
-    <title>@yield('title', config('app.name', 'EduSphere')) - School ERP</title>
-    
-    <!-- Vite Assets -->
+    <title>@yield('title', config('app.name', 'EduSphere'))</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <!-- Livewire Assets (Auto-injected in v3, removed manual tags) -->
-
     @stack('styles')
 </head>
-<body class="bg-gray-50 antialiased font-sans">
-    <!-- Google Analytics -->
-    @production
-        <script async src="https://www.googletagmanager.com/gtag/js?id=GA_ID"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'GA_ID');
-        </script>
-    @endproduction
-    
+<body class="bg-gray-50 antialiased" style="font-family: 'Inter', sans-serif;">
     @yield('content')
-    
-    <!-- Livewire Assets (Auto-injected in v3, removed manual tags) -->
-    
     @stack('scripts')
     <x-toast />
 </body>
 </html>
-
