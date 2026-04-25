@@ -115,7 +115,6 @@ class StudentController extends TenantController
 
     public function show($id)
     {
-        $school = $this->getSchool();
         $student = \App\Models\Student::where('school_id', $this->getSchoolId())
             ->with(['class', 'section', 'fees' => function($q) {
                 $q->latest()->take(10);
@@ -124,13 +123,16 @@ class StudentController extends TenantController
             }])
             ->findOrFail($id);
 
+        $this->authorize('view', $student);
+
         return view('school.students.show', compact('student'));
     }
 
     public function edit($id)
     {
-        $school = $this->getSchool();
         $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
+        $this->authorize('update', $student);
+
         $classes = \App\Models\ClassModel::where('school_id', $this->getSchoolId())->get();
         $sections = \App\Models\Section::where('class_id', $student->class_id)->get();
         
@@ -188,14 +190,26 @@ class StudentController extends TenantController
 
     public function destroy($id)
     {
-        $school = $this->getSchool();
         $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
-        
+        $this->authorize('delete', $student);
+
+        // Guard: prevent deletion if student has fee payment records
+        if ($student->fees()->whereHas('payments')->exists()) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete student with existing fee payment records.'
+                ], 422);
+            }
+            return redirect()->route('school.students.index')
+                ->with('error', 'Cannot delete student with existing fee payment records.');
+        }
+
         $student->delete();
 
-        if (request()->ajax()) {
+        if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
-                'status' => 'success',
+                'success' => true,
                 'message' => 'Student record moved to archives successfully.'
             ]);
         }

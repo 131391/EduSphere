@@ -265,7 +265,7 @@ class Student extends Model
 
     public function parents()
     {
-        return $this->belongsToMany(StudentParent::class, 'student_parent')
+        return $this->belongsToMany(StudentParent::class, 'student_parent', 'student_id', 'parent_id')
             ->using(StudentParentPivot::class)
             ->withPivot('relation', 'is_primary')
             ->withTimestamps();

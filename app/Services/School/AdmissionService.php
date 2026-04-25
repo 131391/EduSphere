@@ -5,6 +5,7 @@ namespace App\Services\School;
 use App\Enums\AdmissionStatus;
 use App\Enums\EnquiryStatus;
 use App\Enums\FeeStatus;
+use App\Enums\StudentStatus;
 use App\Enums\GeneralStatus;
 use App\Enums\ParentStatus;
 use App\Enums\RelationType;
@@ -45,11 +46,24 @@ class AdmissionService
         $student->school_id = $school->id;
 
         // 1. Generate admission number atomically
-        $admissionNo = $request->admission_no ?: Cache::lock('admission_no_seq_' . $school->id, 10)
-            ->block(5, function () use ($school) {
+        if ($request->admission_no) {
+            $admissionNo = $request->admission_no;
+        } else {
+            try {
+                $admissionNo = Cache::lock('admission_no_seq_' . $school->id, 10)
+                    ->block(5, function () use ($school) {
+                        $max = Student::where('school_id', $school->id)->max('admission_no');
+                        return $max ? (intval($max) + 1) : 100001;
+                    });
+            } catch (\Exception $e) {
+                // Fallback for cache drivers that don't support atomic locks (e.g. array)
+                $admissionNo = null;
+            }
+            if (!$admissionNo) {
                 $max = Student::where('school_id', $school->id)->max('admission_no');
-                return $max ? (intval($max) + 1) : 100001;
-            });
+                $admissionNo = $max ? (intval($max) + 1) : 100001;
+            }
+        }
 
         if (Student::where('school_id', $school->id)->where('admission_no', $admissionNo)->exists()) {
             throw new \RuntimeException("Admission number [{$admissionNo}] is already allocated. Please refresh and try again.");
@@ -66,6 +80,7 @@ class AdmissionService
 
         // 4. Fill student data
         $excluded = [
+            'admission_no', 'school_id', 'user_id',
             'student_photo', 'father_photo', 'mother_photo',
             'student_signature', 'father_signature', 'mother_signature',
             'registration_id', 'student_photo_path', 'father_photo_path', 'mother_photo_path',
@@ -74,6 +89,11 @@ class AdmissionService
             'admission_payment_method_id',
         ];
         $student->fill($request->except($excluded));
+
+        // Ensure every new student defaults to Active, even if the form
+        // doesn't explicitly send a status value.
+        $student->status = $student->status ?? StudentStatus::Active;
+        $student->admission_date = $student->admission_date ?? now();
 
         if (!$student->father_name) {
             $student->father_name = trim(implode(' ', array_filter([
@@ -114,9 +134,11 @@ class AdmissionService
     private function assertNoDuplicate(StoreAdmissionRequest $request, int $schoolId): void
     {
         if ($request->aadhaar_no) {
+            // Aadhaar is encrypted at rest — must decrypt in-memory to compare.
             $exists = Student::where('school_id', $schoolId)
-                ->where('aadhaar_no', $request->aadhaar_no)
-                ->exists();
+                ->whereNotNull('aadhaar_no')
+                ->get(['id', 'aadhaar_no'])
+                ->contains(fn ($s) => $s->aadhaar_no === $request->aadhaar_no);
             if ($exists) {
                 throw new \RuntimeException("A student with Aadhaar number [{$request->aadhaar_no}] is already admitted in this school.");
             }
@@ -236,12 +258,13 @@ class AdmissionService
                     'last_name'  => $data['last_name'],
                     'phone'      => $data['mobile'],
                     'email'      => $parentUser->email,
+                    'relation'   => $data['relation'],
                     'status'     => ParentStatus::Active,
                 ]
             );
 
             // Link to student (avoid duplicate pivot rows)
-            if (!$student->parents()->where('student_parent_id', $parentRecord->id)->exists()) {
+            if (!$student->parents()->where('parent_id', $parentRecord->id)->exists()) {
                 $student->parents()->attach($parentRecord->id, [
                     'relation'   => $data['relation'],
                     'is_primary' => $data['is_primary'],

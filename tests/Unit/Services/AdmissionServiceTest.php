@@ -38,6 +38,8 @@ class AdmissionServiceTest extends TestCase
     {
         parent::setUp();
 
+        \Illuminate\Support\Facades\Notification::fake();
+
         $this->service = new AdmissionService();
 
         $this->school = School::factory()->create();
@@ -121,10 +123,10 @@ class AdmissionServiceTest extends TestCase
 
     public function test_admit_generates_unique_admission_number(): void
     {
-        $request1 = $this->createMockRequest();
+        $request1 = $this->createMockRequest(['mobile_no' => '9876000001']);
         $student1 = $this->service->admit($request1, $this->school);
         
-        $request2 = $this->createMockRequest(['first_name' => 'Second']);
+        $request2 = $this->createMockRequest(['first_name' => 'Second', 'mobile_no' => '9876000002']);
         $student2 = $this->service->admit($request2, $this->school);
 
         $this->assertNotEquals($student1->admission_no, $student2->admission_no);
@@ -202,12 +204,14 @@ class AdmissionServiceTest extends TestCase
 
         $request1 = $this->createMockRequest([
             'father_email' => $fatherEmail,
+            'mobile_no'    => '9876100001',
         ]);
         
         $student1 = $this->service->admit($request1, $this->school);
 
         $request2 = $this->createMockRequest([
             'father_email' => $fatherEmail,
+            'mobile_no'    => '9876100002',
         ]);
         
         $student2 = $this->service->admit($request2, $this->school);
@@ -222,7 +226,7 @@ class AdmissionServiceTest extends TestCase
         $registration = StudentRegistration::factory()->create([
             'school_id' => $this->school->id,
             'registration_no' => 'REG001',
-            'admission_status' => AdmissionStatus::Registered,
+            'admission_status' => AdmissionStatus::Pending,
         ]);
 
         $request = $this->createMockRequest([
