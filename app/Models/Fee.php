@@ -113,11 +113,13 @@ class Fee extends Model
 
     public function scopeOverdue($query)
     {
-        return $query->where('payment_status', FeeStatus::Overdue)
-            ->orWhere(function ($q) {
-                $q->where('payment_status', FeeStatus::Pending)
-                  ->where('due_date', '<', now());
-            });
+        return $query->where(function ($q) {
+            $q->where('payment_status', FeeStatus::Overdue)
+              ->orWhere(function ($inner) {
+                  $inner->where('payment_status', FeeStatus::Pending)
+                        ->where('due_date', '<', now());
+              });
+        });
     }
 
 }

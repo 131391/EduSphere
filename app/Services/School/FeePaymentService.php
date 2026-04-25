@@ -50,6 +50,22 @@ class FeePaymentService
             }
         }
 
+        // Reject up-front if every line item is zero. Avoids burning a
+        // receipt number and writing a no-op activity log entry.
+        $hasPositiveAmount = false;
+        foreach ($payments as $payment) {
+            if (bccomp(bcadd((string) ($payment['amount'] ?? '0'), '0', 2), '0', 2) > 0) {
+                $hasPositiveAmount = true;
+                break;
+            }
+        }
+        if (!$hasPositiveAmount) {
+            return [
+                'success' => false,
+                'message' => 'Payment must include at least one positive amount.',
+            ];
+        }
+
         DB::beginTransaction();
         try {
             $student = Student::where('school_id', $school->id)
@@ -202,16 +218,34 @@ class FeePaymentService
                     throw new \Exception("Fee record not found for payment ID: {$payment->id}");
                 }
 
-                $amountToRevert = $payment->amount;
-                $amountToRevert = bcadd($amountToRevert, '0', 2);
+                $amountToRevert = bcadd($payment->amount, '0', 2);
 
-                // Restore balances
+                // Restore paid_amount, then recompute due_amount from base
+                // values. Do NOT add the reverted amount to a stale due_amount
+                // that may already reflect post-payment waiver/discount/late
+                // fee changes.
                 $fee->paid_amount = bcsub($fee->paid_amount ?? '0', $amountToRevert, 2);
-                $fee->due_amount  = bcadd($fee->due_amount ?? '0', $amountToRevert, 2);
+
+                if (bccomp($fee->paid_amount, '0', 2) < 0) {
+                    $fee->paid_amount = '0.00';
+                }
+
+                $deductions = bcadd(
+                    bcadd($fee->paid_amount, $fee->waiver_amount ?? '0', 2),
+                    $fee->discount_amount ?? '0',
+                    2
+                );
+
+                $fee->due_amount = bcsub($fee->payable_amount, $deductions, 2);
+
+                if (bccomp($fee->due_amount, '0', 2) < 0) {
+                    $fee->due_amount = '0.00';
+                }
 
                 if (bccomp($fee->paid_amount, '0', 2) <= 0) {
                     $fee->payment_status = FeeStatus::Pending;
-                    $fee->paid_amount = '0.00';
+                } elseif (bccomp($fee->due_amount, '0', 2) <= 0) {
+                    $fee->payment_status = FeeStatus::Paid;
                 } else {
                     $fee->payment_status = FeeStatus::Partial;
                 }

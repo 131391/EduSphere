@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Waiver;
 use App\Models\Fee;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class WaiverObserver
@@ -51,57 +52,67 @@ class WaiverObserver
     }
 
     /**
-     * Distribute the waiver amount across the student's fees for the same period.
+     * Distribute the waiver amount across the student's fees for the same
+     * period. Runs in a DB transaction with row-level locks so concurrent
+     * payment collection cannot interleave and corrupt due_amount.
      */
     protected function applyWaiver(Waiver $waiver): void
     {
-        $fees = Fee::where('school_id', $waiver->school_id)
-            ->where('student_id', $waiver->student_id)
-            ->where('academic_year_id', $waiver->academic_year_id)
-            ->where('fee_period', $waiver->fee_period)
-            ->where('payment_status', '!=', \App\Enums\FeeStatus::Paid)
-            ->orderBy('payable_amount', 'desc')
-            ->get();
+        DB::transaction(function () use ($waiver) {
+            $fees = Fee::where('school_id', $waiver->school_id)
+                ->where('student_id', $waiver->student_id)
+                ->where('academic_year_id', $waiver->academic_year_id)
+                ->where('fee_period', $waiver->fee_period)
+                ->where('payment_status', '!=', \App\Enums\FeeStatus::Paid)
+                ->orderBy('payable_amount', 'desc')
+                ->lockForUpdate()
+                ->get();
 
-        if ($fees->isEmpty()) {
-            return;
-        }
-
-        $remainingWaiver = (string) $waiver->waiver_amount;
-
-        foreach ($fees as $fee) {
-            if (bccomp($remainingWaiver, '0', 2) <= 0) {
-                break;
+            if ($fees->isEmpty()) {
+                return;
             }
 
-            // How much can this fee absorb?
-            // A fee can absorb up to its (payable_amount - discount_amount - paid_amount)
-            $availableToAbsorb = bcsub($fee->payable_amount, bcadd($fee->discount_amount ?? '0', $fee->paid_amount ?? '0', 2), 2);
-            
-            // Subtract any existing waiver on this fee to find actual capacity
-            $availableToAbsorb = bcsub($availableToAbsorb, $fee->waiver_amount ?? '0', 2);
+            $remainingWaiver = (string) $waiver->waiver_amount;
 
-            if (bccomp($availableToAbsorb, '0', 2) <= 0) {
-                continue;
+            foreach ($fees as $fee) {
+                if (bccomp($remainingWaiver, '0', 2) <= 0) {
+                    break;
+                }
+
+                // Capacity = payable - (discount + paid + existing waiver).
+                // payable_amount already includes late_fee (added by ApplyLateFees).
+                $availableToAbsorb = bcsub(
+                    $fee->payable_amount,
+                    bcadd(
+                        bcadd($fee->discount_amount ?? '0', $fee->paid_amount ?? '0', 2),
+                        $fee->waiver_amount ?? '0',
+                        2
+                    ),
+                    2
+                );
+
+                if (bccomp($availableToAbsorb, '0', 2) <= 0) {
+                    continue;
+                }
+
+                $applyAmount = bccomp($remainingWaiver, $availableToAbsorb, 2) === 1
+                    ? $availableToAbsorb
+                    : $remainingWaiver;
+
+                $fee->waiver_amount = bcadd($fee->waiver_amount ?? '0', $applyAmount, 2);
+
+                $deductions = bcadd(
+                    bcadd($fee->paid_amount ?? '0', $fee->waiver_amount, 2),
+                    $fee->discount_amount ?? '0',
+                    2
+                );
+                $fee->due_amount = bcsub($fee->payable_amount, $deductions, 2);
+
+                $fee->save();
+
+                $remainingWaiver = bcsub($remainingWaiver, $applyAmount, 2);
             }
-
-            // The amount to apply to this fee
-            $applyAmount = bccomp($remainingWaiver, $availableToAbsorb, 2) === 1 ? $availableToAbsorb : $remainingWaiver;
-
-            // Update the fee
-            $newWaiverAmount = bcadd($fee->waiver_amount ?? '0', $applyAmount, 2);
-            $fee->waiver_amount = $newWaiverAmount;
-            
-            // Recalculate due_amount. Note: payable_amount already includes late_fee (added by ApplyLateFees)
-            $discounts = bcadd($fee->discount_amount ?? '0', $fee->waiver_amount ?? '0', 2);
-            $totalDeductions = bcadd($discounts, $fee->paid_amount ?? '0', 2);
-            $newDueAmount = bcsub($fee->payable_amount, $totalDeductions, 2);
-
-            $fee->due_amount = $newDueAmount;
-            $fee->save();
-
-            $remainingWaiver = bcsub($remainingWaiver, $applyAmount, 2);
-        }
+        });
     }
 
     /**
@@ -109,24 +120,24 @@ class WaiverObserver
      */
     protected function removeWaiver(Waiver $waiver): void
     {
-        $fees = Fee::where('school_id', $waiver->school_id)
-            ->where('student_id', $waiver->student_id)
-            ->where('academic_year_id', $waiver->academic_year_id)
-            ->where('fee_period', $waiver->fee_period)
-            ->whereNotNull('waiver_amount')
-            ->where('waiver_amount', '>', 0)
-            ->get();
+        DB::transaction(function () use ($waiver) {
+            $fees = Fee::where('school_id', $waiver->school_id)
+                ->where('student_id', $waiver->student_id)
+                ->where('academic_year_id', $waiver->academic_year_id)
+                ->where('fee_period', $waiver->fee_period)
+                ->whereNotNull('waiver_amount')
+                ->where('waiver_amount', '>', 0)
+                ->lockForUpdate()
+                ->get();
 
-        foreach ($fees as $fee) {
-            $fee->waiver_amount = '0.00';
-            
-            // Recalculate due_amount. Note: payable_amount already includes late_fee
-            $discounts = $fee->discount_amount ?? '0'; // waiver is now 0
-            $totalDeductions = bcadd($discounts, $fee->paid_amount ?? '0', 2);
-            $newDueAmount = bcsub($fee->payable_amount, $totalDeductions, 2);
+            foreach ($fees as $fee) {
+                $fee->waiver_amount = '0.00';
 
-            $fee->due_amount = $newDueAmount;
-            $fee->save();
-        }
+                $deductions = bcadd($fee->paid_amount ?? '0', $fee->discount_amount ?? '0', 2);
+                $fee->due_amount = bcsub($fee->payable_amount, $deductions, 2);
+
+                $fee->save();
+            }
+        });
     }
 }

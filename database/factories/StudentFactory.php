@@ -27,6 +27,8 @@ class StudentFactory extends Factory
             'last_name' => $this->faker->lastName,
             'dob' => $this->faker->date('Y-m-d', '2015-12-31'),
             'gender' => Gender::Male,
+            'father_name' => $this->faker->name('male'),
+            'mother_name' => $this->faker->name('female'),
             'class_id' => ClassModel::factory(),
             'section_id' => Section::factory(),
             'status' => StudentStatus::Active,

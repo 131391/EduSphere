@@ -39,6 +39,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:super_admin'])
     require __DIR__.'/admin.php';
 });
 
+// Payment gateway webhooks (no auth, no tenant — verified by signature)
+Route::post('/webhooks/razorpay', [\App\Http\Controllers\Webhooks\RazorpayWebhookController::class, 'handle'])
+    ->name('webhooks.razorpay');
+
 // Location API Routes
 Route::group(['prefix' => 'api/location'], function () {
     Route::get('countries', [App\Http\Controllers\LocationController::class, 'getCountries'])->name('api.location.countries');

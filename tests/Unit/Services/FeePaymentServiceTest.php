@@ -144,7 +144,7 @@ class FeePaymentServiceTest extends TestCase
         $this->assertEquals(0, $this->fee->paid_amount);
     }
 
-    public function test_collect_payment_handles_zero_amount(): void
+    public function test_collect_payment_rejects_all_zero_amounts(): void
     {
         $user = User::factory()->create(['school_id' => $this->school->id]);
         $this->actingAs($user);
@@ -161,11 +161,13 @@ class FeePaymentServiceTest extends TestCase
 
         $result = $this->service->collectPayment($this->school, $data);
 
-        $this->assertTrue($result['success']);
-        $this->assertEquals(0, $result['data']['total_amount']);
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('positive amount', $result['message']);
 
         $this->fee->refresh();
         $this->assertEquals(0, $this->fee->paid_amount);
+        // No FeePayment row should have been created.
+        $this->assertDatabaseMissing('fee_payments', ['fee_id' => $this->fee->id]);
     }
 
     public function test_collect_payment_throws_exception_for_invalid_fee(): void
@@ -252,6 +254,8 @@ class FeePaymentServiceTest extends TestCase
 
         $pendingFees = $this->service->getStudentPendingFees($this->student);
 
-        $this->assertCount(2, $pendingFees);
+        // setUp() creates one Pending fee; this test adds Pending + Paid + Partial.
+        // Paid is excluded → 3 remain.
+        $this->assertCount(3, $pendingFees);
     }
 }

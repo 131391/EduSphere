@@ -67,7 +67,10 @@ class ApplyLateFees extends Command
                 return false;
             }
 
-            $daysLate = now()->startOfDay()->diffInDays($fee->due_date);
+            // diffInDays sign convention varies by Carbon version. Compute
+            // signed days from due_date → today; positive means overdue.
+            $daysLate = (int) $fee->due_date->copy()->startOfDay()
+                ->diffInDays(now()->startOfDay(), false);
 
             if ($daysLate <= 0) {
                 return false;

@@ -98,19 +98,20 @@ class FeeService
                 }
             }
 
-            DB::commit();
-
             // Trigger waiver redistribution for the newly generated fees
+            // BEFORE committing so the whole generation+waiver run is atomic.
             $studentIds = $students->pluck('id');
             $waivers = \App\Models\Waiver::where('school_id', $school->id)
                 ->whereIn('student_id', $studentIds)
                 ->where('academic_year_id', $academicYearId)
                 ->where('fee_period', $feePeriod)
                 ->get();
-                
+
             foreach ($waivers as $waiver) {
                 $waiver->touch();
             }
+
+            DB::commit();
 
             return [
                 'success' => true,
@@ -140,7 +141,7 @@ class FeeService
     {
         $query = Fee::where('school_id', $school->id)
             ->with(['student', 'feeName', 'class'])
-            ->where('payment_status', '!=', 3); // Not Paid
+            ->where('payment_status', '!=', FeeStatus::Paid->value);
 
         if (isset($filters['class_id'])) {
             $query->where('class_id', $filters['class_id']);

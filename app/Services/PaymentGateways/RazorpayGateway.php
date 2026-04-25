@@ -10,11 +10,13 @@ class RazorpayGateway implements PaymentGatewayInterface
 {
     protected string $keyId;
     protected string $keySecret;
+    protected ?string $webhookSecret;
 
     public function __construct()
     {
         $this->keyId = config('services.razorpay.key');
         $this->keySecret = config('services.razorpay.secret');
+        $this->webhookSecret = config('services.razorpay.webhook_secret') ?: null;
 
         if (empty($this->keyId) || empty($this->keySecret)) {
             throw new Exception("Razorpay keys are not configured.");
@@ -67,5 +69,20 @@ class RazorpayGateway implements PaymentGatewayInterface
         );
 
         return hash_equals($expectedSignature, $payload['razorpay_signature']);
+    }
+
+    /**
+     * Verify a webhook payload using the webhook secret.
+     * Razorpay signs the raw request body with HMAC-SHA256.
+     */
+    public function verifyWebhookSignature(string $rawBody, string $signature): bool
+    {
+        if (empty($this->webhookSecret)) {
+            throw new Exception('Razorpay webhook secret is not configured.');
+        }
+
+        $expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
+
+        return hash_equals($expected, $signature);
     }
 }

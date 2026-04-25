@@ -17,7 +17,7 @@ class AcademicYearFactory extends Factory
             'name' => $this->faker->unique()->year() . ' - ' . ($this->faker->year() + 1),
             'start_date' => $this->faker->date('Y-m-d', '2024-04-01'),
             'end_date' => $this->faker->date('Y-m-d', '2025-03-31'),
-            'is_default' => true,
+            'is_current' => true,
         ];
     }
 }

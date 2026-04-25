@@ -22,7 +22,10 @@ return new class extends Migration
             $table->string('gateway_transaction_id')->nullable()->index();
             $table->string('status')->default('pending'); // pending, success, failed
             $table->json('payload')->nullable(); // Store webhook responses
+            $table->timestamp('failed_at')->nullable();
+            $table->string('error_message')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

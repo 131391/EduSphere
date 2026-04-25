@@ -12,10 +12,13 @@ class PaymentMethodFactory extends Factory
 
     public function definition()
     {
+        $name = $this->faker->randomElement(['Cash', 'Bank Transfer', 'Card', 'UPI', 'Cheque']);
+
         return [
             'school_id' => School::factory(),
-            'name' => $this->faker->randomElement(['Cash', 'Bank Transfer', 'Card', 'UPI', 'Cheque']),
-            'description' => $this->faker->sentence,
+            'name'      => $name,
+            'code'      => strtoupper(str_replace(' ', '_', $name)),
+            'is_active' => true,
         ];
     }
 }

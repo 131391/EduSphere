@@ -237,6 +237,7 @@ class FeePaymentController extends TenantController
     public function downloadPdf($receipt_no)
     {
         $this->ensureSchoolActive();
+        $this->authorize('viewAny', FeePayment::class);
 
         $payments = FeePayment::with(['fee.feeType', 'fee.feeName'])
             ->where('school_id', $this->school->id)
@@ -246,6 +247,8 @@ class FeePaymentController extends TenantController
         if ($payments->isEmpty()) {
             abort(404, 'Receipt not found.');
         }
+
+        $this->authorize('view', $payments->first());
 
         $student = $payments->first()->student;
         $school = $this->school;

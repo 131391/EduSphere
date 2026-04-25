@@ -11,11 +11,13 @@ class RoleFactory extends Factory
 
     public function definition()
     {
+        $suffix = $this->faker->unique()->numerify('###');
+
         return [
-            'name' => 'Parent',
-            'slug' => Role::PARENT,
-            'guard_name' => 'web',
-            'description' => 'Parent Role',
+            'name'        => 'Role-' . $suffix,
+            'slug'        => 'role-' . $suffix,
+            'guard_name'  => 'web',
+            'description' => 'Test Role',
         ];
     }
 }

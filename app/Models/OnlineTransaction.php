@@ -4,10 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OnlineTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_SUCCESS = 'success';
+    public const STATUS_FAILED  = 'failed';
 
     protected $fillable = [
         'school_id',
@@ -18,12 +23,15 @@ class OnlineTransaction extends Model
         'gateway_order_id',
         'gateway_transaction_id',
         'status',
-        'payload'
+        'payload',
+        'failed_at',
+        'error_message',
     ];
 
     protected $casts = [
-        'payload' => 'array',
-        'amount' => 'decimal:2',
+        'payload'   => 'array',
+        'amount'    => 'decimal:2',
+        'failed_at' => 'datetime',
     ];
 
     public function school()

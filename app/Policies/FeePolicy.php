@@ -37,18 +37,31 @@ class FeePolicy
 
     protected function canManageFees(User $user): bool
     {
-        $currentSchoolId = app('currentSchool', [])->id ?? null;
+        $currentSchoolId = $this->currentSchoolId();
 
         return $user->isActive()
             && ($user->hasRole(Role::SCHOOL_ADMIN) || $user->hasRole(Role::RECEPTIONIST))
             && !is_null($currentSchoolId)
-            && $user->school_id === $currentSchoolId;
+            && (int) $user->school_id === (int) $currentSchoolId;
     }
 
     protected function belongsToCurrentSchool(?int $schoolId): bool
     {
-        $currentSchoolId = app('currentSchool', [])->id ?? null;
+        $currentSchoolId = $this->currentSchoolId();
 
-        return !is_null($schoolId) && $schoolId === $currentSchoolId;
+        return !is_null($schoolId)
+            && !is_null($currentSchoolId)
+            && (int) $schoolId === (int) $currentSchoolId;
+    }
+
+    private function currentSchoolId(): ?int
+    {
+        if (!app()->bound('currentSchool')) {
+            return null;
+        }
+
+        $school = app('currentSchool');
+
+        return $school?->id;
     }
 }
