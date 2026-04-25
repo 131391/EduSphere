@@ -290,8 +290,23 @@ Route::prefix('reports')->name('reports.')->group(function () {
 // Facility Management
 Route::prefix('facilities')->name('facilities.')->group(function () {
     Route::get('/', [\App\Http\Controllers\School\StudentFacilityController::class, 'index'])->name('index');
-    Route::post('/transport/{student}', [\App\Http\Controllers\School\StudentFacilityController::class, 'assignTransport'])->name('transport.assign');
+    Route::post('/transport/{student}', [\App\Http\Controllers\School\StudentTransportController::class, 'assignTransport'])->name('transport.assign');
     Route::post('/hostel/{student}', [\App\Http\Controllers\School\StudentFacilityController::class, 'assignHostel'])->name('hostel.assign');
+});
+
+// Transport Management
+Route::prefix('transport')->name('transport.')->group(function () {
+    Route::post('/vehicles/fetch', [\App\Http\Controllers\School\VehicleController::class, 'index'])->name('vehicles.fetch');
+    Route::resource('vehicles', \App\Http\Controllers\School\VehicleController::class)->except(['create', 'edit', 'show']);
+
+    Route::post('/routes/fetch', [\App\Http\Controllers\School\TransportRouteController::class, 'index'])->name('transport_routes.fetch');
+    Route::resource('routes', \App\Http\Controllers\School\TransportRouteController::class)->names('transport_routes')->except(['create', 'edit', 'show']);
+
+    Route::post('/bus-stops/fetch', [\App\Http\Controllers\School\BusStopController::class, 'index'])->name('bus_stops.fetch');
+    Route::resource('bus-stops', \App\Http\Controllers\School\BusStopController::class)->names('bus_stops')->except(['create', 'edit', 'show']);
+
+    Route::get('/attendance', [\App\Http\Controllers\School\TransportAttendanceController::class, 'index'])->name('transport_attendance.index');
+    Route::post('/attendance', [\App\Http\Controllers\School\TransportAttendanceController::class, 'store'])->name('transport_attendance.store');
 });
 
 // Other school admin routes...

@@ -23,14 +23,16 @@ class TenantMiddlewareTest extends TestCase
             'school_id' => $school->id,
             'role_id' => $adminRole->id,
         ]);
-        $response = $this->actingAs($user)->get('http://testschool.localhost/dashboard');
+        $response = $this->actingAs($user)->get('http://testschool.localhost/school/dashboard');
 
         $response->assertStatus(200);
     }
 
     public function test_tenant_middleware_returns_404_for_invalid_subdomain(): void
     {
-        $response = $this->get('http://invalidschool.localhost/dashboard');
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $user = \App\Models\User::factory()->create();
+        $response = $this->actingAs($user)->get('http://invalidschool.localhost/school/dashboard');
 
         $response->assertStatus(404);
     }
@@ -48,7 +50,7 @@ class TenantMiddlewareTest extends TestCase
             'school_id' => $school->id,
             'role_id' => $adminRole->id,
         ]);
-        $response = $this->actingAs($user)->get('http://inactive.localhost/dashboard');
+        $response = $this->actingAs($user)->get('http://inactive.localhost/school/dashboard');
 
         $response->assertStatus(403);
     }

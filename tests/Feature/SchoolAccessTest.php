@@ -13,44 +13,47 @@ class SchoolAccessTest extends TestCase
 
     public function test_school_admin_can_access_their_school(): void
     {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         $school = $this->createSchool();
         $user = $this->createUser([
             'school_id' => $school->id,
-            'role' => 'school_admin',
+            'role_id' => \App\Models\Role::where('slug', \App\Models\Role::SCHOOL_ADMIN)->first()->id,
         ]);
 
         $this->setCurrentSchool($school);
         $this->actingAsUser($user);
 
-        $response = $this->get('/school/dashboard');
+        $response = $this->get('http://' . $school->subdomain . '.localhost/school/dashboard');
 
         $response->assertStatus(200);
     }
 
     public function test_school_admin_cannot_access_other_school(): void
     {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         $school1 = $this->createSchool();
         $school2 = $this->createSchool();
         
         $user = $this->createUser([
             'school_id' => $school1->id,
-            'role' => 'school_admin',
+            'role_id' => \App\Models\Role::where('slug', \App\Models\Role::SCHOOL_ADMIN)->first()->id,
         ]);
 
         $this->setCurrentSchool($school2);
         $this->actingAsUser($user);
 
-        $response = $this->get('/school/dashboard');
+        $response = $this->get('http://' . $school2->subdomain . '.localhost/school/dashboard');
 
         $response->assertStatus(403);
     }
 
     public function test_super_admin_can_access_any_school(): void
     {
+        $this->seed(\Database\Seeders\RoleSeeder::class);
         $school = $this->createSchool();
         $user = $this->createUser([
             'school_id' => null,
-            'role' => 'super_admin',
+            'role_id' => \App\Models\Role::where('slug', \App\Models\Role::SUPER_ADMIN)->first()->id,
         ]);
 
         $this->setCurrentSchool($school);

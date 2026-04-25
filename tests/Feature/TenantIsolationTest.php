@@ -72,7 +72,7 @@ class TenantIsolationTest extends TestCase
             'admission_no' => 'STU002',
         ]);
 
-        $this->app->instance('currentSchool', $schoolB);
+        $this->app->instance('currentSchool', $schoolA);
         $this->actingAs($userA);
 
         $student = Student::where('admission_no', 'STU002')->first();

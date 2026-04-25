@@ -41,10 +41,14 @@ class DashboardController extends Controller
             ->take(15)
             ->get();
 
-        // Schools created per month (last 6 months) for chart
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $dateSelect = $driver === 'sqlite' 
+            ? "strftime('%Y-%m', created_at) as month" 
+            : 'DATE_FORMAT(created_at, "%Y-%m") as month';
+
         $schoolGrowth = School::withTrashed()
             ->where('created_at', '>=', now()->subMonths(6))
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->selectRaw($dateSelect . ', COUNT(*) as count')
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('count', 'month')
