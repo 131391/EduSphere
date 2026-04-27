@@ -22,9 +22,17 @@ class UpdateBusStopRequest extends FormRequest
      */
     public function rules(): array
     {
+        $schoolId = app('currentSchool')->id;
+
         return [
-            'route_id' => 'required|exists:transport_routes,id',
-            'vehicle_id' => 'required|exists:vehicles,id',
+            'route_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('transport_routes', 'id')->where('school_id', $schoolId)
+            ],
+            'vehicle_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('vehicles', 'id')->where('school_id', $schoolId)
+            ],
             'bus_stop_no' => 'required|string|max:50',
             'bus_stop_name' => 'required|string|max:255',
             'latitude' => 'nullable|numeric|between:-90,90',

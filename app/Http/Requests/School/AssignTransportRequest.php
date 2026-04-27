@@ -22,11 +22,22 @@ class AssignTransportRequest extends FormRequest
      */
     public function rules(): array
     {
+        $schoolId = app('currentSchool')->id;
+
         return [
             'action' => 'required|string|in:assign,remove',
-            'route_id' => 'required_if:action,assign|exists:transport_routes,id',
-            'bus_stop_id' => 'required_if:action,assign|exists:bus_stops,id',
-            'academic_year_id' => 'required_if:action,assign|exists:academic_years,id',
+            'route_id' => [
+                'required_if:action,assign',
+                \Illuminate\Validation\Rule::exists('transport_routes', 'id')->where('school_id', $schoolId)
+            ],
+            'bus_stop_id' => [
+                'required_if:action,assign',
+                \Illuminate\Validation\Rule::exists('bus_stops', 'id')->where('school_id', $schoolId)
+            ],
+            'academic_year_id' => [
+                'required_if:action,assign',
+                \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $schoolId)
+            ],
             'start_date' => 'required_if:action,assign|date',
         ];
     }

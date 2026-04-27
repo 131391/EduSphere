@@ -34,6 +34,21 @@ class StudentTransportService
             // Fetch bus stop details to capture the fee and vehicle info
             $busStop = BusStop::where('school_id', $school->id)->findOrFail($data['bus_stop_id']);
 
+            // Validate vehicle capacity
+            if ($busStop->vehicle_id) {
+                $vehicle = \App\Models\Vehicle::find($busStop->vehicle_id);
+                if ($vehicle && $vehicle->capacity) {
+                    $currentCount = StudentTransportAssignment::where('vehicle_id', $vehicle->id)
+                        ->where('academic_year_id', $data['academic_year_id'])
+                        ->where('status', GeneralStatus::Active)
+                        ->count();
+                    
+                    if ($currentCount >= $vehicle->capacity) {
+                        throw new \Exception("Cannot assign transport. Vehicle ({$vehicle->vehicle_no}) has reached its maximum capacity of {$vehicle->capacity}.");
+                    }
+                }
+            }
+
             // Create new assignment
             $assignment = StudentTransportAssignment::create([
                 'school_id' => $school->id,

@@ -22,11 +22,16 @@ class StoreTransportRouteRequest extends FormRequest
      */
     public function rules(): array
     {
+        $schoolId = app('currentSchool')->id;
+
         return [
             'route_name' => 'required|string|max:255',
-            'vehicle_id' => 'required|exists:vehicles,id',
+            'vehicle_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('vehicles', 'id')->where('school_id', $schoolId)
+            ],
             'route_create_date' => 'required|date',
-            'status' => 'required|integer|in:0,1',
+            'status' => ['required', \Illuminate\Validation\Rule::enum(\App\Enums\RouteStatus::class)],
         ];
     }
 }

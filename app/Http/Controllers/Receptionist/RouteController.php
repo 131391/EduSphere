@@ -111,7 +111,9 @@ class RouteController extends TenantController
                 ], 422);
             }
 
-            $route = TransportRoute::create($validated);
+            $route = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+                return TransportRoute::create($validated);
+            });
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([

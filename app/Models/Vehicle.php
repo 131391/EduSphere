@@ -36,6 +36,7 @@ class Vehicle extends Model
         'tracking_url',
         'manufacturing_year',
         'vehicle_create_date',
+        'is_active',
     ];
 
     protected $casts = [
@@ -44,6 +45,7 @@ class Vehicle extends Model
         'capacity' => 'integer',
         'initial_reading' => 'integer',
         'manufacturing_year' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -89,6 +91,7 @@ class Vehicle extends Model
     public static function generateVehicleNo(int $schoolId): string
     {
         $lastVehicle = self::where('school_id', $schoolId)
+            ->lockForUpdate()
             ->orderBy('id', 'desc')
             ->first();
 

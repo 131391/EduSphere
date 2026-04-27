@@ -30,6 +30,8 @@ class StudentTransportAssignment extends Model
     protected $casts = [
         'fee_per_month' => 'decimal:2',
         'status' => GeneralStatus::class,
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     /**

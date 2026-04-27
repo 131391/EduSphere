@@ -7,6 +7,7 @@ use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
 
 use App\Enums\RouteStatus;
@@ -14,10 +15,6 @@ use App\Enums\RouteStatus;
 class TransportRoute extends Model
 {
     use HasFactory, Tenantable;
-
-    // Status Constants
-    const STATUS_INACTIVE = 0;
-    const STATUS_ACTIVE = 1;
 
     protected $fillable = [
         'school_id',
@@ -49,6 +46,22 @@ class TransportRoute extends Model
     }
 
     /**
+     * Get the bus stops on this route.
+     */
+    public function busStops(): HasMany
+    {
+        return $this->hasMany(BusStop::class, 'route_id');
+    }
+
+    /**
+     * Get the student transport assignments for this route.
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(StudentTransportAssignment::class, 'route_id');
+    }
+
+    /**
      * Scope a query to only include active routes.
      */
     public function scopeActive(Builder $query): Builder
@@ -77,9 +90,6 @@ class TransportRoute extends Model
      */
     public static function getStatusLabels(): array
     {
-        return [
-            self::STATUS_INACTIVE => 'Inactive',
-            self::STATUS_ACTIVE => 'Active',
-        ];
+        return collect(RouteStatus::cases())->mapWithKeys(fn(RouteStatus $s) => [$s->value => $s->label()])->toArray();
     }
 }

@@ -9,11 +9,19 @@ use App\Models\Hostel;
 use App\Models\StudentTransportAssignment;
 use App\Models\HostelBedAssignment;
 use App\Enums\GeneralStatus;
+use App\Services\School\StudentTransportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class StudentFacilityController extends TenantController
 {
+    protected StudentTransportService $transportService;
+
+    public function __construct(StudentTransportService $transportService)
+    {
+        parent::__construct();
+        $this->transportService = $transportService;
+    }
     public function index(Request $request)
     {
         $schoolId = $this->getSchoolId();
@@ -29,24 +37,18 @@ class StudentFacilityController extends TenantController
         $this->authorizeTenant($student);
 
         $validated = $request->validate([
-            'transport_route_id' => ['required', \Illuminate\Validation\Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId())],
-            'pickup_point'       => 'nullable|string',
-            'start_date'         => 'required|date',
+            'action'             => 'required|in:assign,remove',
+            'route_id'           => ['required_if:action,assign', \Illuminate\Validation\Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId())],
+            'bus_stop_id'        => ['required_if:action,assign', \Illuminate\Validation\Rule::exists('bus_stops', 'id')->where('school_id', $this->getSchoolId())],
+            'academic_year_id'   => ['required_if:action,assign', \Illuminate\Validation\Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId())],
+            'start_date'         => 'required_if:action,assign|date',
         ]);
 
-        DB::transaction(function () use ($student, $validated) {
-            StudentTransportAssignment::where('student_id', $student->id)
-                ->where('status', GeneralStatus::Active)
-                ->update(['status' => GeneralStatus::Inactive, 'end_date' => now()]);
-
-            StudentTransportAssignment::create([
-                'school_id'  => $this->getSchoolId(),
-                'student_id' => $student->id,
-                'route_id'   => $validated['transport_route_id'],
-                'start_date' => $validated['start_date'],
-                'status'     => GeneralStatus::Active,
-            ]);
-        });
+        if ($validated['action'] === 'remove') {
+            $this->transportService->removeTransport($student);
+        } else {
+            $this->transportService->assignTransport($this->getSchool(), $student, $validated);
+        }
 
         return back()->with('success', 'Transport assigned successfully.');
     }

@@ -31,10 +31,7 @@ class TransportAttendanceController extends TenantController
         $vehicles = Vehicle::where('school_id', $schoolId)->where('is_active', true)->get();
         $academicYears = AcademicYear::where('school_id', $schoolId)->get();
         
-        $attendanceTypes = [
-            TransportAttendanceType::Pickup->value => TransportAttendanceType::Pickup->label(),
-            TransportAttendanceType::Drop->value => TransportAttendanceType::Drop->label(),
-        ];
+        $attendanceTypes = TransportAttendanceType::options();
 
         // If filtering for a specific route/vehicle to mark attendance
         $students = collect();
@@ -76,7 +73,25 @@ class TransportAttendanceController extends TenantController
                     'message' => 'Failed to mark attendance: ' . $e->getMessage()
                 ], 500);
             }
-            return back()->withError('Failed to mark attendance: ' . $e->getMessage());
+            return $this->backWithError('Failed to mark attendance: ' . $e->getMessage());
         }
+    }
+
+    public function getStudents(Request $request)
+    {
+        $schoolId = $this->getSchoolId();
+
+        $students = StudentTransportAssignment::with(['student', 'busStop'])
+            ->where('school_id', $schoolId)
+            ->where('route_id', $request->route_id)
+            ->where('academic_year_id', $request->academic_year_id)
+            ->where('status', GeneralStatus::Active)
+            ->get()
+            ->sortBy(function ($assignment) {
+                return $assignment->busStop?->distance_from_institute ?? 9999;
+            })
+            ->values();
+
+        return response()->json($students);
     }
 }

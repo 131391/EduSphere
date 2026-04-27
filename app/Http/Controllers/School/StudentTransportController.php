@@ -54,7 +54,7 @@ class StudentTransportController extends TenantController
                     'message' => 'Failed to process transport assignment: ' . $e->getMessage()
                 ], 500);
             }
-            return back()->withError('Failed to process transport assignment: ' . $e->getMessage());
+            return $this->backWithError('Failed to process transport assignment: ' . $e->getMessage());
         }
     }
 }
