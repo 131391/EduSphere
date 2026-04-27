@@ -5,6 +5,7 @@ namespace App\Http\Controllers\School\Examination;
 use App\Http\Controllers\TenantController;
 use App\Models\Grade;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 use App\Traits\HasAjaxDataTable;
 
@@ -60,13 +61,18 @@ class GradeController extends TenantController
 
     public function store(Request $request)
     {
+        $this->ensureSchoolActive();
+
         $request->validate([
             'range_start' => 'required|integer|min:0|max:100',
             'range_end' => 'required|integer|min:0|max:100|gte:range_start',
             'grade' => 'required|string|max:10',
         ]);
 
-        $school = auth()->user()->school;
+        $this->guardAgainstOverlappingGradeRange(
+            (int) $request->range_start,
+            (int) $request->range_end
+        );
 
         try {
             $grade = Grade::create([
@@ -98,6 +104,7 @@ class GradeController extends TenantController
 
     public function update(Request $request, Grade $grade)
     {
+        $this->ensureSchoolActive();
         $this->authorizeTenant($grade);
 
         $request->validate([
@@ -105,6 +112,12 @@ class GradeController extends TenantController
             'range_end' => 'required|integer|min:0|max:100|gte:range_start',
             'grade' => 'required|string|max:10',
         ]);
+
+        $this->guardAgainstOverlappingGradeRange(
+            (int) $request->range_start,
+            (int) $request->range_end,
+            $grade->id
+        );
 
         try {
             $grade->update([
@@ -135,6 +148,7 @@ class GradeController extends TenantController
 
     public function destroy(Grade $grade)
     {
+        $this->ensureSchoolActive();
         $this->authorizeTenant($grade);
         
         try {
@@ -156,6 +170,30 @@ class GradeController extends TenantController
                 ], 500);
             }
             return redirect()->route('school.examination.grades.index')->with('error', 'Failed to delete grade: ' . $e->getMessage());
+        }
+    }
+
+    protected function guardAgainstOverlappingGradeRange(int $rangeStart, int $rangeEnd, ?int $ignoreId = null): void
+    {
+        $query = Grade::where('school_id', $this->getSchoolId())
+            ->where(function ($gradeQuery) use ($rangeStart, $rangeEnd) {
+                $gradeQuery
+                    ->whereBetween('range_start', [$rangeStart, $rangeEnd])
+                    ->orWhereBetween('range_end', [$rangeStart, $rangeEnd])
+                    ->orWhere(function ($nestedQuery) use ($rangeStart, $rangeEnd) {
+                        $nestedQuery->where('range_start', '<=', $rangeStart)
+                            ->where('range_end', '>=', $rangeEnd);
+                    });
+            });
+
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'range_start' => ['This grade range overlaps with an existing grade band.'],
+            ]);
         }
     }
 }

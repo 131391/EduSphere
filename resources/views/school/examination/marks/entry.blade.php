@@ -4,16 +4,15 @@
 
 @section('content')
 <div x-data="marksGridManager()">
-    <!-- Header Section -->
     <div class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-4">
             <a href="{{ route('school.examination.marks.index') }}" class="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm group">
                 <i class="fas fa-chevron-left group-hover:-translate-x-0.5 transition-transform"></i>
             </a>
             <div>
-                <h1 class="text-2xl font-black text-gray-800 tracking-tight">{{ $exam->examType->name }} Assessment</h1>
+                <h1 class="text-2xl font-black text-gray-800 tracking-tight">{{ $exam->display_name }}</h1>
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 ml-0.5">
-                    {{ $subject->name }} &bull; {{ $class->name }} &bull; {{ $exam->month }}
+                    {{ $examSubject->resolved_name }} &bull; {{ $class->name }} &bull; {{ $exam->assessment_window }}
                 </p>
             </div>
         </div>
@@ -32,16 +31,12 @@
                 </div>
             </template>
             <div class="bg-indigo-600 px-6 py-2 rounded-2xl shadow-lg shadow-indigo-100 border border-indigo-500/20 text-center">
-                <span class="block text-[8px] font-black text-indigo-200 uppercase tracking-widest">Global Max Marks</span>
-                <div class="flex items-center justify-center gap-2">
-                    <input type="number" x-model="totalMarks" @input="validateAll()" 
-                           class="bg-transparent border-none p-0 text-white font-black text-xl w-16 text-center focus:ring-0">
-                </div>
+                <span class="block text-[8px] font-black text-indigo-200 uppercase tracking-widest">Configured Full Marks</span>
+                <div class="text-white font-black text-xl">{{ number_format($fullMarks, 0) }}</div>
             </div>
         </div>
     </div>
 
-    <!-- The Grid -->
     <div class="bg-white rounded-3xl shadow-sm border border-indigo-50 overflow-hidden">
         <form @submit.prevent="saveAllMarks" method="POST" id="marksForm" class="p-0">
             @csrf
@@ -80,10 +75,11 @@
                             </td>
                             <td class="px-8 py-5 whitespace-nowrap">
                                 <div class="relative w-36 mx-auto">
-                                    <input 
-                                        type="number" 
-                                        step="0.01" 
+                                    <input
+                                        type="number"
+                                        step="0.01"
                                         min="0"
+                                        max="{{ $fullMarks }}"
                                         x-model="scores['{{ $student->id }}'].marks_obtained"
                                         @input="validateRow('{{ $student->id }}')"
                                         class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 transition-all font-black text-gray-700 text-center text-base"
@@ -96,9 +92,10 @@
                             </td>
                             <td class="px-8 py-5 whitespace-nowrap">
                                 <div class="relative group/input">
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         x-model="scores['{{ $student->id }}'].remarks"
+                                        @input="checkModification('{{ $student->id }}')"
                                         placeholder="Add performance remarks..."
                                         class="w-full px-4 py-2.5 bg-transparent border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-slate-100 transition-all font-medium text-gray-500 placeholder:text-slate-300 group-hover:placeholder:text-slate-400"
                                     >
@@ -111,7 +108,6 @@
                 </table>
             </div>
 
-            <!-- Footer Toolbar -->
             <div class="px-10 py-8 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div class="flex items-center gap-8">
                     <div class="flex items-center gap-3">
@@ -119,9 +115,9 @@
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Integrity Validated</span>
                     </div>
                 </div>
-                
-                <button 
-                    type="submit" 
+
+                <button
+                    type="submit"
                     :disabled="submitting || hasInvalid"
                     class="btn-premium-primary min-w-[280px] bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200/50 py-4 uppercase tracking-[0.2em] text-xs font-black disabled:opacity-40 disabled:grayscale"
                 >
@@ -134,8 +130,6 @@
             </div>
         </form>
     </div>
-        </form>
-    </div>
 </div>
 
 @push('scripts')
@@ -143,53 +137,40 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('marksGridManager', () => ({
         submitting: false,
-        totalMarks: 100,
+        fullMarks: {{ json_encode((float) $fullMarks) }},
         hasInvalid: false,
+        hasChanges: false,
         scores: {
             @foreach($students as $student)
             @php $result = $results->get($student->id); @endphp
             '{{ $student->id }}': {
                 student_id: '{{ $student->id }}',
                 marks_obtained: '{{ $result ? $result->marks_obtained : '' }}',
-                remarks: '{{ $result ? $result->remarks : '' }}',
+                remarks: @js($result?->remarks ?? ''),
                 invalid: false,
                 isModified: false
             },
             @endforeach
         },
-        hasChanges: false,
-
-        validateRow(studentId) {
-            const score = parseFloat(this.scores[studentId].marks_obtained);
-            const max = parseFloat(this.totalMarks);
-            this.scores[studentId].invalid = !isNaN(score) && score > max;
-            
-            // Check for modification
-            this.checkModification(studentId);
-            this.checkGlobalValidity();
-        },
-
-        checkModification(studentId) {
-            const current = this.scores[studentId];
-            const original = this.originalScores[studentId];
-            current.isModified = current.marks_obtained != original.marks_obtained || current.remarks != original.remarks;
-            this.hasChanges = Object.values(this.scores).some(s => s.isModified);
-        },
-
         originalScores: {
             @foreach($students as $student)
             @php $result = $results->get($student->id); @endphp
             '{{ $student->id }}': {
                 marks_obtained: '{{ $result ? $result->marks_obtained : '' }}',
-                remarks: '{{ $result ? $result->remarks : '' }}'
+                remarks: @js($result?->remarks ?? '')
             },
             @endforeach
         },
 
+        init() {
+            this.validateAll();
+        },
+
         validateRow(studentId) {
             const score = parseFloat(this.scores[studentId].marks_obtained);
-            const max = parseFloat(this.totalMarks);
+            const max = parseFloat(this.fullMarks);
             this.scores[studentId].invalid = !isNaN(score) && score > max;
+            this.checkModification(studentId);
             this.checkGlobalValidity();
         },
 
@@ -197,8 +178,15 @@ document.addEventListener('alpine:init', () => {
             Object.keys(this.scores).forEach(id => this.validateRow(id));
         },
 
+        checkModification(studentId) {
+            const current = this.scores[studentId];
+            const original = this.originalScores[studentId];
+            current.isModified = current.marks_obtained != original.marks_obtained || current.remarks != original.remarks;
+            this.hasChanges = Object.values(this.scores).some(score => score.isModified);
+        },
+
         checkGlobalValidity() {
-            this.hasInvalid = Object.values(this.scores).some(s => s.invalid);
+            this.hasInvalid = Object.values(this.scores).some(score => score.invalid);
         },
 
         async saveAllMarks() {
@@ -207,11 +195,8 @@ document.addEventListener('alpine:init', () => {
 
             const payload = {
                 exam_id: '{{ $exam->id }}',
-                subject_id: '{{ $subject->id }}',
-                class_id: '{{ $class->id }}',
-                academic_year_id: '{{ $exam->academic_year_id }}',
-                total_marks: this.totalMarks,
-                marks: Object.values(this.scores)
+                exam_subject_id: '{{ $examSubject->id }}',
+                marks: Object.values(this.scores),
             };
 
             try {
@@ -224,12 +209,12 @@ document.addEventListener('alpine:init', () => {
                     },
                     body: JSON.stringify(payload)
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok) {
                     if (window.Toast) {
-                        window.Toast.fire({ icon: 'success', title: 'Registry updated successfully!' });
+                        window.Toast.fire({ icon: 'success', title: result.message || 'Registry updated successfully!' });
                     }
                     setTimeout(() => window.location.href = '{{ route('school.examination.marks.index') }}', 1000);
                 } else {

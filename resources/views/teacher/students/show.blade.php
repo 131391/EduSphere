@@ -75,7 +75,7 @@
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                     @foreach($student->results as $result)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                        <td class="px-6 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->exam)->name ?? '—' }}</td>
+                        <td class="px-6 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->exam)->display_name ?? '—' }}</td>
                         <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->subject)->name ?? '—' }}</td>
                         <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{{ $result->marks_obtained }} / {{ $result->total_marks }}</td>
                         <td class="px-4 py-3 text-center">

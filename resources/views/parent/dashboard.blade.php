@@ -119,7 +119,7 @@
                                             {{ substr($result->student_name, 0, 1) }}
                                         </div>
                                         <div>
-                                            <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ $result->exam->name ?? 'Exam' }}</p>
+                                            <p class="text-sm font-semibold text-gray-800 dark:text-white">{{ $result->exam?->display_name ?? 'Exam' }}</p>
                                             <p class="text-xs text-gray-500 dark:text-gray-400">{{ $result->student_name }} &bull; {{ $result->subject->name ?? 'Subject' }}</p>
                                         </div>
                                     </div>

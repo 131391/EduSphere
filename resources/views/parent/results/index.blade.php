@@ -71,12 +71,12 @@
         </div>
     </div>
 
-    @forelse($results as $examName => $examResults)
+    @forelse($results as $examResults)
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 bg-gray-50/50 dark:bg-gray-700/30 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <h3 class="text-base font-bold text-gray-800 dark:text-white flex items-center gap-2">
                 <i class="fas fa-file-alt text-indigo-500"></i>
-                {{ $examName }}
+                {{ $examResults->first()?->exam?->display_name ?? 'Exam' }}
             </h3>
             <span class="px-2.5 py-1 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 shadow-sm">
                 {{ $examResults->count() }} Subjects
@@ -138,4 +138,3 @@
     @endforelse
 </div>
 @endsection
-

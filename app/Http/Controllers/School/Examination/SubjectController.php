@@ -7,6 +7,7 @@ use App\Models\ClassModel;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 use App\Traits\HasAjaxDataTable;
 
@@ -89,10 +90,22 @@ class SubjectController extends TenantController
 
     public function store(Request $request)
     {
+        $this->ensureSchoolActive();
+
         $request->validate([
-            'class_id'   => 'required|exists:classes,id',
-            'subject_id' => 'required|exists:subjects,id',
-            'full_marks' => 'required|integer|min:1',
+            'class_id' => [
+                'required',
+                Rule::exists('classes', 'id')->where(fn ($query) => $query
+                    ->where('school_id', $this->getSchoolId())
+                    ->whereNull('deleted_at')),
+            ],
+            'subject_id' => [
+                'required',
+                Rule::exists('subjects', 'id')->where(fn ($query) => $query
+                    ->where('school_id', $this->getSchoolId())
+                    ->whereNull('deleted_at')),
+            ],
+            'full_marks' => 'required|integer|min:1|max:1000',
         ]);
 
         $exists = DB::table('class_subject')
@@ -107,8 +120,10 @@ class SubjectController extends TenantController
         }
 
         try {
-            $class = ClassModel::findOrFail($request->class_id);
-            $class->subjects()->attach($request->subject_id, [
+            $class = ClassModel::where('school_id', $this->getSchoolId())->findOrFail($request->class_id);
+            $subject = Subject::where('school_id', $this->getSchoolId())->findOrFail($request->subject_id);
+
+            $class->subjects()->attach($subject->id, [
                 'full_marks' => $request->full_marks,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -123,10 +138,23 @@ class SubjectController extends TenantController
 
     public function destroy($id)
     {
+        $this->ensureSchoolActive();
+
         try {
-            // Scope to school via the junction table join if needed, but here ID is primary key of pivot if using that, 
-            // but the join in index uses class_subject.id.
-            DB::table('class_subject')->where('id', $id)->delete();
+            $assignment = DB::table('class_subject')
+                ->join('classes', 'class_subject.class_id', '=', 'classes.id')
+                ->join('subjects', 'class_subject.subject_id', '=', 'subjects.id')
+                ->where('class_subject.id', $id)
+                ->where('classes.school_id', $this->getSchoolId())
+                ->where('subjects.school_id', $this->getSchoolId())
+                ->select('class_subject.id')
+                ->first();
+
+            if (!$assignment) {
+                abort(404, 'Subject assignment not found.');
+            }
+
+            DB::table('class_subject')->where('id', $assignment->id)->delete();
             
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json([

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Parent;
 
+use App\Enums\ExamStatus;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,15 @@ class DashboardController extends Controller
         }
 
         $children = $parentProfile->students()
-            ->with(['class', 'section', 'attendance', 'fees.feeName', 'results.exam', 'results.subject'])
+            ->with([
+                'class',
+                'section',
+                'attendance',
+                'fees.feeName',
+                'results' => fn ($query) => $query
+                    ->whereHas('exam', fn ($examQuery) => $examQuery->where('status', ExamStatus::Completed))
+                    ->with(['exam', 'subject']),
+            ])
             ->get();
 
         $stats = [
@@ -60,4 +69,3 @@ class DashboardController extends Controller
         return view('parent.dashboard', compact('parentProfile', 'children', 'stats'));
     }
 }
-

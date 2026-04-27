@@ -1,6 +1,6 @@
 @extends('layouts.school')
 
-@section('title', 'Tabulation Matrix - ' . $exam->examType->name)
+@section('title', 'Tabulation Matrix - ' . $exam->display_name)
 
 @section('content')
 <div class="mb-8 flex flex-col md:flex-row items-center justify-between gap-4 no-print">
@@ -11,7 +11,7 @@
         <div>
             <h1 class="text-2xl font-black text-gray-800 tracking-tight">Consolidated Tabulation Sheet</h1>
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 ml-0.5">
-                {{ $exam->examType->name }} &bull; {{ $exam->class->name }} &bull; {{ $exam->academicYear->name }}
+                {{ $exam->display_name }} &bull; {{ $exam->class->name }} &bull; {{ $exam->academicYear->name }}
             </p>
         </div>
     </div>
@@ -31,7 +31,7 @@
             <thead>
                 <!-- Top Header: Info -->
                 <tr class="bg-indigo-600 text-white hidden print:table-row">
-                    <th colspan="{{ 3 + $subjects->count() + 3 }}" class="px-8 py-6 text-center">
+                    <th colspan="{{ 3 + $examSubjects->count() + 3 }}" class="px-8 py-6 text-center">
                         <div class="text-2xl font-black">{{ auth()->user()->school->name }}</div>
                         <div class="text-[10px] uppercase tracking-[0.3em] font-bold mt-1 opacity-70">Official Result Tabulation Register – {{ $exam->academicYear->name }}</div>
                     </th>
@@ -41,14 +41,17 @@
                 <tr class="bg-gray-50/80 border-b border-gray-100">
                     <th rowspan="2" class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-r border-gray-100">Roll/SR</th>
                     <th rowspan="2" class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-r border-gray-100">Student Identity</th>
-                    <th colspan="{{ $subjects->count() }}" class="px-4 py-3 text-center text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] bg-indigo-50/30 border-b border-indigo-100">Subject-wise Score Analysis</th>
+                    <th colspan="{{ $examSubjects->count() }}" class="px-4 py-3 text-center text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] bg-indigo-50/30 border-b border-indigo-100">Subject-wise Score Analysis</th>
                     <th rowspan="2" class="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-l border-gray-100">Agg. Total</th>
                     <th rowspan="2" class="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-l border-gray-100">Pct %</th>
                     <th rowspan="2" class="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border-l border-gray-100">Grade</th>
                 </tr>
                 <tr class="bg-gray-50/30 border-b border-gray-100">
-                    @foreach($subjects as $subject)
-                        <th class="px-3 py-3 text-center text-[9px] font-black text-gray-500 uppercase tracking-tighter border-r border-gray-100 min-w-[100px]">{{ $subject->name }}</th>
+                    @foreach($examSubjects as $examSubject)
+                        <th class="px-3 py-3 text-center text-[9px] font-black text-gray-500 uppercase tracking-tighter border-r border-gray-100 min-w-[100px]">
+                            {{ $examSubject->resolved_name }}
+                            <span class="block text-[8px] text-gray-300 normal-case">/ {{ number_format($examSubject->full_marks, 0) }}</span>
+                        </th>
                     @endforeach
                 </tr>
             </thead>
@@ -72,8 +75,8 @@
                         </div>
                     </td>
                     
-                    @foreach($subjects as $subject)
-                    @php $res = $studentResults->where('subject_id', $subject->id)->first(); @endphp
+                    @foreach($examSubjects as $examSubject)
+                    @php $res = $studentResults->where('subject_id', $examSubject->subject_id)->first(); @endphp
                     <td class="px-3 py-4 text-center border-r border-gray-50">
                         @if($res)
                             <div class="flex flex-col items-center">
@@ -121,7 +124,7 @@
             <div class="w-px h-8 bg-white/20"></div>
             <div class="flex flex-col">
                 <span class="text-[10px] font-black opacity-60 uppercase tracking-widest">Assessments</span>
-                <span class="text-lg font-black">{{ $subjects->count() }} Subjects</span>
+                <span class="text-lg font-black">{{ $examSubjects->count() }} Subjects</span>
             </div>
         </div>
         

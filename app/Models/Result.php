@@ -45,12 +45,12 @@ class Result extends Model
 
     public function exam()
     {
-        return $this->belongsTo(Exam::class);
+        return $this->belongsTo(Exam::class)->withTrashed();
     }
 
     public function subject()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(Subject::class)->withTrashed();
     }
 
     public function class()
@@ -63,4 +63,3 @@ class Result extends Model
         return $this->belongsTo(AcademicYear::class);
     }
 }
-

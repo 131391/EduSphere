@@ -25,11 +25,11 @@
         </div>
     </div>
 
-    @forelse($results as $examName => $examResults)
+    @forelse($results as $examResults)
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <h3 class="text-base font-semibold text-gray-800 dark:text-white">
-                <i class="fas fa-file-alt text-indigo-500 mr-2"></i>{{ $examName }}
+                <i class="fas fa-file-alt text-indigo-500 mr-2"></i>{{ $examResults->first()?->exam?->display_name ?? 'Exam' }}
             </h3>
             @if($examResults->first()->exam)
             <a href="{{ route('student.results.show', $examResults->first()->exam->id) }}"

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\School\Examination;
 use App\Http\Controllers\TenantController;
 use App\Models\ExamType;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 use App\Traits\HasAjaxDataTable;
 
@@ -58,8 +59,16 @@ class ExamTypeController extends TenantController
 
     public function store(Request $request)
     {
+        $this->ensureSchoolActive();
+
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('exam_types', 'name')->where(fn ($query) => $query
+                    ->where('school_id', $this->getSchoolId())),
+            ],
         ]);
 
         try {
@@ -90,7 +99,19 @@ class ExamTypeController extends TenantController
 
     public function update(Request $request, ExamType $examType)
     {
+        $this->ensureSchoolActive();
         $this->authorizeTenant($examType);
+
+        $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('exam_types', 'name')
+                    ->where(fn ($query) => $query->where('school_id', $this->getSchoolId()))
+                    ->ignore($examType->id),
+            ],
+        ]);
 
         try {
             $examType->update([
@@ -119,7 +140,21 @@ class ExamTypeController extends TenantController
 
     public function destroy(ExamType $examType)
     {
+        $this->ensureSchoolActive();
         $this->authorizeTenant($examType);
+
+        if (\App\Models\Exam::withTrashed()->where('exam_type_id', $examType->id)->exists()) {
+            $message = 'This exam type is already used by one or more exams and cannot be deleted.';
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()->route('school.examination.exam-types.index')->with('error', $message);
+        }
         
         try {
             $examType->delete();

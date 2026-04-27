@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Parent;
 
+use App\Enums\ExamStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Result;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ class ResultController extends Controller
 
         if ($selectedChildId && $children->contains('id', $selectedChildId)) {
             $allResults = Result::where('student_id', $selectedChildId)
+                ->whereHas('exam', fn ($query) => $query->where('status', ExamStatus::Completed))
                 ->with(['exam', 'subject'])
                 ->orderByDesc('created_at')
                 ->get();
@@ -42,7 +44,7 @@ class ResultController extends Controller
                 $stats['best_subject'] = optional($bestResult->subject)->name ?? 'N/A';
             }
 
-            $results = $allResults->groupBy(fn($r) => optional($r->exam)->name ?? 'Unknown Exam');
+            $results = $allResults->groupBy('exam_id');
         }
 
         return view('parent.results.index', compact('children', 'results', 'selectedChildId', 'parentProfile', 'stats'));

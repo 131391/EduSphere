@@ -1,6 +1,6 @@
 @extends('layouts.student')
 
-@section('title', 'Result Detail — ' . $exam->name)
+@section('title', 'Result Detail — ' . $exam->display_name)
 @section('page-title', 'Result Detail')
 
 @section('content')
@@ -14,7 +14,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ $exam->name }}</h2>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">{{ $exam->display_name }}</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     {{ $student->full_name }} &middot;
                     {{ optional($student->class)->name }} {{ optional($student->section)->name }}

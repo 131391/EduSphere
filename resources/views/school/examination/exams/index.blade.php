@@ -43,7 +43,7 @@
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
                         <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Active Roster</h2>
-                        <x-table.search placeholder="Search by month or type..." />
+                        <x-table.search placeholder="Search by exam, class, or window..." />
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -91,7 +91,7 @@
                             <x-table.sort-header column="created_at" label="Exam Particulars" sort-var="sort" direction-var="direction" />
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Target Audience</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                            <x-table.sort-header column="month" label="Assessment Window" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="start_date" label="Assessment Window" sort-var="sort" direction-var="direction" />
                             <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-40">Actions</th>
                         </tr>
                     </thead>
@@ -105,7 +105,7 @@
                                             <i class="fas fa-file-signature text-sm"></i>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['exam_type'] }}</div>
+                                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['assessment_name'] }}</div>
                                             <div class="text-[10px] font-bold text-indigo-500 uppercase tracking-tighter italic">Created: {{ $row['created_at'] }}</div>
                                         </div>
                                     </div>
@@ -122,7 +122,7 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap font-bold text-xs text-gray-600 dark:text-gray-400">
-                                    {{ $row['month'] }}
+                                    {{ $row['assessment_window'] }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
@@ -143,7 +143,7 @@
                                             <i class="fas fa-file-signature text-sm"></i>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.exam_type"></div>
+                                            <div class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.assessment_name"></div>
                                             <div class="text-[10px] font-bold text-indigo-500 uppercase tracking-tighter italic" x-text="'Created: ' + row.created_at"></div>
                                         </div>
                                     </div>
@@ -165,7 +165,7 @@
                                         x-text="row.status">
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap font-bold text-xs text-gray-600 dark:text-gray-400" x-text="row.month"></td>
+                                <td class="px-6 py-4 whitespace-nowrap font-bold text-xs text-gray-600 dark:text-gray-400" x-text="row.assessment_window"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <a :href="'/school/examination/exams/' + row.id + '/tabulate'" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm" title="Tabulation Sheet"><i class="fas fa-table text-xs"></i></a>
@@ -231,25 +231,40 @@
                     </div>
                 </div>
 
-                <!-- Month Selection -->
-                <div class="space-y-2 mb-8">
-                    <label class="modal-label-premium">Assessment Window (Month) <span class="text-red-600 font-bold">*</span></label>
-                    <div class="relative group">
-                        <select x-model="formData.month" @change="clearError('month')"
-                            class="modal-input-premium appearance-none pr-10 shadow-sm"
-                            :class="errors.month ? 'border-red-500' : 'border-slate-200'">
-                            <option value="">-- Select Month --</option>
-                            @foreach($months as $month)
-                                <option value="{{ $month }}">{{ $month }}</option>
-                            @endforeach
-                        </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                            <i class="fas fa-calendar-alt text-sm"></i>
-                        </div>
-                    </div>
-                    <template x-if="errors.month">
-                        <p class="modal-error-message" x-text="errors.month[0]"></p>
+                <div class="space-y-2 mb-6">
+                    <label class="modal-label-premium">Exam Name <span class="text-slate-400 font-medium">(Optional)</span></label>
+                    <input x-model="formData.name" @input="clearError('name')"
+                        type="text"
+                        class="modal-input-premium"
+                        :class="errors.name ? 'border-red-500' : 'border-slate-200'"
+                        placeholder="Leave blank to auto-generate from type and schedule">
+                    <template x-if="errors.name">
+                        <p class="modal-error-message" x-text="errors.name[0]"></p>
                     </template>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Start Date <span class="text-red-600 font-bold">*</span></label>
+                        <input x-model="formData.start_date" @input="clearError('start_date')"
+                            type="date"
+                            class="modal-input-premium"
+                            :class="errors.start_date ? 'border-red-500' : 'border-slate-200'">
+                        <template x-if="errors.start_date">
+                            <p class="modal-error-message" x-text="errors.start_date[0]"></p>
+                        </template>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">End Date <span class="text-red-600 font-bold">*</span></label>
+                        <input x-model="formData.end_date" @input="clearError('end_date')"
+                            type="date"
+                            class="modal-input-premium"
+                            :class="errors.end_date ? 'border-red-500' : 'border-slate-200'">
+                        <template x-if="errors.end_date">
+                            <p class="modal-error-message" x-text="errors.end_date[0]"></p>
+                        </template>
+                    </div>
                 </div>
 
                 <!-- Guidance Notification -->
@@ -258,9 +273,9 @@
                         <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-[13px] font-bold text-slate-900 dark:text-gray-100 leading-tight">Timeline Locking Notification</span>
+                        <span class="text-[13px] font-bold text-slate-900 dark:text-gray-100 leading-tight">Snapshot Protection Enabled</span>
                         <p class="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
-                            Scheduling creates a <span class="text-indigo-600 italic underline decoration-indigo-100">centralized session</span>. Individual subject marks can be entered in the assessment grid.
+                            Scheduling captures the class subject list and full marks at that moment, so later curriculum edits do not alter historical mark entry or tabulation.
                         </p>
                     </div>
                 </div>
@@ -292,7 +307,9 @@
                     formData: {
                         exam_type_id: '',
                         class_id: '',
-                        month: ''
+                        name: '',
+                        start_date: '',
+                        end_date: ''
                     },
 
                     clearError(field) {
@@ -305,7 +322,7 @@
 
                     resetForm() {
                         this.errors = {};
-                        this.formData = { exam_type_id: '', class_id: '', month: '' };
+                        this.formData = { exam_type_id: '', class_id: '', name: '', start_date: '', end_date: '' };
                     },
 
                     openAddModal() {
@@ -336,7 +353,11 @@
                                 this.$dispatch('close-modal', 'exam-modal');
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
-                                this.errors = result.errors || {};
+                                if (result.errors && Object.keys(result.errors).length > 0) {
+                                    this.errors = result.errors;
+                                } else {
+                                    throw new Error(result.message || 'Scheduling failed');
+                                }
                             } else {
                                 throw new Error(result.message || 'Scheduling failed');
                             }

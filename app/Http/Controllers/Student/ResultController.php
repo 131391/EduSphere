@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Student;
 
+use App\Enums\ExamStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Result;
 use App\Models\Exam;
+use App\Models\Result;
 use Illuminate\Support\Facades\Auth;
 
 class ResultController extends Controller
@@ -20,16 +21,26 @@ class ResultController extends Controller
 
         $results = Result::where('student_id', $student->id)
             ->where('school_id', $student->school_id)
+            ->whereHas('exam', fn ($query) => $query->where('status', ExamStatus::Completed))
             ->with(['exam', 'subject'])
             ->orderByDesc('created_at')
             ->get()
-            ->groupBy(fn($r) => optional($r->exam)->name ?? 'Unknown Exam');
+            ->groupBy('exam_id');
 
         $summary = [
             'total_exams' => $results->count(),
-            'average'     => round((float) Result::where('student_id', $student->id)->avg('percentage'), 2),
-            'highest'     => round((float) Result::where('student_id', $student->id)->max('percentage'), 2),
-            'lowest'      => round((float) Result::where('student_id', $student->id)->min('percentage'), 2),
+            'average' => round((float) Result::where('student_id', $student->id)
+                ->where('school_id', $student->school_id)
+                ->whereHas('exam', fn ($query) => $query->where('status', ExamStatus::Completed))
+                ->avg('percentage'), 2),
+            'highest' => round((float) Result::where('student_id', $student->id)
+                ->where('school_id', $student->school_id)
+                ->whereHas('exam', fn ($query) => $query->where('status', ExamStatus::Completed))
+                ->max('percentage'), 2),
+            'lowest' => round((float) Result::where('student_id', $student->id)
+                ->where('school_id', $student->school_id)
+                ->whereHas('exam', fn ($query) => $query->where('status', ExamStatus::Completed))
+                ->min('percentage'), 2),
         ];
 
         return view('student.results.index', compact('results', 'summary', 'student'));
@@ -44,7 +55,9 @@ class ResultController extends Controller
                 ->with('error', 'Student profile not found.');
         }
 
-        $exam = Exam::where('school_id', $student->school_id)->findOrFail($id);
+        $exam = Exam::where('school_id', $student->school_id)
+            ->where('status', ExamStatus::Completed)
+            ->findOrFail($id);
 
         $results = Result::where('student_id', $student->id)
             ->where('exam_id', $exam->id)
