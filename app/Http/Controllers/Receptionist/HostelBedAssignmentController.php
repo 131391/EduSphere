@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Receptionist;
 
 use App\Http\Controllers\TenantController;
+use App\Http\Requests\Receptionist\StoreHostelBedAssignmentRequest;
+use App\Http\Requests\Receptionist\UpdateHostelBedAssignmentRequest;
+use App\Services\School\StudentHostelService;
 use App\Models\HostelBedAssignment;
 use App\Models\Student;
 use App\Models\Hostel;
@@ -17,6 +20,14 @@ use Illuminate\Validation\Rule;
 class HostelBedAssignmentController extends TenantController
 {
     use HasAjaxDataTable;
+
+    protected StudentHostelService $hostelService;
+
+    public function __construct(StudentHostelService $hostelService)
+    {
+        parent::__construct();
+        $this->hostelService = $hostelService;
+    }
 
     /**
      * Display a listing of hostel bed assignments.
@@ -134,76 +145,20 @@ class HostelBedAssignmentController extends TenantController
     /**
      * Store a newly created hostel bed assignment.
      */
-    public function store(Request $request)
+    public function store(StoreHostelBedAssignmentRequest $request)
     {
         try {
-            $validated = $request->validate([
-                'student_id' => 'required|exists:students,id',
-                'hostel_id' => 'required|exists:hostels,id',
-                'hostel_floor_id' => 'required|exists:hostel_floors,id',
-                'hostel_room_id' => 'required|exists:hostel_rooms,id',
-                'bed_no' => 'nullable|string|max:255',
-                'rent' => 'nullable|numeric|min:0',
-                'hostel_assign_date' => 'nullable|date',
-                'starting_month' => 'nullable|string|max:255',
-            ]);
-
+            $validated = $request->validated();
             $schoolId = $this->getSchoolId();
-            
-            // Verify student belongs to same school
-            $student = Student::where('id', $validated['student_id'])->where('school_id', $schoolId)->first();
-            if (!$student) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid student node',
-                    'errors' => ['student_id' => ['The selected student node resides outside authorized perimeter.']]
-                ], 422);
-            }
 
-            // Verify hostel belongs to same school
-            $hostel = Hostel::where('id', $validated['hostel_id'])->where('school_id', $schoolId)->first();
-            if (!$hostel) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid hostel resource',
-                    'errors' => ['hostel_id' => ['Unauthorized hostel selection.']]
-                ], 422);
-            }
-
-            // Verify floor belongs to same school and hostel
-            $floor = HostelFloor::where('id', $validated['hostel_floor_id'])
-                ->where('school_id', $schoolId)
-                ->where('hostel_id', $validated['hostel_id'])
-                ->first();
-                
-            if (!$floor) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Structural anomaly',
-                    'errors' => ['hostel_floor_id' => ['The selected floor level does not belong to the selected hostel block.']]
-                ], 422);
-            }
-
-            // Verify room belongs to same school, hostel, and floor
-            $room = HostelRoom::where('id', $validated['hostel_room_id'])
-                ->where('school_id', $schoolId)
-                ->where('hostel_id', $validated['hostel_id'])
-                ->where('hostel_floor_id', $validated['hostel_floor_id'])
-                ->first();
-                
-            if (!$room) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unit mismatch',
-                    'errors' => ['hostel_room_id' => ['The selected residential unit does not map to the selected floor hierarchy.']]
-                ], 422);
-            }
+            $student = Student::where('id', $validated['student_id'])->where('school_id', $schoolId)->firstOrFail();
 
             // Check if student already has an active assignment
             $existingAssignment = HostelBedAssignment::where('student_id', $validated['student_id'])
                 ->whereNull('deleted_at')
+                ->where('status', \App\Enums\GeneralStatus::Active)
                 ->first();
-                
+
             if ($existingAssignment) {
                 return response()->json([
                     'success' => false,
@@ -212,9 +167,8 @@ class HostelBedAssignmentController extends TenantController
                 ], 422);
             }
 
-            $validated['school_id'] = $schoolId;
+            $this->hostelService->assignHostel($this->getSchool(), $student, $validated);
 
-            HostelBedAssignment::create($validated);
             return response()->json([
                 'success' => true,
                 'message' => 'Residential unit assigned successfully to ' . $student->full_name
@@ -236,79 +190,23 @@ class HostelBedAssignmentController extends TenantController
     /**
      * Update the specified hostel bed assignment.
      */
-    public function update(Request $request, HostelBedAssignment $hostelBedAssignment)
+    public function update(UpdateHostelBedAssignmentRequest $request, HostelBedAssignment $hostelBedAssignment)
     {
         $this->authorizeTenant($hostelBedAssignment);
 
         try {
-            $validated = $request->validate([
-                'student_id' => 'required|exists:students,id',
-                'hostel_id' => 'required|exists:hostels,id',
-                'hostel_floor_id' => 'required|exists:hostel_floors,id',
-                'hostel_room_id' => 'required|exists:hostel_rooms,id',
-                'bed_no' => 'nullable|string|max:255',
-                'rent' => 'nullable|numeric|min:0',
-                'hostel_assign_date' => 'nullable|date',
-                'starting_month' => 'nullable|string|max:255',
-            ]);
-
+            $validated = $request->validated();
             $schoolId = $this->getSchoolId();
-            
-            // Verify student belongs to same school
-            $student = Student::where('id', $validated['student_id'])->where('school_id', $schoolId)->first();
-            if (!$student) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid student node',
-                    'errors' => ['student_id' => ['The selected student node resides outside authorized perimeter.']]
-                ], 422);
-            }
 
-            // Verify hostel belongs to same school
-            $hostel = Hostel::where('id', $validated['hostel_id'])->where('school_id', $schoolId)->first();
-            if (!$hostel) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid hostel resource',
-                    'errors' => ['hostel_id' => ['Unauthorized hostel selection.']]
-                ], 422);
-            }
-
-            // Verify floor belongs to same school and hostel
-            $floor = HostelFloor::where('id', $validated['hostel_floor_id'])
-                ->where('school_id', $schoolId)
-                ->where('hostel_id', $validated['hostel_id'])
-                ->first();
-                
-            if (!$floor) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Structural anomaly',
-                    'errors' => ['hostel_floor_id' => ['The selected floor level does not belong to the selected hostel block.']]
-                ], 422);
-            }
-
-            // Verify room belongs to same school, hostel, and floor
-            $room = HostelRoom::where('id', $validated['hostel_room_id'])
-                ->where('school_id', $schoolId)
-                ->where('hostel_id', $validated['hostel_id'])
-                ->where('hostel_floor_id', $validated['hostel_floor_id'])
-                ->first();
-                
-            if (!$room) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unit mismatch',
-                    'errors' => ['hostel_room_id' => ['The selected residential unit does not map to the selected floor hierarchy.']]
-                ], 422);
-            }
+            $student = Student::where('id', $validated['student_id'])->where('school_id', $schoolId)->firstOrFail();
 
             // Check if another student already has an active assignment for this hostel (excluding current)
             $existingAssignment = HostelBedAssignment::where('student_id', $validated['student_id'])
                 ->where('id', '!=', $hostelBedAssignment->id)
                 ->whereNull('deleted_at')
+                ->where('status', \App\Enums\GeneralStatus::Active)
                 ->first();
-                
+
             if ($existingAssignment) {
                 return response()->json([
                     'success' => false,
@@ -317,7 +215,11 @@ class HostelBedAssignmentController extends TenantController
                 ], 422);
             }
 
-            $hostelBedAssignment->update($validated);
+            // We do a manual update here because the service handles *new* assignments
+            \Illuminate\Support\Facades\DB::transaction(function () use ($hostelBedAssignment, $validated) {
+                $hostelBedAssignment->update($validated);
+            });
+
             return response()->json([
                 'success' => true,
                 'message' => 'Residential assignment updated successfully.'

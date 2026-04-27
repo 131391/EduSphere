@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Receptionist;
 
 use App\Http\Controllers\TenantController;
+use App\Http\Requests\Receptionist\StoreHostelAttendanceRequest;
 use App\Models\HostelAttendance;
 use App\Models\HostelBedAssignment;
 use App\Models\Hostel;
@@ -40,8 +41,6 @@ class HostelAttendanceController extends TenantController
                 ->where('is_present', false)
                 ->count(),
         ];
-
-        $hostels = Hostel::where('school_id', $schoolId)->orderBy('hostel_name')->get();
 
         return view('receptionist.hostel-attendance.index', compact('hostels', 'stats'));
     }
@@ -109,42 +108,19 @@ class HostelAttendanceController extends TenantController
         }
     }
 
-    /**
-     * Store hostel attendance records (AJAX).
-     */
-    public function store(Request $request)
+    public function store(StoreHostelAttendanceRequest $request)
     {
         $schoolId = $this->getSchoolId();
-
-        // Validate — ValidationException is automatically converted to a 422 JSON response
-        // by Laravel when the request expects JSON (Accept: application/json).
-        $validated = $request->validate([
-            'hostel_id'                    => [
-                'required',
-                \Illuminate\Validation\Rule::exists('hostels', 'id')->where('school_id', $schoolId),
-            ],
-            'attendance_date'              => 'required|date|before_or_equal:today',
-            'students'                     => 'required|array|min:1',
-            'students.*.student_id'        => [
-                'required',
-                \Illuminate\Validation\Rule::exists('students', 'id')->where('school_id', $schoolId),
-            ],
-            'students.*.is_present'        => 'required|boolean',
-            'students.*.remarks'           => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         // Verify all submitted students are actually assigned to this hostel.
-        // Cast to int on both sides — pluck() returns integers from DB, submitted
-        // values may arrive as strings depending on JSON encoding.
-        $studentIds       = array_map('intval', collect($validated['students'])->pluck('student_id')->toArray());
-        $validAssignments = array_map('intval', HostelBedAssignment::where('school_id', $schoolId)
+        $studentIds = collect($validated['students'])->pluck('student_id')->toArray();
+        $validAssignmentsCount = HostelBedAssignment::where('school_id', $schoolId)
             ->where('hostel_id', $validated['hostel_id'])
             ->whereIn('student_id', $studentIds)
-            ->pluck('student_id')
-            ->toArray());
+            ->count();
 
-        $invalidStudents = array_diff($studentIds, $validAssignments);
-        if (!empty($invalidStudents)) {
+        if ($validAssignmentsCount !== count(array_unique($studentIds))) {
             return response()->json([
                 'success' => false,
                 'message' => 'Some students are not assigned to the selected hostel.',
@@ -152,8 +128,7 @@ class HostelAttendanceController extends TenantController
             ], 422);
         }
 
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () use ($validated, $schoolId) {
             foreach ($validated['students'] as $studentData) {
                 HostelAttendance::updateOrCreate(
                     [
@@ -170,23 +145,11 @@ class HostelAttendanceController extends TenantController
                 );
             }
 
-            DB::commit();
-
             return response()->json([
                 'success' => true,
                 'message' => 'Attendance saved for ' . count($validated['students']) . ' residents.',
             ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Hostel attendance store failed', [
-                'school_id' => $schoolId,
-                'error'     => $e->getMessage(),
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to save attendance: ' . $e->getMessage(),
-            ], 500);
-        }
+        });
     }
 
     /**

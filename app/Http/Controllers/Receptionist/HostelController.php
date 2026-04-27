@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Receptionist;
 
 use App\Http\Controllers\TenantController;
+use App\Http\Requests\Receptionist\StoreHostelRequest;
+use App\Http\Requests\Receptionist\UpdateHostelRequest;
 use App\Models\Hostel;
 use App\Models\HostelFloor;
 use App\Models\HostelRoom;
 use App\Models\HostelBedAssignment;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HostelController extends TenantController
 {
@@ -95,31 +98,21 @@ class HostelController extends TenantController
         return response()->stream($callback, 200, $headers);
     }
 
-    public function store(Request $request)
+    public function store(StoreHostelRequest $request)
     {
         try {
-            $validated = $request->validate([
-                'hostel_name' => 'required|string|max:255',
-                'hostel_incharge' => 'nullable|string|max:255',
-                'capability' => 'nullable|integer|min:1',
-                'hostel_create_date' => 'nullable|date',
-            ]);
-
+            $validated = $request->validated();
             $validated['school_id'] = $this->getSchoolId();
 
-            $hostel = Hostel::create($validated);
+            $hostel = DB::transaction(function () use ($validated) {
+                return Hostel::create($validated);
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Hostel added successfully.',
                 'data' => $hostel,
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please correct the highlighted fields.',
-                'errors' => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -128,31 +121,22 @@ class HostelController extends TenantController
         }
     }
 
-    public function update(Request $request, Hostel $hostel)
+    public function update(UpdateHostelRequest $request, Hostel $hostel)
     {
         $this->authorizeTenant($hostel);
 
         try {
-            $validated = $request->validate([
-                'hostel_name' => 'required|string|max:255',
-                'hostel_incharge' => 'nullable|string|max:255',
-                'capability' => 'nullable|integer|min:1',
-                'hostel_create_date' => 'nullable|date',
-            ]);
+            $validated = $request->validated();
 
-            $hostel->update($validated);
+            DB::transaction(function () use ($hostel, $validated) {
+                $hostel->update($validated);
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Hostel updated successfully.',
                 'data' => $hostel,
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please correct the highlighted fields.',
-                'errors' => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

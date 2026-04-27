@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Receptionist;
 
 use App\Http\Controllers\TenantController;
+use App\Http\Requests\Receptionist\StoreHostelRoomRequest;
+use App\Http\Requests\Receptionist\UpdateHostelRoomRequest;
 use App\Models\HostelRoom;
 use App\Models\Hostel;
 use App\Models\HostelFloor;
@@ -11,6 +13,7 @@ use App\Enums\YesNo;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class HostelRoomController extends TenantController
 {
@@ -125,61 +128,26 @@ class HostelRoomController extends TenantController
         return response()->stream($callback, 200, $headers);
     }
 
-    public function store(Request $request)
+    public function store(StoreHostelRoomRequest $request)
     {
         try {
-            $validated = $request->validate([
-                'hostel_id' => 'required|exists:hostels,id',
-                'hostel_floor_id' => 'required|exists:hostel_floors,id',
-                'room_name' => 'required|string|max:255',
-                'ac' => ['nullable', 'integer', Rule::enum(YesNo::class)],
-                'cooler' => ['nullable', 'integer', Rule::enum(YesNo::class)],
-                'fan' => ['nullable', 'integer', Rule::enum(YesNo::class)],
-                'room_create_date' => 'nullable|date',
-            ]);
-
+            $validated = $request->validated();
             $schoolId = $this->getSchoolId();
-
-            $hostel = Hostel::find($validated['hostel_id']);
-            if (!$hostel || $hostel->school_id !== $schoolId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please correct the highlighted fields.',
-                    'errors' => ['hostel_id' => ['Please select a valid hostel.']],
-                ], 422);
-            }
-
-            $floor = HostelFloor::where('id', $validated['hostel_floor_id'])
-                ->where('school_id', $schoolId)
-                ->where('hostel_id', $validated['hostel_id'])
-                ->first();
-
-            if (!$floor) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please correct the highlighted fields.',
-                    'errors' => ['hostel_floor_id' => ['The selected floor does not belong to the chosen hostel.']],
-                ], 422);
-            }
 
             $validated['ac'] = $validated['ac'] ?? YesNo::No->value;
             $validated['cooler'] = $validated['cooler'] ?? YesNo::No->value;
             $validated['fan'] = $validated['fan'] ?? YesNo::No->value;
             $validated['school_id'] = $schoolId;
 
-            $room = HostelRoom::create($validated);
+            $room = DB::transaction(function () use ($validated) {
+                return HostelRoom::create($validated);
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Room added successfully.',
                 'data' => $room->load(['hostel', 'floor']),
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please correct the highlighted fields.',
-                'errors' => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -188,62 +156,26 @@ class HostelRoomController extends TenantController
         }
     }
 
-    public function update(Request $request, HostelRoom $hostelRoom)
+    public function update(UpdateHostelRoomRequest $request, HostelRoom $hostelRoom)
     {
         $this->authorizeTenant($hostelRoom);
 
         try {
-            $validated = $request->validate([
-                'hostel_id' => 'required|exists:hostels,id',
-                'hostel_floor_id' => 'required|exists:hostel_floors,id',
-                'room_name' => 'required|string|max:255',
-                'ac' => ['nullable', 'integer', Rule::enum(YesNo::class)],
-                'cooler' => ['nullable', 'integer', Rule::enum(YesNo::class)],
-                'fan' => ['nullable', 'integer', Rule::enum(YesNo::class)],
-                'room_create_date' => 'nullable|date',
-            ]);
-
-            $schoolId = $this->getSchoolId();
-
-            $hostel = Hostel::find($validated['hostel_id']);
-            if (!$hostel || $hostel->school_id !== $schoolId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please correct the highlighted fields.',
-                    'errors' => ['hostel_id' => ['Please select a valid hostel.']],
-                ], 422);
-            }
-
-            $floor = HostelFloor::where('id', $validated['hostel_floor_id'])
-                ->where('school_id', $schoolId)
-                ->where('hostel_id', $validated['hostel_id'])
-                ->first();
-
-            if (!$floor) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please correct the highlighted fields.',
-                    'errors' => ['hostel_floor_id' => ['The selected floor does not belong to the chosen hostel.']],
-                ], 422);
-            }
+            $validated = $request->validated();
 
             $validated['ac'] = $validated['ac'] ?? YesNo::No->value;
             $validated['cooler'] = $validated['cooler'] ?? YesNo::No->value;
             $validated['fan'] = $validated['fan'] ?? YesNo::No->value;
 
-            $hostelRoom->update($validated);
+            DB::transaction(function () use ($hostelRoom, $validated) {
+                $hostelRoom->update($validated);
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Room updated successfully.',
                 'data' => $hostelRoom->load(['hostel', 'floor']),
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please correct the highlighted fields.',
-                'errors' => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

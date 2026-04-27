@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Receptionist;
 
 use App\Http\Controllers\TenantController;
+use App\Http\Requests\Receptionist\StoreHostelFloorRequest;
+use App\Http\Requests\Receptionist\UpdateHostelFloorRequest;
 use App\Models\HostelFloor;
 use App\Models\Hostel;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HostelFloorController extends TenantController
 {
@@ -101,42 +104,21 @@ class HostelFloorController extends TenantController
         return response()->stream($callback, 200, $headers);
     }
 
-    public function store(Request $request)
+    public function store(StoreHostelFloorRequest $request)
     {
         try {
-            $validated = $request->validate([
-                'hostel_id' => 'required|exists:hostels,id',
-                'floor_name' => 'required|string|max:255',
-                'total_room' => 'nullable|integer|min:0',
-                'floor_create_date' => 'nullable|date',
-            ]);
+            $validated = $request->validated();
+            $validated['school_id'] = $this->getSchoolId();
 
-            $schoolId = $this->getSchoolId();
-
-            $hostel = Hostel::find($validated['hostel_id']);
-            if (!$hostel || $hostel->school_id !== $schoolId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please correct the highlighted fields.',
-                    'errors' => ['hostel_id' => ['Please select a valid hostel.']],
-                ], 422);
-            }
-
-            $validated['school_id'] = $schoolId;
-
-            $floor = HostelFloor::create($validated);
+            $floor = DB::transaction(function () use ($validated) {
+                return HostelFloor::create($validated);
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Floor added successfully.',
                 'data' => $floor->load('hostel'),
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please correct the highlighted fields.',
-                'errors' => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -145,42 +127,22 @@ class HostelFloorController extends TenantController
         }
     }
 
-    public function update(Request $request, HostelFloor $hostelFloor)
+    public function update(UpdateHostelFloorRequest $request, HostelFloor $hostelFloor)
     {
         $this->authorizeTenant($hostelFloor);
 
         try {
-            $validated = $request->validate([
-                'hostel_id' => 'required|exists:hostels,id',
-                'floor_name' => 'required|string|max:255',
-                'total_room' => 'nullable|integer|min:0',
-                'floor_create_date' => 'nullable|date',
-            ]);
+            $validated = $request->validated();
 
-            $schoolId = $this->getSchoolId();
-
-            $hostel = Hostel::find($validated['hostel_id']);
-            if (!$hostel || $hostel->school_id !== $schoolId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Please correct the highlighted fields.',
-                    'errors' => ['hostel_id' => ['Please select a valid hostel.']],
-                ], 422);
-            }
-
-            $hostelFloor->update($validated);
+            DB::transaction(function () use ($hostelFloor, $validated) {
+                $hostelFloor->update($validated);
+            });
 
             return response()->json([
                 'success' => true,
                 'message' => 'Floor updated successfully.',
                 'data' => $hostelFloor->load('hostel'),
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please correct the highlighted fields.',
-                'errors' => $e->errors(),
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
