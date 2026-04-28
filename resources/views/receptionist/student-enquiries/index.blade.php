@@ -251,7 +251,7 @@
                 @csrf
                 <input type="hidden" name="_method" x-bind:value="editMode ? 'PUT' : 'POST'">
 
-                @include('school.student-enquiries.partials.form')
+                @include('receptionist.student-enquiries.partials.form')
 
                 <!-- Modal Footer -->
                 <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
