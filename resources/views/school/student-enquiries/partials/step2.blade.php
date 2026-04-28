@@ -25,7 +25,7 @@
                            placeholder="Father's full name"
                            :class="{'border-red-500': errors.father_name}"
                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.father_name"><p class="text-red-500 text-xs mt-1" x-text="errors.father_name[0]"></p></template>
+                    <template x-if="errors.father_name"><template x-if="errors.father_name[0]"><p class="modal-error-message" x-text="errors.father_name[0]"></p></template></template>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Contact <span class="text-red-500">*</span></label>
@@ -33,7 +33,7 @@
                            placeholder="Mobile number"
                            :class="{'border-red-500': errors.father_contact}"
                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.father_contact"><p class="text-red-500 text-xs mt-1" x-text="errors.father_contact[0]"></p></template>
+                    <template x-if="errors.father_contact"><template x-if="errors.father_contact[0]"><p class="modal-error-message" x-text="errors.father_contact[0]"></p></template></template>
                 </div>
             </div>
 
@@ -123,7 +123,7 @@
                            placeholder="Mother's full name"
                            :class="{'border-red-500': errors.mother_name}"
                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.mother_name"><p class="text-red-500 text-xs mt-1" x-text="errors.mother_name[0]"></p></template>
+                    <template x-if="errors.mother_name"><template x-if="errors.mother_name[0]"><p class="modal-error-message" x-text="errors.mother_name[0]"></p></template></template>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Contact <span class="text-red-500">*</span></label>
@@ -131,7 +131,7 @@
                            placeholder="Mobile number"
                            :class="{'border-red-500': errors.mother_contact}"
                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.mother_contact"><p class="text-red-500 text-xs mt-1" x-text="errors.mother_contact[0]"></p></template>
+                    <template x-if="errors.mother_contact"><template x-if="errors.mother_contact[0]"><p class="modal-error-message" x-text="errors.mother_contact[0]"></p></template></template>
                 </div>
             </div>
 

@@ -43,7 +43,7 @@
             </label>
             <p class="text-[10px] text-gray-400 mt-1.5">JPG, PNG · Max 2MB</p>
             <template x-if="errors.{{ $item['key'] }}">
-                <p class="text-red-500 text-xs mt-1" x-text="errors.{{ $item['key'] }}[0]"></p>
+                <template x-if="errors.{{ $item['key'] }}[0]"><p class="modal-error-message" x-text="errors.{{ $item['key'] }}[0]"></p></template>
             </template>
         </div>
         @endforeach
@@ -90,7 +90,7 @@
             </label>
             <p class="text-[10px] text-gray-400 mt-1.5">JPG, PNG · Max 2MB</p>
             <template x-if="errors.{{ $item['key'] }}">
-                <p class="text-red-500 text-xs mt-1" x-text="errors.{{ $item['key'] }}[0]"></p>
+                <template x-if="errors.{{ $item['key'] }}[0]"><p class="modal-error-message" x-text="errors.{{ $item['key'] }}[0]"></p></template>
             </template>
         </div>
         @endforeach

@@ -272,7 +272,7 @@
                             @endforeach
                         </select>
                         <template x-if="errors.route_id">
-                            <p x-text="errors.route_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.route_id[0]"><p class="modal-error-message" x-text="errors.route_id[0]"></p></template>
                         </template>
                     </div>
 
@@ -283,7 +283,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
                             :class="errors.bus_stop_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('bus_stop_no')">
                         <template x-if="errors.bus_stop_no">
-                            <p x-text="errors.bus_stop_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.bus_stop_no[0]"><p class="modal-error-message" x-text="errors.bus_stop_no[0]"></p></template>
                         </template>
                     </div>
 
@@ -294,7 +294,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
                             :class="errors.bus_stop_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('bus_stop_name')">
                         <template x-if="errors.bus_stop_name">
-                            <p x-text="errors.bus_stop_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.bus_stop_name[0]"><p class="modal-error-message" x-text="errors.bus_stop_name[0]"></p></template>
                         </template>
                     </div>
                 </div>
@@ -310,7 +310,7 @@
                             :class="errors.latitude ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @input="clearError('latitude')">
                         <template x-if="errors.latitude">
-                            <p x-text="errors.latitude[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.latitude[0]"><p class="modal-error-message" x-text="errors.latitude[0]"></p></template>
                         </template>
                     </div>
                     <div class="space-y-1.5">
@@ -320,7 +320,7 @@
                             :class="errors.longitude ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @input="clearError('longitude')">
                         <template x-if="errors.longitude">
-                            <p x-text="errors.longitude[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.longitude[0]"><p class="modal-error-message" x-text="errors.longitude[0]"></p></template>
                         </template>
                     </div>
                     <div class="space-y-1.5">
@@ -330,7 +330,7 @@
                             :class="errors.area_pin_code ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @input="clearError('area_pin_code')">
                         <template x-if="errors.area_pin_code">
-                            <p x-text="errors.area_pin_code[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.area_pin_code[0]"><p class="modal-error-message" x-text="errors.area_pin_code[0]"></p></template>
                         </template>
                     </div>
                 </div>
@@ -347,7 +347,7 @@
                                     :class="errors.distance_from_institute ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                                     @input="clearError('distance_from_institute')">
                                 <template x-if="errors.distance_from_institute">
-                                    <p x-text="errors.distance_from_institute[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                                    <template x-if="errors.distance_from_institute[0]"><p class="modal-error-message" x-text="errors.distance_from_institute[0]"></p></template>
                                 </template>
                                 <span
                                     class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 dark:text-gray-500">KM</span>
@@ -358,7 +358,7 @@
                                     :class="errors.charge_per_month ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                                     @input="clearError('charge_per_month')">
                                 <template x-if="errors.charge_per_month">
-                                    <p x-text="errors.charge_per_month[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                                    <template x-if="errors.charge_per_month[0]"><p class="modal-error-message" x-text="errors.charge_per_month[0]"></p></template>
                                 </template>
                                 <span
                                     class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-teal-600">₹</span>
@@ -380,7 +380,7 @@
                             @endforeach
                         </select>
                         <template x-if="errors.vehicle_id">
-                            <p x-text="errors.vehicle_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.vehicle_id[0]"><p class="modal-error-message" x-text="errors.vehicle_id[0]"></p></template>
                         </template>
                     </div>
                 </div>

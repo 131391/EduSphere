@@ -43,7 +43,7 @@
             @endforeach
         </select>
         @error($countryName)
-            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            <p class="modal-error-message">{{ $message }}</p>
         @enderror
     </div>
 
@@ -55,7 +55,7 @@
             <option value="">Select State</option>
         </select>
         @error($stateName)
-            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            <p class="modal-error-message">{{ $message }}</p>
         @enderror
     </div>
 
@@ -67,7 +67,7 @@
             <option value="">Select City</option>
         </select>
         @error($cityName)
-            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            <p class="modal-error-message">{{ $message }}</p>
         @enderror
     </div>
 </div>

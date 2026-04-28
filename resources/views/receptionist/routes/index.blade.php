@@ -244,7 +244,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
                             :class="errors.route_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('route_name')">
                         <template x-if="errors.route_name">
-                            <p x-text="errors.route_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.route_name[0]"><p class="modal-error-message" x-text="errors.route_name[0]"></p></template>
                         </template>
                     </div>
 
@@ -262,7 +262,7 @@
                             </template>
                         </select>
                         <template x-if="errors.vehicle_id">
-                            <p x-text="errors.vehicle_id[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.vehicle_id[0]"><p class="modal-error-message" x-text="errors.vehicle_id[0]"></p></template>
                         </template>
                     </div>
 
@@ -275,7 +275,7 @@
                                 :class="errors.route_create_date ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                                 @change="clearError('route_create_date')">
                             <template x-if="errors.route_create_date">
-                                <p x-text="errors.route_create_date[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                                <template x-if="errors.route_create_date[0]"><p class="modal-error-message" x-text="errors.route_create_date[0]"></p></template>
                             </template>
                         </div>
 

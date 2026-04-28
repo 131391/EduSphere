@@ -35,7 +35,7 @@
                         </option>
                     @endforeach
                 </select>
-                <p x-show="errors.vehicle_id" x-text="errors.vehicle_id?.[0]" class="text-xs text-red-500 font-medium" x-cloak></p>
+                <template x-if="errors.vehicle_id"><p class="modal-error-message" x-text="errors.vehicle_id?.[0]"></p></template>
             </div>
 
             {{-- Route --}}
@@ -52,7 +52,7 @@
                         <option :value="route.id" x-text="route.route_name"></option>
                     </template>
                 </select>
-                <p x-show="errors.route_id" x-text="errors.route_id?.[0]" class="text-xs text-red-500 font-medium" x-cloak></p>
+                <template x-if="errors.route_id"><p class="modal-error-message" x-text="errors.route_id?.[0]"></p></template>
             </div>
 
             {{-- Month --}}
@@ -64,7 +64,7 @@
                     value="{{ old('month', $selectedMonth) }}"
                     class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all outline-none"
                     :class="errors.month ? 'border-red-400' : ''">
-                <p x-show="errors.month" x-text="errors.month?.[0]" class="text-xs text-red-500 font-medium" x-cloak></p>
+                <template x-if="errors.month"><p class="modal-error-message" x-text="errors.month?.[0]"></p></template>
             </div>
 
             {{-- Search --}}

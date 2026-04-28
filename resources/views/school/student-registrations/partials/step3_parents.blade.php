@@ -36,7 +36,7 @@
                            placeholder="First name"
                            :class="errors.father_first_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                            class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.father_first_name"><p class="text-red-500 text-xs mt-1" x-text="errors.father_first_name[0]"></p></template>
+                    <template x-if="errors.father_first_name"><template x-if="errors.father_first_name[0]"><p class="modal-error-message" x-text="errors.father_first_name[0]"></p></template></template>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Last Name <span class="text-red-500">*</span></label>
@@ -44,7 +44,7 @@
                            placeholder="Last name"
                            :class="errors.father_last_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                            class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.father_last_name"><p class="text-red-500 text-xs mt-1" x-text="errors.father_last_name[0]"></p></template>
+                    <template x-if="errors.father_last_name"><template x-if="errors.father_last_name[0]"><p class="modal-error-message" x-text="errors.father_last_name[0]"></p></template></template>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Mobile <span class="text-red-500">*</span></label>
@@ -52,7 +52,7 @@
                            placeholder="Mobile number" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                            :class="errors.father_mobile_no ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                            class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.father_mobile_no"><p class="text-red-500 text-xs mt-1" x-text="errors.father_mobile_no[0]"></p></template>
+                    <template x-if="errors.father_mobile_no"><template x-if="errors.father_mobile_no[0]"><p class="modal-error-message" x-text="errors.father_mobile_no[0]"></p></template></template>
                 </div>
             </div>
 
@@ -160,7 +160,7 @@
                            placeholder="First name"
                            :class="errors.mother_first_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                            class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.mother_first_name"><p class="text-red-500 text-xs mt-1" x-text="errors.mother_first_name[0]"></p></template>
+                    <template x-if="errors.mother_first_name"><template x-if="errors.mother_first_name[0]"><p class="modal-error-message" x-text="errors.mother_first_name[0]"></p></template></template>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Last Name <span class="text-red-500">*</span></label>
@@ -168,7 +168,7 @@
                            placeholder="Last name"
                            :class="errors.mother_last_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                            class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.mother_last_name"><p class="text-red-500 text-xs mt-1" x-text="errors.mother_last_name[0]"></p></template>
+                    <template x-if="errors.mother_last_name"><template x-if="errors.mother_last_name[0]"><p class="modal-error-message" x-text="errors.mother_last_name[0]"></p></template></template>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Mobile <span class="text-red-500">*</span></label>
@@ -176,7 +176,7 @@
                            placeholder="Mobile number" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                            :class="errors.mother_mobile_no ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                            class="w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-                    <template x-if="errors.mother_mobile_no"><p class="text-red-500 text-xs mt-1" x-text="errors.mother_mobile_no[0]"></p></template>
+                    <template x-if="errors.mother_mobile_no"><template x-if="errors.mother_mobile_no[0]"><p class="modal-error-message" x-text="errors.mother_mobile_no[0]"></p></template></template>
                 </div>
             </div>
 

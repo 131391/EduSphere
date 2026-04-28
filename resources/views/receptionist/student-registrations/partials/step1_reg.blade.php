@@ -25,7 +25,7 @@
         @endforeach
     </div>
     <template x-if="errors.admission_status">
-        <p class="text-red-500 text-xs mt-1" x-text="errors.admission_status[0]"></p>
+        <template x-if="errors.admission_status[0]"><p class="modal-error-message" x-text="errors.admission_status[0]"></p></template>
     </template>
 </div>
 @endisset
@@ -67,7 +67,7 @@
                 @endforeach
             </select>
             <template x-if="errors.enquiry_id">
-                <p class="text-red-500 text-xs mt-1" x-text="errors.enquiry_id[0]"></p>
+                <template x-if="errors.enquiry_id[0]"><p class="modal-error-message" x-text="errors.enquiry_id[0]"></p></template>
             </template>
         @endisset
     </div>
@@ -87,7 +87,7 @@
             @endforeach
         </select>
         <template x-if="errors.academic_year_id">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.academic_year_id[0]"></p>
+            <template x-if="errors.academic_year_id[0]"><p class="modal-error-message" x-text="errors.academic_year_id[0]"></p></template>
         </template>
     </div>
 
@@ -106,7 +106,7 @@
             @endforeach
         </select>
         <template x-if="errors.class_id">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.class_id[0]"></p>
+            <template x-if="errors.class_id[0]"><p class="modal-error-message" x-text="errors.class_id[0]"></p></template>
         </template>
     </div>
 
@@ -124,7 +124,7 @@
         </div>
         <p class="text-[10px] text-gray-400 mt-1">Auto-calculated based on selected class</p>
         <template x-if="errors.registration_fee">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.registration_fee[0]"></p>
+            <template x-if="errors.registration_fee[0]"><p class="modal-error-message" x-text="errors.registration_fee[0]"></p></template>
         </template>
     </div>
 

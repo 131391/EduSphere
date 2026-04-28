@@ -38,7 +38,7 @@
         </label>
         <p class="text-[10px] text-gray-400 mt-1.5">JPG, PNG · Max 2MB</p>
         <template x-if="errors.student_photo">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.student_photo[0]"></p>
+            <template x-if="errors.student_photo[0]"><p class="modal-error-message" x-text="errors.student_photo[0]"></p></template>
         </template>
     </div>
 
@@ -79,7 +79,7 @@
         </label>
         <p class="text-[10px] text-gray-400 mt-1.5">JPG, PNG · Max 2MB</p>
         <template x-if="errors.father_photo">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.father_photo[0]"></p>
+            <template x-if="errors.father_photo[0]"><p class="modal-error-message" x-text="errors.father_photo[0]"></p></template>
         </template>
     </div>
 
@@ -120,7 +120,7 @@
         </label>
         <p class="text-[10px] text-gray-400 mt-1.5">JPG, PNG · Max 2MB</p>
         <template x-if="errors.mother_photo">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.mother_photo[0]"></p>
+            <template x-if="errors.mother_photo[0]"><p class="modal-error-message" x-text="errors.mother_photo[0]"></p></template>
         </template>
     </div>
 

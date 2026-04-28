@@ -32,7 +32,7 @@
                             </option>
                         @endforeach
                     </select>
-                    @error('student_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error(\'student_id\')<p class="modal-error-message">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -92,7 +92,7 @@
                 <label for="reason" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason for Waiver</label>
                 <textarea name="reason" id="reason" rows="3" required placeholder="Describe why this student is eligible..."
                           class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">{{ old('reason') }}</textarea>
-                @error('reason') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                @error(\'reason\')<p class="modal-error-message">{{ $message }}</p>@enderror
             </div>
         </div>
 

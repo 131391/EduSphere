@@ -96,7 +96,7 @@
         </select>
         <input type="hidden" name="registration_no" x-model="formData.registration_no">
         <template x-if="errors.registration_id">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.registration_id[0]"></p>
+            <template x-if="errors.registration_id[0]"><p class="modal-error-message" x-text="errors.registration_id[0]"></p></template>
         </template>
     </div>
 
@@ -129,7 +129,7 @@
             @endforeach
         </select>
         <template x-if="errors.academic_year_id">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.academic_year_id[0]"></p>
+            <template x-if="errors.academic_year_id[0]"><p class="modal-error-message" x-text="errors.academic_year_id[0]"></p></template>
         </template>
     </div>
 
@@ -148,7 +148,7 @@
             @endforeach
         </select>
         <template x-if="errors.class_id">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.class_id[0]"></p>
+            <template x-if="errors.class_id[0]"><p class="modal-error-message" x-text="errors.class_id[0]"></p></template>
         </template>
     </div>
 
@@ -167,7 +167,7 @@
             </template>
         </select>
         <template x-if="errors.section_id">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.section_id[0]"></p>
+            <template x-if="errors.section_id[0]"><p class="modal-error-message" x-text="errors.section_id[0]"></p></template>
         </template>
     </div>
 
@@ -194,7 +194,7 @@
                :class="errors.roll_no ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
         <template x-if="errors.roll_no">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.roll_no[0]"></p>
+            <template x-if="errors.roll_no[0]"><p class="modal-error-message" x-text="errors.roll_no[0]"></p></template>
         </template>
     </div>
 
@@ -208,7 +208,7 @@
                :class="errors.receipt_no ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
         <template x-if="errors.receipt_no">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.receipt_no[0]"></p>
+            <template x-if="errors.receipt_no[0]"><p class="modal-error-message" x-text="errors.receipt_no[0]"></p></template>
         </template>
     </div>
 
@@ -221,7 +221,7 @@
                :class="errors.admission_date ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
         <template x-if="errors.admission_date">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.admission_date[0]"></p>
+            <template x-if="errors.admission_date[0]"><p class="modal-error-message" x-text="errors.admission_date[0]"></p></template>
         </template>
     </div>
 

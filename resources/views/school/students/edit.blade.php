@@ -27,28 +27,28 @@
                     <label for="first_name" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">First Name</label>
                     <input type="text" name="first_name" id="first_name" value="{{ old('first_name', $student->first_name) }}" required
                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 @error('first_name') border-red-500 @enderror">
-                    @error('first_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error(\'first_name\')<p class="modal-error-message">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
                     <label for="last_name" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Last Name</label>
                     <input type="text" name="last_name" id="last_name" value="{{ old('last_name', $student->last_name) }}" required
                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 @error('last_name') border-red-500 @enderror">
-                    @error('last_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error(\'last_name\')<p class="modal-error-message">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
                     <label for="email" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Email Address</label>
                     <input type="email" name="email" id="email" value="{{ old('email', $student->email) }}"
                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 @error('email') border-red-500 @enderror">
-                    @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error(\'email\')<p class="modal-error-message">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
                     <label for="phone" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Phone Number</label>
                     <input type="text" name="mobile_no" id="phone" value="{{ old('mobile_no', $student->mobile_no) }}"
                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 @error('phone') border-red-500 @enderror">
-                    @error('phone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    @error(\'phone\')<p class="modal-error-message">{{ $message }}</p>@enderror
                 </div>
             </div>
         </div>
@@ -96,7 +96,7 @@
                 <label for="address" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Current Address</label>
                 <textarea name="address" id="address" rows="3" 
                           class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">{{ old('address', $student->address) }}</textarea>
-                @error('address') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                @error(\'address\')<p class="modal-error-message">{{ $message }}</p>@enderror
             </div>
         </div>
 

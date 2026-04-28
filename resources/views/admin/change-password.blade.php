@@ -157,7 +157,7 @@
                             </button>
                         </div>
                         <p x-cloak x-show="capsLockOn" class="mt-1 text-xs font-medium text-amber-700 ml-1">Caps Lock is on.</p>
-                        <p x-cloak x-show="errors.current_password" class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="errors.current_password"></p>
+                        <template x-if="errors.current_password"><p class="modal-error-message" x-text="errors.current_password"></p></template>
                     </div>
 
                     <!-- New Password -->
@@ -179,7 +179,7 @@
                                 <i class="fas" :class="isPasswordVisible('password') ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
-                        <p x-cloak x-show="errors.password" class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="errors.password"></p>
+                        <template x-if="errors.password"><p class="modal-error-message" x-text="errors.password"></p></template>
                     </div>
 
                     <!-- Confirm Password -->
@@ -201,7 +201,7 @@
                                 <i class="fas" :class="isPasswordVisible('password_confirmation') ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
-                        <p x-cloak x-show="errors.password_confirmation" class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="errors.password_confirmation"></p>
+                        <template x-if="errors.password_confirmation"><p class="modal-error-message" x-text="errors.password_confirmation"></p></template>
                     </div>
 
                     <div class="pt-4 flex items-center justify-end">

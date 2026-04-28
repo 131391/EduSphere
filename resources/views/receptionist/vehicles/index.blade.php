@@ -212,7 +212,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.registration_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('registration_no')">
                         <template x-if="errors.registration_no">
-                            <p x-text="errors.registration_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.registration_no[0]"><p class="modal-error-message" x-text="errors.registration_no[0]"></p></template>
                         </template>
                     </div>
 
@@ -228,7 +228,7 @@
                             @endforeach
                         </select>
                         <template x-if="errors.fuel_type">
-                            <p x-text="errors.fuel_type[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.fuel_type[0]"><p class="modal-error-message" x-text="errors.fuel_type[0]"></p></template>
                         </template>
                     </div>
 
@@ -238,7 +238,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.capacity ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('capacity')">
                         <template x-if="errors.capacity">
-                            <p x-text="errors.capacity[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.capacity[0]"><p class="modal-error-message" x-text="errors.capacity[0]"></p></template>
                         </template>
                     </div>
 
@@ -248,7 +248,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.engine_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('engine_no')">
                         <template x-if="errors.engine_no">
-                            <p x-text="errors.engine_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.engine_no[0]"><p class="modal-error-message" x-text="errors.engine_no[0]"></p></template>
                         </template>
                     </div>
                 </div>
@@ -261,7 +261,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.vehicle_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('vehicle_no')">
                         <template x-if="errors.vehicle_no">
-                            <p x-text="errors.vehicle_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.vehicle_no[0]"><p class="modal-error-message" x-text="errors.vehicle_no[0]"></p></template>
                         </template>
                     </div>
 
@@ -278,7 +278,7 @@
                             <option value="truck">Utility Truck</option>
                         </select>
                         <template x-if="errors.vehicle_type">
-                            <p x-text="errors.vehicle_type[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.vehicle_type[0]"><p class="modal-error-message" x-text="errors.vehicle_type[0]"></p></template>
                         </template>
                     </div>
 
@@ -288,7 +288,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.model_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('model_no')">
                         <template x-if="errors.model_no">
-                            <p x-text="errors.model_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.model_no[0]"><p class="modal-error-message" x-text="errors.model_no[0]"></p></template>
                         </template>
                     </div>
 
@@ -298,7 +298,7 @@
                             class="w-full bg-slate-50 dark:bg-gray-700 border-none rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.date_of_purchase ? 'ring-2 ring-red-500/20' : ''" @change="clearError('date_of_purchase')">
                         <template x-if="errors.date_of_purchase">
-                            <p x-text="errors.date_of_purchase[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.date_of_purchase[0]"><p class="modal-error-message" x-text="errors.date_of_purchase[0]"></p></template>
                         </template>
                     </div>
                 </div>

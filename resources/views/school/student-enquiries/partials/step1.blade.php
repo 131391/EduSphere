@@ -47,7 +47,7 @@
             @endforeach
         </select>
         <template x-if="errors.academic_year_id">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.academic_year_id[0]"></p>
+            <template x-if="errors.academic_year_id[0]"><p class="modal-error-message" x-text="errors.academic_year_id[0]"></p></template>
         </template>
     </div>
 
@@ -66,7 +66,7 @@
             @endforeach
         </select>
         <template x-if="errors.class_id">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.class_id[0]"></p>
+            <template x-if="errors.class_id[0]"><p class="modal-error-message" x-text="errors.class_id[0]"></p></template>
         </template>
     </div>
 
@@ -81,7 +81,7 @@
                :class="{'border-red-500': errors.student_name}"
                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
         <template x-if="errors.student_name">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.student_name[0]"></p>
+            <template x-if="errors.student_name[0]"><p class="modal-error-message" x-text="errors.student_name[0]"></p></template>
         </template>
     </div>
 
@@ -98,7 +98,7 @@
             @endforeach
         </select>
         <template x-if="errors.gender">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.gender[0]"></p>
+            <template x-if="errors.gender[0]"><p class="modal-error-message" x-text="errors.gender[0]"></p></template>
         </template>
     </div>
 
@@ -114,7 +114,7 @@
                :class="{'border-red-500': errors.subject_name}"
                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
         <template x-if="errors.subject_name">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.subject_name[0]"></p>
+            <template x-if="errors.subject_name[0]"><p class="modal-error-message" x-text="errors.subject_name[0]"></p></template>
         </template>
     </div>
 
@@ -126,7 +126,7 @@
                :class="{'border-red-500': errors.follow_up_date}"
                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
         <template x-if="errors.follow_up_date">
-            <p class="text-red-500 text-xs mt-1" x-text="errors.follow_up_date[0]"></p>
+            <template x-if="errors.follow_up_date[0]"><p class="modal-error-message" x-text="errors.follow_up_date[0]"></p></template>
         </template>
     </div>
 </div>

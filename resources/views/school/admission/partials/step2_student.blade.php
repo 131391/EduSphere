@@ -14,7 +14,7 @@
         <input type="text" name="first_name" x-model="formData.first_name" @input="clearError('first_name')" placeholder="First name"
                :class="errors.first_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-        <template x-if="errors.first_name"><p class="text-red-500 text-xs mt-1" x-text="errors.first_name[0]"></p></template>
+        <template x-if="errors.first_name"><template x-if="errors.first_name[0]"><p class="modal-error-message" x-text="errors.first_name[0]"></p></template></template>
     </div>
 
     <div>
@@ -28,7 +28,7 @@
         <input type="text" name="last_name" x-model="formData.last_name" @input="clearError('last_name')" placeholder="Last name"
                :class="errors.last_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-        <template x-if="errors.last_name"><p class="text-red-500 text-xs mt-1" x-text="errors.last_name[0]"></p></template>
+        <template x-if="errors.last_name"><template x-if="errors.last_name[0]"><p class="modal-error-message" x-text="errors.last_name[0]"></p></template></template>
     </div>
 
     <div>
@@ -41,7 +41,7 @@
                 <option value="{{ $value }}">{{ $label }}</option>
             @endforeach
         </select>
-        <template x-if="errors.gender"><p class="text-red-500 text-xs mt-1" x-text="errors.gender[0]"></p></template>
+        <template x-if="errors.gender"><template x-if="errors.gender[0]"><p class="modal-error-message" x-text="errors.gender[0]"></p></template></template>
     </div>
 
     <div>
@@ -49,7 +49,7 @@
         <input type="date" name="dob" x-model="formData.dob" @input="clearError('dob')"
                :class="errors.dob ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-        <template x-if="errors.dob"><p class="text-red-500 text-xs mt-1" x-text="errors.dob[0]"></p></template>
+        <template x-if="errors.dob"><template x-if="errors.dob[0]"><p class="modal-error-message" x-text="errors.dob[0]"></p></template></template>
     </div>
 
     <div>
@@ -58,7 +58,7 @@
                placeholder="Mobile number" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                :class="errors.mobile_no ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
-        <template x-if="errors.mobile_no"><p class="text-red-500 text-xs mt-1" x-text="errors.mobile_no[0]"></p></template>
+        <template x-if="errors.mobile_no"><template x-if="errors.mobile_no[0]"><p class="modal-error-message" x-text="errors.mobile_no[0]"></p></template></template>
     </div>
 
     <div>

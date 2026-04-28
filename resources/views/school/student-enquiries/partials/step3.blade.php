@@ -17,7 +17,7 @@
                    :class="{'border-red-500': errors.contact_no}"
                    class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <template x-if="errors.contact_no">
-                <p class="text-red-500 text-xs mt-1" x-text="errors.contact_no[0]"></p>
+                <template x-if="errors.contact_no[0]"><p class="modal-error-message" x-text="errors.contact_no[0]"></p></template>
             </template>
         </div>
 
@@ -40,7 +40,7 @@
                 </button>
             </div>
             <template x-if="errors.whatsapp_no">
-                <p class="text-red-500 text-xs mt-1" x-text="errors.whatsapp_no[0]"></p>
+                <template x-if="errors.whatsapp_no[0]"><p class="modal-error-message" x-text="errors.whatsapp_no[0]"></p></template>
             </template>
         </div>
 
@@ -209,7 +209,7 @@
                 @endforeach
             </select>
             <template x-if="errors.country_id">
-                <p class="text-red-500 text-xs mt-1" x-text="errors.country_id[0]"></p>
+                <template x-if="errors.country_id[0]"><p class="modal-error-message" x-text="errors.country_id[0]"></p></template>
             </template>
         </div>
         <div>

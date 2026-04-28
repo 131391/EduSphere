@@ -18,7 +18,7 @@
                       :class="errors.permanent_address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                       class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white"></textarea>
             <template x-if="errors.permanent_address">
-                <p class="text-red-500 text-xs mt-1" x-text="errors.permanent_address[0]"></p>
+                <template x-if="errors.permanent_address[0]"><p class="modal-error-message" x-text="errors.permanent_address[0]"></p></template>
             </template>
         </div>
 
@@ -32,7 +32,7 @@
                 :selectedCity="old('permanent_city_id', isset($student) ? ($student->permanent_city_id ?? '') : '')"
             />
             <template x-if="errors.permanent_country_id || errors.permanent_state_id || errors.permanent_city_id">
-                <p class="text-red-500 text-xs mt-1">Please select country, state and city.</p>
+                <p class="modal-error-message">Please select country, state and city.</p>
             </template>
         </div>
 
@@ -46,7 +46,7 @@
                    :class="errors.permanent_pin ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'"
                    class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
             <template x-if="errors.permanent_pin">
-                <p class="text-red-500 text-xs mt-1" x-text="errors.permanent_pin[0]"></p>
+                <template x-if="errors.permanent_pin[0]"><p class="modal-error-message" x-text="errors.permanent_pin[0]"></p></template>
             </template>
         </div>
 

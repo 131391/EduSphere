@@ -50,7 +50,7 @@
                                         placeholder="Enter school name">
                                 </div>
                                 <template x-if="hasError('name')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('name')"></p>
+                                    <template x-if="getError('name')"><p class="modal-error-message" x-text="getError('name')"></p></template>
                                 </template>
                             </div>
 
@@ -67,7 +67,7 @@
                                         placeholder="e.g. SCH001">
                                 </div>
                                 <template x-if="hasError('code')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('code')"></p>
+                                    <template x-if="getError('code')"><p class="modal-error-message" x-text="getError('code')"></p></template>
                                 </template>
                             </div>
 
@@ -89,7 +89,7 @@
                                     </span>
                                 </div>
                                 <template x-if="hasError('subdomain')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('subdomain')"></p>
+                                    <template x-if="getError('subdomain')"><p class="modal-error-message" x-text="getError('subdomain')"></p></template>
                                 </template>
                             </div>
 
@@ -106,7 +106,7 @@
                                         placeholder="e.g. school.com">
                                 </div>
                                 <template x-if="hasError('domain')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('domain')"></p>
+                                    <template x-if="getError('domain')"><p class="modal-error-message" x-text="getError('domain')"></p></template>
                                 </template>
                             </div>
                         </div>
@@ -136,7 +136,7 @@
                                         placeholder="school@example.com">
                                 </div>
                                 <template x-if="hasError('email')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('email')"></p>
+                                    <template x-if="getError('email')"><p class="modal-error-message" x-text="getError('email')"></p></template>
                                 </template>
                             </div>
 
@@ -150,7 +150,7 @@
                                     />
                                 </div>
                                 <template x-if="hasError('phone')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('phone')"></p>
+                                    <template x-if="getError('phone')"><p class="modal-error-message" x-text="getError('phone')"></p></template>
                                 </template>
                             </div>
 
@@ -167,7 +167,7 @@
                                         placeholder="Enter full address"></textarea>
                                 </div>
                                 <template x-if="hasError('address')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('address')"></p>
+                                    <template x-if="getError('address')"><p class="modal-error-message" x-text="getError('address')"></p></template>
                                 </template>
                             </div>
 
@@ -186,7 +186,7 @@
 
                                 </div>
                                 <template x-if="hasError('country_id')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('country_id')"></p>
+                                    <template x-if="getError('country_id')"><p class="modal-error-message" x-text="getError('country_id')"></p></template>
                                 </template>
                             </div>
 
@@ -201,7 +201,7 @@
                                     <option value="">Select State</option>
                                 </select>
                                 <template x-if="hasError('state_id')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('state_id')"></p>
+                                    <template x-if="getError('state_id')"><p class="modal-error-message" x-text="getError('state_id')"></p></template>
                                 </template>
                             </div>
 
@@ -216,7 +216,7 @@
                                     <option value="">Select City</option>
                                 </select>
                                 <template x-if="hasError('city_id')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('city_id')"></p>
+                                    <template x-if="getError('city_id')"><p class="modal-error-message" x-text="getError('city_id')"></p></template>
                                 </template>
                             </div>
 
@@ -228,7 +228,7 @@
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none"
                                     placeholder="Enter pincode">
                                 <template x-if="hasError('pincode')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('pincode')"></p>
+                                    <template x-if="getError('pincode')"><p class="modal-error-message" x-text="getError('pincode')"></p></template>
                                 </template>
                             </div>
 
@@ -245,7 +245,7 @@
                                         placeholder="https://www.school.com">
                                 </div>
                                 <template x-if="hasError('website')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('website')"></p>
+                                    <template x-if="getError('website')"><p class="modal-error-message" x-text="getError('website')"></p></template>
                                 </template>
                             </div>
                         </div>
@@ -275,7 +275,7 @@
                                 @endforeach
                             </select>
                             <template x-if="hasError('status')">
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('status')"></p>
+                                <template x-if="getError('status')"><p class="modal-error-message" x-text="getError('status')"></p></template>
                             </template>
                         </div>
 
@@ -286,7 +286,7 @@
                                 :class="hasError('subscription_start_date') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                 class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
                             <template x-if="hasError('subscription_start_date')">
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('subscription_start_date')"></p>
+                                <template x-if="getError('subscription_start_date')"><p class="modal-error-message" x-text="getError('subscription_start_date')"></p></template>
                             </template>
                         </div>
 
@@ -297,7 +297,7 @@
                                 :class="hasError('subscription_end_date') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                 class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all outline-none">
                              <template x-if="hasError('subscription_end_date')">
-                                <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('subscription_end_date')"></p>
+                                <template x-if="getError('subscription_end_date')"><p class="modal-error-message" x-text="getError('subscription_end_date')"></p></template>
                             </template>
                         </div>
                     </div>
@@ -321,7 +321,7 @@
                                     :class="hasError('admin_name') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
                                 <template x-if="hasError('admin_name')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('admin_name')"></p>
+                                    <template x-if="getError('admin_name')"><p class="modal-error-message" x-text="getError('admin_name')"></p></template>
                                 </template>
                             </div>
                             <div class="space-y-2">
@@ -331,7 +331,7 @@
                                     :class="hasError('admin_email') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none">
                                 <template x-if="hasError('admin_email')">
-                                    <p class="mt-1 text-xs text-red-600 font-medium ml-1" x-text="getError('admin_email')"></p>
+                                    <template x-if="getError('admin_email')"><p class="modal-error-message" x-text="getError('admin_email')"></p></template>
                                 </template>
                             </div>
                             <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -392,7 +392,7 @@
                             </div>
                             
                             <template x-if="hasError('logo')">
-                                <p class="mt-1 text-xs text-red-600 font-medium text-center" x-text="getError('logo')"></p>
+                                <template x-if="getError('logo')"><p class="modal-error-message" x-text="getError('logo')"></p></template>
                             </template>
                         </div>
                     </div>

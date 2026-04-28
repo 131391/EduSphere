@@ -92,9 +92,7 @@
                                     placeholder="Enter your full name"
                                     class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
                                     :class="errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 dark:border-gray-600'">
-                                <p x-show="errors.name" x-text="errors.name" class="text-[11px] font-semibold text-red-500 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-circle text-[10px]"></i>
-                                </p>
+                                <template x-if="errors.name"><p class="modal-error-message" x-text="errors.name"></p></template>
                             </div>
 
                             <!-- Email -->
@@ -104,9 +102,7 @@
                                     placeholder="Enter your email"
                                     class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
                                     :class="errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 dark:border-gray-600'">
-                                <p x-show="errors.email" x-text="errors.email" class="text-[11px] font-semibold text-red-500 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-circle text-[10px]"></i>
-                                </p>
+                                <template x-if="errors.email"><p class="modal-error-message" x-text="errors.email"></p></template>
                             </div>
 
                             <!-- Phone -->
@@ -116,9 +112,7 @@
                                     placeholder="Enter your phone number"
                                     class="w-full h-11 px-4 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
                                     :class="errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200 dark:border-gray-600'">
-                                <p x-show="errors.phone" x-text="errors.phone" class="text-[11px] font-semibold text-red-500 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-circle text-[10px]"></i>
-                                </p>
+                                <template x-if="errors.phone"><p class="modal-error-message" x-text="errors.phone"></p></template>
                             </div>
                         </div>
 

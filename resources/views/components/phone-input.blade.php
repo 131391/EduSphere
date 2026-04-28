@@ -37,7 +37,7 @@
 </div>
 
 @error($name)
-    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+    <p class="modal-error-message">{{ $message }}</p>
 @enderror
 
 @once

@@ -201,7 +201,7 @@
                             class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.hostel_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                         <template x-if="errors.hostel_name">
-                            <p x-text="errors.hostel_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
+                            <template x-if="errors.hostel_name[0]"><p class="modal-error-message" x-text="errors.hostel_name[0]"></p></template>
                         </template>
                     </div>
 
