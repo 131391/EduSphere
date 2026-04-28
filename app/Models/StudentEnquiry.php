@@ -102,6 +102,9 @@ class StudentEnquiry extends Model
         'country_id' => 'integer',
         'form_status' => EnquiryStatus::class,
         'gender' => Gender::class,
+        'transport_facility' => \App\Enums\YesNo::class,
+        'hostel_facility' => \App\Enums\YesNo::class,
+        'minority' => \App\Enums\YesNo::class,
     ];
 
     /**

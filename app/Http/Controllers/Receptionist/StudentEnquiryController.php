@@ -419,7 +419,7 @@ class StudentEnquiryController extends TenantController
                 'nullable',
                 Rule::exists('categories', 'id')->where('school_id', $this->getSchoolId())
             ],
-            'minority' => 'nullable|in:Yes,No',
+            'minority' => ['nullable', \Illuminate\Validation\Rule::enum(\App\Enums\YesNo::class)],
             'blood_group_id' => [
                 'nullable',
                 Rule::exists('blood_groups', 'id')->where('school_id', $this->getSchoolId())
@@ -440,8 +440,8 @@ class StudentEnquiryController extends TenantController
                 'nullable',
                 Rule::exists('boarding_types', 'id')->where('school_id', $this->getSchoolId())
             ],
-            'transport_facility' => 'nullable|in:Yes,No',
-            'hostel_facility' => 'nullable|in:Yes,No',
+            'transport_facility' => ['nullable', \Illuminate\Validation\Rule::enum(\App\Enums\YesNo::class)],
+            'hostel_facility' => ['nullable', \Illuminate\Validation\Rule::enum(\App\Enums\YesNo::class)],
             'previous_class' => 'nullable|string|max:255',
             'identity_marks' => 'nullable|string',
             'permanent_address' => 'nullable|string',

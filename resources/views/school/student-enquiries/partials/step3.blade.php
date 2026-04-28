@@ -142,8 +142,9 @@
             <select name="transport_facility" x-model="formData.transport_facility"
                     class="no-select2 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                 <option value="">Select</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
+                @foreach(\App\Enums\YesNo::options() as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
             </select>
         </div>
         <div>
@@ -151,8 +152,9 @@
             <select name="hostel_facility" x-model="formData.hostel_facility"
                     class="no-select2 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                 <option value="">Select</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
+                @foreach(\App\Enums\YesNo::options() as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
             </select>
         </div>
         <div>
@@ -170,8 +172,9 @@
             <select name="minority" x-model="formData.minority"
                     class="no-select2 w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                 <option value="">Select</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
+                @foreach(\App\Enums\YesNo::options() as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
             </select>
         </div>
         <div>
