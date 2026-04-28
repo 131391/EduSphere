@@ -39,6 +39,7 @@
 
     <form action="{{ route('school.examination.marks.entry') }}" method="GET" class="space-y-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Exam Selection -->
             <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-indigo-50 dark:border-gray-700 p-6 hover:border-indigo-200 dark:hover:border-indigo-500 transition-all group relative overflow-hidden lg:col-span-2">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50/30 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
                 <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
@@ -58,6 +59,7 @@
                 </div>
             </div>
 
+            <!-- Summary Box -->
             <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-violet-50 dark:border-gray-700 p-6 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-violet-50/30 rounded-full -mr-16 -mt-16"></div>
                 <div class="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-violet-600 dark:text-violet-400 mb-6">
@@ -76,7 +78,8 @@
                 </template>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-emerald-50 dark:border-gray-700 p-6 hover:border-emerald-200 dark:hover:border-emerald-500 transition-all group relative overflow-hidden lg:col-span-3">
+            <!-- Subject Selection -->
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-emerald-50 dark:border-gray-700 p-6 hover:border-emerald-200 dark:hover:border-emerald-500 transition-all group relative overflow-hidden lg:col-span-2">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50/30 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
                 <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
                     <i class="fas fa-book-open text-lg"></i>
@@ -97,6 +100,30 @@
                     <p class="mt-3 text-sm text-rose-500 font-semibold">This exam has no subject snapshot yet. Reopen the schedule after assigning class subjects.</p>
                 </template>
             </div>
+
+            <!-- Bulk Operations -->
+            <div class="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl shadow-lg p-6 text-white relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-125"></div>
+                <div class="relative z-10 space-y-4">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                        <i class="fas fa-cloud-upload-alt text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black uppercase tracking-widest italic">Bulk Operations</h4>
+                        <p class="text-[10px] text-white/70 font-medium mt-1 leading-relaxed">Import marks using a pre-filled CSV template for faster data entry.</p>
+                    </div>
+                    <div class="flex flex-col gap-2 pt-2">
+                        <button type="button" @click="downloadTemplate()" :disabled="!selectedExamId || !selectedExamSubjectId"
+                            class="w-full py-2 bg-white/20 hover:bg-white text-white hover:text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50">
+                            Download Template
+                        </button>
+                        <button type="button" @click="$dispatch('open-modal', 'import-modal')" :disabled="!selectedExamId || !selectedExamSubjectId"
+                            class="w-full py-2 bg-indigo-900/40 hover:bg-indigo-900/60 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50">
+                            Import CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="flex items-center justify-center pt-8">
@@ -108,6 +135,37 @@
             </button>
         </div>
     </form>
+
+    <!-- Import Modal -->
+    <x-modal name="import-modal" title="Import Marks via CSV" maxWidth="lg">
+        <form @submit.prevent="importMarks()" class="p-1">
+            <div class="space-y-6 mb-8">
+                <div class="flex items-start gap-4 bg-amber-50 border border-amber-100 p-4 rounded-2xl">
+                    <i class="fas fa-exclamation-triangle text-amber-500 mt-1"></i>
+                    <p class="text-[11px] text-amber-700 font-bold uppercase leading-relaxed">
+                        Ensure you are using the template downloaded for the specific exam and subject selected. The Student IDs must match the current class snapshot.
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Upload CSV File</label>
+                    <div class="relative group">
+                        <input type="file" @change="file = $event.target.files[0]" accept=".csv"
+                            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[11px] file:font-black file:uppercase file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <x-slot name="footer">
+                <button type="button" @click="$dispatch('close-modal', 'import-modal')" class="btn-premium-cancel">Discard</button>
+                <button type="submit" :disabled="!file || submitting" class="btn-premium-primary min-w-[140px]">
+                    <span x-show="!submitting">Confirm Import</span>
+                    <i x-show="submitting" class="fas fa-spinner fa-spin"></i>
+                </button>
+            </x-slot>
+        </form>
+    </x-modal>
+</div>
 </div>
 
 @push('scripts')
@@ -119,11 +177,53 @@
             selectedExamSubjectId: '',
             availableSubjects: [],
             selectedExam: null,
+            file: null,
+            submitting: false,
 
             handleExamChange() {
                 this.selectedExam = this.exams.find(exam => String(exam.id) === this.selectedExamId) || null;
                 this.availableSubjects = this.selectedExam ? this.selectedExam.subjects : [];
                 this.selectedExamSubjectId = '';
+            },
+
+            downloadTemplate() {
+                if (!this.selectedExamId || !this.selectedExamSubjectId) return;
+                const url = `{{ route('school.examination.marks.template') }}?exam_id=${this.selectedExamId}&exam_subject_id=${this.selectedExamSubjectId}`;
+                window.location.href = url;
+            },
+
+            async importMarks() {
+                if (!this.file || this.submitting) return;
+                this.submitting = true;
+
+                const formData = new FormData();
+                formData.append('file', this.file);
+                formData.append('exam_id', this.selectedExamId);
+                formData.append('exam_subject_id', this.selectedExamSubjectId);
+
+                try {
+                    const response = await fetch(`{{ route('school.examination.marks.import') }}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                        this.$dispatch('close-modal', 'import-modal');
+                        this.file = null;
+                    } else {
+                        if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Import failed' });
+                    }
+                } catch (e) {
+                    if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });
+                } finally {
+                    this.submitting = false;
+                }
             }
         };
     }

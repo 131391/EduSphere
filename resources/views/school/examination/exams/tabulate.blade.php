@@ -17,6 +17,10 @@
     </div>
 
     <div class="flex items-center gap-3">
+        <a href="{{ route('school.examination.exams.bulk-report-cards', $exam->id) }}" class="px-6 py-2.5 bg-indigo-600 text-white text-xs font-black rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center gap-2 uppercase tracking-widest">
+            <i class="fas fa-file-pdf"></i>
+            Bulk Report Cards
+        </a>
         <button onclick="window.print()" class="px-6 py-2.5 bg-gray-900 text-white text-xs font-black rounded-xl hover:bg-black transition-all shadow-lg shadow-gray-200 flex items-center gap-2 uppercase tracking-widest">
             <i class="fas fa-print"></i>
             Generate Report
@@ -113,7 +117,7 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 text-center whitespace-nowrap border-l border-gray-50">
-                        <div class="flex justify-center">
+                        <div class="flex flex-col items-center gap-1">
                             @if($isAbsentOverall)
                                 <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black bg-amber-500 text-white shadow-sm">AB</span>
                             @else
@@ -121,6 +125,10 @@
                                     {{ $finalGrade ?? '-' }}
                                 </span>
                             @endif
+                            <a href="{{ route('school.examination.exams.report-card', [$exam->id, $student->id]) }}" 
+                                class="text-[9px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-tighter no-print">
+                                <i class="fas fa-download mr-0.5"></i> PDF
+                            </a>
                         </div>
                     </td>
                 </tr>

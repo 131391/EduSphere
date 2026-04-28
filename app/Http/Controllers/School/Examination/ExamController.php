@@ -397,6 +397,55 @@ class ExamController extends TenantController
         return back()->with('success', 'Teacher assignment updated.');
     }
 
+    public function downloadMarksTemplate(Request $request, ExamImportService $importService)
+    {
+        $this->ensureSchoolActive();
+        $request->validate([
+            'exam_id' => 'required|exists:exams,id',
+            'exam_subject_id' => 'required|exists:exam_subjects,id',
+        ]);
+
+        $exam = Exam::where('school_id', $this->getSchoolId())->findOrFail($request->exam_id);
+        $examSubject = $exam->examSubjects()->findOrFail($request->exam_subject_id);
+
+        $csv = $importService->generateTemplate($exam, $examSubject);
+        $filename = "marks_template_" . str($exam->display_name)->slug() . "_" . str($examSubject->resolved_name)->slug() . ".csv";
+
+        return response($csv)
+            ->header('Content-Type', 'text/csv')
+            ->header('Content-Disposition', "attachment; filename={$filename}");
+    }
+
+    public function importMarks(Request $request, ExamImportService $importService)
+    {
+        $this->authorize('create', Result::class);
+        $this->ensureSchoolActive();
+        
+        $request->validate([
+            'exam_id' => 'required|exists:exams,id',
+            'exam_subject_id' => 'required|exists:exam_subjects,id',
+            'file' => 'required|file|mimes:csv,txt|max:2048',
+        ]);
+
+        $exam = Exam::where('school_id', $this->getSchoolId())->findOrFail($request->exam_id);
+        $examSubject = $exam->examSubjects()->findOrFail($request->exam_subject_id);
+
+        try {
+            $result = $importService->import($this->school, $exam, $examSubject, $request->file('file')->getRealPath());
+
+            if ($result['success']) {
+                return response()->json($result);
+            }
+
+            return response()->json($result, 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function tabulate(Exam $exam)
     {
         $this->authorize('view', $exam);
@@ -423,6 +472,92 @@ class ExamController extends TenantController
             'students' => $students,
             'rows' => $rows,
         ]);
+    }
+
+    public function routine(Exam $exam)
+    {
+        $this->authorize('view', $exam);
+        $this->authorizeTenant($exam);
+        $this->ensureSchoolActive();
+
+        $exam->ensureSubjectSnapshot();
+        $exam->load(['class', 'examSubjects.subject']);
+
+        return view('school.examination.exams.routine', [
+            'exam' => $exam,
+            'examSubjects' => $exam->examSubjects,
+        ]);
+    }
+
+    public function updateRoutine(Request $request, Exam $exam)
+    {
+        $this->authorize('update', $exam);
+        $this->authorizeTenant($exam);
+        $this->ensureSchoolActive();
+
+        $validated = $request->validate([
+            'routine' => 'required|array',
+            'routine.*.id' => 'required|integer|exists:exam_subjects,id',
+            'routine.*.exam_date' => 'nullable|date',
+            'routine.*.start_time' => 'nullable',
+            'routine.*.end_time' => 'nullable',
+            'routine.*.room_no' => 'nullable|string|max:50',
+        ]);
+
+        foreach ($validated['routine'] as $item) {
+            $examSubject = $exam->examSubjects()->findOrFail($item['id']);
+            $examSubject->update([
+                'exam_date' => $item['exam_date'],
+                'start_time' => $item['start_time'],
+                'end_time' => $item['end_time'],
+                'room_no' => $item['room_no'],
+            ]);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Exam routine updated successfully.',
+            ]);
+        }
+
+        return redirect()->route('school.examination.exams.routine', $exam)->with('success', 'Routine updated successfully.');
+    }
+
+    public function downloadReportCard(Exam $exam, Student $student, ReportCardService $reportService)
+    {
+        $this->authorize('view', $exam);
+        $this->authorizeTenant($exam);
+        $this->ensureSchoolActive();
+
+        if ((int) $student->class_id !== (int) $exam->class_id) {
+            abort(403, 'Student does not belong to this exam class.');
+        }
+
+        try {
+            $pdf = $reportService->generateForStudent($this->school, $exam, $student);
+            $filename = "report_card_" . str($student->full_name)->slug() . "_" . str($exam->display_name)->slug() . ".pdf";
+
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to generate report card: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadAllReportCards(Exam $exam, ReportCardService $reportService)
+    {
+        $this->authorize('view', $exam);
+        $this->authorizeTenant($exam);
+        $this->ensureSchoolActive();
+
+        try {
+            $pdf = $reportService->generateBulk($this->school, $exam);
+            $filename = "bulk_report_cards_" . str($exam->display_name)->slug() . ".pdf";
+
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to generate bulk report cards: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Request $request, Exam $exam)

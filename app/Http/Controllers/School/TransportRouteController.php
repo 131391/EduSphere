@@ -31,10 +31,11 @@ class TransportRouteController extends TenantController
             return [
                 'id' => $route->id,
                 'route_name' => $route->route_name,
-                'vehicle_no' => $route->vehicle?->vehicle_no,
-                'route_create_date' => $route->route_create_date?->format('Y-m-d'),
+                'vehicle_no' => $route->vehicle?->vehicle_no ?? 'Unassigned',
+                'route_create_date' => $route->route_create_date?->format('d M, Y'),
                 'status_label' => $route->getStatusLabel(),
                 'status' => $route->status->value,
+                'status_color' => $route->status->value === 'active' ? 'emerald' : 'amber',
                 'created_at' => $route->created_at?->format('M d, Y'),
             ];
         };
@@ -61,13 +62,19 @@ class TransportRouteController extends TenantController
             $query->orderBy('route_name', 'asc');
         }
 
-        if ($request->expectsJson() || $request->ajax() || $request->has('page') || $request->filled('filters')) {
+        if ($request->expectsJson() || $request->ajax()) {
             return $this->handleAjaxTable($query, $transformer, []);
         }
 
         $vehicles = Vehicle::where('school_id', $schoolId)->where('is_active', true)->get();
 
         $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => TransportRoute::where('school_id', $schoolId)->count(),
+                'active' => TransportRoute::where('school_id', $schoolId)->where('status', 'active')->count(),
+                'inactive' => TransportRoute::where('school_id', $schoolId)->where('status', 'inactive')->count(),
+                'unassigned' => TransportRoute::where('school_id', $schoolId)->whereNull('vehicle_id')->count(),
+            ],
             'vehicles' => $vehicles,
             'statusLabels' => TransportRoute::getStatusLabels(),
         ]);
@@ -75,8 +82,38 @@ class TransportRouteController extends TenantController
         return view('school.transport.routes', [
             'initialData' => $initialData,
             'vehicles' => $vehicles,
-            'title' => 'Transport Routes Management'
+            'title' => 'Transport Routes Management',
+            'stats' => $initialData['stats']
         ]);
+    }
+
+    public function export()
+    {
+        $schoolId = $this->getSchoolId();
+        $query = TransportRoute::with('vehicle')->where('school_id', $schoolId);
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="transport_routes_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Route Name', 'Vehicle No', 'Route Creation Date', 'Status']);
+
+            $query->orderBy('route_name', 'asc')->cursor()->each(function (TransportRoute $route) use ($file) {
+                fputcsv($file, [
+                    $route->route_name,
+                    $route->vehicle?->vehicle_no ?? 'N/A',
+                    $route->route_create_date ? $route->route_create_date->format('Y-m-d') : 'N/A',
+                    $route->getStatusLabel()
+                ]);
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function store(StoreTransportRouteRequest $request)

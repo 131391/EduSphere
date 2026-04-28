@@ -94,4 +94,37 @@ class TransportAttendanceController extends TenantController
 
         return response()->json($students);
     }
+
+    public function monthWiseReport(Request $request)
+    {
+        $schoolId = $this->getSchoolId();
+        
+        $vehicles = Vehicle::where('school_id', $schoolId)->orderBy('vehicle_no')->get();
+        $selectedVehicle = null;
+        $selectedRoute = null;
+        $selectedMonth = $request->input('month', date('Y-m'));
+        $reportData = ['students' => [], 'days_in_month' => 0];
+
+        if ($request->filled('vehicle_id') && $request->filled('route_id') && $request->filled('month')) {
+            $selectedVehicle = Vehicle::where('school_id', $schoolId)->findOrFail($request->vehicle_id);
+            $selectedRoute = TransportRoute::where('school_id', $schoolId)
+                ->where('vehicle_id', $request->vehicle_id)
+                ->findOrFail($request->route_id);
+
+            $reportData = $this->attendanceService->getMonthWiseReport(
+                $this->getSchool(),
+                $request->vehicle_id,
+                $request->route_id,
+                $request->month
+            );
+        }
+
+        return view('school.transport.attendance-report', compact(
+            'vehicles',
+            'selectedVehicle',
+            'selectedRoute',
+            'selectedMonth',
+            'reportData'
+        ));
+    }
 }

@@ -33,10 +33,10 @@ class BusStopController extends TenantController
                 'id' => $busStop->id,
                 'bus_stop_no' => $busStop->bus_stop_no,
                 'bus_stop_name' => $busStop->bus_stop_name,
-                'route_name' => $busStop->route?->route_name,
-                'vehicle_no' => $busStop->vehicle?->vehicle_no,
-                'distance_from_institute' => $busStop->distance_from_institute,
-                'charge_per_month' => $busStop->charge_per_month,
+                'route_name' => $busStop->route?->route_name ?? 'N/A',
+                'vehicle_no' => $busStop->vehicle?->vehicle_no ?? 'N/A',
+                'distance' => $busStop->distance_from_institute . ' KM',
+                'charge' => '₹' . number_format($busStop->charge_per_month, 2),
                 'created_at' => $busStop->created_at?->format('M d, Y'),
             ];
         };
@@ -67,7 +67,7 @@ class BusStopController extends TenantController
             $query->orderBy('bus_stop_name', 'asc');
         }
 
-        if ($request->expectsJson() || $request->ajax() || $request->has('page') || $request->filled('filters')) {
+        if ($request->expectsJson() || $request->ajax()) {
             return $this->handleAjaxTable($query, $transformer, []);
         }
 
@@ -75,6 +75,12 @@ class BusStopController extends TenantController
         $vehicles = Vehicle::where('school_id', $schoolId)->where('is_active', true)->get();
 
         $initialData = $this->getHydrationData($query, $transformer, [
+            'stats' => [
+                'total' => BusStop::where('school_id', $schoolId)->count(),
+                'avg_charge' => '₹' . number_format(BusStop::where('school_id', $schoolId)->avg('charge_per_month') ?? 0, 2),
+                'total_routes' => TransportRoute::where('school_id', $schoolId)->count(),
+                'total_vehicles' => Vehicle::where('school_id', $schoolId)->count(),
+            ],
             'routes' => $routes,
             'vehicles' => $vehicles,
         ]);
@@ -83,8 +89,40 @@ class BusStopController extends TenantController
             'initialData' => $initialData,
             'routes' => $routes,
             'vehicles' => $vehicles,
-            'title' => 'Bus Stops Management'
+            'title' => 'Bus Stops Management',
+            'stats' => $initialData['stats']
         ]);
+    }
+
+    public function export()
+    {
+        $schoolId = $this->getSchoolId();
+        $query = BusStop::with(['route', 'vehicle'])->where('school_id', $schoolId);
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="bus_stops_registry_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Stop No', 'Stop Name', 'Route', 'Vehicle', 'Distance (KM)', 'Monthly Charge']);
+
+            $query->orderBy('bus_stop_name', 'asc')->cursor()->each(function ($stop) use ($file) {
+                fputcsv($file, [
+                    $stop->bus_stop_no,
+                    $stop->bus_stop_name,
+                    $stop->route?->route_name ?? 'N/A',
+                    $stop->vehicle?->vehicle_no ?? 'N/A',
+                    $stop->distance_from_institute,
+                    $stop->charge_per_month
+                ]);
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function store(StoreBusStopRequest $request)

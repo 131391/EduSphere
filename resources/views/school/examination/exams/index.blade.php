@@ -126,6 +126,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route('school.examination.exams.routine', $row['id']) }}" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm" title="Exam Routine"><i class="fas fa-calendar-alt text-xs"></i></a>
                                         <a href="{{ route('school.examination.exams.tabulate', $row['id']) }}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm" title="Tabulation Sheet"><i class="fas fa-table text-xs"></i></a>
                                         @if(in_array($row['status_value'], [1, 2]))
                                         <button @click="openEditModal(@js($row))" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm" title="Edit Schedule"><i class="fas fa-edit text-xs"></i></button>
@@ -174,6 +175,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap font-bold text-xs text-gray-600 dark:text-gray-400" x-text="row.assessment_window"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
+                                        <a :href="'/school/examination/exams/' + row.id + '/routine'" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm" title="Exam Routine"><i class="fas fa-calendar-alt text-xs"></i></a>
                                         <a :href="'/school/examination/exams/' + row.id + '/tabulate'" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm" title="Tabulation Sheet"><i class="fas fa-table text-xs"></i></a>
                                         <template x-if="row.status_value === 1 || row.status_value === 2">
                                             <div class="flex items-center gap-1">

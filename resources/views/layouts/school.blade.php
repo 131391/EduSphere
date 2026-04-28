@@ -269,6 +269,150 @@
                         </a>
                     </li>
 
+                    <!-- Transport Management -->
+                    <li x-data="{
+                        open: {{ request()->routeIs('school.transport.*') ? 'true' : 'false' }},
+                        flyoutStyle: '',
+                        syncFlyout() {
+                            if (!this.sidebarCollapsed || !this.open || !this.$refs.trigger) return;
+                            const rect = this.$refs.trigger.getBoundingClientRect();
+                            const top = Math.max(12, Math.min(rect.top, window.innerHeight - 360));
+                            this.flyoutStyle = `top: ${top}px; left: ${rect.right}px;`;
+                        },
+                        toggleMenu() {
+                            this.open = !this.open;
+                            if (this.sidebarCollapsed && this.open) {
+                                this.$nextTick(() => this.syncFlyout());
+                            }
+                        },
+                        closeMenu() {
+                            if (this.sidebarCollapsed) this.open = false;
+                        }
+                    }" class="relative"
+                        @resize.window="syncFlyout()"
+                        @scroll.window="syncFlyout()"
+                        @keydown.escape.window="closeMenu()">
+                        <button x-ref="trigger" @click="toggleMenu()"
+                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
+                            :class="{ 'justify-center': sidebarCollapsed }">
+                            <div class="flex items-center">
+                                <i class="fas fa-bus w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Transport</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200"
+                                :class="{ 'transform rotate-180': open }" x-show="!sidebarCollapsed"></i>
+                        </button>
+                        <ul x-show="!sidebarCollapsed && open" x-collapse class="pl-4 mt-1 space-y-1 sidebar-submenu" x-cloak>
+                            <li>
+                                <a href="{{ route('school.transport.vehicles.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.transport.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Vehicles</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.transport.transport_routes.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.transport.transport_routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Routes</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.transport.bus_stops.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.transport.bus_stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Bus Stops</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.transport.assignments.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.transport.assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Assignments</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.transport.transport_attendance.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.transport.transport_attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Attendance</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Hostel Management -->
+                    <li x-data="{
+                        open: {{ request()->routeIs('school.hostel.*') ? 'true' : 'false' }},
+                        flyoutStyle: '',
+                        syncFlyout() {
+                            if (!this.sidebarCollapsed || !this.open || !this.$refs.trigger) return;
+                            const rect = this.$refs.trigger.getBoundingClientRect();
+                            const top = Math.max(12, Math.min(rect.top, window.innerHeight - 360));
+                            this.flyoutStyle = `top: ${top}px; left: ${rect.right}px;`;
+                        },
+                        toggleMenu() {
+                            this.open = !this.open;
+                            if (this.sidebarCollapsed && this.open) {
+                                this.$nextTick(() => this.syncFlyout());
+                            }
+                        },
+                        closeMenu() {
+                            if (this.sidebarCollapsed) this.open = false;
+                        }
+                    }" class="relative"
+                        @resize.window="syncFlyout()"
+                        @scroll.window="syncFlyout()"
+                        @keydown.escape.window="closeMenu()">
+                        <button x-ref="trigger" @click="toggleMenu()"
+                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
+                            :class="{ 'justify-center': sidebarCollapsed }">
+                            <div class="flex items-center">
+                                <i class="fas fa-hotel w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Hostel</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200"
+                                :class="{ 'transform rotate-180': open }" x-show="!sidebarCollapsed"></i>
+                        </button>
+                        <ul x-show="!sidebarCollapsed && open" x-collapse class="pl-4 mt-1 space-y-1 sidebar-submenu" x-cloak>
+                            <li>
+                                <a href="{{ route('school.hostel.hostels.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.hostel.hostels.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Hostels</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.hostel.floors.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.hostel.floors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Floors</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.hostel.rooms.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.hostel.rooms.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Rooms</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.hostel.assignments.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.hostel.assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Assignments</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.hostel.attendance.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.hostel.attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Attendance</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Fee Masters -->
                     <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Masters</p>

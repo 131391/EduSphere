@@ -14,11 +14,18 @@ class ExamSubject extends Model
         'subject_id',
         'teacher_id',
         'subject_name',
+        'exam_date',
+        'start_time',
+        'end_time',
+        'room_no',
         'full_marks',
         'sort_order',
     ];
 
     protected $casts = [
+        'exam_date' => 'date',
+        'start_time' => 'datetime:H:i',
+        'end_time' => 'datetime:H:i',
         'full_marks' => 'integer',
         'sort_order' => 'integer',
     ];

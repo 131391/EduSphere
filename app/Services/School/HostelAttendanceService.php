@@ -3,14 +3,16 @@
 namespace App\Services\School;
 
 use App\Models\School;
-use App\Models\TransportAttendance;
+use App\Models\HostelAttendance;
+use App\Models\HostelBedAssignment;
+use App\Enums\GeneralStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-class TransportAttendanceService
+class HostelAttendanceService
 {
     /**
-     * Mark transport attendance in bulk.
+     * Mark hostel attendance in bulk.
      *
      * @param School $school
      * @param array $data
@@ -23,17 +25,17 @@ class TransportAttendanceService
             $now = now();
 
             foreach ($data['attendance_data'] as $studentData) {
-                TransportAttendance::updateOrCreate(
+                HostelAttendance::updateOrCreate(
                     [
                         'school_id' => $school->id,
                         'student_id' => $studentData['student_id'],
                         'attendance_date' => $data['attendance_date'],
-                        'attendance_type' => $data['attendance_type'],
                         'academic_year_id' => $data['academic_year_id'],
                     ],
                     [
-                        'vehicle_id' => $data['vehicle_id'],
-                        'route_id' => $data['route_id'],
+                        'hostel_id' => $data['hostel_id'],
+                        'hostel_floor_id' => $data['hostel_floor_id'],
+                        'hostel_room_id' => $data['hostel_room_id'],
                         'is_present' => $studentData['is_present'],
                         'time' => $now,
                         'remarks' => $studentData['remarks'] ?? null,
@@ -45,15 +47,16 @@ class TransportAttendanceService
     }
 
     /**
-     * Get month-wise attendance report for a route and vehicle.
+     * Get month-wise attendance report for a hostel room.
      *
      * @param School $school
-     * @param int $vehicleId
-     * @param int $routeId
+     * @param int $hostelId
+     * @param int $floorId
+     * @param int $roomId
      * @param string $month Y-m
      * @return array
      */
-    public function getMonthWiseReport(School $school, int $vehicleId, int $routeId, string $month): array
+    public function getMonthWiseReport(School $school, int $hostelId, int $floorId, int $roomId, string $month): array
     {
         $year = (int)substr($month, 0, 4);
         $monthNum = (int)substr($month, 5, 2);
@@ -71,20 +74,21 @@ class TransportAttendanceService
             return [];
         }
 
-        // Get all students assigned to this route
-        $assignments = \App\Models\StudentTransportAssignment::with(['student'])
+        // Get all students assigned to this room
+        $assignments = HostelBedAssignment::with(['student'])
             ->where('school_id', $school->id)
-            ->where('route_id', $routeId)
-            ->where('academic_year_id', $academicYear->id)
+            ->where('hostel_id', $hostelId)
+            ->where('hostel_floor_id', $floorId)
+            ->where('hostel_room_id', $roomId)
+            ->where('status', GeneralStatus::Active)
             ->whereNull('deleted_at')
             ->get();
 
         $studentIds = $assignments->pluck('student_id')->toArray();
 
         // Get all attendance records
-        $attendances = TransportAttendance::where('school_id', $school->id)
-            ->where('vehicle_id', $vehicleId)
-            ->where('route_id', $routeId)
+        $attendances = HostelAttendance::where('school_id', $school->id)
+            ->where('hostel_id', $hostelId)
             ->whereIn('student_id', $studentIds)
             ->whereBetween('attendance_date', [$startDate, $endDate])
             ->where('is_present', true)
@@ -96,15 +100,15 @@ class TransportAttendanceService
             $studentData = [
                 'id' => $student->id,
                 'admission_no' => $student->admission_no,
-                'name' => trim($student->first_name . ' ' . $student->middle_name . ' ' . $student->last_name),
-                'days' => array_fill(1, $daysInMonth, [])
+                'name' => $student->full_name,
+                'days' => array_fill(1, $daysInMonth, false)
             ];
 
             $studentAttendances = $attendances->where('student_id', $student->id);
             foreach ($studentAttendances as $attendance) {
                 $day = (int)$attendance->attendance_date->format('d');
                 if ($day >= 1 && $day <= $daysInMonth) {
-                    $studentData['days'][$day][] = $this->getAttendanceTypeCode($attendance->attendance_type);
+                    $studentData['days'][$day] = true;
                 }
             }
 
@@ -116,28 +120,5 @@ class TransportAttendanceService
             'days_in_month' => $daysInMonth,
             'month_name' => date('F Y', strtotime($startDate))
         ];
-    }
-
-    /**
-     * Get attendance type code.
-     */
-    private function getAttendanceTypeCode($type): string
-    {
-        if ($type instanceof \App\Enums\TransportAttendanceType) {
-            return match($type) {
-                \App\Enums\TransportAttendanceType::PickupFromBusStop => 'PBS',
-                \App\Enums\TransportAttendanceType::DropAtSchoolCampus => 'DSC',
-                \App\Enums\TransportAttendanceType::PickupFromSchoolCampus => 'PSC',
-                \App\Enums\TransportAttendanceType::DropAtBusStop => 'DBS',
-            };
-        }
-
-        return match((int)$type) {
-            1 => 'PBS',
-            2 => 'DSC',
-            3 => 'PSC',
-            4 => 'DBS',
-            default => '??',
-        };
     }
 }
