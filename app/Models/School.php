@@ -10,6 +10,12 @@ use Spatie\Activitylog\LogOptions;
 
 use App\Enums\SchoolStatus;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $subdomain
+ * @property \App\Enums\SchoolStatus $status
+ */
 class School extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;

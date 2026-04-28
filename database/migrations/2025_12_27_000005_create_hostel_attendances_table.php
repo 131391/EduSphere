@@ -17,7 +17,11 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('hostel_id')->constrained('hostels')->onDelete('cascade');
             $table->date('attendance_date');
+            $table->foreignId('academic_year_id')->constrained('academic_years')->onDelete('cascade');
+            $table->foreignId('hostel_floor_id')->nullable()->constrained('hostel_floors')->onDelete('cascade');
+            $table->foreignId('hostel_room_id')->nullable()->constrained('hostel_rooms')->onDelete('cascade');
             $table->boolean('is_present')->default(true);
+            $table->timestamp('time')->nullable();
             $table->text('remarks')->nullable();
             $table->foreignId('marked_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();

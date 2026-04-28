@@ -17,6 +17,13 @@ use App\Enums\YesNo;
 use App\Models\StudentRegistration;
 use App\Models\StudentEnquiry;
 
+/**
+ * @property int $id
+ * @property int $school_id
+ * @property string $first_name
+ * @property string $last_name
+ * @property \App\Enums\StudentStatus $status
+ */
 class Student extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity, Tenantable;

@@ -29,14 +29,26 @@ class StoreHostelAttendanceRequest extends FormRequest
                 'required',
                 Rule::exists('hostels', 'id')->where('school_id', $schoolId),
             ],
+            'hostel_floor_id' => [
+                'required',
+                Rule::exists('hostel_floors', 'id')->where('school_id', $schoolId)->where('hostel_id', $this->hostel_id),
+            ],
+            'hostel_room_id' => [
+                'required',
+                Rule::exists('hostel_rooms', 'id')->where('school_id', $schoolId)->where('hostel_floor_id', $this->hostel_floor_id),
+            ],
+            'academic_year_id' => [
+                'required',
+                Rule::exists('academic_years', 'id')->where('school_id', $schoolId),
+            ],
             'attendance_date' => 'required|date|before_or_equal:today',
-            'students' => 'required|array|min:1',
-            'students.*.student_id' => [
+            'attendance_data' => 'required|array|min:1',
+            'attendance_data.*.student_id' => [
                 'required',
                 Rule::exists('students', 'id')->where('school_id', $schoolId),
             ],
-            'students.*.is_present' => 'required|boolean',
-            'students.*.remarks' => 'nullable|string|max:500',
+            'attendance_data.*.is_present' => 'required|boolean',
+            'attendance_data.*.remarks' => 'nullable|string|max:500',
         ];
     }
 }

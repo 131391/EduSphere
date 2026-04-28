@@ -8,28 +8,35 @@ use App\Models\HostelAttendance;
 use App\Models\HostelBedAssignment;
 use App\Models\Hostel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class HostelAttendanceController extends TenantController
 {
+    protected \App\Services\School\HostelAttendanceService $attendanceService;
+
+    public function __construct(\App\Services\School\HostelAttendanceService $attendanceService)
+    {
+        parent::__construct();
+        $this->attendanceService = $attendanceService;
+    }
+
     /**
      * Display the hostel attendance form.
      */
     public function index(Request $request)
     {
         $schoolId = $this->getSchoolId();
-        
-        // Get all hostels for the school
+
         $hostels = Hostel::where('school_id', $schoolId)
             ->orderBy('hostel_name')
             ->get();
+
+        $academicYears = \App\Models\AcademicYear::where('school_id', $schoolId)->get();
 
         // Calculate Global Stats for today
         $today = now()->toDateString();
         $stats = [
             'total_residents' => HostelBedAssignment::where('school_id', $schoolId)
+                ->where('status', \App\Enums\GeneralStatus::Active)
                 ->whereNull('deleted_at')
                 ->count(),
             'present_today' => HostelAttendance::where('school_id', $schoolId)
@@ -42,50 +49,70 @@ class HostelAttendanceController extends TenantController
                 ->count(),
         ];
 
-        return view('receptionist.hostel-attendance.index', compact('hostels', 'stats'));
+        return view('receptionist.hostel-attendance.index', compact('hostels', 'stats', 'academicYears'));
     }
 
     /**
-     * Get students for a selected hostel (AJAX).
+     * Get floors for a selected hostel (AJAX).
+     */
+    public function getFloors(Request $request)
+    {
+        $schoolId = $this->getSchoolId();
+        $floors = \App\Models\HostelFloor::where('school_id', $schoolId)
+            ->where('hostel_id', $request->hostel_id)
+            ->orderBy('floor_name')
+            ->get();
+        return response()->json($floors);
+    }
+
+    /**
+     * Get rooms for a selected floor (AJAX).
+     */
+    public function getRooms(Request $request)
+    {
+        $schoolId = $this->getSchoolId();
+        $rooms = \App\Models\HostelRoom::where('school_id', $schoolId)
+            ->where('hostel_floor_id', $request->hostel_floor_id)
+            ->orderBy('room_name')
+            ->get();
+        return response()->json($rooms);
+    }
+
+    /**
+     * Get students for a selected room (AJAX).
      */
     public function getStudents(Request $request)
     {
         try {
             $schoolId = $this->getSchoolId();
-            
+
             $request->validate([
-                'hostel_id' => ['required', \Illuminate\Validation\Rule::exists('hostels', 'id')->where('school_id', $this->getSchoolId())],
+                'hostel_id' => ['required', \Illuminate\Validation\Rule::exists('hostels', 'id')->where('school_id', $schoolId)],
+                'hostel_floor_id' => ['required', \Illuminate\Validation\Rule::exists('hostel_floors', 'id')->where('school_id', $schoolId)],
+                'hostel_room_id' => ['required', \Illuminate\Validation\Rule::exists('hostel_rooms', 'id')->where('school_id', $schoolId)],
             ]);
 
-            $hostel = Hostel::findOrFail($request->hostel_id);
-
-            // Get active bed assignments for this hostel
+            // Get active bed assignments for this room
             $assignments = HostelBedAssignment::where('school_id', $schoolId)
-                ->where('hostel_id', $request->hostel_id)
+                ->where('hostel_room_id', $request->hostel_room_id)
+                ->where('status', \App\Enums\GeneralStatus::Active)
                 ->with([
-                    'student' => function($query) {
+                    'student' => function ($query) {
                         $query->with(['class', 'section']);
-                    },
-                    'floor', 
-                    'room'
+                    }
                 ])
-                ->has('student') // Only get assignments with valid students
                 ->get();
 
-            $studentsArray = $assignments->map(function($assignment) {
+            $studentsArray = $assignments->map(function ($assignment) {
                 $student = $assignment->student;
-                if (!$student) {
+                if (!$student)
                     return null;
-                }
-                
+
                 return [
-                    'id' => $student->id,
+                    'student_id' => $student->id,
                     'admission_no' => $student->admission_no,
-                    'name' => trim($student->first_name . ' ' . ($student->middle_name ?? '') . ' ' . ($student->last_name ?? '')),
+                    'name' => $student->full_name,
                     'class_name' => $student->class ? $student->class->name : 'N/A',
-                    'section_name' => $student->section ? $student->section->name : '',
-                    'floor_name' => $assignment->floor ? $assignment->floor->floor_name : 'N/A',
-                    'room_name' => $assignment->room ? $assignment->room->room_name : 'N/A',
                     'bed_no' => $assignment->bed_no ?? 'N/A',
                 ];
             })->filter()->values()->toArray();
@@ -94,62 +121,32 @@ class HostelAttendanceController extends TenantController
                 'success' => true,
                 'students' => $studentsArray,
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Manifest retrieval failure: ' . $e->getMessage()
+                'message' => 'Failed to retrieve manifest: ' . $e->getMessage()
             ], 500);
         }
     }
 
     public function store(StoreHostelAttendanceRequest $request)
     {
-        $schoolId = $this->getSchoolId();
-        $validated = $request->validated();
-
-        // Verify all submitted students are actually assigned to this hostel.
-        $studentIds = collect($validated['students'])->pluck('student_id')->toArray();
-        $validAssignmentsCount = HostelBedAssignment::where('school_id', $schoolId)
-            ->where('hostel_id', $validated['hostel_id'])
-            ->whereIn('student_id', $studentIds)
-            ->count();
-
-        if ($validAssignmentsCount !== count(array_unique($studentIds))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Some students are not assigned to the selected hostel.',
-                'errors'  => ['students' => ['Student residency mismatch detected.']],
-            ], 422);
-        }
-
-        return DB::transaction(function () use ($validated, $schoolId) {
-            foreach ($validated['students'] as $studentData) {
-                HostelAttendance::updateOrCreate(
-                    [
-                        'school_id'       => $schoolId,
-                        'student_id'      => $studentData['student_id'],
-                        'attendance_date' => $validated['attendance_date'],
-                    ],
-                    [
-                        'hostel_id'  => $validated['hostel_id'],
-                        'is_present' => $studentData['is_present'],
-                        'remarks'    => $studentData['remarks'] ?? null,
-                        'marked_by'  => Auth::id(),
-                    ]
-                );
-            }
+        try {
+            $this->attendanceService->markBulkAttendance(
+                $this->getSchool(),
+                $request->validated()
+            );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Attendance saved for ' . count($validated['students']) . ' residents.',
+                'message' => 'Hostel attendance marked successfully!',
             ]);
-        });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark attendance: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -158,7 +155,7 @@ class HostelAttendanceController extends TenantController
     public function report(Request $request)
     {
         $schoolId = $this->getSchoolId();
-        
+
         // Get all hostels for the school
         $hostels = Hostel::where('school_id', $schoolId)
             ->orderBy('hostel_name')
@@ -167,10 +164,10 @@ class HostelAttendanceController extends TenantController
         // Build query with eager loading - use whereHas for filtering to preserve relationships
         $query = HostelAttendance::where('school_id', $schoolId)
             ->with([
-                'student' => function($q) {
+                'student' => function ($q) {
                     $q->with(['class', 'section']);
                 },
-                'hostel', 
+                'hostel',
                 'markedBy'
             ]);
 
@@ -190,14 +187,14 @@ class HostelAttendanceController extends TenantController
         // Search by student name or admission number using whereHas
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('student', function($q) use ($search, $schoolId) {
+            $query->whereHas('student', function ($q) use ($search, $schoolId) {
                 $q->where('school_id', $schoolId)
-                  ->where(function($sub) use ($search) {
-                    $sub->where('admission_no', 'like', "%{$search}%")
-                        ->orWhere('first_name', 'like', "%{$search}%")
-                        ->orWhere('middle_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%");
-                  });
+                    ->where(function ($sub) use ($search) {
+                        $sub->where('admission_no', 'like', "%{$search}%")
+                            ->orWhere('first_name', 'like', "%{$search}%")
+                            ->orWhere('middle_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -212,18 +209,18 @@ class HostelAttendanceController extends TenantController
         }
 
         // Sorting
-        $sortColumn   = $request->input('sort', 'attendance_date');
+        $sortColumn = $request->input('sort', 'attendance_date');
         $sortDirection = $request->input('direction', 'desc');
         $allowedSortColumns = ['attendance_date', 'admission_no', 'hostel_name'];
         if (in_array($sortColumn, $allowedSortColumns)) {
             if ($sortColumn === 'admission_no') {
                 $query->join('students', 'hostel_attendances.student_id', '=', 'students.id')
-                      ->orderBy('students.admission_no', $sortDirection)
-                      ->select('hostel_attendances.*');
+                    ->orderBy('students.admission_no', $sortDirection)
+                    ->select('hostel_attendances.*');
             } elseif ($sortColumn === 'hostel_name') {
                 $query->join('hostels', 'hostel_attendances.hostel_id', '=', 'hostels.id')
-                      ->orderBy('hostels.hostel_name', $sortDirection)
-                      ->select('hostel_attendances.*');
+                    ->orderBy('hostels.hostel_name', $sortDirection)
+                    ->select('hostel_attendances.*');
             } else {
                 $query->orderBy('hostel_attendances.attendance_date', $sortDirection);
             }
@@ -239,7 +236,7 @@ class HostelAttendanceController extends TenantController
         }
 
         // Pagination
-        $perPage     = $request->input('per_page', 15);
+        $perPage = $request->input('per_page', 15);
         $attendances = $query->paginate($perPage)->withQueryString();
 
         $attendances->load([
@@ -249,7 +246,7 @@ class HostelAttendanceController extends TenantController
 
         // Attach bed assignment data (floor, room, bed) to each attendance record
         $studentIds = $attendances->pluck('student_id')->unique();
-        $hostelIds  = $attendances->pluck('hostel_id')->unique();
+        $hostelIds = $attendances->pluck('hostel_id')->unique();
 
         $bedAssignments = HostelBedAssignment::where('school_id', $schoolId)
             ->whereIn('student_id', $studentIds)
@@ -262,9 +259,9 @@ class HostelAttendanceController extends TenantController
         $attendances->getCollection()->transform(function ($attendance) use ($bedAssignments) {
             $assignment = $bedAssignments->get($attendance->student_id . '_' . $attendance->hostel_id);
             if ($assignment) {
-                $attendance->bed_no     = $assignment->bed_no;
+                $attendance->bed_no = $assignment->bed_no;
                 $attendance->floor_name = $assignment->floor?->floor_name;
-                $attendance->room_name  = $assignment->room?->room_name;
+                $attendance->room_name = $assignment->room?->room_name;
             }
             return $attendance;
         });
@@ -289,7 +286,7 @@ class HostelAttendanceController extends TenantController
     private function exportToExcel($attendances)
     {
         $filename = 'hostel_attendance_report_' . date('Y-m-d_His') . '.csv';
-        
+
         $headers = [
             'SR NO',
             'ADMISSION NO',
@@ -306,10 +303,10 @@ class HostelAttendanceController extends TenantController
 
         $callback = function () use ($attendances, $headers) {
             $file = fopen('php://output', 'w');
-            
+
             // Write headers
             fputcsv($file, $headers);
-            
+
             // Write data
             $srNo = 1;
             foreach ($attendances as $attendance) {
@@ -329,7 +326,7 @@ class HostelAttendanceController extends TenantController
                 ];
                 fputcsv($file, $rowData);
             }
-            
+
             fclose($file);
         };
 
