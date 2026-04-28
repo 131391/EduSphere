@@ -69,7 +69,7 @@
 
 <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-start gap-3">
     <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
-    <p class="text-sm text-blue-700 dark:text-blue-300">
+    <p class="text-sm text-blue-700 dark:text-blue-300 dark:text-blue-300">
         Select a registration to begin. All student details will be auto-filled from the registration record.
         <strong>A registration is required to proceed.</strong>
     </p>

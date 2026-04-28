@@ -386,7 +386,7 @@
 
                 <div class="flex items-start gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-4 py-3">
                     <i class="fas fa-info-circle mt-0.5 flex-shrink-0 text-blue-400"></i>
-                    <span class="text-xs text-blue-700 dark:text-blue-300">This sets the standard rate for the selected class and component. It will be used during automated fee generation.</span>
+                    <span class="text-xs text-blue-700 dark:text-blue-300 dark:text-blue-300">This sets the standard rate for the selected class and component. It will be used during automated fee generation.</span>
                 </div>
             </div>
 

@@ -598,12 +598,12 @@
                         <label class="modal-label-premium">Aadhaar Card Document</label>
                         <div class="relative group">
                             <div class="flex items-center gap-4">
-                                <div class="w-20 h-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                                <div class="w-20 h-20 bg-slate-50 dark:bg-gray-700 border-2 border-dashed border-slate-200 dark:border-gray-600 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
                                     <img :src="formData.aadhaar_card_preview" x-show="formData.aadhaar_card_preview" class="w-full h-full object-cover">
                                     <i x-show="!formData.aadhaar_card_preview" class="fas fa-id-card text-xl text-slate-300"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm">
+                                    <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-gray-600 transition-colors shadow-sm">
                                         <i class="fas fa-upload mr-2 text-slate-400"></i> Choose File
                                         <input type="file" x-ref="aadhaarCardInput" accept=".pdf,.jpg,.jpeg,.png"
                                             @change="previewAadhaarCard($event); clearError('aadhaar_card')" class="hidden">
@@ -622,12 +622,12 @@
                         <label class="modal-label-premium">Staff Photograph</label>
                         <div class="relative group">
                             <div class="flex items-center gap-4">
-                                <div class="w-20 h-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                                <div class="w-20 h-20 bg-slate-50 dark:bg-gray-700 border-2 border-dashed border-slate-200 dark:border-gray-600 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
                                     <img :src="formData.staff_image_preview" x-show="formData.staff_image_preview" class="w-full h-full object-cover">
                                     <i x-show="!formData.staff_image_preview" class="fas fa-camera text-xl text-slate-300"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm">
+                                    <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 text-slate-600 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-slate-50 dark:hover:bg-gray-600 transition-colors shadow-sm">
                                         <i class="fas fa-upload mr-2 text-slate-400"></i> Choose File
                                         <input type="file" x-ref="staffImageInput" accept=".jpg,.jpeg,.png"
                                             @change="previewStaffImage($event); clearError('staff_image')" class="hidden">
@@ -643,10 +643,10 @@
                 </div>
 
                 <!-- Notice Card (same style as Academic Year toggle card) -->
-                <div class="mb-8 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                <div class="mb-8 flex items-center justify-between bg-[#f0f5ff] dark:bg-indigo-900/20 border border-[#e5edff] dark:border-indigo-800 p-5 rounded-2xl shadow-sm">
                     <div class="flex flex-col">
-                        <span class="text-sm font-bold text-slate-900 leading-tight">Note</span>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">Ensure salary and qualification details are verified before saving.</span>
+                        <span class="text-sm font-bold text-slate-900 dark:text-gray-100 leading-tight">Note</span>
+                        <span class="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase mt-1 tracking-wide opacity-80">Ensure salary and qualification details are verified before saving.</span>
                     </div>
                     <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
                         <i class="fas fa-shield-check text-indigo-600 text-sm"></i>

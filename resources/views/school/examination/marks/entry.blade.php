@@ -19,7 +19,7 @@
 
         <div class="flex items-center gap-3">
             <template x-if="hasChanges">
-                <div class="px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 animate-pulse">
+                <div class="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center gap-2 animate-pulse">
                     <div class="w-2 h-2 rounded-full bg-amber-500"></div>
                     <span class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Unsaved Changes</span>
                 </div>

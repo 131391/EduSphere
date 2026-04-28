@@ -402,7 +402,7 @@
                 </div>
 
                 <!-- notice card -->
-                <div class="mt-6 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
+                <div class="mt-6 flex items-center justify-between bg-[#f0f5ff] dark:bg-indigo-900/20 border border-[#e5edff] dark:border-indigo-800 p-5 rounded-2xl shadow-sm">
                     <div class="flex flex-col">
                         <span class="text-sm font-bold text-slate-900 dark:text-gray-100 leading-tight">Note</span>
                         <span class="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase mt-1 tracking-wide opacity-80">The assignment is linked to the student's fee account. Make sure the student and room details are correct before saving.</span>

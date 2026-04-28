@@ -304,7 +304,7 @@
                 </div>
             </div>
 
-            <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
+            <div class="mt-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 p-4 rounded-2xl flex items-start gap-3">
                 <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
                 <div class="flex flex-col">
                     <span class="text-xs font-bold text-slate-900 dark:text-gray-100 dark:text-gray-100 leading-tight">Note</span>

@@ -18,7 +18,7 @@
     </div>
 
     {{-- Info Banner --}}
-    <div class="mb-6 flex items-start gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl px-4 py-3 text-sm text-blue-700 dark:text-blue-300">
+    <div class="mb-6 flex items-start gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 rounded-xl px-4 py-3 text-sm text-blue-700 dark:text-blue-300 dark:text-blue-300">
         <i class="fas fa-info-circle mt-0.5 flex-shrink-0"></i>
         <span>This will create individual fee records for every <strong>active student</strong> in the selected class. Duplicate records for the same period are automatically skipped.</span>
     </div>

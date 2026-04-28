@@ -69,7 +69,7 @@
                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">
                 </div>
 
-                <div class="md:col-span-2 p-4 bg-blue-50 rounded-xl border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="waiver_percentage" class="block text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">Waiver Percentage (%)</label>
                         <input type="number" step="0.01" name="waiver_percentage" id="waiver_percentage" x-model.number="percent" @input="amount = (actual * percent / 100).toFixed(2)"

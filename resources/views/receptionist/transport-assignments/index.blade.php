@@ -278,7 +278,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex flex-col gap-3 shadow-sm">
+                    <div class="bg-[#f0f5ff] dark:bg-indigo-900/20 border border-[#e5edff] dark:border-indigo-800 p-5 rounded-2xl flex flex-col gap-3 shadow-sm">
                         <label class="modal-label-premium !mb-0">Monthly Fee</label>
                         <div class="relative">
                             <span class="absolute right-5 top-1/2 -translate-y-1/2 text-teal-600 font-black text-xl">₹</span>
@@ -288,7 +288,7 @@
                     </div>
 
                     {{-- Administrative Notice --}}
-                    <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
+                    <div class="bg-[#f0f5ff] dark:bg-indigo-900/20 border border-[#e5edff] dark:border-indigo-800 p-5 rounded-2xl flex items-start gap-4 shadow-sm">
                         <div class="w-10 h-10 rounded-xl bg-white dark:bg-gray-700 shadow-sm flex items-center justify-center shrink-0">
                             <i class="fas fa-exclamation-triangle text-amber-500 text-sm"></i>
                         </div>

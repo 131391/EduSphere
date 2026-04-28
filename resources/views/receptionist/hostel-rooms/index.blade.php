@@ -299,7 +299,7 @@
                     </div>
                 </div>
 
-                <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
+                <div class="mt-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 p-4 rounded-2xl flex items-start gap-3">
                     <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
                     <p class="text-[11px] text-slate-500 dark:text-gray-400 leading-relaxed">
                         After adding a room, assign students to it via the Bed Assignments section.
