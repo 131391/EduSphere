@@ -50,8 +50,8 @@ Route::get('student-registrations', [StudentRegistrationController::class, 'inde
 Route::post('student-registrations/fetch', [StudentRegistrationController::class, 'index'])->name('student-registrations.fetch');
 Route::get('student-registrations/enquiry/{id}', [StudentRegistrationController::class, 'getEnquiryData'])->name('student-registrations.enquiry-data');
 Route::get('student-registrations/registration-fee/{classId}', [StudentRegistrationController::class, 'getRegistrationFee'])->name('student-registrations.registration-fee');
-Route::get('student-registrations/download-template', [StudentRegistrationController::class, 'downloadTemplate'])->name('registrations.download-template');
-Route::post('student-registrations/import', [StudentRegistrationController::class, 'import'])->name('registrations.import');
+Route::get('student-registrations/download-template', [StudentRegistrationController::class, 'downloadTemplate'])->name('student-registrations.download-template');
+Route::post('student-registrations/import', [StudentRegistrationController::class, 'import'])->name('student-registrations.import');
 Route::get('student-registrations/{id}/pdf', [StudentRegistrationController::class, 'downloadPdf'])->name('student-registrations.pdf');
 Route::resource('student-registrations', StudentRegistrationController::class)->except(['index']);
 
