@@ -254,7 +254,7 @@
     </div>
 
     <!-- Pagination and Info -->
-    @if($data && $data->hasPages())
+    @if($data && ($data instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) && $data->hasPages())
     <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <!-- Info -->
@@ -274,7 +274,7 @@
             </div>
         </div>
     </div>
-    @elseif($data)
+    @elseif($data && ($data instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator || $data instanceof \Illuminate\Support\Collection || $data instanceof \Illuminate\Database\Eloquent\Collection))
     <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
         <div class="text-sm text-gray-700">
             Showing 
