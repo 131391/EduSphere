@@ -31,9 +31,9 @@
                     this.$el.style.display = 'block';
                     this.$el.style.zIndex = '99999';
                     // Close any other modals that might be open
-                    const otherModals = document.querySelectorAll('[x-show*="show"], [class*="modal"], [class*="z-50"]');
+                    const otherModals = document.querySelectorAll('[x-show*=\'show\'], [class*=\'modal\'], [class*=\'z-50\']');
                     otherModals.forEach(modal => {
-                        if (modal !== this.$el && modal.closest('[x-data*="enquiryManagement"]')) {
+                        if (modal !== this.$el && modal.closest('[x-data*=\'enquiryManagement\']')) {
                             // Don't close modals that are part of the same component
                             return;
                         }
