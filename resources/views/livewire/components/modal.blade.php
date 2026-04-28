@@ -23,14 +23,14 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
     >
-        <div class="w-full {{ $this->sizeClass() }} bg-white rounded-lg shadow-xl">
+        <div class="w-full {{ $this->sizeClass() }} bg-white dark:bg-gray-800 rounded-lg shadow-xl">
             <!-- Header -->
-            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                <h2 class="text-xl font-semibold text-gray-900">{{ $title }}</h2>
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">{{ $title }}</h2>
                 @if($showCloseButton)
                     <button 
                         wire:click="close"
-                        class="text-gray-400 hover:text-gray-600 transition"
+                        class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition"
                     >
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -40,7 +40,7 @@
             </div>
 
             <!-- Body -->
-            <div class="px-6 py-4">
+            <div class="px-6 py-4 dark:text-gray-200">
                 {{ $slot }}
             </div>
         </div>

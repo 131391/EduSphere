@@ -57,7 +57,7 @@
                         </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
                         @foreach($initialData['rows'] as $row)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                                 <td class="px-6 py-4 whitespace-nowrap">

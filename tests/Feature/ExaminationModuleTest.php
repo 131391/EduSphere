@@ -11,12 +11,15 @@ use App\Models\ClassModel;
 use App\Models\Exam;
 use App\Models\ExamSubject;
 use App\Models\ExamType;
+use App\Models\Grade;
+use App\Models\Result;
 use App\Models\Role;
 use App\Models\School;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\User;
+use App\Services\School\Examination\ResultService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -347,6 +350,229 @@ class ExaminationModuleTest extends TestCase
             ->assertJsonPath('message', 'This exam already has recorded marks and cannot be removed.');
 
         $this->assertDatabaseHas('exams', ['id' => $exam->id]);
+    }
+
+    public function test_school_admin_can_update_exam_dates_and_name(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'exam-update-school']);
+        $admin = $this->createSchoolAdmin($school);
+        [$exam] = $this->seedScheduledExam($school);
+
+        $response = $this->actingAs($admin)->putJson(
+            $this->tenantUrl($school, "/school/examination/exams/{$exam->id}"),
+            [
+                'name' => 'Renamed Exam',
+                'start_date' => '2026-11-02',
+                'end_date' => '2026-11-08',
+            ]
+        );
+
+        $response->assertOk()->assertJsonPath('success', true);
+
+        $exam->refresh();
+        $this->assertSame('Renamed Exam', $exam->name);
+        $this->assertSame('2026-11-02', $exam->start_date->toDateString());
+        $this->assertSame('2026-11-08', $exam->end_date->toDateString());
+    }
+
+    public function test_school_admin_can_cancel_exam_and_mark_entry_is_blocked(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'exam-cancel-school']);
+        $admin = $this->createSchoolAdmin($school);
+        [$exam, $student, $examSubject] = $this->seedScheduledExam($school, withStudent: true);
+
+        $cancel = $this->actingAs($admin)->postJson(
+            $this->tenantUrl($school, "/school/examination/exams/{$exam->id}/cancel")
+        );
+
+        $cancel->assertOk();
+        $exam->refresh();
+        $this->assertSame(ExamStatus::Cancelled, $exam->status);
+
+        $markEntry = $this->actingAs($admin)->postJson(
+            $this->tenantUrl($school, '/school/examination/marks'),
+            [
+                'exam_id' => $exam->id,
+                'exam_subject_id' => $examSubject->id,
+                'marks' => [
+                    ['student_id' => $student->id, 'marks_obtained' => 70],
+                ],
+            ]
+        );
+
+        // Service responds with a validation error wrapped in a 422.
+        $markEntry->assertStatus(422);
+        $this->assertDatabaseMissing('results', [
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+        ]);
+    }
+
+    public function test_locking_exam_freezes_results_with_lock_timestamp(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'exam-lock-school']);
+        $admin = $this->createSchoolAdmin($school);
+        [$exam, $student, $examSubject] = $this->seedScheduledExam($school, withStudent: true);
+
+        // Enter marks first.
+        $this->actingAs($admin)->postJson(
+            $this->tenantUrl($school, '/school/examination/marks'),
+            [
+                'exam_id' => $exam->id,
+                'exam_subject_id' => $examSubject->id,
+                'marks' => [
+                    ['student_id' => $student->id, 'marks_obtained' => 88],
+                ],
+            ]
+        )->assertOk();
+
+        $lock = $this->actingAs($admin)->postJson(
+            $this->tenantUrl($school, "/school/examination/exams/{$exam->id}/lock")
+        );
+
+        $lock->assertOk();
+        $exam->refresh();
+        $this->assertSame(ExamStatus::Locked, $exam->status);
+
+        $result = Result::where('exam_id', $exam->id)
+            ->where('student_id', $student->id)
+            ->firstOrFail();
+        $this->assertNotNull($result->locked_at);
+    }
+
+    public function test_absent_marking_persists_with_zero_marks_and_skips_grade(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'exam-absent-school']);
+        $admin = $this->createSchoolAdmin($school);
+        [$exam, $student, $examSubject] = $this->seedScheduledExam($school, withStudent: true);
+
+        // Configure a basic grade band so we can verify absent rows do NOT receive a grade.
+        Grade::create([
+            'school_id' => $school->id,
+            'range_start' => 0,
+            'range_end' => 100,
+            'grade' => 'A',
+        ]);
+
+        $response = $this->actingAs($admin)->postJson(
+            $this->tenantUrl($school, '/school/examination/marks'),
+            [
+                'exam_id' => $exam->id,
+                'exam_subject_id' => $examSubject->id,
+                'marks' => [
+                    ['student_id' => $student->id, 'is_absent' => true],
+                ],
+            ]
+        );
+
+        $response->assertOk();
+        $result = Result::where('exam_id', $exam->id)
+            ->where('student_id', $student->id)
+            ->firstOrFail();
+
+        $this->assertTrue((bool) $result->is_absent);
+        $this->assertEquals(0, (float) $result->marks_obtained);
+        $this->assertNull($result->grade);
+    }
+
+    public function test_grade_fallback_clamps_percentage_outside_configured_bands(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'grade-fallback-school']);
+        Grade::create([
+            'school_id' => $school->id,
+            'range_start' => 40,
+            'range_end' => 60,
+            'grade' => 'C',
+        ]);
+        Grade::create([
+            'school_id' => $school->id,
+            'range_start' => 61,
+            'range_end' => 100,
+            'grade' => 'A',
+        ]);
+
+        $service = app(ResultService::class);
+
+        // Below the lowest band -> floor band.
+        $this->assertSame('C', $service->calculateGrade($school, 25.0));
+        // Above the highest band (composite > 100) -> ceiling band.
+        $this->assertSame('A', $service->calculateGrade($school, 120.0));
+        // In the gap between 60 and 61 -> still falls back to ceiling.
+        $this->assertSame('A', $service->calculateGrade($school, 60.5));
+    }
+
+    public function test_grade_calculation_returns_null_when_no_bands_configured(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'grade-none-school']);
+        $this->assertNull(app(ResultService::class)->calculateGrade($school, 75.0));
+    }
+
+    /**
+     * @return array{0: Exam, 1?: Student, 2?: ExamSubject}
+     */
+    protected function seedScheduledExam(School $school, bool $withStudent = false): array
+    {
+        $academicYear = $this->createAcademicYear($school);
+        $class = $this->createClass($school, 'Class 9');
+        $section = $this->createSection($school, $class, 'A');
+        $examType = ExamType::create([
+            'school_id' => $school->id,
+            'name' => 'Term',
+        ]);
+
+        $subject = Subject::create([
+            'school_id' => $school->id,
+            'name' => 'English',
+            'code' => 'ENG',
+            'is_active' => true,
+        ]);
+
+        $class->subjects()->attach($subject->id, ['full_marks' => 100]);
+
+        $exam = Exam::create([
+            'school_id' => $school->id,
+            'academic_year_id' => $academicYear->id,
+            'class_id' => $class->id,
+            'exam_type_id' => $examType->id,
+            'name' => 'Term Exam',
+            'month' => 'November 2026',
+            'start_date' => '2026-11-01',
+            'end_date' => '2026-11-05',
+            'status' => ExamStatus::Scheduled,
+        ]);
+        $exam->ensureSubjectSnapshot();
+
+        if (!$withStudent) {
+            return [$exam];
+        }
+
+        $studentUser = $this->createUser([
+            'school_id' => $school->id,
+            'role_id' => Role::where('slug', Role::STUDENT)->firstOrFail()->id,
+            'email' => uniqid('student-', true) . '@example.test',
+        ]);
+
+        $student = Student::create([
+            'school_id' => $school->id,
+            'user_id' => $studentUser->id,
+            'academic_year_id' => $academicYear->id,
+            'admission_no' => 'STU-' . uniqid(),
+            'first_name' => 'Test',
+            'last_name' => 'Student',
+            'dob' => '2012-01-01',
+            'gender' => Gender::Male,
+            'father_name' => 'F',
+            'mother_name' => 'M',
+            'class_id' => $class->id,
+            'section_id' => $section->id,
+            'status' => StudentStatus::Active,
+            'admission_date' => '2026-04-01',
+            'mobile_no' => '9000000000',
+            'is_single_parent' => YesNo::No,
+            'is_transport_required' => YesNo::No,
+        ]);
+
+        return [$exam, $student, $exam->examSubjects()->firstOrFail()];
     }
 
     protected function createSchoolAdmin(School $school): User

@@ -2,18 +2,26 @@
 
 namespace App\Providers;
 
+use App\Models\Exam;
+use App\Models\ExamType;
 use App\Models\Fee;
 use App\Models\FeeType;
 use App\Models\FeePayment;
+use App\Models\Grade;
 use App\Models\PaymentMethod;
+use App\Models\Result;
 use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use App\Models\User;
+use App\Policies\ExamPolicy;
+use App\Policies\ExamTypePolicy;
 use App\Policies\FeePolicy;
 use App\Policies\FeeTypePolicy;
 use App\Policies\FeePaymentPolicy;
+use App\Policies\GradePolicy;
 use App\Policies\PaymentMethodPolicy;
+use App\Policies\ResultPolicy;
 use App\Policies\SchoolPolicy;
 use App\Policies\StudentPolicy;
 use App\Policies\StudentRegistrationPolicy;
@@ -43,10 +51,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Exam::class, ExamPolicy::class);
+        Gate::policy(ExamType::class, ExamTypePolicy::class);
         Gate::policy(Fee::class, FeePolicy::class);
         Gate::policy(FeeType::class, FeeTypePolicy::class);
         Gate::policy(FeePayment::class, FeePaymentPolicy::class);
+        Gate::policy(Grade::class, GradePolicy::class);
         Gate::policy(PaymentMethod::class, PaymentMethodPolicy::class);
+        Gate::policy(Result::class, ResultPolicy::class);
         Gate::policy(School::class, SchoolPolicy::class);
         Gate::policy(Student::class, StudentPolicy::class);
         Gate::policy(StudentRegistration::class, StudentRegistrationPolicy::class);

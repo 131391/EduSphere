@@ -109,7 +109,7 @@
                 </thead>
 
                 {{-- Server-rendered rows --}}
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
                     @foreach($schools as $school)
                     <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-500 dark:text-gray-400">#{{ $school->id }}</td>
@@ -231,15 +231,6 @@
                 </tbody>
             </table>
         </div>
-
-        @if($schools->total() > 0)
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" x-show="!hydrated">
-            <div class="text-sm text-gray-600 dark:text-gray-400">
-                Showing {{ $schools->firstItem() }} to {{ $schools->lastItem() }} of {{ $schools->total() }} results
-            </div>
-        </div>
-        @endif
-
         <x-table.pagination />
     </div>
 

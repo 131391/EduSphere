@@ -210,12 +210,16 @@ Route::prefix('examination')->name('examination.')->group(function () {
     Route::get('subjects', [ExamSubjectController::class, 'index'])->name('subjects.index');
     Route::post('subjects', [ExamSubjectController::class, 'store'])->name('subjects.store');
     Route::delete('subjects/{id}', [ExamSubjectController::class, 'destroy'])->name('subjects.destroy');
-    
+
     Route::post('exam-types/fetch', [ExamTypeController::class, 'index'])->name('exam-types.fetch');
     Route::resource('exam-types', ExamTypeController::class)->only(['index', 'store', 'update', 'destroy']);
-    
+
     Route::post('exams/fetch', [ExamController::class, 'index'])->name('exams.fetch');
-    Route::resource('exams', ExamController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('exams', ExamController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::get('exams/{exam}/edit', [ExamController::class, 'edit'])->name('exams.edit');
+    Route::post('exams/{exam}/cancel', [ExamController::class, 'cancel'])->name('exams.cancel');
+    Route::post('exams/{exam}/lock', [ExamController::class, 'lock'])->name('exams.lock');
+    Route::get('exams/{exam}/tabulate', [ExamController::class, 'tabulate'])->name('exams.tabulate');
 
     Route::post('grades/fetch', [GradeController::class, 'index'])->name('grades.fetch');
     Route::resource('grades', GradeController::class)->only(['index', 'store', 'update', 'destroy']);
@@ -223,10 +227,10 @@ Route::prefix('examination')->name('examination.')->group(function () {
     // Mark Entry
     Route::get('marks', [ExamController::class, 'marksEntry'])->name('marks.index');
     Route::get('marks/enter', [ExamController::class, 'enterMarks'])->name('marks.entry');
-    Route::post('marksGroup', [ExamController::class, 'storeMarks'])->name('marks.store');
-
-    // Tabulation
-    Route::get('exams/{exam}/tabulate', [ExamController::class, 'tabulate'])->name('exams.tabulate');
+    Route::post('marks', [ExamController::class, 'storeMarks'])->name('marks.store');
+    // Backward-compat alias for the previous route name; remove once external
+    // callers (front-end fetch in marks/entry.blade.php) have been migrated.
+    Route::post('marksGroup', [ExamController::class, 'storeMarks'])->name('marks.store-legacy');
 });
 
 // Subject Management

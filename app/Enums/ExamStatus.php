@@ -8,6 +8,7 @@ enum ExamStatus: int
     case Ongoing = 2;
     case Completed = 3;
     case Cancelled = 4;
+    case Locked = 5;
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum ExamStatus: int
             self::Ongoing => 'Ongoing',
             self::Completed => 'Completed',
             self::Cancelled => 'Cancelled',
+            self::Locked => 'Locked',
         };
     }
 
@@ -26,6 +28,17 @@ enum ExamStatus: int
             self::Ongoing => 'yellow',
             self::Completed => 'green',
             self::Cancelled => 'red',
+            self::Locked => 'slate',
         };
+    }
+
+    public function isTerminal(): bool
+    {
+        return $this === self::Cancelled || $this === self::Locked;
+    }
+
+    public function acceptsMarkEntry(): bool
+    {
+        return !$this->isTerminal();
     }
 }

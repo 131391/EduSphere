@@ -96,7 +96,7 @@
                         </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
                         @foreach($initialData['rows'] as $row)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -127,6 +127,12 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <a href="{{ route('school.examination.exams.tabulate', $row['id']) }}" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm" title="Tabulation Sheet"><i class="fas fa-table text-xs"></i></a>
+                                        @if(in_array($row['status_value'], [1, 2]))
+                                        <button @click="openEditModal(@js($row))" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm" title="Edit Schedule"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="cancelExam(@js($row))" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition-colors shadow-sm" title="Cancel Exam"><i class="fas fa-ban text-xs"></i></button>
+                                        @elseif($row['status_value'] == 3)
+                                        <button @click="lockExam(@js($row))" class="w-8 h-8 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center hover:bg-violet-100 transition-colors shadow-sm" title="Lock Results"><i class="fas fa-lock text-xs"></i></button>
+                                        @endif
                                         <button @click="confirmDelete(@js($row))" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors shadow-sm" title="Remove Schedule"><i class="fas fa-trash-alt text-xs"></i></button>
                                     </div>
                                 </td>
@@ -169,6 +175,15 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <a :href="'/school/examination/exams/' + row.id + '/tabulate'" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors shadow-sm" title="Tabulation Sheet"><i class="fas fa-table text-xs"></i></a>
+                                        <template x-if="row.status_value === 1 || row.status_value === 2">
+                                            <div class="flex items-center gap-1">
+                                                <button @click="openEditModal(row)" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors shadow-sm" title="Edit Schedule"><i class="fas fa-edit text-xs"></i></button>
+                                                <button @click="cancelExam(row)" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition-colors shadow-sm" title="Cancel Exam"><i class="fas fa-ban text-xs"></i></button>
+                                            </div>
+                                        </template>
+                                        <template x-if="row.status_value === 3">
+                                            <button @click="lockExam(row)" class="w-8 h-8 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center hover:bg-violet-100 transition-colors shadow-sm" title="Lock Results"><i class="fas fa-lock text-xs"></i></button>
+                                        </template>
                                         <button @click="confirmDelete(row)" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors shadow-sm" title="Remove Schedule"><i class="fas fa-trash-alt text-xs"></i></button>
                                     </div>
                                 </td>
@@ -183,8 +198,8 @@
             <x-table.pagination />
         </div>
 
-        <!-- Schedule Exam Modal -->
-        <x-modal name="exam-modal" alpineTitle="'Schedule Institutional Assessment'" maxWidth="2xl">
+        <!-- Schedule/Edit Exam Modal -->
+        <x-modal name="exam-modal" alpineTitle="isEditMode ? 'Edit Institutional Assessment' : 'Schedule Institutional Assessment'" maxWidth="2xl">
             <form @submit.prevent="submitForm()" method="POST" novalidate class="p-1">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -193,7 +208,7 @@
                         <label class="modal-label-premium">Exam Category <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select x-model="formData.exam_type_id" @change="clearError('exam_type_id')"
-                                class="modal-input-premium appearance-none pr-10"
+                                class="modal-input-premium appearance-none pr-10 no-select2"
                                 :class="errors.exam_type_id ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">-- Select Type --</option>
                                 @foreach($examTypes as $type)
@@ -214,7 +229,7 @@
                         <label class="modal-label-premium">Target Class <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <select x-model="formData.class_id" @change="clearError('class_id')"
-                                class="modal-input-premium appearance-none pr-10"
+                                class="modal-input-premium appearance-none pr-10 no-select2"
                                 :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">-- Select Class --</option>
                                 @foreach($classes as $class)
@@ -289,7 +304,7 @@
                         <template x-if="submitting">
                             <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
                         </template>
-                        <span x-text="submitting ? 'Allocating...' : 'Lock Schedule'"></span>
+                        <span x-text="submitting ? (isEditMode ? 'Updating...' : 'Allocating...') : (isEditMode ? 'Update Schedule' : 'Lock Schedule')"></span>
                     </button>
                 </x-slot>
             </form>
@@ -303,6 +318,8 @@
             function examManagement() {
                 return {
                     submitting: false,
+                    editingExamId: null,
+                    isEditMode: false,
                     errors: {},
                     formData: {
                         exam_type_id: '',
@@ -323,6 +340,8 @@
                     resetForm() {
                         this.errors = {};
                         this.formData = { exam_type_id: '', class_id: '', name: '', start_date: '', end_date: '' };
+                        this.editingExamId = null;
+                        this.isEditMode = false;
                     },
 
                     openAddModal() {
@@ -330,20 +349,54 @@
                         this.$dispatch('open-modal', 'exam-modal');
                     },
 
+                    async openEditModal(exam) {
+                        this.resetForm();
+                        this.editingExamId = exam.id;
+                        this.isEditMode = true;
+                        
+                        try {
+                            const response = await fetch(`/school/examination/exams/${exam.id}/edit`);
+                            const result = await response.json();
+                            
+                            if (response.ok) {
+                                this.formData = {
+                                    exam_type_id: result.exam_type_id,
+                                    class_id: result.class_id,
+                                    name: result.name || '',
+                                    start_date: result.start_date,
+                                    end_date: result.end_date
+                                };
+                                this.$dispatch('open-modal', 'exam-modal');
+                            } else {
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Failed to load exam' });
+                            }
+                        } catch (error) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Failed to load exam data' });
+                        }
+                    },
+
                     async submitForm() {
                         if (this.submitting) return;
                         this.submitting = true;
                         this.errors = {};
 
+                        const url = this.isEditMode 
+                            ? `/school/examination/exams/${this.editingExamId}`
+                            : '{{ route('school.examination.exams.store') }}';
+                        
+                        const method = this.isEditMode ? 'PUT' : 'POST';
+                        const payload = { ...this.formData };
+                        if (this.isEditMode) payload._method = 'PUT';
+
                         try {
-                            const response = await fetch('{{ route('school.examination.exams.store') }}', {
+                            const response = await fetch(url, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 },
-                                body: JSON.stringify(this.formData)
+                                body: JSON.stringify(payload)
                             });
 
                             const result = await response.json();
@@ -351,6 +404,7 @@
                             if (response.ok) {
                                 if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                                 this.$dispatch('close-modal', 'exam-modal');
+                                this.resetForm();
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 if (result.errors && Object.keys(result.errors).length > 0) {
@@ -365,6 +419,58 @@
                             if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
                         } finally {
                             this.submitting = false;
+                        }
+                    },
+
+                    async cancelExam(exam) {
+                        if (!confirm(`Are you sure you want to cancel "${exam.assessment_name}"? This will mark all results as cancelled.`)) return;
+                        
+                        try {
+                            const response = await fetch(`/school/examination/exams/${exam.id}/cancel`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                }
+                            });
+
+                            const result = await response.json();
+
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Exam cancelled' });
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else {
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Cancellation failed' });
+                            }
+                        } catch (error) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Cancellation failed' });
+                        }
+                    },
+
+                    async lockExam(exam) {
+                        if (!confirm(`Are you sure you want to lock "${exam.assessment_name}"? This will freeze all results and prevent further edits.`)) return;
+                        
+                        try {
+                            const response = await fetch(`/school/examination/exams/${exam.id}/lock`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                }
+                            });
+
+                            const result = await response.json();
+
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Exam locked' });
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else {
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Lock failed' });
+                            }
+                        } catch (error) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Lock failed' });
                         }
                     },
 

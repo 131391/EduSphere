@@ -124,7 +124,7 @@
                             </tr>
                         </thead>
                         {{-- Server-rendered rows (Hidden once Alpine initializes, prevents FOUC flash) --}}
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
                             @forelse($initialData['rows'] as $index => $row)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
                                     <td class="px-6 py-4 text-sm font-medium text-gray-400">{{ ($initialData['pagination']['current_page'] - 1) * $initialData['pagination']['per_page'] + $index + 1 }}</td>
@@ -277,14 +277,6 @@
             </div>
 
             <!-- Table Footer/Pagination -->
-            @if($initialData['pagination']['total'] > 0)
-            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" x-show="!hydrated">
-                <div class="text-sm text-gray-700 dark:text-gray-300">
-                    Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
-                </div>
-            </div>
-            @endif
-
             <x-table.pagination />
         </div>
 

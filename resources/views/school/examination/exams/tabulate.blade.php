@@ -57,12 +57,15 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @foreach($students as $index => $student)
-                @php 
-                    $studentResults = $results->get($student->id) ?? collect();
-                    $totalObtained = $studentResults->sum('marks_obtained');
-                    $totalMax = $studentResults->sum('total_marks');
-                    $avgPercentage = $totalMax > 0 ? ($totalObtained / $totalMax) * 100 : 0;
-                    $finalGrade = app(\App\Services\School\Examination\ResultService::class)->calculateGrade($exam->school, $avgPercentage);
+                @php
+                    $row = $rows->get($student->id);
+                    $totalObtained = $row['total_obtained'] ?? 0;
+                    $totalMax = $row['total_max'] ?? 0;
+                    $avgPercentage = $row['percentage'] ?? 0;
+                    $finalGrade = $row['grade'] ?? null;
+                    $hasMissing = $row['has_missing'] ?? false;
+                    $isAbsentOverall = $row['is_absent_overall'] ?? false;
+                    $studentSubjectResults = $row['subjects'] ?? collect();
                 @endphp
                 <tr class="hover:bg-indigo-50/10 transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap text-[11px] font-black text-gray-300 border-r border-gray-50 uppercase tracking-tighter">
@@ -72,13 +75,20 @@
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-gray-800 uppercase tracking-tight">{{ $student->full_name }}</span>
                             <span class="text-[9px] font-medium text-gray-400 uppercase">{{ $student->admission_no }}</span>
+                            @if($hasMissing)
+                                <span class="mt-1 inline-flex items-center gap-1 text-[8px] font-black text-amber-600 uppercase tracking-tighter">
+                                    <i class="fas fa-circle-exclamation"></i> Missing entries
+                                </span>
+                            @endif
                         </div>
                     </td>
-                    
+
                     @foreach($examSubjects as $examSubject)
-                    @php $res = $studentResults->where('subject_id', $examSubject->subject_id)->first(); @endphp
+                    @php $res = $studentSubjectResults->get($examSubject->id); @endphp
                     <td class="px-3 py-4 text-center border-r border-gray-50">
-                        @if($res)
+                        @if($res && $res->is_absent)
+                            <span class="text-[10px] font-black text-amber-600">AB</span>
+                        @elseif($res)
                             <div class="flex flex-col items-center">
                                 <span class="text-[11px] font-black {{ $res->marks_obtained < ($res->total_marks * 0.33) ? 'text-red-500' : 'text-gray-700' }}">
                                     {{ number_format($res->marks_obtained, 1) }}
@@ -93,6 +103,7 @@
 
                     <td class="px-6 py-4 text-center whitespace-nowrap bg-gray-50/20 border-l border-gray-50">
                         <span class="text-xs font-black text-indigo-700">{{ number_format($totalObtained, 1) }}</span>
+                        <div class="text-[8px] font-bold text-gray-300">/ {{ number_format($totalMax, 0) }}</div>
                     </td>
                     <td class="px-6 py-4 text-center whitespace-nowrap border-l border-gray-50">
                         <div class="flex flex-col items-center">
@@ -103,9 +114,13 @@
                     </td>
                     <td class="px-6 py-4 text-center whitespace-nowrap border-l border-gray-50">
                         <div class="flex justify-center">
-                            <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black bg-gray-900 text-white shadow-sm">
-                                {{ $finalGrade ?? 'F' }}
-                            </span>
+                            @if($isAbsentOverall)
+                                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black bg-amber-500 text-white shadow-sm">AB</span>
+                            @else
+                                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black bg-gray-900 text-white shadow-sm">
+                                    {{ $finalGrade ?? '-' }}
+                                </span>
+                            @endif
                         </div>
                     </td>
                 </tr>

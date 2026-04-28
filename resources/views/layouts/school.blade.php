@@ -559,14 +559,14 @@
                                 <a href="{{ route('school.examination.exams.index') }}"
                                     class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.exams.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-minus w-3"></i>
-                                    <span>Create Exam</span>
+                                    <span>Exam Schedule</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="#"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                                <a href="{{ route('school.examination.marks.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.marks.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                     <i class="fas fa-minus w-3"></i>
-                                    <span>Exam Schedule</span>
+                                    <span>Marks Entry</span>
                                 </a>
                             </li>
                             <li>
@@ -609,14 +609,14 @@
                                     <a href="{{ route('school.examination.exams.index') }}"
                                         class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.exams.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                         <i class="fas fa-minus w-3"></i>
-                                        <span>Create Exam</span>
+                                        <span>Exam Schedule</span>
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#"
-                                        class="flex items-center gap-3 px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]">
+                                    <a href="{{ route('school.examination.marks.index') }}"
+                                        class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.examination.marks.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
                                         <i class="fas fa-minus w-3"></i>
-                                        <span>Exam Schedule</span>
+                                        <span>Marks Entry</span>
                                     </a>
                                 </li>
                                 <li>

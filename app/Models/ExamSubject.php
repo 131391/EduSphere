@@ -12,6 +12,7 @@ class ExamSubject extends Model
     protected $fillable = [
         'exam_id',
         'subject_id',
+        'teacher_id',
         'subject_name',
         'full_marks',
         'sort_order',
@@ -30,6 +31,11 @@ class ExamSubject extends Model
     public function subject()
     {
         return $this->belongsTo(Subject::class)->withTrashed();
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(Teacher::class);
     }
 
     public function getResolvedNameAttribute(): string

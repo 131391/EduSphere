@@ -12,6 +12,24 @@ use Illuminate\Support\Facades\DB;
 
 use App\Enums\ExamStatus;
 
+/**
+ * @property int $id
+ * @property int $school_id
+ * @property int $academic_year_id
+ * @property int $class_id
+ * @property int $exam_type_id
+ * @property string $name
+ * @property string|null $code
+ * @property string|null $month
+ * @property \Carbon\Carbon|null $start_date
+ * @property \Carbon\Carbon|null $end_date
+ * @property string|null $description
+ * @property ExamStatus $status
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read string $display_name
+ * @property-read string|null $assessment_window
+ */
 class Exam extends Model
 {
     use HasFactory, SoftDeletes, Tenantable;
@@ -136,8 +154,8 @@ class Exam extends Model
 
     public function resolveStatus(): ExamStatus
     {
-        if ($this->status === ExamStatus::Cancelled) {
-            return ExamStatus::Cancelled;
+        if ($this->status?->isTerminal()) {
+            return $this->status;
         }
 
         $this->ensureSubjectSnapshot();
@@ -176,5 +194,32 @@ class Exam extends Model
         $this->forceFill(['status' => $resolvedStatus])->save();
 
         return true;
+    }
+
+    public function cancel(): bool
+    {
+        if ($this->status === ExamStatus::Cancelled) {
+            return false;
+        }
+
+        $this->forceFill(['status' => ExamStatus::Cancelled])->save();
+
+        return true;
+    }
+
+    public function lock(): bool
+    {
+        if ($this->status === ExamStatus::Locked) {
+            return false;
+        }
+
+        $this->forceFill(['status' => ExamStatus::Locked])->save();
+
+        return true;
+    }
+
+    public function isMarkEntryAllowed(): bool
+    {
+        return $this->status?->acceptsMarkEntry() ?? false;
     }
 }

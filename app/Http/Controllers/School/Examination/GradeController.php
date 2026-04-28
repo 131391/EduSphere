@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\School\Examination;
 
 use App\Http\Controllers\TenantController;
+use App\Http\Requests\School\Examination\StoreGradeRequest;
+use App\Http\Requests\School\Examination\UpdateGradeRequest;
 use App\Models\Grade;
+use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-
-use App\Traits\HasAjaxDataTable;
 
 class GradeController extends TenantController
 {
@@ -17,10 +18,11 @@ class GradeController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Grade::class);
         $this->ensureSchoolActive();
         $schoolId = $this->getSchoolId();
 
-        $transformer = function($row) {
+        $transformer = function ($row) {
             return [
                 'id' => $row->id,
                 'grade' => $row->grade,
@@ -59,34 +61,31 @@ class GradeController extends TenantController
         ];
     }
 
-    public function store(Request $request)
+    public function store(StoreGradeRequest $request)
     {
+        $this->authorize('create', Grade::class);
         $this->ensureSchoolActive();
 
-        $request->validate([
-            'range_start' => 'required|integer|min:0|max:100',
-            'range_end' => 'required|integer|min:0|max:100|gte:range_start',
-            'grade' => 'required|string|max:10',
-        ]);
+        $validated = $request->validated();
 
         $this->guardAgainstOverlappingGradeRange(
-            (int) $request->range_start,
-            (int) $request->range_end
+            (int) $validated['range_start'],
+            (int) $validated['range_end']
         );
 
         try {
             $grade = Grade::create([
                 'school_id' => $this->getSchoolId(),
-                'range_start' => $request->range_start,
-                'range_end' => $request->range_end,
-                'grade' => $request->grade,
+                'range_start' => $validated['range_start'],
+                'range_end' => $validated['range_end'],
+                'grade' => $validated['grade'],
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Grade created successfully!',
-                    'data' => $grade
+                    'data' => $grade,
                 ]);
             }
 
@@ -95,42 +94,40 @@ class GradeController extends TenantController
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create grade: ' . $e->getMessage()
+                    'message' => 'Failed to create grade: ' . $e->getMessage(),
                 ], 500);
             }
+
             return back()->with('error', 'Failed to create grade: ' . $e->getMessage());
         }
     }
 
-    public function update(Request $request, Grade $grade)
+    public function update(UpdateGradeRequest $request, Grade $grade)
     {
+        $this->authorize('update', $grade);
         $this->ensureSchoolActive();
         $this->authorizeTenant($grade);
 
-        $request->validate([
-            'range_start' => 'required|integer|min:0|max:100',
-            'range_end' => 'required|integer|min:0|max:100|gte:range_start',
-            'grade' => 'required|string|max:10',
-        ]);
+        $validated = $request->validated();
 
         $this->guardAgainstOverlappingGradeRange(
-            (int) $request->range_start,
-            (int) $request->range_end,
+            (int) $validated['range_start'],
+            (int) $validated['range_end'],
             $grade->id
         );
 
         try {
             $grade->update([
-                'range_start' => $request->range_start,
-                'range_end' => $request->range_end,
-                'grade' => $request->grade,
+                'range_start' => $validated['range_start'],
+                'range_end' => $validated['range_end'],
+                'grade' => $validated['grade'],
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Grade updated successfully!',
-                    'data' => $grade
+                    'data' => $grade,
                 ]);
             }
 
@@ -139,36 +136,39 @@ class GradeController extends TenantController
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update grade: ' . $e->getMessage()
+                    'message' => 'Failed to update grade: ' . $e->getMessage(),
                 ], 500);
             }
+
             return back()->with('error', 'Failed to update grade: ' . $e->getMessage());
         }
     }
 
-    public function destroy(Grade $grade)
+    public function destroy(Request $request, Grade $grade)
     {
+        $this->authorize('delete', $grade);
         $this->ensureSchoolActive();
         $this->authorizeTenant($grade);
-        
+
         try {
             $grade->delete();
 
-            if (request()->wantsJson()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Grade deleted successfully!'
+                    'message' => 'Grade deleted successfully!',
                 ]);
             }
 
             return redirect()->route('school.examination.grades.index')->with('success', 'Grade deleted successfully.');
         } catch (\Exception $e) {
-            if (request()->wantsJson()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to delete grade: ' . $e->getMessage()
+                    'message' => 'Failed to delete grade: ' . $e->getMessage(),
                 ], 500);
             }
+
             return redirect()->route('school.examination.grades.index')->with('error', 'Failed to delete grade: ' . $e->getMessage());
         }
     }

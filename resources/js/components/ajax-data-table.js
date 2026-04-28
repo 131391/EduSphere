@@ -43,7 +43,7 @@ document.addEventListener('alpine:init', () => {
         stats: config.initialStats || {},
         filterLabels: config.filterLabels || {},
         exporting: false,
-        hydrated: false,
+        hydrated: !!config.initialRows,
 
         // Track whether we're still showing the initial server-rendered content.
         // If the server pre-loaded rows (even an empty array), we're already past
@@ -59,26 +59,18 @@ document.addEventListener('alpine:init', () => {
         _loadingTimer: null,
         showSpinner: false,
 
-        // ─── Lifecycle ──────────────────────────────────────────────────
+        // ─── Lifecycle ──────────────────────────────────────────────────────────────
         init() {
-            // Only fetch if no initial data was provided by the server
             if (!config.initialRows) {
-                this._finishHydration();
                 this.fetchData();
             } else {
-                // To allow proper cascade and UI rendering when using pre-loaded data
                 this.loading = false;
                 this.initialLoad = false;
-                this._finishHydration();
             }
         },
 
         _finishHydration() {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    this.hydrated = true;
-                });
-            });
+            this.hydrated = true;
         },
 
         // ─── Core Fetch ─────────────────────────────────────────────────

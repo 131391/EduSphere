@@ -103,7 +103,7 @@
                 </thead>
 
                 {{-- SSR rows — hidden once Alpine initialises --}}
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
                     @if(empty($initialData['rows']))
                     <tr>
                         <td colspan="7" class="px-6 py-12 text-center">
@@ -208,15 +208,6 @@
             </table>
         </div>
 
-        {{-- SSR pagination --}}
-        @if($initialData['pagination']['total'] > 0)
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" x-show="!hydrated">
-            <div class="text-sm text-gray-700 dark:text-gray-300">
-                Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
-            </div>
-        </div>
-        @endif
-
         <x-table.pagination />
     </div>
 
@@ -256,7 +247,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium">Role <span class="text-red-600 font-bold">*</span></label>
                         <select x-model="formData.role" @change="clearError('role')" name="role"
-                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.role}">
+                            class="modal-input-premium no-select2" :class="{'border-red-500 ring-red-500/10': errors.role}">
                             <option value="">Select Role</option>
                             @foreach($roles as $slug => $label)
                             <option value="{{ $slug }}">{{ $label }}</option>
@@ -303,7 +294,7 @@
                     <div class="space-y-2" x-show="editMode" x-cloak>
                         <label class="modal-label-premium">Status <span class="text-red-600 font-bold">*</span></label>
                         <select x-model="formData.status" @change="clearError('status')" name="status"
-                            class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.status}">
+                            class="modal-input-premium no-select2" :class="{'border-red-500 ring-red-500/10': errors.status}">
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                             <option value="suspended">Suspended</option>
@@ -362,28 +353,11 @@ function userManagementData() {
             this.userId = null;
             this.errors = {};
             this.formData = { name: '', email: '', password: '', phone: '', role: '', status: 'active' };
-            if (typeof $ !== 'undefined') {
-                $('select[name="role"]').val('').trigger('change');
-                $('select[name="status"]').val('active').trigger('change');
-            }
         },
 
         init() {
             window.addEventListener('open-edit-user', (e) => this.openEditModal(e.detail));
             window.addEventListener('open-delete-user', (e) => this.confirmDelete(e.detail));
-
-            this.$nextTick(() => {
-                if (typeof $ !== 'undefined') {
-                    $('select[name="role"]').on('change', (e) => {
-                        this.formData.role = e.target.value;
-                        this.clearError('role');
-                    });
-                    $('select[name="status"]').on('change', (e) => {
-                        this.formData.status = e.target.value;
-                        this.clearError('status');
-                    });
-                }
-            });
         },
 
         openAddModal() {
@@ -409,15 +383,6 @@ function userManagementData() {
             };
 
             this.$dispatch('open-modal', 'user-modal');
-
-            this.$nextTick(() => {
-                setTimeout(() => {
-                    if (typeof $ !== 'undefined') {
-                        $('select[name="role"]').val(this.formData.role).trigger('change');
-                        $('select[name="status"]').val(this.formData.status).trigger('change');
-                    }
-                }, 100);
-            });
         },
 
         async confirmDelete(user) {

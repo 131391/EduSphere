@@ -4,18 +4,19 @@ namespace App\Http\Controllers\School\Examination;
 
 use App\Enums\ExamStatus;
 use App\Http\Controllers\TenantController;
-use App\Models\AcademicYear;
+use App\Http\Requests\School\Examination\StoreExamRequest;
+use App\Http\Requests\School\Examination\StoreMarksRequest;
+use App\Http\Requests\School\Examination\UpdateExamRequest;
 use App\Models\ClassModel;
 use App\Models\Exam;
 use App\Models\ExamType;
 use App\Models\Result;
 use App\Models\Student;
+use App\Services\School\Examination\ExamService;
 use App\Services\School\Examination\ResultService;
+use App\Services\School\Examination\TabulationService;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ExamController extends TenantController
@@ -24,30 +25,34 @@ class ExamController extends TenantController
         handleAjaxTable as traitHandleAjaxTable;
     }
 
-    public function __construct(protected ResultService $resultService)
-    {
+    public function __construct(
+        protected ExamService $examService,
+        protected ResultService $resultService,
+        protected TabulationService $tabulationService,
+    ) {
         parent::__construct();
     }
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Exam::class);
         $this->ensureSchoolActive();
-        $schoolId = $this->getSchoolId();
 
-        $this->syncExamStatuses($schoolId);
+        $schoolId = $this->getSchoolId();
+        $this->examService->syncSchoolStatuses($this->school);
 
         $transformer = function (Exam $row) {
             return [
-                'id' => $row->id,
-                'assessment_name' => $row->display_name,
+                'id' => $row->id ?? null,
+                'assessment_name' => $row->display_name ?? 'N/A',
                 'exam_type' => $row->examType?->name ?? 'N/A',
                 'class_name' => $row->class?->name ?? 'N/A',
                 'academic_year' => $row->academicYear?->name ?? 'N/A',
                 'assessment_window' => $row->assessment_window ?? 'TBD',
-                'status' => $row->status->label(),
-                'status_value' => $row->status->value,
-                'status_color' => $row->status->color(),
-                'created_at' => $row->created_at->format('M d, Y'),
+                'status' => $row->status?->label() ?? 'N/A',
+                'status_value' => $row->status?->value ?? null,
+                'status_color' => $row->status?->color() ?? 'gray',
+                'created_at' => $row->created_at?->format('M d, Y') ?? 'N/A',
             ];
         };
 
@@ -101,97 +106,23 @@ class ExamController extends TenantController
 
     protected function getTableStats(): array
     {
+        $schoolId = $this->getSchoolId();
+
         return [
-            'total' => Exam::where('school_id', $this->getSchoolId())->count(),
-            'scheduled' => Exam::where('school_id', $this->getSchoolId())->where('status', ExamStatus::Scheduled)->count(),
-            'ongoing' => Exam::where('school_id', $this->getSchoolId())->where('status', ExamStatus::Ongoing)->count(),
-            'completed' => Exam::where('school_id', $this->getSchoolId())->where('status', ExamStatus::Completed)->count(),
+            'total' => Exam::where('school_id', $schoolId)->count(),
+            'scheduled' => Exam::where('school_id', $schoolId)->where('status', ExamStatus::Scheduled)->count(),
+            'ongoing' => Exam::where('school_id', $schoolId)->where('status', ExamStatus::Ongoing)->count(),
+            'completed' => Exam::where('school_id', $schoolId)->where('status', ExamStatus::Completed)->count(),
         ];
     }
 
-    public function store(Request $request)
+    public function store(StoreExamRequest $request)
     {
+        $this->authorize('create', Exam::class);
         $this->ensureSchoolActive();
 
-        $validated = $request->validate([
-            'class_id' => [
-                'required',
-                Rule::exists('classes', 'id')->where(fn ($query) => $query
-                    ->where('school_id', $this->getSchoolId())
-                    ->whereNull('deleted_at')),
-            ],
-            'exam_type_id' => [
-                'required',
-                Rule::exists('exam_types', 'id')->where(fn ($query) => $query
-                    ->where('school_id', $this->getSchoolId())),
-            ],
-            'name' => 'nullable|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-        ]);
-
-        $activeAcademicYear = AcademicYear::where('school_id', $this->getSchoolId())
-            ->where('is_current', true)
-            ->first();
-
-        if (!$activeAcademicYear) {
-            return $this->validationErrorResponse(
-                $request,
-                'No current academic year is configured. Please activate an academic year first.'
-            );
-        }
-
-        $class = ClassModel::where('school_id', $this->getSchoolId())
-            ->findOrFail($validated['class_id']);
-        $examType = ExamType::where('school_id', $this->getSchoolId())
-            ->findOrFail($validated['exam_type_id']);
-
-        if (!$class->subjects()->exists()) {
-            return $this->validationErrorResponse(
-                $request,
-                'Assign at least one subject to the selected class before scheduling an exam.'
-            );
-        }
-
-        $startDate = Carbon::parse($validated['start_date'])->startOfDay();
-        $endDate = Carbon::parse($validated['end_date'])->endOfDay();
-
-        $duplicateExists = Exam::where('school_id', $this->getSchoolId())
-            ->where('academic_year_id', $activeAcademicYear->id)
-            ->where('class_id', $class->id)
-            ->where('exam_type_id', $examType->id)
-            ->whereDate('start_date', $startDate->toDateString())
-            ->whereDate('end_date', $endDate->toDateString())
-            ->exists();
-
-        if ($duplicateExists) {
-            throw ValidationException::withMessages([
-                'start_date' => ['An exam with the same class, type, and schedule already exists.'],
-            ]);
-        }
-
         try {
-            $exam = DB::transaction(function () use ($activeAcademicYear, $class, $examType, $validated, $startDate, $endDate) {
-                $window = $this->buildAssessmentWindow($startDate, $endDate);
-
-                $exam = Exam::create([
-                    'school_id' => $this->getSchoolId(),
-                    'academic_year_id' => $activeAcademicYear->id,
-                    'class_id' => $class->id,
-                    'exam_type_id' => $examType->id,
-                    'name' => trim((string) (($validated['name'] ?? null) ?: "{$examType->name} ({$window})")),
-                    'month' => $window,
-                    'start_date' => $startDate->toDateString(),
-                    'end_date' => $endDate->toDateString(),
-                    'status' => $startDate->isPast() || $startDate->isToday()
-                        ? ExamStatus::Ongoing
-                        : ExamStatus::Scheduled,
-                ]);
-
-                $exam->ensureSubjectSnapshot();
-
-                return $exam->load(['academicYear', 'class', 'examType', 'examSubjects']);
-            });
+            $exam = $this->examService->schedule($this->school, $request->validated());
 
             if ($request->wantsJson()) {
                 return response()->json([
@@ -202,6 +133,8 @@ class ExamController extends TenantController
             }
 
             return redirect()->route('school.examination.exams.index')->with('success', 'Exam created successfully.');
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -214,11 +147,99 @@ class ExamController extends TenantController
         }
     }
 
+    public function update(UpdateExamRequest $request, Exam $exam)
+    {
+        $this->authorize('update', $exam);
+        $this->ensureSchoolActive();
+        $this->authorizeTenant($exam);
+
+        try {
+            $exam = $this->examService->update($exam, $request->validated());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Exam updated successfully!',
+                    'data' => $exam,
+                ]);
+            }
+
+            return redirect()->route('school.examination.exams.index')->with('success', 'Exam updated successfully.');
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update exam: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            return back()->with('error', 'Failed to update exam: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Return exam data for edit modal (JSON).
+     */
+    public function edit(Exam $exam)
+    {
+        $this->authorize('view', $exam);
+        $this->ensureSchoolActive();
+        $this->authorizeTenant($exam);
+
+        return response()->json([
+            'id' => $exam->id,
+            'exam_type_id' => $exam->exam_type_id,
+            'class_id' => $exam->class_id,
+            'name' => $exam->name,
+            'start_date' => $exam->start_date ? \Carbon\Carbon::parse($exam->start_date)->format('Y-m-d') : null,
+            'end_date' => $exam->end_date ? \Carbon\Carbon::parse($exam->end_date)->format('Y-m-d') : null,
+            'status' => $exam->status->value,
+            'status_label' => $exam->status->label(),
+        ]);
+    }
+
+    public function cancel(Request $request, Exam $exam)
+    {
+        $this->authorize('cancel', $exam);
+        $this->ensureSchoolActive();
+        $this->authorizeTenant($exam);
+
+        $this->examService->cancel($exam);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Exam cancelled successfully.',
+            ]);
+        }
+
+        return redirect()->route('school.examination.exams.index')->with('success', 'Exam cancelled.');
+    }
+
+    public function lock(Request $request, Exam $exam)
+    {
+        $this->authorize('lock', $exam);
+        $this->ensureSchoolActive();
+        $this->authorizeTenant($exam);
+
+        $this->examService->lock($exam);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Results published and locked.',
+            ]);
+        }
+
+        return redirect()->route('school.examination.exams.index')->with('success', 'Results locked.');
+    }
+
     public function marksEntry()
     {
         $this->ensureSchoolActive();
-
-        $this->syncExamStatuses($this->getSchoolId());
+        $this->examService->syncSchoolStatuses($this->school);
 
         $exams = Exam::with(['examType', 'class', 'examSubjects.subject'])
             ->where('school_id', $this->getSchoolId())
@@ -226,10 +247,7 @@ class ExamController extends TenantController
             ->orderByDesc('created_at')
             ->get();
 
-        $exams->each(function (Exam $exam) {
-            $exam->ensureSubjectSnapshot();
-        });
-
+        $exams->each(fn (Exam $exam) => $exam->ensureSubjectSnapshot());
         $exams->load(['examType', 'class', 'examSubjects.subject']);
 
         return view('school.examination.marks.index', compact('exams'));
@@ -240,22 +258,24 @@ class ExamController extends TenantController
         $this->ensureSchoolActive();
 
         $validated = $request->validate([
-            'exam_id' => [
-                'required',
-                Rule::exists('exams', 'id')->where(fn ($query) => $query
-                    ->where('school_id', $this->getSchoolId())
-                    ->whereNull('deleted_at')),
-            ],
-            'exam_subject_id' => 'required|exists:exam_subjects,id',
+            'exam_id' => 'required|integer',
+            'exam_subject_id' => 'required|integer',
         ]);
 
         $exam = Exam::with(['class', 'examType', 'examSubjects.subject'])
             ->where('school_id', $this->getSchoolId())
             ->findOrFail($validated['exam_id']);
+
+        $this->authorize('enterMarks', $exam);
         $this->authorizeTenant($exam);
 
         $exam->ensureSubjectSnapshot();
         $exam->syncStatus();
+
+        if (!$exam->isMarkEntryAllowed()) {
+            return redirect()->route('school.examination.marks.index')
+                ->with('error', 'Mark entry is closed for this exam (status: ' . $exam->status->label() . ').');
+        }
 
         $examSubject = $exam->examSubjects()
             ->with('subject')
@@ -299,42 +319,19 @@ class ExamController extends TenantController
         ]);
     }
 
-    public function storeMarks(Request $request)
+    public function storeMarks(StoreMarksRequest $request)
     {
         $this->ensureSchoolActive();
 
-        $validated = $request->validate([
-            'exam_id' => [
-                'required',
-                Rule::exists('exams', 'id')->where(fn ($query) => $query
-                    ->where('school_id', $this->getSchoolId())
-                    ->whereNull('deleted_at')),
-            ],
-            'exam_subject_id' => 'required|exists:exam_subjects,id',
-            'marks' => 'required|array|min:1',
-            'marks.*.student_id' => [
-                'required',
-                Rule::exists('students', 'id')->where(fn ($query) => $query
-                    ->where('school_id', $this->getSchoolId())
-                    ->whereNull('deleted_at')),
-            ],
-            'marks.*.marks_obtained' => 'nullable|numeric|min:0|max:999999.99',
-            'marks.*.remarks' => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validated();
+
+        $exam = Exam::where('school_id', $this->getSchoolId())
+            ->findOrFail($validated['exam_id']);
+
+        $this->authorize('enterMarks', $exam);
+        $this->authorizeTenant($exam);
 
         try {
-            $exam = Exam::where('school_id', $this->getSchoolId())
-                ->findOrFail($validated['exam_id']);
-            $this->authorizeTenant($exam);
-
-            $exam->ensureSubjectSnapshot();
-
-            if (!$exam->examSubjects()->whereKey($validated['exam_subject_id'])->exists()) {
-                throw ValidationException::withMessages([
-                    'exam_subject_id' => ['The selected subject does not belong to this exam.'],
-                ]);
-            }
-
             $result = $this->resultService->saveMarks($this->school, $validated);
 
             if ($result['success']) {
@@ -367,6 +364,7 @@ class ExamController extends TenantController
 
     public function tabulate(Exam $exam)
     {
+        $this->authorize('view', $exam);
         $this->authorizeTenant($exam);
         $this->ensureSchoolActive();
 
@@ -379,32 +377,30 @@ class ExamController extends TenantController
             abort(422, 'This exam is missing its class assignment and cannot be tabulated.');
         }
 
+        $rows = $this->tabulationService->tabulate($this->school, $exam);
         $examSubjects = $exam->examSubjects;
+        $students = $rows->map(fn ($row) => $row['student'])->values();
 
-        $students = Student::where('class_id', $exam->class_id)
-            ->where('school_id', $this->getSchoolId())
-            ->active()
-            ->orderByRaw('COALESCE(roll_no, 999999999)')
-            ->orderBy('first_name')
-            ->get();
-
-        $results = Result::where('school_id', $this->getSchoolId())
-            ->where('exam_id', $exam->id)
-            ->get()
-            ->groupBy('student_id');
-
-        return view('school.examination.exams.tabulate', compact('exam', 'examSubjects', 'students', 'results'));
+        return view('school.examination.exams.tabulate', [
+            'exam' => $exam,
+            'examSubjects' => $examSubjects,
+            'students' => $students,
+            'rows' => $rows,
+        ]);
     }
 
-    public function destroy(Exam $exam)
+    public function destroy(Request $request, Exam $exam)
     {
+        $this->authorize('delete', $exam);
         $this->ensureSchoolActive();
         $this->authorizeTenant($exam);
 
-        if (Result::withTrashed()->where('exam_id', $exam->id)->exists()) {
-            $message = 'This exam already has recorded marks and cannot be removed.';
+        try {
+            $this->examService->delete($exam);
+        } catch (ValidationException $e) {
+            $message = collect($e->errors())->flatten()->first() ?? 'Cannot delete exam.';
 
-            if (request()->wantsJson()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => $message,
@@ -412,21 +408,8 @@ class ExamController extends TenantController
             }
 
             return redirect()->route('school.examination.exams.index')->with('error', $message);
-        }
-
-        try {
-            $exam->delete();
-
-            if (request()->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Exam schedule removed successfully!',
-                ]);
-            }
-
-            return redirect()->route('school.examination.exams.index')->with('success', 'Exam deleted successfully.');
         } catch (\Throwable $e) {
-            if (request()->wantsJson()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to remove examination: ' . $e->getMessage(),
@@ -435,41 +418,14 @@ class ExamController extends TenantController
 
             return redirect()->route('school.examination.exams.index')->with('error', 'Failed to remove exam: ' . $e->getMessage());
         }
-    }
 
-    protected function syncExamStatuses(int $schoolId): void
-    {
-        Exam::with(['class', 'examSubjects'])
-            ->where('school_id', $schoolId)
-            ->get()
-            ->each(function (Exam $exam) {
-                $exam->ensureSubjectSnapshot();
-                $exam->syncStatus();
-            });
-    }
-
-    protected function buildAssessmentWindow(Carbon $startDate, Carbon $endDate): string
-    {
-        if ($startDate->isSameMonth($endDate)) {
-            return $startDate->format('F Y');
-        }
-
-        if ($startDate->isSameYear($endDate)) {
-            return $startDate->format('M') . ' - ' . $endDate->format('M Y');
-        }
-
-        return $startDate->format('M Y') . ' - ' . $endDate->format('M Y');
-    }
-
-    protected function validationErrorResponse(Request $request, string $message)
-    {
         if ($request->wantsJson()) {
             return response()->json([
-                'success' => false,
-                'message' => $message,
-            ], 422);
+                'success' => true,
+                'message' => 'Exam schedule removed successfully!',
+            ]);
         }
 
-        return back()->with('error', $message);
+        return redirect()->route('school.examination.exams.index')->with('success', 'Exam deleted successfully.');
     }
 }

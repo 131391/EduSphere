@@ -56,7 +56,7 @@
                     </thead>
 
                     {{-- Server-rendered rows: visible instantly, hidden once Alpine initializes --}}
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
                         @if(empty($initialData['rows']))
                             <tr>
                                 <td colspan="3" class="px-6 py-12 text-center">

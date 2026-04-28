@@ -6,10 +6,11 @@ use App\Traits\Tenantable;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ExamType extends Model
 {
-    use HasFactory, Tenantable;
+    use HasFactory, SoftDeletes, Tenantable;
 
     protected $fillable = [
         'school_id',
@@ -19,5 +20,10 @@ class ExamType extends Model
     public function school()
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function exams()
+    {
+        return $this->hasMany(Exam::class);
     }
 }

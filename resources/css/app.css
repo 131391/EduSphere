@@ -649,36 +649,55 @@ select:focus {
     display: block;
     font-size: 0.65rem;
     font-weight: 800;
-    color: #475569; /* Slate 600 */
+    color: #475569;
     text-transform: uppercase;
     letter-spacing: 0.075em;
     margin-bottom: 0.5rem;
 }
 
+.dark .modal-label-premium {
+    color: #94a3b8;
+}
+
 .modal-input-premium {
     width: 100%;
-    background-color: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 0.75rem !important;
-    padding: 0.875rem 1rem !important;
-    color: #1e293b !important;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 0.875rem 1rem;
+    color: #1e293b;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 0.9rem !important;
-    font-weight: 500 !important;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .modal-input-premium:focus {
-    outline: none !important;
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+}
+
+.dark .modal-input-premium {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+.dark .modal-input-premium:focus {
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08) !important;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important;
 }
 
 .modal-footer-premium {
-    background-color: #f1f5f9; /* Soft Slate 100 for subtle contrast */
+    background-color: #f1f5f9;
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 1rem;
+}
+
+.dark .modal-footer-premium {
+    background-color: #1e293b;
 }
 
 .btn-premium-primary {
@@ -747,6 +766,18 @@ select:focus {
     align-items: center !important;
 }
 
+.dark .modal-toggle-section {
+    background-color: #1e293b !important;
+}
+
+.modal-premium-content {
+    /* background inherited from parent modal wrapper */
+}
+
+.dark .modal-premium-content {
+    /* background inherited from parent modal wrapper */
+}
+
 .editorial-shadow {
     box-shadow: 0px 20px 50px rgba(11, 28, 48, 0.08);
 }
@@ -759,6 +790,14 @@ select:focus {
 .sidebar-scroll {
     -ms-overflow-style: none !important;
     scrollbar-width: none !important;
+}
+
+/* Dark mode native select elements */
+.dark select {
+    background-color: #374151;
+    color: #f3f4f6;
+    border-color: #4b5563;
+    color-scheme: dark;
 }
 
 /* Toggle Active State */

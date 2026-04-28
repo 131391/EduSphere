@@ -24,13 +24,28 @@ class Result extends Model
         'percentage',
         'grade',
         'remarks',
+        'is_absent',
+        'entered_by',
+        'locked_at',
     ];
 
     protected $casts = [
         'marks_obtained' => 'decimal:2',
         'total_marks' => 'decimal:2',
         'percentage' => 'decimal:2',
+        'is_absent' => 'boolean',
+        'locked_at' => 'datetime',
     ];
+
+    public function isLocked(): bool
+    {
+        return $this->locked_at !== null;
+    }
+
+    public function enteredBy()
+    {
+        return $this->belongsTo(User::class, 'entered_by');
+    }
 
     // Relationships
     public function school()

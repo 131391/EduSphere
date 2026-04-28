@@ -4,20 +4,22 @@
 
 @section('content')
 @php
-    $examCatalog = $exams->map(function ($exam) {
-        return [
-            'id' => $exam->id,
-            'label' => $exam->display_name,
-            'class_name' => $exam->class?->name ?? 'N/A',
-            'assessment_window' => $exam->assessment_window,
-            'status' => $exam->status->label(),
-            'subjects' => $exam->examSubjects->map(fn ($examSubject) => [
-                'id' => $examSubject->id,
-                'name' => $examSubject->resolved_name,
-                'full_marks' => $examSubject->full_marks,
-            ])->values()->all(),
-        ];
-    })->values();
+    $examCatalog = $exams
+        ->filter(fn ($exam) => $exam->isMarkEntryAllowed())
+        ->map(function ($exam) {
+            return [
+                'id' => $exam->id,
+                'label' => $exam->display_name,
+                'class_name' => $exam->class?->name ?? 'N/A',
+                'assessment_window' => $exam->assessment_window,
+                'status' => $exam->status->label(),
+                'subjects' => $exam->examSubjects->map(fn ($examSubject) => [
+                    'id' => $examSubject->id,
+                    'name' => $examSubject->resolved_name,
+                    'full_marks' => $examSubject->full_marks,
+                ])->values()->all(),
+            ];
+        })->values();
 @endphp
 
 <div x-data="marksEntryGateway(@js($examCatalog))">
@@ -37,14 +39,14 @@
 
     <form action="{{ route('school.examination.marks.entry') }}" method="GET" class="space-y-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="bg-white rounded-3xl shadow-sm border border-indigo-50 p-6 hover:border-indigo-200 transition-all group relative overflow-hidden lg:col-span-2">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-indigo-50 dark:border-gray-700 p-6 hover:border-indigo-200 dark:hover:border-indigo-500 transition-all group relative overflow-hidden lg:col-span-2">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50/30 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
-                <div class="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
                     <i class="fas fa-file-signature text-lg"></i>
                 </div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">1. Exam Schedule</label>
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3">1. Exam Schedule</label>
                 <div class="relative">
-                    <select name="exam_id" x-model="selectedExamId" @change="handleExamChange()" required class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white transition-all font-bold text-gray-700 py-3.5 appearance-none pr-10">
+                    <select name="exam_id" x-model="selectedExamId" @change="handleExamChange()" required class="w-full bg-gray-50/50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 dark:focus:bg-gray-700 transition-all font-bold text-gray-700 py-3.5 appearance-none pr-10">
                         <option value="">-- Select Scheduled Exam --</option>
                         <template x-for="exam in exams" :key="exam.id">
                             <option :value="String(exam.id)" x-text="`${exam.label} • ${exam.class_name}`"></option>
@@ -56,32 +58,32 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl shadow-sm border border-violet-50 p-6 relative overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-violet-50 dark:border-gray-700 p-6 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-violet-50/30 rounded-full -mr-16 -mt-16"></div>
-                <div class="w-12 h-12 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-violet-600 dark:text-violet-400 mb-6">
                     <i class="fas fa-users text-lg"></i>
                 </div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Class Snapshot</label>
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3">Class Snapshot</label>
                 <template x-if="selectedExam">
                     <div class="space-y-2">
-                        <p class="text-lg font-black text-gray-800" x-text="selectedExam.class_name"></p>
-                        <p class="text-xs font-bold uppercase tracking-widest text-violet-500" x-text="selectedExam.assessment_window"></p>
-                        <p class="text-[10px] font-black uppercase tracking-wider text-gray-400" x-text="'Status: ' + selectedExam.status"></p>
+                        <p class="text-lg font-black text-gray-800 dark:text-gray-100" x-text="selectedExam.class_name"></p>
+                        <p class="text-xs font-bold uppercase tracking-widest text-violet-500 dark:text-violet-400" x-text="selectedExam.assessment_window"></p>
+                        <p class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500" x-text="'Status: ' + selectedExam.status"></p>
                     </div>
                 </template>
                 <template x-if="!selectedExam">
-                    <p class="text-sm text-gray-400 leading-relaxed">Select an exam to lock onto its class and subject snapshot.</p>
+                    <p class="text-sm text-gray-400 dark:text-gray-500 leading-relaxed">Select an exam to lock onto its class and subject snapshot.</p>
                 </template>
             </div>
 
-            <div class="bg-white rounded-3xl shadow-sm border border-emerald-50 p-6 hover:border-emerald-200 transition-all group relative overflow-hidden lg:col-span-3">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-emerald-50 dark:border-gray-700 p-6 hover:border-emerald-200 dark:hover:border-emerald-500 transition-all group relative overflow-hidden lg:col-span-3">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50/30 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform"></div>
-                <div class="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
                     <i class="fas fa-book-open text-lg"></i>
                 </div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">2. Exam Subject</label>
+                <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3">2. Exam Subject</label>
                 <div class="relative">
-                    <select name="exam_subject_id" x-model="selectedExamSubjectId" required :disabled="availableSubjects.length === 0" class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all font-bold text-gray-700 py-3.5 appearance-none pr-10 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <select name="exam_subject_id" x-model="selectedExamSubjectId" required :disabled="availableSubjects.length === 0" class="w-full bg-gray-50/50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 dark:focus:bg-gray-700 transition-all font-bold text-gray-700 py-3.5 appearance-none pr-10 disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="">-- Select Exam Subject --</option>
                         <template x-for="subject in availableSubjects" :key="subject.id">
                             <option :value="String(subject.id)" x-text="`${subject.name} • ${subject.full_marks} marks`"></option>

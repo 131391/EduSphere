@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\School\Examination;
 
 use App\Http\Controllers\TenantController;
+use App\Http\Requests\School\Examination\StoreExamTypeRequest;
+use App\Http\Requests\School\Examination\UpdateExamTypeRequest;
+use App\Models\Exam;
 use App\Models\ExamType;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-
 use App\Traits\HasAjaxDataTable;
+use Illuminate\Http\Request;
 
 class ExamTypeController extends TenantController
 {
@@ -17,10 +18,11 @@ class ExamTypeController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', ExamType::class);
         $this->ensureSchoolActive();
         $schoolId = $this->getSchoolId();
 
-        $transformer = function($row) {
+        $transformer = function ($row) {
             return [
                 'id' => $row->id,
                 'name' => $row->name,
@@ -57,31 +59,22 @@ class ExamTypeController extends TenantController
         ];
     }
 
-    public function store(Request $request)
+    public function store(StoreExamTypeRequest $request)
     {
+        $this->authorize('create', ExamType::class);
         $this->ensureSchoolActive();
-
-        $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('exam_types', 'name')->where(fn ($query) => $query
-                    ->where('school_id', $this->getSchoolId())),
-            ],
-        ]);
 
         try {
             $examType = ExamType::create([
                 'school_id' => $this->getSchoolId(),
-                'name' => $request->name,
+                'name' => $request->validated()['name'],
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Exam type created successfully!',
-                    'data' => $examType
+                    'data' => $examType,
                 ]);
             }
 
@@ -90,39 +83,30 @@ class ExamTypeController extends TenantController
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create exam type: ' . $e->getMessage()
+                    'message' => 'Failed to create exam type: ' . $e->getMessage(),
                 ], 500);
             }
+
             return back()->with('error', 'Failed to create exam type: ' . $e->getMessage());
         }
     }
 
-    public function update(Request $request, ExamType $examType)
+    public function update(UpdateExamTypeRequest $request, ExamType $examType)
     {
+        $this->authorize('update', $examType);
         $this->ensureSchoolActive();
         $this->authorizeTenant($examType);
 
-        $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('exam_types', 'name')
-                    ->where(fn ($query) => $query->where('school_id', $this->getSchoolId()))
-                    ->ignore($examType->id),
-            ],
-        ]);
-
         try {
             $examType->update([
-                'name' => $request->name,
+                'name' => $request->validated()['name'],
             ]);
 
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Exam type updated successfully!',
-                    'data' => $examType
+                    'data' => $examType,
                 ]);
             }
 
@@ -131,22 +115,24 @@ class ExamTypeController extends TenantController
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update exam type: ' . $e->getMessage()
+                    'message' => 'Failed to update exam type: ' . $e->getMessage(),
                 ], 500);
             }
+
             return back()->with('error', 'Failed to update exam type: ' . $e->getMessage());
         }
     }
 
-    public function destroy(ExamType $examType)
+    public function destroy(Request $request, ExamType $examType)
     {
+        $this->authorize('delete', $examType);
         $this->ensureSchoolActive();
         $this->authorizeTenant($examType);
 
-        if (\App\Models\Exam::withTrashed()->where('exam_type_id', $examType->id)->exists()) {
+        if (Exam::withTrashed()->where('exam_type_id', $examType->id)->exists()) {
             $message = 'This exam type is already used by one or more exams and cannot be deleted.';
 
-            if (request()->wantsJson()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => $message,
@@ -155,25 +141,26 @@ class ExamTypeController extends TenantController
 
             return redirect()->route('school.examination.exam-types.index')->with('error', $message);
         }
-        
+
         try {
             $examType->delete();
 
-            if (request()->wantsJson()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Exam type deleted successfully!'
+                    'message' => 'Exam type deleted successfully!',
                 ]);
             }
 
             return redirect()->route('school.examination.exam-types.index')->with('success', 'Exam type deleted successfully.');
         } catch (\Exception $e) {
-            if (request()->wantsJson()) {
+            if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to delete exam type: ' . $e->getMessage()
+                    'message' => 'Failed to delete exam type: ' . $e->getMessage(),
                 ], 500);
             }
+
             return redirect()->route('school.examination.exam-types.index')->with('error', 'Failed to delete exam type: ' . $e->getMessage());
         }
     }

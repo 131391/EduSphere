@@ -67,7 +67,7 @@
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
             x-transition:leave-end="opacity-0 transform scale-95 translate-y-4"
-            class="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden border border-gray-100"
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden border border-gray-100 dark:border-gray-700"
             @click.stop
         >
             <!-- Red danger stripe at top -->
@@ -76,7 +76,7 @@
             <!-- Header -->
             <div class="flex items-center justify-between px-6 pt-5 pb-0">
                 <span class="text-sm font-semibold text-red-600 uppercase tracking-widest">Destructive Action</span>
-                <button @click="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-1 hover:bg-gray-100">
+                <button @click="closeModal()" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -92,12 +92,12 @@
                         <i class="fas fa-trash-alt text-red-500 text-2xl"></i>
                     </div>
                 </div>
-                <h4 class="text-gray-900 font-bold text-xl mb-2" x-text="modalTitle"></h4>
-                <p class="text-gray-500 text-sm leading-relaxed" x-text="modalMessage"></p>
+                <h4 class="text-gray-900 dark:text-gray-100 font-bold text-xl mb-2" x-text="modalTitle"></h4>
+                <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed" x-text="modalMessage"></p>
             </div>
 
             <!-- Actions -->
-            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100">
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-700">
                 <button 
                     type="button"
                     @click="closeModal()"

@@ -46,6 +46,7 @@
                         <tr class="bg-gray-50/50">
                             <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-20">Rank</th>
                             <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Student Identity</th>
+                            <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-32 text-center">Absent</th>
                             <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-48 text-center">Score Obtained</th>
                             <th class="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Observational Remarks</th>
                         </tr>
@@ -73,6 +74,15 @@
                                     </div>
                                 </div>
                             </td>
+                            <td class="px-8 py-5 whitespace-nowrap text-center">
+                                <input 
+                                    type="checkbox" 
+                                    x-model="scores['{{ $student->id }}'].is_absent"
+                                    @change="toggleAbsent('{{ $student->id }}')"
+                                    class="w-5 h-5 rounded border-slate-200 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer"
+                                    :class="scores['{{ $student->id }}'].is_absent ? 'bg-indigo-50 border-indigo-300' : ''"
+                                >
+                            </td>
                             <td class="px-8 py-5 whitespace-nowrap">
                                 <div class="relative w-36 mx-auto">
                                     <input
@@ -82,7 +92,8 @@
                                         max="{{ $fullMarks }}"
                                         x-model="scores['{{ $student->id }}'].marks_obtained"
                                         @input="validateRow('{{ $student->id }}')"
-                                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 transition-all font-black text-gray-700 text-center text-base"
+                                        :disabled="scores['{{ $student->id }}'].is_absent"
+                                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 transition-all font-black text-center text-base disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
                                         :class="scores['{{ $student->id }}'].invalid ? 'bg-rose-50 border-rose-200 text-rose-600 ring-rose-500/10' : 'group-hover:bg-white group-hover:border-indigo-200 focus:ring-indigo-500/10 focus:border-indigo-500 focus:bg-white focus:shadow-sm'"
                                     >
                                     <template x-if="scores['{{ $student->id }}'].invalid">
@@ -147,6 +158,7 @@ document.addEventListener('alpine:init', () => {
                 student_id: '{{ $student->id }}',
                 marks_obtained: '{{ $result ? $result->marks_obtained : '' }}',
                 remarks: @js($result?->remarks ?? ''),
+                is_absent: @json($result?->is_absent ?? false),
                 invalid: false,
                 isModified: false
             },
@@ -157,7 +169,8 @@ document.addEventListener('alpine:init', () => {
             @php $result = $results->get($student->id); @endphp
             '{{ $student->id }}': {
                 marks_obtained: '{{ $result ? $result->marks_obtained : '' }}',
-                remarks: @js($result?->remarks ?? '')
+                remarks: @js($result?->remarks ?? ''),
+                is_absent: @json($result?->is_absent ?? false)
             },
             @endforeach
         },
@@ -178,10 +191,21 @@ document.addEventListener('alpine:init', () => {
             Object.keys(this.scores).forEach(id => this.validateRow(id));
         },
 
+        toggleAbsent(studentId) {
+            // When marked absent, clear marks and mark as modified
+            if (this.scores[studentId].is_absent) {
+                this.scores[studentId].marks_obtained = '';
+                this.scores[studentId].invalid = false;
+            }
+            this.checkModification(studentId);
+        },
+
         checkModification(studentId) {
             const current = this.scores[studentId];
             const original = this.originalScores[studentId];
-            current.isModified = current.marks_obtained != original.marks_obtained || current.remarks != original.remarks;
+            current.isModified = current.marks_obtained != original.marks_obtained 
+                || current.remarks != original.remarks 
+                || current.is_absent !== original.is_absent;
             this.hasChanges = Object.values(this.scores).some(score => score.isModified);
         },
 

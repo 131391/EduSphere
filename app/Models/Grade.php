@@ -6,6 +6,7 @@ use App\Traits\Tenantable;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Grade extends Model
 {
@@ -17,6 +18,16 @@ class Grade extends Model
         'range_end',
         'grade',
     ];
+
+    protected static function booted(): void
+    {
+        $invalidate = function (Grade $grade) {
+            Cache::forget('examination:grades:' . $grade->school_id);
+        };
+
+        static::saved($invalidate);
+        static::deleted($invalidate);
+    }
 
     public function school()
     {
