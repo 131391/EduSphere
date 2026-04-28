@@ -7,9 +7,11 @@ use App\Http\Requests\School\StoreTransportRouteRequest;
 use App\Http\Requests\School\UpdateTransportRouteRequest;
 use App\Models\TransportRoute;
 use App\Models\Vehicle;
+use App\Enums\RouteStatus;
 use App\Services\School\TransportRouteService;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class TransportRouteController extends TenantController
 {
@@ -35,7 +37,7 @@ class TransportRouteController extends TenantController
                 'route_create_date' => $route->route_create_date?->format('d M, Y'),
                 'status_label' => $route->getStatusLabel(),
                 'status' => $route->status->value,
-                'status_color' => $route->status->value === 'active' ? 'emerald' : 'amber',
+                'status_color' => $route->status === RouteStatus::Active ? 'emerald' : 'amber',
                 'created_at' => $route->created_at?->format('M d, Y'),
             ];
         };
@@ -71,8 +73,8 @@ class TransportRouteController extends TenantController
         $initialData = $this->getHydrationData($query, $transformer, [
             'stats' => [
                 'total' => TransportRoute::where('school_id', $schoolId)->count(),
-                'active' => TransportRoute::where('school_id', $schoolId)->where('status', 'active')->count(),
-                'inactive' => TransportRoute::where('school_id', $schoolId)->where('status', 'inactive')->count(),
+                'active' => TransportRoute::where('school_id', $schoolId)->where('status', RouteStatus::Active)->count(),
+                'inactive' => TransportRoute::where('school_id', $schoolId)->where('status', RouteStatus::Inactive)->count(),
                 'unassigned' => TransportRoute::where('school_id', $schoolId)->whereNull('vehicle_id')->count(),
             ],
             'vehicles' => $vehicles,
@@ -116,6 +118,14 @@ class TransportRouteController extends TenantController
         return response()->stream($callback, 200, $headers);
     }
 
+    public function edit($id)
+    {
+        $route = TransportRoute::where('school_id', $this->getSchoolId())
+            ->findOrFail($id);
+
+        return response()->json($route);
+    }
+
     public function store(StoreTransportRouteRequest $request)
     {
         try {
@@ -133,9 +143,19 @@ class TransportRouteController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.transport_routes.index',
+                'school.transport.transport_routes.index',
                 'Route "' . $route->route_name . '" created successfully!'
             );
+        } catch (ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -164,9 +184,19 @@ class TransportRouteController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.transport_routes.index',
+                'school.transport.transport_routes.index',
                 'Route "' . $route->route_name . '" updated successfully!'
             );
+        } catch (ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -195,9 +225,19 @@ class TransportRouteController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.transport_routes.index',
+                'school.transport.transport_routes.index',
                 'Route "' . $routeName . '" deleted successfully!'
             );
+        } catch (ValidationException $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors());
         } catch (\Exception $e) {
             if (request()->wantsJson()) {
                 return response()->json([
@@ -206,7 +246,7 @@ class TransportRouteController extends TenantController
                 ], 500);
             }
             return $this->redirectWithError(
-                'school.transport_routes.index',
+                'school.transport.transport_routes.index',
                 'Failed to delete route: ' . $e->getMessage()
             );
         }

@@ -9,6 +9,7 @@ use App\Enums\StudentStatus;
 use App\Enums\GeneralStatus;
 use App\Enums\ParentStatus;
 use App\Enums\RelationType;
+use App\Enums\YesNo;
 use App\Enums\UserStatus;
 use App\Http\Requests\School\StoreAdmissionRequest;
 use App\Models\Fee;
@@ -338,13 +339,11 @@ class AdmissionService
     private function handleFacilityIntegration(StoreAdmissionRequest $request, Student $student, $school): void
     {
         if ($request->transport_route_id) {
-            StudentTransportAssignment::create([
-                'school_id'  => $school->id,
-                'student_id' => $student->id,
-                'route_id'   => $request->transport_route_id,
-                'status'     => GeneralStatus::Active,
-                'start_date' => now(),
-            ]);
+            // Admission currently captures only a route preference, not the required bus stop.
+            // Mark the student as transport-required and defer the concrete assignment
+            // until route, stop, vehicle, and fee can be captured together.
+            $student->is_transport_required = YesNo::Yes;
+            $student->save();
         }
 
         if ($request->hostel_id && $request->hostel_room_id) {

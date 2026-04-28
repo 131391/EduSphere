@@ -5,7 +5,7 @@
 
 @section('content')
     <div x-data="Object.assign(ajaxDataTable({
-        fetchUrl: '{{ route('school.vehicles.index') }}',
+        fetchUrl: '{{ route('school.transport.vehicles.index') }}',
         defaultSort: 'created_at',
         defaultDirection: 'desc',
         defaultPerPage: 25,
@@ -107,7 +107,7 @@
                                     <button @click="open(@js($row))" title="Edit" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
                                         <i class="fas fa-edit text-xs"></i>
                                     </button>
-                                    <button @click="quickAction(`{{ route('school.vehicles.index') }}/${row.id}`, 'Delete Vehicle', 'DELETE')" title="Delete" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
+                                    <button @click="quickAction(`{{ route('school.transport.vehicles.index') }}/${row.id}`, 'Delete Vehicle', 'DELETE')" title="Delete" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
                                         <i class="fas fa-trash-alt text-xs"></i>
                                     </button>
                                 </div>
@@ -150,7 +150,7 @@
                                         <button @click="open(row)" title="Edit" class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex items-center justify-center">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
-                                        <button @click="quickAction(`{{ route('school.vehicles.index') }}/${row.id}`, 'Delete Vehicle', 'DELETE')" title="Delete" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
+                                        <button @click="quickAction(`{{ route('school.transport.vehicles.index') }}/${row.id}`, 'Delete Vehicle', 'DELETE')" title="Delete" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
                                     </div>
@@ -367,7 +367,7 @@
 
                 async fetchFullData(id) {
                     try {
-                        const response = await fetch(`{{ route('school.vehicles.index') }}/${id}/edit`, {
+                        const response = await fetch(`{{ route('school.transport.vehicles.index') }}/${id}/edit`, {
                             headers: { 'Accept': 'application/json' }
                         });
                         const data = await response.json();
@@ -392,8 +392,8 @@
                     this.submitting = true;
                     this.errors = {};
                     const url = this.editMode 
-                        ? `{{ route('school.vehicles.index') }}/${this.vehicleId}`
-                        : `{{ route('school.vehicles.store') }}`;
+                        ? `{{ route('school.transport.vehicles.index') }}/${this.vehicleId}`
+                        : `{{ route('school.transport.vehicles.store') }}`;
                     
                     try {
                         const response = await fetch(url, {
@@ -425,7 +425,7 @@
                 },
 
                 exportData(format) {
-                    window.location.href = `{{ route('school.vehicles.export') }}?format=${format}`;
+                    window.location.href = `{{ route('school.transport.vehicles.export') }}?format=${format}`;
                 }
             }
         }

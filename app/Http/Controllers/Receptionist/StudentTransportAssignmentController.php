@@ -10,11 +10,18 @@ use App\Models\BusStop;
 use App\Models\Vehicle;
 use App\Models\AcademicYear;
 use App\Models\ClassModel;
+use App\Services\School\StudentTransportService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class StudentTransportAssignmentController extends TenantController
 {
+    public function __construct(
+        protected StudentTransportService $transportService
+    ) {
+        parent::__construct();
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -177,81 +184,20 @@ class StudentTransportAssignmentController extends TenantController
     public function store(Request $request)
     {
         try {
-            $schoolId = $this->getSchoolId();
-            $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
-                ->where('is_current', true)
-                ->first() ?: AcademicYear::where('school_id', $schoolId)->latest('start_date')->first();
-
-            if (!$currentAcademicYear) {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Temporal context missing',
-                    'errors' => ['academic_year' => ['No active academic session found. Please establish an academic year before mapping transport.']]
-                ], 422);
-            }
-
             $validated = $request->validate([
                 'student_id' => 'required|exists:students,id',
                 'route_id' => 'required|exists:transport_routes,id',
                 'bus_stop_id' => 'required|exists:bus_stops,id',
                 'vehicle_id' => 'nullable|exists:vehicles,id',
-                'fee_per_month' => 'required|numeric|min:0',
+                'fee_per_month' => 'nullable|numeric|min:0',
+                'start_date' => 'nullable|date',
+                'academic_year_id' => 'nullable|exists:academic_years,id',
             ]);
 
-            // Verify tenant ownership
-            $student = Student::where('id', $validated['student_id'])->where('school_id', $schoolId)->first();
-            if (!$student) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['student_id' => ['The selected student is not part of this institutional registry.']]
-                ], 422);
-            }
+            $student = Student::where('school_id', $this->getSchoolId())
+                ->findOrFail($validated['student_id']);
 
-            $route = TransportRoute::where('id', $validated['route_id'])->where('school_id', $schoolId)->first();
-            if (!$route) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['route_id' => ['The selected route does not belong to your institutional fleet.']]
-                ], 422);
-            }
-
-            $busStop = BusStop::where('id', $validated['bus_stop_id'])->where('school_id', $schoolId)->with('route')->first();
-            if (!$busStop) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['bus_stop_id' => ['The selected bus stop is not part of this institutional network.']]
-                ], 422);
-            }
-
-            if ($busStop->route_id !== $route->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Topology mismatch',
-                    'errors' => ['bus_stop_id' => ['Network node "' . $busStop->bus_stop_name . '" is mapping to route "' . ($busStop->route->route_name ?? 'N/A') . '", not the selected route.']]
-                ], 422);
-            }
-
-            $validated['school_id'] = $schoolId;
-            $validated['academic_year_id'] = $currentAcademicYear->id;
-
-            // Prevent duplicate: one active assignment per student per academic year
-            $duplicate = StudentTransportAssignment::where('school_id', $schoolId)
-                ->where('student_id', $validated['student_id'])
-                ->where('academic_year_id', $currentAcademicYear->id)
-                ->whereNull('deleted_at')
-                ->exists();
-            if ($duplicate) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Duplicate assignment',
-                    'errors' => ['student_id' => ['This student already has an active transport assignment for the current academic year.']]
-                ], 422);
-            }
-
-            $assignment = StudentTransportAssignment::create($validated);
+            $assignment = $this->transportService->assignTransport($this->getSchool(), $student, $validated);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -299,48 +245,12 @@ class StudentTransportAssignmentController extends TenantController
                 'route_id' => 'required|exists:transport_routes,id',
                 'bus_stop_id' => 'required|exists:bus_stops,id',
                 'vehicle_id' => 'nullable|exists:vehicles,id',
-                'fee_per_month' => 'required|numeric|min:0',
+                'fee_per_month' => 'nullable|numeric|min:0',
+                'start_date' => 'nullable|date',
+                'academic_year_id' => 'nullable|exists:academic_years,id',
             ]);
 
-            $schoolId = $this->getSchoolId();
-
-            // Verify tenant ownership
-            $student = Student::where('id', $validated['student_id'])->where('school_id', $schoolId)->first();
-            if (!$student) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['student_id' => ['The selected student is not part of this institutional registry.']]
-                ], 422);
-            }
-
-            $route = TransportRoute::where('id', $validated['route_id'])->where('school_id', $schoolId)->first();
-            if (!$route) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['route_id' => ['The selected route does not belong to your institutional fleet.']]
-                ], 422);
-            }
-
-            $busStop = BusStop::where('id', $validated['bus_stop_id'])->where('school_id', $schoolId)->with('route')->first();
-            if (!$busStop) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['bus_stop_id' => ['The selected bus stop is not part of this institutional network.']]
-                ], 422);
-            }
-
-            if ($busStop->route_id !== $route->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Topology mismatch',
-                    'errors' => ['bus_stop_id' => ['Network node "' . $busStop->bus_stop_name . '" is mapping to route "' . ($busStop->route->route_name ?? 'N/A') . '", not the selected route.']]
-                ], 422);
-            }
-
-            $transportAssignment->update($validated);
+            $transportAssignment = $this->transportService->updateAssignment($transportAssignment, $validated);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -373,12 +283,18 @@ class StudentTransportAssignmentController extends TenantController
         $this->authorizeTenant($transportAssignment);
 
         try {
-            $transportAssignment->delete();
+            $this->transportService->deleteAssignment($transportAssignment);
 
             return response()->json([
                 'success' => true, 
                 'message' => 'Student transit registry entry struck successfully.'
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false, 

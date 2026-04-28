@@ -17,7 +17,7 @@
 
     {{-- Page Header --}}
     <x-page-header title="Transport Attendance" description="Select a vehicle, route and type, then mark each student present or absent" icon="fas fa-bus">
-        <a href="{{ route('school.transport_attendance.month_wise_report') }}"
+        <a href="{{ route('school.transport.transport_attendance.month_wise_report') }}"
             class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
             <i class="fas fa-calendar-alt mr-2 text-xs"></i>
             Monthly Report
@@ -286,7 +286,7 @@ function transportAttendanceManagement() {
             if (!this.formData.vehicle_id) return;
 
             try {
-                const res = await fetch('{{ route('school.transport_attendance.get_routes') }}', {
+                const res = await fetch('{{ route('school.transport.transport_attendance.get_routes') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ vehicle_id: this.formData.vehicle_id })
@@ -311,7 +311,7 @@ function transportAttendanceManagement() {
 
             this.loading = true;
             try {
-                const res = await fetch('{{ route('school.transport_attendance.get_students') }}', {
+                const res = await fetch('{{ route('school.transport.transport_attendance.get_students') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ vehicle_id: this.formData.vehicle_id, route_id: this.formData.route_id })
@@ -333,7 +333,7 @@ function transportAttendanceManagement() {
             this.submitting = true;
 
             try {
-                const res = await fetch('{{ route('school.transport_attendance.store') }}', {
+                const res = await fetch('{{ route('school.transport.transport_attendance.store') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({

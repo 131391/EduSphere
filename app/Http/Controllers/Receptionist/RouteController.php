@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Receptionist;
 use App\Http\Controllers\TenantController;
 use App\Models\TransportRoute;
 use App\Models\Vehicle;
+use App\Services\School\TransportRouteService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Enums\RouteStatus;
@@ -15,6 +16,12 @@ use App\Traits\HasAjaxDataTable;
 class RouteController extends TenantController
 {
     use HasAjaxDataTable;
+
+    public function __construct(
+        protected TransportRouteService $routeService
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Display a listing of routes.
@@ -94,26 +101,9 @@ class RouteController extends TenantController
                 'route_create_date' => 'required|date',
             ]);
 
-            $schoolId = $this->getSchoolId();
-            $validated['school_id'] = $schoolId;
             $validated['status'] = RouteStatus::Active;
 
-            // Verify vehicle belongs to same school
-            $vehicle = Vehicle::where('id', $validated['vehicle_id'])
-                ->where('school_id', $schoolId)
-                ->first();
-                
-            if (!$vehicle) {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Integrity violation',
-                    'errors' => ['vehicle_id' => ['The selected vehicle is not part of this institutional fleet.']]
-                ], 422);
-            }
-
-            $route = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
-                return TransportRoute::create($validated);
-            });
+            $route = $this->routeService->createRoute($this->getSchool(), $validated);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -153,22 +143,7 @@ class RouteController extends TenantController
                 'status' => ['required', 'integer', Rule::enum(RouteStatus::class)],
             ]);
 
-            $schoolId = $this->getSchoolId();
-
-            // Verify vehicle belongs to same school
-            $vehicle = Vehicle::where('id', $validated['vehicle_id'])
-                ->where('school_id', $schoolId)
-                ->first();
-                
-            if (!$vehicle) {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Integrity violation',
-                    'errors' => ['vehicle_id' => ['The selected vehicle is not part of this institutional fleet.']]
-                ], 422);
-            }
-
-            $route->update($validated);
+            $route = $this->routeService->updateRoute($route, $validated);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -201,24 +176,18 @@ class RouteController extends TenantController
         $this->authorizeTenant($route);
 
         try {
-            // Block deletion if students are assigned to this route
-            $assignedCount = \App\Models\StudentTransportAssignment::where('route_id', $route->id)
-                ->whereNull('deleted_at')
-                ->count();
-            if ($assignedCount > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete route',
-                    'errors' => ['route' => ["{$assignedCount} student(s) are assigned to this route. Please remove them first."]]
-                ], 422);
-            }
-
-            $route->delete();
+            $this->routeService->deleteRoute($route);
 
             return response()->json([
                 'success' => true, 
                 'message' => 'Route record struck from registry.'
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false, 

@@ -120,6 +120,8 @@ Route::get('hostel-bed-assignments-export', [HostelBedAssignmentController::clas
 Route::resource('hostel-bed-assignments', HostelBedAssignmentController::class);
 
 // Hostel Attendance
+Route::post('hostel-attendance/get-floors', [HostelAttendanceController::class, 'getFloors'])->name('hostel-attendance.get-floors');
+Route::post('hostel-attendance/get-rooms', [HostelAttendanceController::class, 'getRooms'])->name('hostel-attendance.get-rooms');
 Route::post('hostel-attendance/get-students', [HostelAttendanceController::class, 'getStudents'])->name('hostel-attendance.get-students');
 Route::post('hostel-attendance/report/fetch', [HostelAttendanceController::class, 'report'])->name('hostel-attendance.report.fetch');
 Route::get('hostel-attendance/report', [HostelAttendanceController::class, 'report'])->name('hostel-attendance.report');

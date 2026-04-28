@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Receptionist;
 
 use App\Http\Controllers\TenantController;
 use App\Models\Vehicle;
+use App\Services\School\VehicleService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Enums\FuelType;
@@ -14,6 +15,12 @@ use App\Traits\HasAjaxDataTable;
 class VehicleController extends TenantController
 {
     use HasAjaxDataTable;
+
+    public function __construct(
+        protected VehicleService $vehicleService
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Display a listing of vehicles.
@@ -141,26 +148,7 @@ class VehicleController extends TenantController
                 'vehicle_create_date' => 'nullable|date',
             ]);
 
-            $schoolId = $this->getSchoolId();
-            $validated['school_id'] = $schoolId;
-
-            // Prevent duplicate registration number within the same school
-            $exists = Vehicle::where('school_id', $schoolId)
-                ->where('registration_no', $validated['registration_no'])
-                ->exists();
-            if ($exists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => ['registration_no' => ['A vehicle with this registration number already exists.']]
-                ], 422);
-            }
-
-            if (empty($validated['vehicle_no'])) {
-                $validated['vehicle_no'] = Vehicle::generateVehicleNo($schoolId);
-            }
-
-            $vehicle = Vehicle::create($validated);
+            $vehicle = $this->vehicleService->createVehicle($this->getSchool(), $validated);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -211,7 +199,7 @@ class VehicleController extends TenantController
                 'vehicle_create_date' => 'nullable|date',
             ]);
 
-            $vehicle->update($validated);
+            $vehicle = $this->vehicleService->updateVehicle($vehicle, $validated);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -244,20 +232,18 @@ class VehicleController extends TenantController
         $this->authorizeTenant($vehicle);
 
         try {
-            if ($vehicle->routes()->count() > 0) {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Integrity violation',
-                    'errors' => ['registration_no' => ['Cannot strike vehicle record. Active route mappings exist.']]
-                ], 422);
-            }
-
-            $vehicle->delete();
+            $this->vehicleService->deleteVehicle($vehicle);
 
             return response()->json([
                 'success' => true, 
                 'message' => 'Vehicle record struck from registry.'
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false, 

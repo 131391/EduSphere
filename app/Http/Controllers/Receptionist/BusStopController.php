@@ -6,6 +6,7 @@ use App\Http\Controllers\TenantController;
 use App\Models\BusStop;
 use App\Models\TransportRoute;
 use App\Models\Vehicle;
+use App\Services\School\BusStopService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -14,6 +15,12 @@ use App\Traits\HasAjaxDataTable;
 class BusStopController extends TenantController
 {
     use HasAjaxDataTable;
+
+    public function __construct(
+        protected BusStopService $busStopService
+    ) {
+        parent::__construct();
+    }
 
     public function index(Request $request)
     {
@@ -97,8 +104,6 @@ class BusStopController extends TenantController
     public function store(Request $request)
     {
         try {
-            $schoolId = $this->getSchoolId();
-
             $validated = $request->validate([
                 'route_id' => ['required', 'integer', 'exists:transport_routes,id'],
                 'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
@@ -111,29 +116,7 @@ class BusStopController extends TenantController
                 'area_pin_code' => ['nullable', 'string', 'max:10'],
             ]);
 
-            // Verify route belongs to school
-            $routeCheck = TransportRoute::where('id', $validated['route_id'])->where('school_id', $schoolId)->exists();
-            if (!$routeCheck) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['route_id' => ['The selected route does not belong to your institutional fleet.']]
-                ], 422);
-            }
-
-            if (!empty($validated['vehicle_id'])) {
-                $vehicleCheck = Vehicle::where('id', $validated['vehicle_id'])->where('school_id', $schoolId)->exists();
-                if (!$vehicleCheck) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Integrity violation',
-                        'errors' => ['vehicle_id' => ['The selected vehicle is not part of this institutional registry.']]
-                    ], 422);
-                }
-            }
-
-            $validated['school_id'] = $schoolId;
-            $busStop = BusStop::create($validated);
+            $busStop = $this->busStopService->createBusStop($this->getSchool(), $validated);
 
             return response()->json([
                 'success' => true,
@@ -159,8 +142,6 @@ class BusStopController extends TenantController
         $this->authorizeTenant($busStop);
 
         try {
-            $schoolId = $this->getSchoolId();
-
             $validated = $request->validate([
                 'route_id' => ['required', 'integer', 'exists:transport_routes,id'],
                 'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
@@ -173,28 +154,7 @@ class BusStopController extends TenantController
                 'area_pin_code' => ['nullable', 'string', 'max:10'],
             ]);
 
-            // Verify route belongs to school
-            $routeCheck = TransportRoute::where('id', $validated['route_id'])->where('school_id', $schoolId)->exists();
-            if (!$routeCheck) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Integrity violation',
-                    'errors' => ['route_id' => ['The selected route does not belong to your institutional fleet.']]
-                ], 422);
-            }
-
-            if (!empty($validated['vehicle_id'])) {
-                $vehicleCheck = Vehicle::where('id', $validated['vehicle_id'])->where('school_id', $schoolId)->exists();
-                if (!$vehicleCheck) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Integrity violation',
-                        'errors' => ['vehicle_id' => ['The selected vehicle is not part of this institutional registry.']]
-                    ], 422);
-                }
-            }
-
-            $busStop->update($validated);
+            $busStop = $this->busStopService->updateBusStop($busStop, $validated);
 
             return response()->json([
                 'success' => true,
@@ -220,24 +180,18 @@ class BusStopController extends TenantController
         $this->authorizeTenant($busStop);
 
         try {
-            // Block deletion if students are assigned to this stop
-            $assignedCount = \App\Models\StudentTransportAssignment::where('bus_stop_id', $busStop->id)
-                ->whereNull('deleted_at')
-                ->count();
-            if ($assignedCount > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete bus stop',
-                    'errors' => ['bus_stop' => ["{$assignedCount} student(s) are assigned to this stop. Please reassign them first."]]
-                ], 422);
-            }
-
-            $busStop->delete();
+            $this->busStopService->deleteBusStop($busStop);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Bus stop node removed from network.'
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

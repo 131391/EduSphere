@@ -9,6 +9,7 @@ use App\Models\Vehicle;
 use App\Services\School\VehicleService;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class VehicleController extends TenantController
 {
@@ -121,6 +122,14 @@ class VehicleController extends TenantController
         return response()->stream($callback, 200, $headers);
     }
 
+    public function edit($id)
+    {
+        $vehicle = Vehicle::where('school_id', $this->getSchoolId())
+            ->findOrFail($id);
+
+        return response()->json($vehicle);
+    }
+
     public function store(StoreVehicleRequest $request)
     {
         try {
@@ -138,9 +147,19 @@ class VehicleController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.vehicles.index',
+                'school.transport.vehicles.index',
                 'Vehicle "' . $vehicle->vehicle_no . '" added successfully!'
             );
+        } catch (ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -169,9 +188,19 @@ class VehicleController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.vehicles.index',
+                'school.transport.vehicles.index',
                 'Vehicle "' . $vehicle->vehicle_no . '" updated successfully!'
             );
+        } catch (ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -200,9 +229,19 @@ class VehicleController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.vehicles.index',
+                'school.transport.vehicles.index',
                 'Vehicle "' . $vehicleNo . '" deleted successfully!'
             );
+        } catch (ValidationException $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors());
         } catch (\Exception $e) {
             if (request()->wantsJson()) {
                 return response()->json([
@@ -211,7 +250,7 @@ class VehicleController extends TenantController
                 ], 500);
             }
             return $this->redirectWithError(
-                'school.vehicles.index',
+                'school.transport.vehicles.index',
                 'Failed to delete vehicle: ' . $e->getMessage()
             );
         }

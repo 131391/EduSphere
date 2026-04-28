@@ -18,7 +18,7 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Historical audit trail of student transit mapping.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('school.transport_assignments.index') }}"
+                <a href="{{ route('school.transport.assignments.index') }}"
                     class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
                     <i class="fas fa-arrow-left mr-2 text-xs"></i>
                     Back to Registry

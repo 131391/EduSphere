@@ -65,6 +65,14 @@ class Vehicle extends Model
     }
 
     /**
+     * Get the bus stops mapped to the vehicle.
+     */
+    public function busStops(): HasMany
+    {
+        return $this->hasMany(BusStop::class);
+    }
+
+    /**
      * Get fuel type label.
      */
     public function getFuelTypeLabel(): string

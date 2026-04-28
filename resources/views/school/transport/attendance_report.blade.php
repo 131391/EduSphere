@@ -9,7 +9,7 @@
 
     {{-- Page Header --}}
     <x-page-header title="Monthly Attendance Report" description="Select a vehicle, route and month to view the attendance calendar" icon="fas fa-calendar-alt">
-        <a href="{{ route('school.transport_attendance.index') }}"
+        <a href="{{ route('school.transport.transport_attendance.index') }}"
             class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-900 hover:from-black hover:to-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
             <i class="fas fa-arrow-left mr-2 text-xs"></i>
             Back to Attendance
@@ -226,7 +226,7 @@ function transportAttendanceReport() {
             }
 
             try {
-                const res = await fetch('{{ route('school.transport_attendance.get_routes') }}', {
+                const res = await fetch('{{ route('school.transport.transport_attendance.get_routes') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: JSON.stringify({ vehicle_id: this.formData.vehicle_id }),
@@ -263,7 +263,7 @@ function transportAttendanceReport() {
                 route_id:   this.formData.route_id,
                 month:      this.formData.month,
             });
-            window.location.href = '{{ route('school.transport_attendance.month_wise_report') }}?' + params.toString();
+            window.location.href = '{{ route('school.transport.transport_attendance.month_wise_report') }}?' + params.toString();
         },
     };
 }

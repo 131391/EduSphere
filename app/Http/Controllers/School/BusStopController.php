@@ -11,6 +11,7 @@ use App\Models\Vehicle;
 use App\Services\School\BusStopService;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class BusStopController extends TenantController
 {
@@ -37,11 +38,16 @@ class BusStopController extends TenantController
                 'vehicle_no' => $busStop->vehicle?->vehicle_no ?? 'N/A',
                 'distance' => $busStop->distance_from_institute . ' KM',
                 'charge' => '₹' . number_format($busStop->charge_per_month, 2),
+                'raw_charge' => (float) $busStop->charge_per_month,
                 'created_at' => $busStop->created_at?->format('M d, Y'),
             ];
         };
 
         $query = BusStop::with(['route', 'vehicle'])->where('school_id', $schoolId);
+
+        if ($request->filled('route_id')) {
+            $query->where('route_id', $request->route_id);
+        }
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -125,6 +131,14 @@ class BusStopController extends TenantController
         return response()->stream($callback, 200, $headers);
     }
 
+    public function edit($id)
+    {
+        $busStop = BusStop::where('school_id', $this->getSchoolId())
+            ->findOrFail($id);
+
+        return response()->json($busStop);
+    }
+
     public function store(StoreBusStopRequest $request)
     {
         try {
@@ -142,9 +156,19 @@ class BusStopController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.bus_stops.index',
+                'school.transport.bus_stops.index',
                 'Bus Stop "' . $busStop->bus_stop_name . '" created successfully!'
             );
+        } catch (ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -173,9 +197,19 @@ class BusStopController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.bus_stops.index',
+                'school.transport.bus_stops.index',
                 'Bus Stop "' . $busStop->bus_stop_name . '" updated successfully!'
             );
+        } catch (ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
@@ -204,9 +238,19 @@ class BusStopController extends TenantController
             }
 
             return $this->redirectWithSuccess(
-                'school.bus_stops.index',
+                'school.transport.bus_stops.index',
                 'Bus Stop "' . $busStopName . '" deleted successfully!'
             );
+        } catch (ValidationException $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors());
         } catch (\Exception $e) {
             if (request()->wantsJson()) {
                 return response()->json([
@@ -215,7 +259,7 @@ class BusStopController extends TenantController
                 ], 500);
             }
             return $this->redirectWithError(
-                'school.bus_stops.index',
+                'school.transport.bus_stops.index',
                 'Failed to delete bus stop: ' . $e->getMessage()
             );
         }

@@ -5,7 +5,7 @@
 
 @section('content')
     <div x-data="Object.assign(ajaxDataTable({
-            fetchUrl: '{{ route('school.transport_routes.index') }}',
+            fetchUrl: '{{ route('school.transport.transport_routes.index') }}',
             defaultSort: 'created_at',
             defaultDirection: 'desc',
             defaultPerPage: 25,
@@ -116,7 +116,7 @@
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <button
-                                            @click="quickAction(`{{ route('school.transport_routes.index') }}/${row.id}`, 'Delete Route', 'DELETE')"
+                                            @click="quickAction(`{{ route('school.transport.transport_routes.index') }}/${row.id}`, 'Delete Route', 'DELETE')"
                                             title="Delete"
                                             class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
                                             <i class="fas fa-trash-alt text-xs"></i>
@@ -164,7 +164,7 @@
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <button
-                                            @click="quickAction(`{{ route('school.transport_routes.index') }}/${row.id}`, 'Delete Route', 'DELETE')"
+                                            @click="quickAction(`{{ route('school.transport.transport_routes.index') }}/${row.id}`, 'Delete Route', 'DELETE')"
                                             title="Delete"
                                             class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center">
                                             <i class="fas fa-trash-alt text-xs"></i>
@@ -331,7 +331,7 @@
 
                     async fetchFullData(id) {
                         try {
-                            const response = await fetch(`{{ route('school.transport_routes.index') }}/${id}/edit`, {
+                            const response = await fetch(`{{ route('school.transport.transport_routes.index') }}/${id}/edit`, {
                                 headers: { 'Accept': 'application/json' }
                             });
                             const data = await response.json();
@@ -352,8 +352,8 @@
                         this.submitting = true;
                         this.errors = {};
                         const url = this.editMode
-                            ? `{{ route('school.transport_routes.index') }}/${this.routeId}`
-                            : `{{ route('school.transport_routes.store') }}`;
+                            ? `{{ route('school.transport.transport_routes.index') }}/${this.routeId}`
+                            : `{{ route('school.transport.transport_routes.store') }}`;
 
                         try {
                             const response = await fetch(url, {
@@ -385,7 +385,7 @@
                     },
 
                     exportData(format) {
-                        window.location.href = `{{ route('school.transport_routes.export') }}?format=${format}`;
+                        window.location.href = `{{ route('school.transport.transport_routes.export') }}?format=${format}`;
                     }
                 }
             }

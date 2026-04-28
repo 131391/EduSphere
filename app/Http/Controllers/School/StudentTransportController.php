@@ -6,6 +6,7 @@ use App\Http\Controllers\TenantController;
 use App\Http\Requests\School\AssignTransportRequest;
 use App\Models\Student;
 use App\Services\School\StudentTransportService;
+use Illuminate\Validation\ValidationException;
 
 class StudentTransportController extends TenantController
 {
@@ -47,6 +48,16 @@ class StudentTransportController extends TenantController
             }
 
             return back()->with('success', $message);
+        } catch (ValidationException $e) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
                 return response()->json([
