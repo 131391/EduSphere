@@ -270,51 +270,51 @@
             <form action="{{ route('receptionist.student-registrations.import') }}" method="POST" enctype="multipart/form-data" class="p-0">
                 @csrf
                 <div class="p-8 space-y-8">
-                    <div class="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-6 flex flex-col gap-4">
+                    <div class="bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl p-6 flex flex-col gap-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
                                 <i class="fas fa-info-circle text-sm"></i>
                             </div>
                             <div>
-                                <h4 class="text-xs font-black text-indigo-900 uppercase tracking-wider text-[10px]">Interface Guidelines</h4>
-                                <p class="text-[9px] text-indigo-600 font-bold uppercase tracking-widest mt-0.5">Established Enrollment Protocol</p>
+                                <h4 class="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-wider text-[10px]">Interface Guidelines</h4>
+                                <p class="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-widest mt-0.5">Established Enrollment Protocol</p>
                             </div>
                         </div>
-                        <p class="text-xs text-indigo-700/70 font-medium leading-relaxed">
+                        <p class="text-xs text-indigo-700/70 dark:text-indigo-300/70 font-medium leading-relaxed">
                             To ensure institutional data integrity, please utilize the standardized CSV template. Map all required student nodes before initiating the transmission.
                         </p>
                         <a href="{{ route('receptionist.student-registrations.download-template') }}" 
-                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-indigo-100 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm w-full">
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-700 border border-indigo-100 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-500 dark:hover:bg-indigo-600 hover:text-white transition-all shadow-sm w-full">
                             <i class="fas fa-download text-[8px]"></i>
                             Download Registry Template
                         </a>
                     </div>
 
                     <div class="space-y-3">
-                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">CSV Data Segment <span class="text-red-500 font-bold">*</span></label>
+                        <label class="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">CSV Data Segment <span class="text-red-500 font-bold">*</span></label>
                         <div class="relative group">
                             <input type="file" name="file" accept=".csv" required 
-                                class="w-full text-xs text-slate-500 font-bold
+                                class="w-full text-xs text-slate-500 dark:text-slate-400 font-bold
                                 file:mr-4 file:py-3 file:px-6
                                 file:rounded-xl file:border-0
                                 file:text-[10px] file:font-black file:uppercase file:tracking-widest
                                 file:bg-slate-900 file:text-white
                                 hover:file:bg-slate-800 transition-all
-                                cursor-pointer bg-slate-50 border border-slate-100 rounded-2xl pr-4">
-                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
+                                cursor-pointer bg-slate-50 dark:bg-gray-700 border border-slate-100 dark:border-gray-600 rounded-2xl pr-4">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-500 pointer-events-none group-focus-within:text-indigo-500 transition-colors">
                                 <i class="fas fa-file-csv text-[10px]"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-4 rounded-b-3xl">
+                <div class="px-8 py-6 bg-slate-50 dark:bg-gray-700/50 border-t border-slate-100 dark:border-gray-600 flex items-center justify-end gap-4 rounded-b-3xl">
                     <button type="button" @click="$dispatch('close-modal', 'import-modal')"
-                        class="px-6 py-3 text-[10px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors font-bold tracking-widest">
+                        class="px-6 py-3 text-[10px] font-black text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 uppercase tracking-widest transition-colors font-bold tracking-widest">
                         Cancel Protocol
                     </button>
                     <button type="submit" 
-                        class="px-8 py-3 bg-gray-900 text-white text-[10px] font-black rounded-xl transition-all shadow-lg uppercase tracking-widest flex items-center gap-2 group hover:bg-black">
+                        class="px-8 py-3 bg-gray-900 dark:bg-gray-700 hover:bg-black dark:hover:bg-gray-600 text-white text-[10px] font-black rounded-xl transition-all shadow-lg uppercase tracking-widest flex items-center gap-2 group">
                         <i class="fas fa-upload text-[10px] group-hover:-translate-y-1 transition-transform"></i>
                         Initialize Node Import
                     </button>

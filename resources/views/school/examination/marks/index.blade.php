@@ -46,7 +46,7 @@
                 </div>
                 <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3">1. Exam Schedule</label>
                 <div class="relative">
-                    <select name="exam_id" x-model="selectedExamId" @change="handleExamChange()" required class="w-full bg-gray-50/50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 dark:focus:bg-gray-700 transition-all font-bold text-gray-700 py-3.5 appearance-none pr-10">
+                    <select name="exam_id" x-model="selectedExamId" @change="handleExamChange()" required class="no-select2 w-full bg-gray-50/50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 dark:focus:bg-gray-700 transition-all font-bold text-gray-700 py-3.5 appearance-none pr-10">
                         <option value="">-- Select Scheduled Exam --</option>
                         <template x-for="exam in exams" :key="exam.id">
                             <option :value="String(exam.id)" x-text="`${exam.label} • ${exam.class_name}`"></option>
@@ -83,7 +83,7 @@
                 </div>
                 <label class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-3">2. Exam Subject</label>
                 <div class="relative">
-                    <select name="exam_subject_id" x-model="selectedExamSubjectId" required :disabled="availableSubjects.length === 0" class="w-full bg-gray-50/50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 dark:focus:bg-gray-700 transition-all font-bold text-gray-700 py-3.5 appearance-none pr-10 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <select name="exam_subject_id" x-model="selectedExamSubjectId" required :disabled="availableSubjects.length === 0" class="no-select2 w-full bg-gray-50/50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border-gray-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 dark:focus:bg-gray-700 transition-all font-bold text-gray-700 py-3.5 appearance-none pr-10 disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="">-- Select Exam Subject --</option>
                         <template x-for="subject in availableSubjects" :key="subject.id">
                             <option :value="String(subject.id)" x-text="`${subject.name} • ${subject.full_marks} marks`"></option>

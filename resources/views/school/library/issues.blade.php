@@ -161,7 +161,7 @@
                 <div class="space-y-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Targeted Asset <span class="text-red-500">*</span></label>
-                        <select x-model="formData.book_id" class="modal-input-premium appearance-none pr-10">
+                        <select x-model="formData.book_id" class="modal-input-premium no-select2 appearance-none pr-10">
                             <option value="">-- Choose Book --</option>
                             @foreach($books as $book)
                                 <option value="{{ $book->id }}">{{ $book->title }} ({{ $book->available_quantity }} units left)</option>
@@ -171,7 +171,7 @@
 
                     <div class="space-y-2">
                         <label class="modal-label-premium">Beneficiary Student <span class="text-red-500">*</span></label>
-                        <select x-model="formData.student_id" class="modal-input-premium appearance-none pr-10">
+                        <select x-model="formData.student_id" class="modal-input-premium no-select2 appearance-none pr-10">
                             <option value="">-- Choose Student --</option>
                             @foreach($students as $student)
                                 <option value="{{ $student->id }}">{{ $student->admission_no }} - {{ $student->full_name }}</option>

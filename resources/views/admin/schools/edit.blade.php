@@ -175,7 +175,7 @@
                                 <label for="country_id" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Country</label>
                                 <div class="relative">
                                     <select name="country_id" id="country_id" x-model="formData.country_id"
-                                        @change="clearError('country_id'); $nextTick(() => { formData.state_id = ''; formData.city_id = ''; })"
+                                        @change="clearError('country_id'); $nextTick(() = class="no-select2"> { formData.state_id = ''; formData.city_id = ''; })"
                                         :class="hasError('country_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                         class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none appearance-none cursor-pointer no-select2"
                                         data-location-cascade="true"
@@ -193,7 +193,7 @@
                             <div class="space-y-2">
                                 <label for="state_id" class="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">State</label>
                                 <select name="state_id" id="state_id" x-model="formData.state_id"
-                                    @change="clearError('state_id'); $nextTick(() => { formData.city_id = ''; })"
+                                    @change="clearError('state_id'); $nextTick(() = class="no-select2"> { formData.city_id = ''; })"
                                     :class="hasError('state_id') ? 'border-red-500 ring-2 ring-red-500/10' : 'border-gray-200 dark:border-gray-600'"
                                     class="w-full px-4 py-3 bg-white dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 border rounded-2xl focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all outline-none no-select2"
                                     data-state-select="true"

@@ -147,7 +147,7 @@
 
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Payment Channel</label>
-                            <select x-model="payment_method_id" required class="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:border-indigo-500 transition-all font-bold text-gray-700 appearance-none">
+                            <select x-model="payment_method_id" required class="no-select2 w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:border-indigo-500 transition-all font-bold text-gray-700 appearance-none">
                                 @foreach($paymentMethods as $method)
                                     <option value="{{ $method->id }}">{{ $method->name }}</option>
                                 @endforeach

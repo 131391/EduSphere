@@ -27,7 +27,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1">From Year <span class="text-red-500">*</span></label>
-                    <select x-model="fromYearId" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <select x-model="fromYearId" class="no-select2 w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="">— Select —</option>
                         @foreach($academicYears as $year)
                             <option value="{{ $year->id }}" {{ $currentYear?->id === $year->id ? 'selected' : '' }}>
@@ -38,7 +38,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1">To Year <span class="text-red-500">*</span></label>
-                    <select x-model="toYearId" class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <select x-model="toYearId" class="no-select2 w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="">— Select —</option>
                         @foreach($academicYears as $year)
                             <option value="{{ $year->id }}">{{ $year->name }}</option>
@@ -98,7 +98,7 @@
                                                 <td class="px-4 py-2">
                                                     <select x-model.number="student.result"
                                                         @change="onResultChange(cls, student)"
-                                                        class="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                        class="no-select2 border border-gray-300 rounded-lg px-2 py-1 text-xs focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                                         <option value="1">Promoted</option>
                                                         <option value="2">Graduated</option>
                                                         <option value="3">Detained</option>
@@ -108,7 +108,7 @@
                                                 <td class="px-4 py-2">
                                                     <template x-if="student.result === 1 || student.result === 4">
                                                         <select x-model.number="student.to_section_id"
-                                                            class="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                            class="no-select2 border border-gray-300 rounded-lg px-2 py-1 text-xs focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                                             <option value="">Auto</option>
                                                             <template x-for="sec in getSections(cls.next_class_id)" :key="sec.id">
                                                                 <option :value="sec.id" x-text="sec.name"></option>

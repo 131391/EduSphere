@@ -141,7 +141,7 @@
                         <div class="relative group">
                             <input type="number" name="late_fee_amount" x-model="formData.late_fee_amount" @input="clearError('late_fee_amount')"
                                 step="0.01" placeholder="0.00"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 transition-all pr-10"
+                                class="modal-input-premium font-bold pr-10"
                                 :class="errors.late_fee_amount ? 'border-red-500' : 'border-slate-200'">
                             <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm transition-colors group-focus-within:text-emerald-500">₹</div>
                         </div>
@@ -155,7 +155,7 @@
                         <div class="relative group">
                             <select name="fine_date" x-model="formData.fine_date"
                                 @change="clearError('fine_date')"
-                                class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold appearance-none focus:ring-2 focus:ring-emerald-500/20 transition-all pr-10"
+                                class="no-select2 modal-input-premium appearance-none pr-10"
                                 :class="errors.fine_date ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select Day of Month</option>
                                 @for($i = 1; $i <= 31; $i++)

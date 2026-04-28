@@ -3,32 +3,30 @@
 @section('title', 'Assign Ad-Hoc Fee')
 
 @section('content')
-<div class="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8" x-data="adhocFeeForm()">
-    <!-- Header -->
-    <div class="mb-8 sm:flex sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Assign Ad-Hoc Fee</h1>
-            <p class="mt-2 text-sm text-gray-600">Bill students directly for miscellaneous items like Library Fines or Events.</p>
-        </div>
-        <div class="mt-4 sm:mt-0">
-            <a href="{{ route('school.fees.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                <i class="mr-2 fas fa-arrow-left"></i> Back to Ledger
-            </a>
-        </div>
-    </div>
+<div x-data="adhocFeeForm()" class="space-y-6">
+    
+    <!-- Header Section -->
+    <x-page-header title="Assign Ad-Hoc Fee" description="Bill students directly for miscellaneous items like Library Fines or Events." icon="fas fa-file-invoice-dollar">
+        <a href="{{ route('school.fees.index') }}" 
+            class="inline-flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+            <i class="fas fa-arrow-left mr-2 text-xs"></i>
+            Back to Ledger
+        </a>
+    </x-page-header>
 
     <!-- Form Section -->
-    <div class="overflow-hidden bg-white shadow sm:rounded-lg">
-        <form @submit.prevent="submitForm" class="p-6 space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <form @submit.prevent="submitForm" class="p-6 sm:p-8 space-y-6">
             @csrf
 
             <!-- Selection Grid -->
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 <!-- Academic Year -->
-                <div>
-                    <label for="academic_year_id" class="block text-sm font-medium text-gray-700">Academic Year <span class="text-red-500">*</span></label>
-                    <select id="academic_year_id" name="academic_year_id" x-model="formData.academic_year_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-                        <option value="">Select Academic Year</option>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Academic Year <span class="text-red-600 font-bold">*</span></label>
+                    <select x-model="formData.academic_year_id" 
+                        class="modal-input-premium no-select2 appearance-none" required>
+                        <option value="">2026-2027 (Current)</option>
                         @foreach($academicYears as $year)
                             <option value="{{ $year->id }}">{{ $year->name }} {{ $year->is_current ? '(Current)' : '' }}</option>
                         @endforeach
@@ -36,9 +34,10 @@
                 </div>
 
                 <!-- Class -->
-                <div>
-                    <label for="class_id" class="block text-sm font-medium text-gray-700">Class <span class="text-red-500">*</span></label>
-                    <select id="class_id" name="class_id" x-model="formData.class_id" @change="fetchStudents" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Class <span class="text-red-600 font-bold">*</span></label>
+                    <select x-model="formData.class_id" @change="fetchStudents" 
+                        class="modal-input-premium no-select2 appearance-none" required>
                         <option value="">Select Class</option>
                         @foreach($classes as $class)
                             <option value="{{ $class->id }}">{{ $class->name }}</option>
@@ -46,92 +45,103 @@
                     </select>
                 </div>
 
-                <!-- Miscellaneous Fee -->
-                <div>
-                    <label for="miscellaneous_fee_id" class="block text-sm font-medium text-gray-700">Fee Item <span class="text-red-500">*</span></label>
-                    <select id="miscellaneous_fee_id" name="miscellaneous_fee_id" x-model="formData.miscellaneous_fee_id" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                <!-- Fee Item -->
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Fee Item <span class="text-red-600 font-bold">*</span></label>
+                    <select x-model="formData.miscellaneous_fee_id" 
+                        class="modal-input-premium no-select2 appearance-none" required>
                         <option value="">Select Fee Item</option>
                         @foreach($miscFees as $fee)
-                            <option value="{{ $fee->id }}">{{ $fee->name }} ({{ number_format($fee->amount, 2) }})</option>
+                            <option value="{{ $fee->id }}">{{ $fee->name }} (₹{{ number_format($fee->amount, 2) }})</option>
                         @endforeach
                     </select>
                 </div>
 
                 <!-- Fee Period -->
-                <div>
-                    <label for="fee_period" class="block text-sm font-medium text-gray-700">Fee Period <span class="text-red-500">*</span></label>
-                    <input type="month" id="fee_period_input" x-model="rawFeePeriod" @change="formatPeriod" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Fee Period <span class="text-red-600 font-bold">*</span></label>
+                    <input type="month" x-model="rawFeePeriod" @change="formatPeriod" 
+                        class="modal-input-premium" required>
                     <input type="hidden" name="fee_period" x-model="formData.fee_period">
-                    <p class="mt-1 text-xs text-gray-500" x-show="formData.fee_period">Target Period: <span x-text="formData.fee_period" class="font-semibold text-indigo-600"></span></p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-show="formData.fee_period">
+                        Target Period: <span x-text="formData.fee_period" class="font-semibold text-indigo-600 dark:text-indigo-400"></span>
+                    </p>
                 </div>
 
                 <!-- Due Date -->
-                <div>
-                    <label for="due_date" class="block text-sm font-medium text-gray-700">Due Date <span class="text-red-500">*</span></label>
-                    <input type="date" id="due_date" name="due_date" x-model="formData.due_date" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Due Date <span class="text-red-600 font-bold">*</span></label>
+                    <input type="date" x-model="formData.due_date" 
+                        class="modal-input-premium" required>
                 </div>
             </div>
 
             <!-- Student Selection Table -->
-            <div class="pt-6 border-t border-gray-200" x-show="formData.class_id">
-                <div class="sm:flex sm:items-center sm:justify-between">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">Select Students to Bill</h3>
-                    <div class="flex items-center space-x-4">
-                        <label class="flex items-center text-sm font-medium text-gray-700">
-                            <input type="checkbox" x-model="selectAll" @change="toggleAllStudents" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700" x-show="formData.class_id">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Select Students to Bill</h3>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                            <input type="checkbox" x-model="selectAll" @change="toggleAllStudents" 
+                                class="w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:bg-gray-700">
                             <span class="ml-2">Select All</span>
                         </label>
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800" x-text="`${formData.student_ids.length} selected`"></span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" 
+                            x-text="`${formData.student_ids.length} selected`"></span>
                     </div>
                 </div>
 
-                <div class="mt-4">
-                    <div x-show="loadingStudents" class="py-12 text-center">
-                        <i class="text-indigo-500 fas fa-circle-notch fa-spin fa-2x"></i>
-                        <p class="mt-2 text-sm text-gray-500">Loading students...</p>
-                    </div>
+                <div x-show="loadingStudents" class="py-12 text-center">
+                    <i class="text-indigo-500 fas fa-circle-notch fa-spin fa-2x"></i>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading students...</p>
+                </div>
 
-                    <div x-show="!loadingStudents && students.length === 0" class="py-12 text-center text-gray-500">
-                        No active students found in this class.
-                    </div>
+                <div x-show="!loadingStudents && students.length === 0" class="py-12 text-center">
+                    <i class="fas fa-users text-4xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                    <p class="text-gray-500 dark:text-gray-400">No active students found in this class.</p>
+                </div>
 
-                    <div x-show="!loadingStudents && students.length > 0" class="overflow-hidden border border-gray-200 shadow sm:rounded-lg max-h-96 overflow-y-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="sticky top-0 bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Select</th>
-                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Admission No</th>
-                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Student Name</th>
-                                    <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Section</th>
+                <div x-show="!loadingStudents && students.length > 0" 
+                    class="border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="sticky top-0 bg-gray-50 dark:bg-gray-700/50 z-10">
+                            <tr>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-left">Select</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-left">Admission No</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-left">Student Name</th>
+                                <th class="px-6 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-left">Section</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <template x-for="student in students" :key="student.id">
+                                <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50" 
+                                    :class="{'bg-indigo-50 dark:bg-indigo-900/20': isSelected(student.id)}">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="checkbox" :value="student.id" x-model="formData.student_ids" 
+                                            class="w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:bg-gray-700">
+                                    </td>
+                                    <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap" x-text="student.admission_no"></td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-200 whitespace-nowrap" x-text="student.full_name"></td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap" x-text="student.section_name"></td>
                                 </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <template x-for="student in students" :key="student.id">
-                                    <tr class="transition-colors hover:bg-gray-50" :class="{'bg-indigo-50': isSelected(student.id)}">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <input type="checkbox" :value="student.id" x-model="formData.student_ids" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                                        </td>
-                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap" x-text="student.admission_no"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap" x-text="student.full_name"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap" x-text="student.section_name"></td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- Submit Button -->
-            <div class="flex justify-end pt-5 border-t border-gray-200">
-                <button type="button" @click="window.location.href='{{ route('school.fees.index') }}'" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <div class="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700 gap-3">
+                <button type="button" @click="window.location.href='{{ route('school.fees.index') }}'" 
+                    class="btn-premium-cancel px-8">
                     Cancel
                 </button>
-                <button type="submit" :disabled="isSubmitting || formData.student_ids.length === 0" class="inline-flex justify-center px-4 py-2 ml-3 text-sm font-medium text-white transition-colors bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span x-show="!isSubmitting">Assign to <span x-text="formData.student_ids.length"></span> Students</span>
-                    <span x-show="isSubmitting" class="flex items-center">
-                        <i class="mr-2 fas fa-circle-notch fa-spin"></i> Processing...
-                    </span>
+                <button type="submit" :disabled="isSubmitting || formData.student_ids.length === 0" 
+                    class="btn-premium-primary min-w-[200px] !from-indigo-600 !to-violet-600 shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <template x-if="isSubmitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"></span>
+                    </template>
+                    <span x-text="isSubmitting ? 'Processing...' : `Assign to ${formData.student_ids.length} Students`"></span>
                 </button>
             </div>
         </form>
@@ -194,11 +204,7 @@
                     }
                 } catch (error) {
                     console.error('Error fetching students:', error);
-                    window.Swal && Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to load students for the selected class.'
-                    });
+                    if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Failed to load students for the selected class.' });
                 } finally {
                     this.loadingStudents = false;
                 }
@@ -218,20 +224,12 @@
 
             async submitForm() {
                 if (this.formData.student_ids.length === 0) {
-                    window.Swal && Swal.fire({
-                        icon: 'warning',
-                        title: 'Selection Required',
-                        text: 'Please select at least one student to assign the fee.'
-                    });
+                    if (window.Toast) window.Toast.fire({ icon: 'warning', title: 'Please select at least one student to assign the fee.' });
                     return;
                 }
 
                 if (!this.formData.fee_period) {
-                    window.Swal && Swal.fire({
-                        icon: 'warning',
-                        title: 'Missing Input',
-                        text: 'Please select a fee period.'
-                    });
+                    if (window.Toast) window.Toast.fire({ icon: 'warning', title: 'Please select a fee period.' });
                     return;
                 }
 
@@ -251,25 +249,19 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        window.Swal && Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: result.message,
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
+                        if (window.Toast) {
+                            window.Toast.fire({ icon: 'success', title: result.message }).then(() => {
+                                window.location.href = '{{ route("school.fees.index") }}';
+                            });
+                        } else {
                             window.location.href = '{{ route("school.fees.index") }}';
-                        });
+                        }
                     } else {
                         throw new Error(result.message || 'Validation failed');
                     }
                 } catch (error) {
                     console.error('Submission error:', error);
-                    window.Swal && Swal.fire({
-                        icon: 'error',
-                        title: 'Assignment Failed',
-                        text: error.message || 'An unexpected error occurred while assigning the fee.'
-                    });
+                    if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message || 'An unexpected error occurred while assigning the fee.' });
                 } finally {
                     this.isSubmitting = false;
                 }

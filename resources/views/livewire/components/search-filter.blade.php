@@ -9,7 +9,7 @@
             >
         </div>
         <select 
-            wire:model.live="sortBy"
+            wire:model.live="sortBy" class="no-select2"
             class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         >
             <option value="name">Sort by Name</option>

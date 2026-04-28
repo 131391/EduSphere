@@ -201,7 +201,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="modal-label-premium">Category <span class="text-red-500">*</span></label>
-                            <select x-model="formData.category_id" @change="clearError('category_id')" class="modal-input-premium appearance-none pr-10">
+                            <select x-model="formData.category_id" @change="clearError('category_id')" class="modal-input-premium no-select2 appearance-none pr-10">
                                 <option value="">Choose Category</option>
                                 @foreach($categories as $category)
                                     <option value="{{ $category->id }}">{{ $category->name }}</option>

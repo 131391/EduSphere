@@ -187,7 +187,7 @@
                         <label class="modal-label-premium">Student <span class="text-red-500">*</span></label>
                         <div class="relative group">
                             <select x-model="formData.student_id" @change="errors.student_id = null"
-                                class="modal-input-premium appearance-none pr-10"
+                                class="modal-input-premium appearance-none pr-10 no-select2"
                                 :class="errors.student_id ? 'border-red-500' : 'border-slate-200'">
                                 <option value="">Select a student...</option>
                                 @foreach($students as $student)
@@ -201,7 +201,7 @@
                                 <i class="fas fa-chevron-down text-[10px]"></i>
                             </div>
                         </div>
-                        <p x-show="errors.student_id" x-cloak class="modal-error-message" x-text="errors.student_id ? errors.student_id[0] : ''"></p>
+                        <template x-if="errors.student_id"><p class="modal-error-message" x-text="errors.student_id[0]"></p></template>
                     </div>
 
                     {{-- Academic Year + Fee Period --}}
@@ -210,7 +210,7 @@
                             <label class="modal-label-premium">Academic Year <span class="text-red-500">*</span></label>
                             <div class="relative group">
                                 <select x-model="formData.academic_year_id" @change="errors.academic_year_id = null"
-                                    class="modal-input-premium appearance-none pr-10"
+                                    class="modal-input-premium appearance-none pr-10 no-select2"
                                     :class="errors.academic_year_id ? 'border-red-500' : 'border-slate-200'">
                                     <option value="">Select academic year...</option>
                                     @foreach($academicYears as $year)
@@ -221,14 +221,14 @@
                                     <i class="fas fa-chevron-down text-[10px]"></i>
                                 </div>
                             </div>
-                            <p x-show="errors.academic_year_id" x-cloak class="modal-error-message" x-text="errors.academic_year_id ? errors.academic_year_id[0] : ''"></p>
+                            <template x-if="errors.academic_year_id"><p class="modal-error-message" x-text="errors.academic_year_id[0]"></p></template>
                         </div>
 
                         <div class="space-y-1.5">
                             <label class="modal-label-premium">Fee Period <span class="text-red-500">*</span></label>
                             <div class="relative group">
                                 <select x-model="formData.fee_period" @change="errors.fee_period = null"
-                                    class="modal-input-premium appearance-none pr-10"
+                                    class="modal-input-premium appearance-none pr-10 no-select2"
                                     :class="errors.fee_period ? 'border-red-500' : 'border-slate-200'">
                                     <option value="">Select fee period...</option>
                                     <option value="Monthly">Monthly</option>
@@ -241,7 +241,7 @@
                                     <i class="fas fa-chevron-down text-[10px]"></i>
                                 </div>
                             </div>
-                            <p x-show="errors.fee_period" x-cloak class="modal-error-message" x-text="errors.fee_period ? errors.fee_period[0] : ''"></p>
+                            <template x-if="errors.fee_period"><p class="modal-error-message" x-text="errors.fee_period[0]"></p></template>
                         </div>
                     </div>
 
@@ -258,7 +258,7 @@
                                     class="modal-input-premium pl-8"
                                     :class="errors.actual_fee ? 'border-red-500' : 'border-slate-200'">
                             </div>
-                            <p x-show="errors.actual_fee" x-cloak class="modal-error-message" x-text="errors.actual_fee ? errors.actual_fee[0] : ''"></p>
+                            <template x-if="errors.actual_fee"><p class="modal-error-message" x-text="errors.actual_fee[0]"></p></template>
                         </div>
 
                         <div class="space-y-1.5">
@@ -271,8 +271,8 @@
                     </div>
 
                     {{-- Waiver % / Amount --}}
-                    <div class="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-4">
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Waiver Amount — enter percentage or fixed amount</p>
+                    <div class="p-4 bg-slate-50 dark:bg-gray-700/50 border border-slate-100 dark:border-gray-600 rounded-xl space-y-4">
+                        <p class="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide">Waiver Amount — enter percentage or fixed amount</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-1.5">
                                 <label class="modal-label-premium">Percentage <span class="text-red-500">*</span></label>
@@ -285,7 +285,7 @@
                                         :class="errors.waiver_percentage ? 'border-red-500' : 'border-slate-200'">
                                     <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 font-semibold text-sm pointer-events-none">%</span>
                                 </div>
-                                <p x-show="errors.waiver_percentage" x-cloak class="modal-error-message" x-text="errors.waiver_percentage ? errors.waiver_percentage[0] : ''"></p>
+                                <template x-if="errors.waiver_percentage"><p class="modal-error-message" x-text="errors.waiver_percentage[0]"></p></template>
                             </div>
 
                             <div class="space-y-1.5">
@@ -299,7 +299,7 @@
                                         class="modal-input-premium pl-8"
                                         :class="errors.waiver_amount ? 'border-red-500' : 'border-slate-200'">
                                 </div>
-                                <p x-show="errors.waiver_amount" x-cloak class="modal-error-message" x-text="errors.waiver_amount ? errors.waiver_amount[0] : ''"></p>
+                                <template x-if="errors.waiver_amount"><p class="modal-error-message" x-text="errors.waiver_amount[0]"></p></template>
                             </div>
                         </div>
                     </div>
@@ -330,7 +330,7 @@
                             placeholder="e.g. Merit scholarship, financial hardship, staff ward concession..."
                             class="modal-input-premium resize-none !h-auto"
                             :class="errors.reason ? 'border-red-500' : 'border-slate-200'"></textarea>
-                        <p x-show="errors.reason" x-cloak class="modal-error-message" x-text="errors.reason ? errors.reason[0] : ''"></p>
+                        <template x-if="errors.reason"><p class="modal-error-message" x-text="errors.reason[0]"></p></template>
                     </div>
 
                 </div>

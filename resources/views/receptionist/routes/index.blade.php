@@ -252,7 +252,7 @@
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assigned Fleet Asset
                             <span class="text-red-500">*</span></label>
                         <select x-model="formData.vehicle_id"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.vehicle_id ? 'border-red-500' : 'border-slate-200'"
                             @change="clearError('vehicle_id')">
                             <option value="">Select Primary Vehicle</option>
@@ -283,7 +283,7 @@
                             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Operational
                                 Status</label>
                             <select x-model="formData.status"
-                                class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                                class="no-select2 w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
                                 <option value="1">Active / Operational</option>
                                 <option value="0">Inactive / Suspended</option>
                             </select>

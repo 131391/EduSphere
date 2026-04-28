@@ -736,7 +736,7 @@ select:focus {
 .modal-error-message {
     font-size: 0.75rem !important;
     font-weight: 700 !important;
-    color: #ef4444 !important; /* Red 500 */
+    color: #ef4444 !important;
     margin-top: 0.5rem !important;
     display: flex !important;
     align-items: center !important;
@@ -745,10 +745,15 @@ select:focus {
     letter-spacing: 0.025em;
 }
 
+.modal-error-message:empty {
+    display: none !important;
+}
+
 .modal-error-message::before {
     content: "\f06a";
     font-family: "Font Awesome 5 Free";
     font-weight: 900;
+    flex-shrink: 0;
 }
 
 .modal-backdrop-premium {
