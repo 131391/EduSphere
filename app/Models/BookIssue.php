@@ -6,9 +6,17 @@ use App\Traits\Tenantable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+/**
+ * @property \Illuminate\Support\Carbon $issue_date
+ * @property \Illuminate\Support\Carbon $due_date
+ * @property \Illuminate\Support\Carbon|null $return_date
+ * @property \Illuminate\Support\Carbon|null $fine_paid_at
+ */
 class BookIssue extends Model
 {
-    use HasFactory, Tenantable;
+    use HasFactory, Tenantable, SoftDeletes;
 
     protected $fillable = [
         'school_id',
@@ -44,6 +52,26 @@ class BookIssue extends Model
     public function isFineSettled(): bool
     {
         return $this->fine_paid_at !== null;
+    }
+
+    public function isOverdue(): bool
+    {
+        if ($this->status !== 'issued') return false;
+        return \Illuminate\Support\Carbon::parse($this->due_date)->isPast();
+    }
+
+    public function getBeneficiaryNameAttribute(): string
+    {
+        if ($this->student_id) return $this->student?->full_name ?? 'Unknown Student';
+        if ($this->staff_id) return $this->staff?->name ?? 'Unknown Staff';
+        return 'N/A';
+    }
+
+    public function getBeneficiaryIdAttribute(): string
+    {
+        if ($this->student_id) return $this->student?->admission_no ?? 'N/A';
+        if ($this->staff_id) return 'Staff ID: ' . $this->staff_id;
+        return 'N/A';
     }
 
     public function school()

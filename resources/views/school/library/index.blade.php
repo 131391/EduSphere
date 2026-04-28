@@ -141,9 +141,14 @@
                                     ₹{{ $row['price'] }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <button class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-indigo-600 transition-colors">
-                                        <i class="fas fa-ellipsis-v text-xs"></i>
-                                    </button>
+                                    <div class="flex justify-center items-center gap-2">
+                                        <button class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-amber-600 transition-colors">
+                                            <i class="fas fa-edit text-xs"></i>
+                                        </button>
+                                        <button class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-rose-600 transition-colors">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -177,9 +182,14 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-700 dark:text-gray-200" x-text="'₹' + row.price"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <button class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-indigo-600 transition-colors">
-                                        <i class="fas fa-ellipsis-v text-xs"></i>
-                                    </button>
+                                    <div class="flex justify-center items-center gap-2">
+                                        <button @click="openEditModal(row)" class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-amber-600 transition-colors" title="Edit Book">
+                                            <i class="fas fa-edit text-xs"></i>
+                                        </button>
+                                        <button @click="confirmDeleteBook(row.id)" class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-rose-600 transition-colors" title="Remove from Catalog">
+                                            <i class="fas fa-trash-alt text-xs"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -192,8 +202,8 @@
             <x-table.pagination />
         </div>
 
-        <!-- Add Book Modal -->
-        <x-modal name="add-book-modal" alpineTitle="'Catalog New Acquisition'" maxWidth="2xl">
+        <!-- Add/Edit Book Modal -->
+        <x-modal name="book-modal" :alpineTitle="isEdit ? 'Refine Catalog Entry' : 'Catalog New Acquisition'" maxWidth="2xl">
             <form @submit.prevent="submitForm()" method="POST" class="p-1">
                 @csrf
                 <div class="space-y-6">
@@ -236,7 +246,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
                             <label class="modal-label-premium">Stock Quantity <span class="text-red-500">*</span></label>
-                            <input type="number" x-model="formData.quantity" @input="clearError('quantity')" class="modal-input-premium text-center font-bold">
+                            <input type="number" x-model="formData.quantity" @input="clearError('quantity')" :disabled="isEdit"
+                                class="modal-input-premium text-center font-bold" :class="isEdit ? 'bg-gray-50 dark:bg-gray-900/50 cursor-not-allowed' : ''">
+                            <template x-if="isEdit">
+                                <p class="text-[10px] text-gray-400 mt-1 italic italic">Total quantity cannot be reduced manually once cataloged.</p>
+                            </template>
                             <template x-if="errors.quantity"><p class="modal-error-message" x-text="errors.quantity[0]"></p></template>
                         </div>
                         <div class="space-y-2">
@@ -250,10 +264,10 @@
                 </div>
 
                 <x-slot name="footer">
-                    <button type="button" @click="$dispatch('close-modal', 'add-book-modal')" class="btn-premium-cancel px-10">Discard</button>
+                    <button type="button" @click="$dispatch('close-modal', 'book-modal')" class="btn-premium-cancel px-10">Discard</button>
                     <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[200px] !from-amber-500 !to-orange-600 shadow-amber-200">
                         <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
-                        <span x-text="submitting ? 'Registering...' : 'Add to Catalog'"></span>
+                        <span x-text="submitting ? (isEdit ? 'Updating...' : 'Registering...') : (isEdit ? 'Save Changes' : 'Add to Catalog')"></span>
                     </button>
                 </x-slot>
             </form>
@@ -288,6 +302,8 @@
                 </x-slot>
             </form>
         </x-modal>
+
+        <x-confirm-modal />
     </div>
 
     @push('scripts')
@@ -299,6 +315,8 @@
                     hasCategories: @js($categories->isNotEmpty()),
                     errors: {},
                     categoryErrors: {},
+                    isEdit: false,
+                    editingId: null,
                     formData: {
                         title: '',
                         author: '',
@@ -341,9 +359,53 @@
                             return;
                         }
 
+                        this.isEdit = false;
+                        this.editingId = null;
                         this.errors = {};
                         this.formData = { title: '', author: '', category_id: '', isbn: '', quantity: 1, price: '' };
-                        this.$dispatch('open-modal', 'add-book-modal');
+                        this.$dispatch('open-modal', 'book-modal');
+                    },
+
+                    openEditModal(book) {
+                        this.isEdit = true;
+                        this.editingId = book.id;
+                        this.errors = {};
+                        this.formData = {
+                            title: book.title,
+                            author: book.author,
+                            category_id: book.category_id,
+                            isbn: book.isbn === 'N/A' ? '' : book.isbn,
+                            quantity: book.total_quantity,
+                            price: book.price.replace(/,/g, '')
+                        };
+                        this.$dispatch('open-modal', 'book-modal');
+                    },
+
+                    confirmDeleteBook(bookId) {
+                        this.$dispatch('open-confirm-modal', {
+                            title: 'Purge Book from Catalog?',
+                            message: 'This will permanently remove the book record. If this book has circulation history, the operation may be restricted to preserve data integrity.',
+                            callback: async () => {
+                                try {
+                                    const response = await fetch(`{{ route('school.library.books.destroy', ['book' => '__BOOK__']) }}`.replace('__BOOK__', bookId), {
+                                        method: 'DELETE',
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        }
+                                    });
+                                    const result = await response.json();
+                                    if (response.ok) {
+                                        if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                        if (typeof this.refreshTable === 'function') this.refreshTable();
+                                    } else {
+                                        throw new Error(result.message || 'Deletion failed');
+                                    }
+                                } catch (e) {
+                                    if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                                }
+                            }
+                        });
                     },
 
                     async submitForm() {
@@ -351,9 +413,15 @@
                         this.submitting = true;
                         this.errors = {};
 
+                        const url = this.isEdit 
+                            ? `{{ route('school.library.books.update', ['book' => '__BOOK__']) }}`.replace('__BOOK__', this.editingId)
+                            : '{{ route('school.library.books.store') }}';
+                        
+                        const method = this.isEdit ? 'PUT' : 'POST';
+
                         try {
-                            const response = await fetch('{{ route('school.library.books.store') }}', {
-                                method: 'POST',
+                            const response = await fetch(url, {
+                                method: method,
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
@@ -365,7 +433,7 @@
                             const result = await response.json();
                             if (response.ok) {
                                 if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
-                                this.$dispatch('close-modal', 'add-book-modal');
+                                this.$dispatch('close-modal', 'book-modal');
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};

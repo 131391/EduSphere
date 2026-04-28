@@ -99,9 +99,17 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <button @click="processReturn({{ $row['id'] }})" class="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-black rounded-lg border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
-                                        RETURN ASSET
-                                    </button>
+                                    <div class="flex justify-center items-center gap-2">
+                                        <button @click="processReturn({{ $row['id'] }})" class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-black rounded-lg border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Process Return">
+                                            RETURN
+                                        </button>
+                                        <button @click="openRenewModal({{ $row['id'] }}, '{{ $row['due_date'] }}')" class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-indigo-600 transition-colors" title="Renew Issue">
+                                            <i class="fas fa-redo-alt text-xs"></i>
+                                        </button>
+                                        <button @click="confirmMarkAsLost({{ $row['id'] }})" class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-rose-600 transition-colors" title="Mark as Lost">
+                                            <i class="fas fa-skull-crossbones text-xs"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -139,9 +147,17 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <button @click="processReturn(row.id)" class="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-black rounded-lg border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
-                                        RETURN ASSET
-                                    </button>
+                                    <div class="flex justify-center items-center gap-2">
+                                        <button @click="processReturn(row.id)" class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[10px] font-black rounded-lg border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Process Return">
+                                            RETURN
+                                        </button>
+                                        <button @click="openRenewModal(row.id, row.due_date)" class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-indigo-600 transition-colors" title="Renew Issue">
+                                            <i class="fas fa-redo-alt text-xs"></i>
+                                        </button>
+                                        <button @click="confirmMarkAsLost(row.id)" class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-rose-600 transition-colors" title="Mark as Lost">
+                                            <i class="fas fa-skull-crossbones text-xs"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -170,15 +186,41 @@
                         <template x-if="errors.book_id"><p class="modal-error-message" x-text="errors.book_id[0]"></p></template>
                     </div>
 
-                    <div class="space-y-2">
-                        <label class="modal-label-premium">Beneficiary Student <span class="text-red-500">*</span></label>
-                        <select x-model="formData.student_id" @change="clearError('student_id')" class="modal-input-premium no-select2 appearance-none pr-10">
-                            <option value="">-- Choose Student --</option>
-                            @foreach($students as $student)
-                                <option value="{{ $student->id }}">{{ $student->admission_no }} - {{ $student->full_name }}</option>
-                            @endforeach
-                        </select>
-                        <template x-if="errors.student_id"><p class="modal-error-message" x-text="errors.student_id[0]"></p></template>
+                    <div class="space-y-4">
+                        <label class="modal-label-premium">Beneficiary Type <span class="text-red-500">*</span></label>
+                        <div class="flex p-1 bg-gray-100 dark:bg-gray-900/50 rounded-xl">
+                            <button type="button" @click="formData.target_type = 'student'; formData.beneficiary_id = ''; beneficiarySearch = ''" 
+                                :class="formData.target_type === 'student' ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600' : 'text-gray-500'"
+                                class="flex-1 py-2 text-xs font-bold rounded-lg transition-all uppercase tracking-widest">Student</button>
+                            <button type="button" @click="formData.target_type = 'staff'; formData.beneficiary_id = ''; beneficiarySearch = ''"
+                                :class="formData.target_type === 'staff' ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600' : 'text-gray-500'"
+                                class="flex-1 py-2 text-xs font-bold rounded-lg transition-all uppercase tracking-widest">Staff</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 relative" x-data="{ open: false, results: [], loading: false }">
+                        <label class="modal-label-premium" x-text="formData.target_type === 'student' ? 'Select Student Beneficiary' : 'Select Staff Beneficiary'"></label>
+                        <div class="relative">
+                            <input type="text" x-model="beneficiarySearch" @input.debounce.300ms="searchBeneficiaries($data)"
+                                placeholder="Search by name, ID or mobile..." class="modal-input-premium pr-10">
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2">
+                                <template x-if="loading"><i class="fas fa-spinner fa-spin text-indigo-500 text-xs"></i></template>
+                                <template x-if="!loading && formData.beneficiary_id"><i class="fas fa-check-circle text-emerald-500 text-xs"></i></template>
+                            </div>
+                        </div>
+
+                        <div x-show="open && results.length > 0" @click.away="open = false" 
+                            class="absolute z-[100] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto p-1" x-cloak>
+                            <template x-for="res in results" :key="res.id">
+                                <button type="button" @click="selectBeneficiary(res, $data)" 
+                                    class="w-full text-left px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all group border-b border-gray-50 dark:border-gray-700 last:border-0">
+                                    <div class="text-sm font-bold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600" x-text="res.label"></div>
+                                </button>
+                            </template>
+                        </div>
+                        <template x-if="errors.student_id || errors.staff_id">
+                            <p class="modal-error-message" x-text="errors.student_id ? errors.student_id[0] : errors.staff_id[0]"></p>
+                        </template>
                     </div>
 
                     <div class="space-y-2">
@@ -215,6 +257,25 @@
             </div>
         </x-modal>
 
+        <!-- Renew Modal -->
+        <x-modal name="renew-modal" alpineTitle="'Extend Due Date'" maxWidth="sm">
+            <form @submit.prevent="submitRenewal()" class="p-1">
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">New Return Obligation <span class="text-red-500">*</span></label>
+                        <input type="date" x-model="renewData.due_date" min="{{ date('Y-m-d') }}" class="modal-input-premium font-bold">
+                    </div>
+                    <p class="text-[10px] text-gray-500 italic">Extending the due date will delay overdue penalty calculations.</p>
+                </div>
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'renew-modal')" class="btn-premium-cancel px-10">Cancel</button>
+                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[140px] !from-indigo-600 !to-violet-600">
+                        <span x-text="submitting ? 'Renewing...' : 'Confirm Renewal'"></span>
+                    </button>
+                </x-slot>
+            </form>
+        </x-modal>
+
         <x-confirm-modal />
     </div>
 
@@ -226,21 +287,135 @@
                     errors: {},
                     formData: {
                         book_id: '',
-                        student_id: '',
+                        target_type: 'student',
+                        beneficiary_id: '',
                         due_date: '{{ date('Y-m-d', strtotime('+14 days')) }}'
                     },
+                    beneficiarySearch: '',
                     returnIssueId: null,
+                    renewData: {
+                        issue_id: null,
+                        due_date: ''
+                    },
 
                     openIssueModal() {
                         this.errors = {};
-                        this.formData = { book_id: '', student_id: '', due_date: '{{ date('Y-m-d', strtotime('+14 days')) }}' };
+                        this.beneficiarySearch = '';
+                        this.formData = { 
+                            book_id: '', 
+                            target_type: 'student', 
+                            beneficiary_id: '', 
+                            due_date: '{{ date('Y-m-d', strtotime('+14 days')) }}' 
+                        };
                         this.$dispatch('open-modal', 'issue-book-modal');
+                    },
+
+                    async searchBeneficiaries(scope) {
+                        if (this.beneficiarySearch.length < 2) {
+                            scope.results = [];
+                            scope.open = false;
+                            return;
+                        }
+
+                        scope.loading = true;
+                        const url = this.formData.target_type === 'student' 
+                            ? '{{ route('school.library.students.search') }}' 
+                            : '{{ route('school.library.staff.search') }}';
+
+                        try {
+                            const response = await fetch(`${url}?q=${encodeURIComponent(this.beneficiarySearch)}`);
+                            const data = await response.json();
+                            scope.results = data;
+                            scope.open = true;
+                        } catch (e) {
+                            console.error('Search failed', e);
+                        } finally {
+                            scope.loading = false;
+                        }
+                    },
+
+                    selectBeneficiary(res, scope) {
+                        this.formData.beneficiary_id = res.id;
+                        this.beneficiarySearch = res.label;
+                        scope.open = false;
+                        this.clearError(this.formData.target_type === 'student' ? 'student_id' : 'staff_id');
+                    },
+
+                    openRenewModal(issueId, currentDueDate) {
+                        this.renewData.issue_id = issueId;
+                        this.renewData.due_date = currentDueDate;
+                        this.$dispatch('open-modal', 'renew-modal');
+                    },
+
+                    async submitRenewal() {
+                        if (this.submitting) return;
+                        this.submitting = true;
+
+                        try {
+                            const response = await fetch(`{{ route('school.library.renew', ['issue' => '__ISSUE__']) }}`.replace('__ISSUE__', this.renewData.issue_id), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ due_date: this.renewData.due_date })
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'renew-modal');
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else {
+                                throw new Error(result.message || 'Renewal failed');
+                            }
+                        } catch (e) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                        } finally {
+                            this.submitting = false;
+                        }
+                    },
+
+                    confirmMarkAsLost(issueId) {
+                        this.$dispatch('open-confirm-modal', {
+                            title: 'Mark Asset as Lost?',
+                            message: 'This will close the issue record and apply a fine equal to the book\'s price. This action cannot be reversed.',
+                            callback: async () => {
+                                try {
+                                    const response = await fetch(`{{ route('school.library.lost', ['issue' => '__ISSUE__']) }}`.replace('__ISSUE__', issueId), {
+                                        method: 'POST',
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        }
+                                    });
+                                    const result = await response.json();
+                                    if (response.ok) {
+                                        if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                        if (typeof this.refreshTable === 'function') this.refreshTable();
+                                    } else {
+                                        throw new Error(result.message || 'Operation failed');
+                                    }
+                                } catch (e) {
+                                    if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                                }
+                            }
+                        });
                     },
 
                     async submitIssue() {
                         if (this.submitting) return;
                         this.submitting = true;
                         this.errors = {};
+
+                        // Map beneficiary_id to student_id or staff_id
+                        const payload = { ...this.formData };
+                        if (this.formData.target_type === 'student') {
+                            payload.student_id = this.formData.beneficiary_id;
+                        } else {
+                            payload.staff_id = this.formData.beneficiary_id;
+                        }
 
                         try {
                             const response = await fetch('{{ route('school.library.issue.store') }}', {
@@ -250,7 +425,7 @@
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 },
-                                body: JSON.stringify(this.formData)
+                                body: JSON.stringify(payload)
                             });
 
                             const result = await response.json();

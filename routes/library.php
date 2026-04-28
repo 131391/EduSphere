@@ -30,6 +30,9 @@ Route::prefix('library')->name('library.')->group(function () {
     Route::get('/history',                   [LibraryController::class, 'history'])->name('history');
     Route::post('/history/fetch',            [LibraryController::class, 'history'])->name('history.fetch');
 
-    // Student AJAX search (replaces full <select> load)
+    // Student/Staff AJAX search
     Route::get('/students/search',           [LibraryController::class, 'searchStudents'])->name('students.search');
+    Route::get('/staff/search',              [LibraryController::class, 'searchStaff'])->name('staff.search');
+
+    Route::post('/renew/{issue}',            [LibraryController::class, 'renew'])->name('renew');
 });

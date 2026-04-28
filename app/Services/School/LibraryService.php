@@ -13,9 +13,12 @@ class LibraryService
     public function issueBook(array $data)
     {
         return DB::transaction(function () use ($data) {
+            $schoolId = (int) $data['school_id'];
+            $bookId   = (int) $data['book_id'];
+
             $book = Book::query()
-                ->where('school_id', $data['school_id'])
-                ->whereKey($data['book_id'])
+                ->where('school_id', $schoolId)
+                ->whereKey($bookId)
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -29,9 +32,10 @@ class LibraryService
 
             // Prevent same student holding multiple active copies of the same book
             if (!empty($data['student_id'])) {
-                $alreadyHeld = BookIssue::where('school_id', $data['school_id'])
-                    ->where('book_id', $data['book_id'])
-                    ->where('student_id', $data['student_id'])
+                $studentId   = (int) $data['student_id'];
+                $alreadyHeld = BookIssue::where('school_id', $schoolId)
+                    ->where('book_id', $bookId)
+                    ->where('student_id', $studentId)
                     ->where('status', 'issued')
                     ->exists();
 
@@ -41,10 +45,10 @@ class LibraryService
             }
 
             $issue = BookIssue::create([
-                'school_id'  => $data['school_id'],
-                'book_id'    => $data['book_id'],
-                'student_id' => $data['student_id'] ?? null,
-                'staff_id'   => $data['staff_id'] ?? null,
+                'school_id'  => $schoolId,
+                'book_id'    => $bookId,
+                'student_id' => isset($data['student_id']) ? (int) $data['student_id'] : null,
+                'staff_id'   => isset($data['staff_id']) ? (int) $data['staff_id'] : null,
                 'issue_date' => $data['issue_date'] ?? now(),
                 'due_date'   => $data['due_date'],
                 'status'     => 'issued',
@@ -67,7 +71,7 @@ class LibraryService
     {
         return DB::transaction(function () use ($issue, $returnDate) {
             $lockedIssue = BookIssue::query()
-                ->where('school_id', $issue->school_id)
+                ->where('school_id', (int) $issue->school_id)
                 ->whereKey($issue->getKey())
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -77,8 +81,8 @@ class LibraryService
             }
 
             $book = Book::query()
-                ->where('school_id', $lockedIssue->school_id)
-                ->whereKey($lockedIssue->book_id)
+                ->where('school_id', (int) $lockedIssue->school_id)
+                ->whereKey((int) $lockedIssue->book_id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -93,8 +97,8 @@ class LibraryService
             $lockedIssue->return_date = $returnDate;
             $lockedIssue->fine_amount = 0;
 
-            if ($returnDate->gt($lockedIssue->due_date)) {
-                $daysOverdue    = $lockedIssue->due_date->diffInDays($returnDate);
+            if ($returnDate->gt(Carbon::parse($lockedIssue->due_date))) {
+                $daysOverdue    = Carbon::parse($lockedIssue->due_date)->diffInDays($returnDate);
                 $schoolSettings = $lockedIssue->school?->settings ?? [];
                 $finePerDay     = (float) ($schoolSettings['late_return_library_book_fine'] ?? 5);
                 $lockedIssue->fine_amount = $daysOverdue * $finePerDay;
@@ -120,7 +124,7 @@ class LibraryService
     {
         return DB::transaction(function () use ($issue) {
             $lockedIssue = BookIssue::query()
-                ->where('school_id', $issue->school_id)
+                ->where('school_id', (int) $issue->school_id)
                 ->whereKey($issue->getKey())
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -130,8 +134,8 @@ class LibraryService
             }
 
             $book = Book::query()
-                ->where('school_id', $lockedIssue->school_id)
-                ->whereKey($lockedIssue->book_id)
+                ->where('school_id', (int) $lockedIssue->school_id)
+                ->whereKey((int) $lockedIssue->book_id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -164,7 +168,7 @@ class LibraryService
     {
         return DB::transaction(function () use ($issue) {
             $locked = BookIssue::query()
-                ->where('school_id', $issue->school_id)
+                ->where('school_id', (int) $issue->school_id)
                 ->whereKey($issue->getKey())
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -191,6 +195,36 @@ class LibraryService
                 ->log('fine_settled');
 
             return ['success' => true, 'message' => 'Fine settled successfully.', 'fine' => (float) $locked->fine_amount];
+        });
+    }
+
+    public function renewBook(BookIssue $issue, $newDueDate)
+    {
+        return DB::transaction(function () use ($issue, $newDueDate) {
+            $lockedIssue = BookIssue::query()
+                ->where('school_id', (int) $issue->school_id)
+                ->whereKey($issue->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedIssue->status !== 'issued') {
+                return ['success' => false, 'message' => 'Only issued books can be renewed.'];
+            }
+
+            $oldDueDate = $lockedIssue->due_date;
+            $lockedIssue->due_date = Carbon::parse($newDueDate);
+            $lockedIssue->save();
+
+            activity('library')
+                ->causedBy(auth()->user())
+                ->performedOn($lockedIssue)
+                ->withProperties([
+                    'old_due_date' => Carbon::parse($oldDueDate)->toDateString(),
+                    'new_due_date' => Carbon::parse($lockedIssue->due_date)->toDateString()
+                ])
+                ->log('book_renewed');
+
+            return ['success' => true, 'message' => 'Book renewal successful. New due date: ' . Carbon::parse($lockedIssue->due_date)->format('d M, Y')];
         });
     }
 }
