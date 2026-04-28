@@ -205,8 +205,8 @@
                         <label class="modal-label-premium">Hostel <span class="text-red-600 font-bold">*</span></label>
                         <select x-model="formData.hostel_id" @change="clearError('hostel_id')"
                             name="hostel_id"
-                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200'">
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                             <option value="">Select Hostel</option>
                             @foreach($hostels as $hostel)
                                 <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
@@ -221,8 +221,8 @@
                         <label class="modal-label-premium">Floor Name <span class="text-red-600 font-bold">*</span></label>
                         <input type="text" x-model="formData.floor_name" @input="clearError('floor_name')"
                             placeholder="e.g., Ground Floor, First Floor"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.floor_name ? 'border-red-500' : 'border-slate-200'">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.floor_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                         <template x-if="errors.floor_name">
                             <p x-text="errors.floor_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
@@ -232,23 +232,23 @@
                         <label class="modal-label-premium">Total Rooms</label>
                         <input type="number" x-model="formData.total_room" @input="clearError('total_room')"
                             placeholder="0" min="0"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.total_room ? 'border-red-500' : 'border-slate-200'">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.total_room ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                     </div>
 
                     <div class="space-y-2">
                         <label class="modal-label-premium">Established On</label>
                         <input type="date" x-model="formData.floor_create_date" @input="clearError('floor_create_date')"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.floor_create_date ? 'border-red-500' : 'border-slate-200'">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.floor_create_date ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                     </div>
                 </div>
 
                 <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                     <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
                     <div class="flex flex-col">
-                        <span class="text-xs font-bold text-slate-900">Tip</span>
-                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                        <span class="text-xs font-bold text-slate-900 dark:text-gray-100">Tip</span>
+                        <p class="text-[11px] text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
                             Once you add a floor, you can add rooms to it to start assigning beds to students.
                         </p>
                     </div>
@@ -257,7 +257,7 @@
 
             <x-slot name="footer">
                 <button type="button" @click="$dispatch('close-modal', 'floor-modal')" :disabled="submitting"
-                    class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                    class="px-6 py-2.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest hover:text-slate-700 dark:hover:text-gray-200 transition-colors">
                     Cancel
                 </button>
                 <button type="submit" form="floorForm" :disabled="submitting"

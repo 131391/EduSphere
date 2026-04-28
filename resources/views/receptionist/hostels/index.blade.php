@@ -198,8 +198,8 @@
                         <label class="modal-label-premium">Hostel Name <span class="text-red-600 font-bold">*</span></label>
                         <input type="text" x-model="formData.hostel_name" @input="clearError('hostel_name')"
                             placeholder="e.g., Aravali Boys Hostel"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.hostel_name ? 'border-red-500' : 'border-slate-200'">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.hostel_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                         <template x-if="errors.hostel_name">
                             <p x-text="errors.hostel_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
@@ -209,31 +209,31 @@
                         <label class="modal-label-premium">Warden Name</label>
                         <input type="text" x-model="formData.hostel_incharge" @input="clearError('hostel_incharge')"
                             placeholder="e.g., Mr. Sharma"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.hostel_incharge ? 'border-red-500' : 'border-slate-200'">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.hostel_incharge ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                     </div>
 
                     <div class="space-y-2">
                         <label class="modal-label-premium">Total Bed Capacity</label>
                         <input type="number" x-model="formData.capability" @input="clearError('capability')"
                             placeholder="0" min="0"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.capability ? 'border-red-500' : 'border-slate-200'">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.capability ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                     </div>
 
                     <div class="space-y-2">
                         <label class="modal-label-premium">Established On</label>
                         <input type="date" x-model="formData.hostel_create_date" @input="clearError('hostel_create_date')"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.hostel_create_date ? 'border-red-500' : 'border-slate-200'">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.hostel_create_date ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                     </div>
                 </div>
 
                 <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                     <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
                     <div class="flex flex-col">
-                        <span class="text-xs font-bold text-slate-900">Tip</span>
-                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                        <span class="text-xs font-bold text-slate-900 dark:text-gray-100">Tip</span>
+                        <p class="text-[11px] text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
                             After adding a hostel, add its floors and rooms to start allocating beds to students.
                         </p>
                     </div>
@@ -242,7 +242,7 @@
 
             <x-slot name="footer">
                 <button type="button" @click="$dispatch('close-modal', 'hostel-modal')" :disabled="submitting"
-                    class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                    class="px-6 py-2.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest hover:text-slate-700 dark:hover:text-gray-200 transition-colors">
                     Cancel
                 </button>
                 <button type="submit" form="hostelForm" :disabled="submitting"

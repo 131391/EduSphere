@@ -116,13 +116,13 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-indigo-100 group-hover:text-indigo-600">
+                                            class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 transition-colors group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/40 group-hover:text-indigo-600">
                                             <i class="fas fa-route"></i>
                                         </div>
                                         <div class="flex flex-col">
                                             <span
                                                 class="text-sm font-bold text-slate-800 dark:text-white leading-tight">{{ $row['route_name'] }}</span>
-                                            <span class="text-[10px] font-medium text-slate-400 mt-0.5">Created:
+                                            <span class="text-[10px] font-medium text-slate-400 dark:text-gray-500 dark:text-gray-500 mt-0.5">Created:
                                                 {{ $row['created_at'] }}</span>
                                         </div>
                                     </div>
@@ -130,11 +130,11 @@
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col gap-1">
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
+                                            <i class="fas fa-bus-alt text-[10px] text-slate-400 dark:text-gray-500"></i>
                                             <span
                                                 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $row['vehicle_label'] }}</span>
                                         </div>
-                                        <span class="text-[10px] font-medium text-slate-500">Capacity:
+                                        <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400">Capacity:
                                             {{ $row['vehicle_capacity'] }}</span>
                                     </div>
                                 </td>
@@ -170,13 +170,13 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-indigo-100 group-hover:text-indigo-600">
+                                            class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 transition-colors group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/40 group-hover:text-indigo-600">
                                             <i class="fas fa-route"></i>
                                         </div>
                                         <div class="flex flex-col">
                                             <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight"
                                                 x-text="row.route_name"></span>
-                                            <span class="text-[10px] font-medium text-slate-400 mt-0.5"
+                                            <span class="text-[10px] font-medium text-slate-400 dark:text-gray-500 dark:text-gray-500 mt-0.5"
                                                 x-text="'Created: ' + row.created_at"></span>
                                         </div>
                                     </div>
@@ -184,11 +184,11 @@
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col gap-1">
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
+                                            <i class="fas fa-bus-alt text-[10px] text-slate-400 dark:text-gray-500"></i>
                                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300"
                                                 x-text="row.vehicle_label"></span>
                                         </div>
-                                        <span class="text-[10px] font-medium text-slate-500"
+                                        <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400"
                                             x-text="'Capacity: ' + row.vehicle_capacity + ' seats'"></span>
                                     </div>
                                 </td>
@@ -238,22 +238,22 @@
 
                 <div class="space-y-4">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation /
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Route Designation /
                             Name <span class="text-red-500">*</span></label>
                         <input type="text" x-model="formData.route_name" placeholder="e.g. North Sector Express"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
-                            :class="errors.route_name ? 'border-red-500' : 'border-slate-200'" @input="clearError('route_name')">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.route_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('route_name')">
                         <template x-if="errors.route_name">
                             <p x-text="errors.route_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assigned Fleet Asset
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Assigned Fleet Asset
                             <span class="text-red-500">*</span></label>
                         <select x-model="formData.vehicle_id"
-                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.vehicle_id ? 'border-red-500' : 'border-slate-200'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.vehicle_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @change="clearError('vehicle_id')">
                             <option value="">Select Primary Vehicle</option>
                             <template x-for="vehicle in vehicles" :key="vehicle.id">
@@ -268,11 +268,11 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Activation Date
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Activation Date
                                 <span class="text-red-500">*</span></label>
                             <input type="date" x-model="formData.route_create_date"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                                :class="errors.route_create_date ? 'border-red-500' : 'border-slate-200'"
+                                class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                :class="errors.route_create_date ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                                 @change="clearError('route_create_date')">
                             <template x-if="errors.route_create_date">
                                 <p x-text="errors.route_create_date[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
@@ -280,10 +280,10 @@
                         </div>
 
                         <div class="space-y-1.5">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Operational
+                            <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Operational
                                 Status</label>
                             <select x-model="formData.status"
-                                class="no-select2 w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                                class="no-select2 w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all">
                                 <option value="1">Active / Operational</option>
                                 <option value="0">Inactive / Suspended</option>
                             </select>
@@ -294,8 +294,8 @@
                 <div class="mt-6 bg-teal-50 border border-teal-100 p-4 rounded-2xl flex items-start gap-3">
                     <i class="fas fa-network-wired text-teal-600 mt-0.5"></i>
                     <div class="flex flex-col">
-                        <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
-                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                        <span class="text-xs font-bold text-slate-900 dark:text-gray-100 dark:text-gray-100 leading-tight">Note</span>
+                        <p class="text-[11px] text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
                             Changes to this route will automatically update all <span class="text-teal-600 font-bold">bus
                                 stops</span> and student transport assignments.
                         </p>
@@ -305,7 +305,7 @@
 
             <x-slot name="footer">
                 <button @click="$dispatch('close-modal', 'route-modal')"
-                    class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                    class="px-6 py-2.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest hover:text-slate-700 dark:hover:text-gray-200 transition-colors">
                     Cancel
                 </button>
                 <button type="submit" form="routeForm" :disabled="submitting"

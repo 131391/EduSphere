@@ -247,7 +247,7 @@
                                 </template>
                             </div>
                         </div>
-                    <hr class="border-slate-100">
+                    <hr class="border-slate-100 dark:border-gray-700">
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -283,18 +283,18 @@
                         <div class="relative">
                             <span class="absolute right-5 top-1/2 -translate-y-1/2 text-teal-600 font-black text-xl">₹</span>
                             <input type="number" name="fee_per_month" x-model="formData.fee_per_month" step="0.01" readonly
-                                class="w-full pr-12 pl-6 py-4 bg-white border border-slate-200 rounded-xl font-black text-2xl text-slate-800 shadow-sm cursor-not-allowed outline-none">
+                                class="w-full pr-12 pl-6 py-4 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl font-black text-2xl text-slate-800 dark:text-gray-100 shadow-sm cursor-not-allowed outline-none">
                         </div>
                     </div>
 
                     {{-- Administrative Notice --}}
                     <div class="bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl flex items-start gap-4 shadow-sm">
-                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                        <div class="w-10 h-10 rounded-xl bg-white dark:bg-gray-700 shadow-sm flex items-center justify-center shrink-0">
                             <i class="fas fa-exclamation-triangle text-amber-500 text-sm"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-900 leading-tight">Note</span>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
+                            <span class="text-sm font-bold text-slate-900 dark:text-gray-100 leading-tight">Note</span>
+                            <p class="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase mt-1 tracking-wide opacity-80 leading-relaxed">
                                 Assignment will be mapped to the <span class="text-indigo-600 font-bold underline decoration-indigo-200">current academic session</span>. Any modifications will reflect in the next billing cycle.
                             </p>
                         </div>

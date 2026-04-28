@@ -103,12 +103,12 @@
                         <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 transition-colors group-hover:bg-teal-100 dark:group-hover:bg-teal-900/40 group-hover:text-teal-600">
                                         <i class="fas fa-bus-alt"></i>
                                     </div>
                                     <div class="flex flex-col">
                                         <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight">{{ $row['registration_no'] }}</span>
-                                        <span class="text-[10px] font-medium text-slate-400 mt-0.5">Ref: {{ $row['vehicle_no'] ?? 'N/A' }}</span>
+                                        <span class="text-[10px] font-medium text-slate-400 dark:text-gray-500 dark:text-gray-500 mt-0.5">Ref: {{ $row['vehicle_no'] ?? 'N/A' }}</span>
                                     </div>
                                 </div>
                             </td>
@@ -118,13 +118,13 @@
                                         <span class="w-2 h-2 rounded-full bg-{{ $row['fuel_color'] }}-500"></span>
                                         <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $row['fuel_label'] }}</span>
                                     </div>
-                                    <span class="text-[10px] font-medium text-slate-500">{{ $row['capacity'] }}</span>
+                                    <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400">{{ $row['capacity'] }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
                                     <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $row['model_no'] }}</span>
-                                    <span class="text-[10px] font-medium text-slate-500 mt-0.5">Purchased: {{ $row['purchase_date'] }}</span>
+                                    <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400 mt-0.5">Purchased: {{ $row['purchase_date'] }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
@@ -147,12 +147,12 @@
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 transition-colors group-hover:bg-teal-100 dark:group-hover:bg-teal-900/40 group-hover:text-teal-600">
                                             <i class="fas fa-bus-alt"></i>
                                         </div>
                                         <div class="flex flex-col">
                                             <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight" x-text="row.registration_no"></span>
-                                            <span class="text-[10px] font-medium text-slate-400 mt-0.5" x-text="'Ref: ' + (row.vehicle_no || 'N/A')"></span>
+                                            <span class="text-[10px] font-medium text-slate-400 dark:text-gray-500 dark:text-gray-500 mt-0.5" x-text="'Ref: ' + (row.vehicle_no || 'N/A')"></span>
                                         </div>
                                     </div>
                                 </td>
@@ -162,13 +162,13 @@
                                             <span class="w-2 h-2 rounded-full" :class="'bg-' + row.fuel_color + '-500'"></span>
                                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="row.fuel_label"></span>
                                         </div>
-                                        <span class="text-[10px] font-medium text-slate-500" x-text="row.capacity"></span>
+                                        <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400" x-text="row.capacity"></span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <span class="text-xs font-bold text-slate-700 dark:text-slate-300" x-text="row.model_no"></span>
-                                        <span class="text-[10px] font-medium text-slate-500 mt-0.5" x-text="'Purchased: ' + row.purchase_date"></span>
+                                        <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400 mt-0.5" x-text="'Purchased: ' + row.purchase_date"></span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
@@ -207,20 +207,20 @@
                 {{-- Column 1 --}}
                 <div class="space-y-4">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Registration Number <span class="text-red-500">*</span></label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Registration Number <span class="text-red-500">*</span></label>
                         <input type="text" x-model="formData.registration_no" placeholder="e.g., DL 1C AB 1234"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.registration_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('registration_no')">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.registration_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('registration_no')">
                         <template x-if="errors.registration_no">
                             <p x-text="errors.registration_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Propulsion / Fuel Type <span class="text-red-500">*</span></label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Propulsion / Fuel Type <span class="text-red-500">*</span></label>
                         <select x-model="formData.fuel_type" 
-                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.fuel_type ? 'border-red-500' : 'border-slate-200'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.fuel_type ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @change="clearError('fuel_type')">
                             <option value="">Select Propulsion</option>
                             @foreach(\App\Enums\FuelType::cases() as $fuel)
@@ -233,20 +233,20 @@
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Seating Capacity</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Seating Capacity</label>
                         <input type="number" x-model="formData.capacity" placeholder="0" 
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.capacity ? 'border-red-500' : 'border-slate-200'" @input="clearError('capacity')">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.capacity ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('capacity')">
                         <template x-if="errors.capacity">
                             <p x-text="errors.capacity[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Engine Serial</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Engine Serial</label>
                         <input type="text" x-model="formData.engine_no" placeholder="SN-XXXX" 
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.engine_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('engine_no')">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.engine_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('engine_no')">
                         <template x-if="errors.engine_no">
                             <p x-text="errors.engine_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
@@ -256,20 +256,20 @@
                 {{-- Column 2 --}}
                 <div class="space-y-4">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Internal Reference No</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Internal Reference No</label>
                         <input type="text" x-model="formData.vehicle_no" placeholder="e.g. BUS-01" 
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.vehicle_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('vehicle_no')">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.vehicle_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('vehicle_no')">
                         <template x-if="errors.vehicle_no">
                             <p x-text="errors.vehicle_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Vehicle Variant</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Vehicle Variant</label>
                         <select x-model="formData.vehicle_type" 
-                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.vehicle_type ? 'border-red-500' : 'border-slate-200'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.vehicle_type ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @change="clearError('vehicle_type')">
                             <option value="">Select Configuration</option>
                             <option value="bus">School Bus</option>
@@ -283,19 +283,19 @@
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Model / Year</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Model / Year</label>
                         <input type="text" x-model="formData.model_no" placeholder="e.g. 2024 Turbo" 
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.model_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('model_no')">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.model_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('model_no')">
                         <template x-if="errors.model_no">
                             <p x-text="errors.model_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Purchase Date</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Purchase Date</label>
                         <input type="date" x-model="formData.date_of_purchase" 
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            class="w-full bg-slate-50 dark:bg-gray-700 border-none rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             :class="errors.date_of_purchase ? 'ring-2 ring-red-500/20' : ''" @change="clearError('date_of_purchase')">
                         <template x-if="errors.date_of_purchase">
                             <p x-text="errors.date_of_purchase[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
@@ -307,8 +307,8 @@
             <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                 <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
                 <div class="flex flex-col">
-                    <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
-                    <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    <span class="text-xs font-bold text-slate-900 dark:text-gray-100 dark:text-gray-100 leading-tight">Note</span>
+                    <p class="text-[11px] text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
                         Changes to vehicle details will automatically update all <span class="text-indigo-600 font-bold">routes</span> and <span class="text-indigo-600 font-bold">transport history</span>.
                     </p>
                 </div>
@@ -316,7 +316,7 @@
         </form>
 
         <x-slot name="footer">
-            <button @click="$dispatch('close-modal', 'vehicle-modal')" class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+            <button @click="$dispatch('close-modal', 'vehicle-modal')" class="px-6 py-2.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest hover:text-slate-700 dark:hover:text-gray-200 transition-colors">
                 Cancel
             </button>
             <button type="submit" form="vehicleForm" :disabled="submitting" 

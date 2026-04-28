@@ -223,8 +223,8 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium">Hostel Block <span class="text-red-600 font-bold">*</span></label>
                         <select x-model="formData.hostel_id" @change="loadFloors(); clearError('hostel_id')"
-                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200'">
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                             <option value="">Select Hostel</option>
                             @foreach($hostels as $hostel)
                                 <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
@@ -239,8 +239,8 @@
                         <label class="modal-label-premium">Floor Level <span class="text-red-600 font-bold">*</span></label>
                         <select x-model="formData.hostel_floor_id" :disabled="!formData.hostel_id"
                             @change="clearError('hostel_floor_id')"
-                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all disabled:opacity-50"
-                            :class="errors.hostel_floor_id ? 'border-red-500' : 'border-slate-200'">
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all disabled:opacity-50"
+                            :class="errors.hostel_floor_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                             <option value="">Select Floor</option>
                             <template x-for="floor in floors" :key="floor.id">
                                 <option :value="floor.id" x-text="floor.floor_name"></option>
@@ -255,8 +255,8 @@
                         <label class="modal-label-premium">Room Name <span class="text-red-600 font-bold">*</span></label>
                         <input type="text" x-model="formData.room_name" @input="clearError('room_name')"
                             placeholder="e.g., Room 101"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.room_name ? 'border-red-500' : 'border-slate-200'">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.room_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                         <template x-if="errors.room_name">
                             <p x-text="errors.room_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
@@ -265,7 +265,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium text-emerald-600">Air Conditioning</label>
                         <select x-model="formData.ac"
-                            class="no-select2 w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -275,7 +275,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium text-indigo-600">Cooler</label>
                         <select x-model="formData.cooler"
-                            class="no-select2 w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -285,7 +285,7 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium text-amber-600">Fan</label>
                         <select x-model="formData.fan"
-                            class="no-select2 w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all">
                             @foreach(YesNo::options() as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
@@ -295,13 +295,13 @@
                     <div class="space-y-2">
                         <label class="modal-label-premium">Established On</label>
                         <input type="date" x-model="formData.room_create_date"
-                            class="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            class="w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all">
                     </div>
                 </div>
 
                 <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                     <i class="fas fa-info-circle text-indigo-600 mt-0.5"></i>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">
+                    <p class="text-[11px] text-slate-500 dark:text-gray-400 leading-relaxed">
                         After adding a room, assign students to it via the Bed Assignments section.
                     </p>
                 </div>
@@ -309,7 +309,7 @@
 
             <x-slot name="footer">
                 <button type="button" @click="$dispatch('close-modal', 'room-modal')" :disabled="submitting"
-                    class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                    class="px-6 py-2.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest hover:text-slate-700 dark:hover:text-gray-200 transition-colors">
                     Cancel
                 </button>
                 <button type="submit" form="roomForm" :disabled="submitting"

@@ -241,8 +241,8 @@
                                 <input type="text" x-model="admissionSearch"
                                     @input="searchStudents(); clearError('student_id')"
                                     @focus="showStudentDropdown = true" placeholder="Type student name or ID..."
-                                    class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium shadow-sm"
-                                    :class="errors.student_id ? 'border-red-500' : 'border-slate-200'"
+                                    class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium shadow-sm"
+                                    :class="errors.student_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                                     autocomplete="off">
 
                                 {{-- Student Dropdown Results --}}
@@ -295,8 +295,8 @@
                             <div class="space-y-2">
                                 <label class="modal-label-premium">Hostel Block <span class="text-red-500 font-bold">*</span></label>
                                 <select name="hostel_id" x-model="formData.hostel_id" @change="loadFloors(); clearError('hostel_id')"
-                                    class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
-                                    :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200'">
+                                    class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
+                                    :class="errors.hostel_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                                     <option value="">Select Block</option>
                                     @foreach($hostels as $hostel)
                                         <option value="{{ $hostel->id }}">{{ $hostel->hostel_name }}</option>
@@ -311,8 +311,8 @@
                                 <label class="modal-label-premium">Floor Level <span class="text-red-500 font-bold">*</span></label>
                                 <select name="hostel_floor_id" x-model="formData.hostel_floor_id"
                                     @change="loadRooms(); clearError('hostel_floor_id')" :disabled="!formData.hostel_id"
-                                    class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-50"
-                                    :class="errors.hostel_floor_id ? 'border-red-500' : 'border-slate-200'">
+                                    class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-50"
+                                    :class="errors.hostel_floor_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                                     <option value="">Select Floor</option>
                                     <template x-for="floor in floors" :key="floor.id">
                                         <option :value="String(floor.id)" x-text="floor.floor_name"></option>
@@ -327,8 +327,8 @@
                                 <label class="modal-label-premium">Room <span class="text-red-500 font-bold">*</span></label>
                                 <select name="hostel_room_id" x-model="formData.hostel_room_id" @change="clearError('hostel_room_id')"
                                     :disabled="!formData.hostel_floor_id"
-                                    class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-50"
-                                    :class="errors.hostel_room_id ? 'border-red-500' : 'border-slate-200'">
+                                    class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-50"
+                                    :class="errors.hostel_room_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                                     <option value="">Select Room</option>
                                     <template x-for="room in rooms" :key="room.id">
                                         <option :value="String(room.id)" x-text="room.room_name"></option>
@@ -344,14 +344,14 @@
                     {{-- Financial & Scheduling --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fee Details</label>
-                            <div class="grid grid-cols-2 gap-4 bg-slate-50/50 p-5 rounded-2xl border border-slate-100 shadow-inner">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest ml-1">Fee Details</label>
+                            <div class="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-gray-700/50 p-5 rounded-2xl border border-slate-100 dark:border-gray-600 shadow-inner">
                                 <div class="space-y-2">
                                     <label class="modal-label-premium">Bed No</label>
                                     <input type="text" name="bed_no" x-model="formData.bed_no" @input="clearError('bed_no')"
                                         placeholder="e.g., Bed A"
-                                        class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
-                                        :class="errors.bed_no ? 'border-red-500' : 'border-slate-200'">
+                                        class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
+                                        :class="errors.bed_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                                     <template x-if="errors.bed_no">
                                         <p class="modal-error-message" x-text="errors.bed_no[0]"></p>
                                     </template>
@@ -360,8 +360,8 @@
                                     <label class="modal-label-premium">Monthly Fee</label>
                                     <input type="number" name="rent" step="0.01" x-model="formData.rent" @input="clearError('rent')"
                                         placeholder="0.00"
-                                        class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
-                                        :class="errors.rent ? 'border-red-500' : 'border-slate-200'">
+                                        class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
+                                        :class="errors.rent ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                                     <template x-if="errors.rent">
                                         <p class="modal-error-message" x-text="errors.rent[0]"></p>
                                     </template>
@@ -370,14 +370,14 @@
                         </div>
 
                         <div class="space-y-4">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dates</label>
-                            <div class="grid grid-cols-2 gap-4 bg-slate-50/50 p-5 rounded-2xl border border-slate-100 shadow-inner">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest ml-1">Dates</label>
+                            <div class="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-gray-700/50 p-5 rounded-2xl border border-slate-100 dark:border-gray-600 shadow-inner">
                                 <div class="space-y-2">
                                     <label class="modal-label-premium">Start Date</label>
                                     <input type="date" name="hostel_assign_date" x-model="formData.hostel_assign_date"
                                         @input="clearError('hostel_assign_date')"
-                                        class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
-                                        :class="errors.hostel_assign_date ? 'border-red-500' : 'border-slate-200'">
+                                        class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
+                                        :class="errors.hostel_assign_date ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                                     <template x-if="errors.hostel_assign_date">
                                         <p class="modal-error-message" x-text="errors.hostel_assign_date[0]"></p>
                                     </template>
@@ -385,8 +385,8 @@
                                 <div class="space-y-2">
                                     <label class="modal-label-premium">Billing Month <span class="text-red-500 font-bold">*</span></label>
                                     <select name="starting_month" x-model="formData.starting_month" @change="clearError('starting_month')"
-                                        class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
-                                        :class="errors.starting_month ? 'border-red-500' : 'border-slate-200'">
+                                        class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
+                                        :class="errors.starting_month ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                                         <option value="">Select Month</option>
                                         <template x-for="month in months" :key="month.value">
                                             <option :value="String(month.value)" x-text="month.label"></option>
@@ -404,10 +404,10 @@
                 <!-- notice card -->
                 <div class="mt-6 flex items-center justify-between bg-[#f0f5ff] border border-[#e5edff] p-5 rounded-2xl shadow-sm">
                     <div class="flex flex-col">
-                        <span class="text-sm font-bold text-slate-900 leading-tight">Note</span>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-wide opacity-80">The assignment is linked to the student's fee account. Make sure the student and room details are correct before saving.</span>
+                        <span class="text-sm font-bold text-slate-900 dark:text-gray-100 leading-tight">Note</span>
+                        <span class="text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase mt-1 tracking-wide opacity-80">The assignment is linked to the student's fee account. Make sure the student and room details are correct before saving.</span>
                     </div>
-                    <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                    <div class="w-10 h-10 bg-white dark:bg-gray-700 rounded-xl shadow-sm flex items-center justify-center shrink-0">
                         <i class="fas fa-info-circle text-indigo-600 text-sm"></i>
                     </div>
                 </div>

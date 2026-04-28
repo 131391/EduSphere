@@ -116,13 +116,13 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600">
+                                            class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 transition-colors group-hover:bg-teal-100 dark:group-hover:bg-teal-900/40 group-hover:text-teal-600">
                                             <i class="fas fa-map-marker-alt"></i>
                                         </div>
                                         <div class="flex flex-col">
                                             <span
                                                 class="text-sm font-bold text-slate-800 dark:text-white leading-tight">{{ $row['bus_stop_name'] }}</span>
-                                            <span class="text-[10px] font-medium text-slate-400 mt-0.5">Stop No:
+                                            <span class="text-[10px] font-medium text-slate-400 dark:text-gray-500 dark:text-gray-500 mt-0.5">Stop No:
                                                 {{ $row['bus_stop_no'] }}</span>
                                         </div>
                                     </div>
@@ -130,14 +130,14 @@
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col gap-1">
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-route text-[10px] text-slate-400"></i>
+                                            <i class="fas fa-route text-[10px] text-slate-400 dark:text-gray-500"></i>
                                             <span
                                                 class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $row['route_name'] }}</span>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
+                                            <i class="fas fa-bus-alt text-[10px] text-slate-400 dark:text-gray-500"></i>
                                             <span
-                                                class="text-[10px] font-medium text-slate-500">{{ $row['vehicle_label'] }}</span>
+                                                class="text-[10px] font-medium text-slate-500 dark:text-gray-400">{{ $row['vehicle_label'] }}</span>
                                         </div>
                                     </div>
                                 </td>
@@ -146,11 +146,11 @@
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs font-bold text-teal-600">{{ $row['charge'] }}</span>
                                             <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                            <span class="text-[10px] font-medium text-slate-500">{{ $row['distance'] }}</span>
+                                            <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400">{{ $row['distance'] }}</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 opacity-60">
-                                            <i class="fas fa-crosshairs text-[8px] text-slate-400"></i>
-                                            <span class="text-[10px] font-medium text-slate-500">{{ $row['coords'] }}</span>
+                                            <i class="fas fa-crosshairs text-[8px] text-slate-400 dark:text-gray-500"></i>
+                                            <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400">{{ $row['coords'] }}</span>
                                         </div>
                                     </div>
                                 </td>
@@ -180,13 +180,13 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 transition-colors group-hover:bg-teal-100 group-hover:text-teal-600">
+                                            class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 transition-colors group-hover:bg-teal-100 dark:group-hover:bg-teal-900/40 group-hover:text-teal-600">
                                             <i class="fas fa-map-marker-alt"></i>
                                         </div>
                                         <div class="flex flex-col">
                                             <span class="text-sm font-bold text-slate-800 dark:text-white leading-tight"
                                                 x-text="row.bus_stop_name"></span>
-                                            <span class="text-[10px] font-medium text-slate-400 mt-0.5"
+                                            <span class="text-[10px] font-medium text-slate-400 dark:text-gray-500 dark:text-gray-500 mt-0.5"
                                                 x-text="'Stop No: ' + row.bus_stop_no"></span>
                                         </div>
                                     </div>
@@ -194,13 +194,13 @@
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col gap-1">
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-route text-[10px] text-slate-400"></i>
+                                            <i class="fas fa-route text-[10px] text-slate-400 dark:text-gray-500"></i>
                                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300"
                                                 x-text="row.route_name"></span>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-bus-alt text-[10px] text-slate-400"></i>
-                                            <span class="text-[10px] font-medium text-slate-500"
+                                            <i class="fas fa-bus-alt text-[10px] text-slate-400 dark:text-gray-500"></i>
+                                            <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400"
                                                 x-text="row.vehicle_label"></span>
                                         </div>
                                     </div>
@@ -210,12 +210,12 @@
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs font-bold text-teal-600" x-text="row.charge"></span>
                                             <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                            <span class="text-[10px] font-medium text-slate-500"
+                                            <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400"
                                                 x-text="row.distance"></span>
                                         </div>
                                         <div class="flex items-center gap-1.5 opacity-60">
-                                            <i class="fas fa-crosshairs text-[8px] text-slate-400"></i>
-                                            <span class="text-[10px] font-medium text-slate-500" x-text="row.coords"></span>
+                                            <i class="fas fa-crosshairs text-[8px] text-slate-400 dark:text-gray-500"></i>
+                                            <span class="text-[10px] font-medium text-slate-500 dark:text-gray-400" x-text="row.coords"></span>
                                         </div>
                                     </div>
                                 </td>
@@ -261,11 +261,11 @@
                 {{-- Logistics Section --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Route Designation
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Route Designation
                             <span class="text-red-500">*</span></label>
                         <select x-model="formData.route_id" @change="clearError('route_id')"
-                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
-                            :class="errors.route_id ? 'border-red-500' : 'border-slate-200'">
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.route_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
                             <option value="">Select Primary Route</option>
                             @foreach($routes as $route)
                                 <option value="{{ $route->id }}">{{ $route->route_name }}</option>
@@ -277,57 +277,57 @@
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Node Identifier (Stop
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Node Identifier (Stop
                             No) <span class="text-red-500">*</span></label>
                         <input type="text" x-model="formData.bus_stop_no" placeholder="e.g. ST-001"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
-                            :class="errors.bus_stop_no ? 'border-red-500' : 'border-slate-200'" @input="clearError('bus_stop_no')">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.bus_stop_no ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('bus_stop_no')">
                         <template x-if="errors.bus_stop_no">
                             <p x-text="errors.bus_stop_no[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
 
                     <div class="md:col-span-2 space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Geographic Landmark
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Geographic Landmark
                             Name <span class="text-red-500">*</span></label>
                         <input type="text" x-model="formData.bus_stop_name" placeholder="e.g. Central Square Park Entrance"
-                            class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
-                            :class="errors.bus_stop_name ? 'border-red-500' : 'border-slate-200'" @input="clearError('bus_stop_name')">
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.bus_stop_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'" @input="clearError('bus_stop_name')">
                         <template x-if="errors.bus_stop_name">
                             <p x-text="errors.bus_stop_name[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
                 </div>
 
-                <hr class="border-slate-100/50">
+                <hr class="border-slate-100/50 dark:border-gray-700">
 
                 {{-- GPS & Tariff Section --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Latitude</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Latitude</label>
                         <input type="number" step="0.00000001" x-model="formData.latitude" placeholder="0.00000000"
-                            class="w-full bg-white border rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.latitude ? 'border-red-500' : 'border-slate-200'"
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-2 px-3 text-xs font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.latitude ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @input="clearError('latitude')">
                         <template x-if="errors.latitude">
                             <p x-text="errors.latitude[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Longitude</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Longitude</label>
                         <input type="number" step="0.00000001" x-model="formData.longitude" placeholder="0.00000000"
-                            class="w-full bg-white border rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.longitude ? 'border-red-500' : 'border-slate-200'"
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-2 px-3 text-xs font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.longitude ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @input="clearError('longitude')">
                         <template x-if="errors.longitude">
                             <p x-text="errors.longitude[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                         </template>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">PIN Code</label>
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">PIN Code</label>
                         <input type="text" x-model="formData.area_pin_code" placeholder="110001"
-                            class="w-full bg-white border rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.area_pin_code ? 'border-red-500' : 'border-slate-200'"
+                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-2 px-3 text-xs font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                            :class="errors.area_pin_code ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @input="clearError('area_pin_code')">
                         <template x-if="errors.area_pin_code">
                             <p x-text="errors.area_pin_code[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
@@ -337,25 +337,25 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Distance & Tariff
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Distance & Tariff
                             Mapping</label>
                         <div class="flex items-center gap-2">
                             <div class="relative flex-1 group">
                                 <input type="number" step="0.01" x-model="formData.distance_from_institute"
                                     placeholder="Distance (KM)"
-                                    class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all"
-                                    :class="errors.distance_from_institute ? 'border-red-500' : 'border-slate-200'"
+                                    class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                                    :class="errors.distance_from_institute ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                                     @input="clearError('distance_from_institute')">
                                 <template x-if="errors.distance_from_institute">
                                     <p x-text="errors.distance_from_institute[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
                                 </template>
                                 <span
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">KM</span>
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 dark:text-gray-500">KM</span>
                             </div>
                             <div class="relative flex-1 group">
                                 <input type="number" step="0.01" x-model="formData.charge_per_month" placeholder="Tariff (MT)"
-                                    class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
-                                    :class="errors.charge_per_month ? 'border-red-500' : 'border-slate-200'"
+                                    class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                                    :class="errors.charge_per_month ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                                     @input="clearError('charge_per_month')">
                                 <template x-if="errors.charge_per_month">
                                     <p x-text="errors.charge_per_month[0]" class="text-[10px] font-bold text-red-500 ml-1"></p>
@@ -367,11 +367,11 @@
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Fleet Assignment
+                        <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Fleet Assignment
                             Override</label>
                         <select x-model="formData.vehicle_id"
-                            class="no-select2 w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
-                            :class="errors.vehicle_id ? 'border-red-500' : 'border-slate-200'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all font-premium"
+                            :class="errors.vehicle_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
                             @change="clearError('vehicle_id')">
                             <option value="">Allocated via Route</option>
                             @foreach($vehicles as $vehicle)
@@ -389,8 +389,8 @@
                 <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex items-start gap-3">
                     <i class="fas fa-satellite-dish text-indigo-600 mt-0.5"></i>
                     <div class="flex flex-col">
-                        <span class="text-xs font-bold text-slate-900 leading-tight">Note</span>
-                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                        <span class="text-xs font-bold text-slate-900 dark:text-gray-100 dark:text-gray-100 leading-tight">Note</span>
+                        <p class="text-[11px] text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
                             Adding GPS coordinates enables <span class="text-indigo-600 font-bold">live tracking</span> and
                             student proximity alerts.
                         </p>
@@ -400,7 +400,7 @@
 
             <x-slot name="footer">
                 <button @click="$dispatch('close-modal', 'bus-stop-modal')"
-                    class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">
+                    class="px-6 py-2.5 text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest hover:text-slate-700 dark:hover:text-gray-200 transition-colors">
                     Cancel
                 </button>
                 <button type="submit" form="stopForm" :disabled="submitting"
