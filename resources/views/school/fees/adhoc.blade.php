@@ -28,7 +28,7 @@
                         class="modal-input-premium no-select2 appearance-none" required>
                         <option value="">2026-2027 (Current)</option>
                         @foreach($academicYears as $year)
-                            <option value="{{ $year->id }}">{{ $year->name }} {{ $year->is_current ? '(Current)' : '' }}</option>
+                            <option value="{{ $year->id }}">{{ $year->name }} {{ $year->is_current === \App\Enums\YesNo::Yes ? '(Current)' : '' }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -153,7 +153,7 @@
     function adhocFeeForm() {
         return {
             formData: {
-                academic_year_id: '{{ $academicYears->firstWhere("is_current", true)?->id ?? "" }}',
+                academic_year_id: '{{ $academicYears->firstWhere("is_current", \App\Enums\YesNo::Yes)?->id ?? "" }}',
                 class_id: '',
                 miscellaneous_fee_id: '',
                 fee_period: '',

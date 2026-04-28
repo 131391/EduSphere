@@ -70,8 +70,8 @@
                             class="no-select2 w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                         <option value="">Select academic year</option>
                         @foreach($academicYears as $year)
-                            <option value="{{ $year->id }}" @if($year->is_current) selected @endif>
-                                {{ $year->name }}@if($year->is_current) (Current)@endif
+                            <option value="{{ $year->id }}" @if($year->is_current === \App\Enums\YesNo::Yes) selected @endif>
+                                {{ $year->name }}@if($year->is_current === \App\Enums\YesNo::Yes) (Current)@endif
                             </option>
                         @endforeach
                     </select>
@@ -244,7 +244,7 @@ document.addEventListener('alpine:init', () => {
         errors: {},
         formData: {
             class_id: '{{ old('class_id') }}',
-            academic_year_id: '{{ $academicYears->where('is_current', true)->first()->id ?? ($academicYears->first()->id ?? '') }}',
+            academic_year_id: '{{ $academicYears->where('is_current', \App\Enums\YesNo::Yes)->first()?->id ?? ($academicYears->first()?->id ?? '') }}',
             fee_type_id: '',
             fee_period: '{{ date('F Y') }}',
             due_date: '{{ date('Y-m-d', strtotime('+10 days')) }}',
