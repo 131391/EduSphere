@@ -347,6 +347,23 @@
                         </template>
                     </div>
 
+                    <!-- Password -->
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">
+                            Password
+                            <span class="text-red-600 font-bold" x-show="!editMode">*</span>
+                            <span class="text-gray-400 text-xs" x-show="editMode">(leave blank to keep current)</span>
+                        </label>
+                        <div class="relative group">
+                            <input type="password" name="password" x-model="formData.password"
+                                @input="clearError('password')" placeholder="Min. 8 characters"
+                                class="modal-input-premium" :class="{'border-red-500 ring-red-500/10': errors.password}">
+                        </div>
+                        <template x-if="errors.password">
+                            <p class="modal-error-message" x-text="errors.password[0]"></p>
+                        </template>
+                    </div>
+
                     <!-- Gender -->
                     <div class="space-y-2">
                         <label class="modal-label-premium">Gender <span class="text-red-600 font-bold">*</span></label>
@@ -690,6 +707,7 @@ document.addEventListener('alpine:init', () => {
             name: '',
             mobile: '',
             email: '',
+            password: '',
             gender: '',
             total_experience: '',
             previous_school_salary: '',
@@ -754,7 +772,7 @@ document.addEventListener('alpine:init', () => {
                 if (this.editMode) fd.append('_method', 'PUT');
 
                 const fields = [
-                    'post', 'class_id', 'section_id', 'name', 'mobile', 'email',
+                    'post', 'class_id', 'section_id', 'name', 'mobile', 'email', 'password',
                     'gender', 'total_experience', 'previous_school_salary', 'current_salary',
                     'country_id', 'state_id', 'city_id', 'zip_code', 'address',
                     'aadhaar_no', 'joining_date', 'higher_qualification_id', 'previous_school_company_name'
@@ -906,7 +924,7 @@ document.addEventListener('alpine:init', () => {
 
         resetForm() {
             this.formData = {
-                post: '', class_id: '', section_id: '', name: '', mobile: '', email: '', gender: '',
+                post: '', class_id: '', section_id: '', name: '', mobile: '', email: '', password: '', gender: '',
                 total_experience: '', previous_school_salary: '', current_salary: '', country_id: '',
                 state_id: '', city_id: '', zip_code: '', address: '', aadhaar_no: '',
                 aadhaar_card_preview: '', staff_image_preview: '', joining_date: '',

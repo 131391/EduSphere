@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Receptionist;
 
 use App\Http\Controllers\TenantController;
 use App\Models\Staff;
+use App\Models\User;
+use App\Models\Role;
 use App\Models\ClassModel;
 use App\Models\Section;
 use App\Models\Qualification;
 use App\Traits\HasAjaxDataTable;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use App\Enums\Gender;
 use App\Enums\StaffPost;
+use App\Enums\UserStatus;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class StaffController extends TenantController
 {
@@ -145,7 +150,6 @@ class StaffController extends TenantController
     public function store(Request $request)
     {
         $validated = $this->validateStaff($request);
-        $validated['school_id'] = $this->getSchoolId();
 
         if ($request->hasFile('aadhaar_card')) {
             $validated['aadhaar_card'] = $request->file('aadhaar_card')->store('staff/aadhaar', 'public');
@@ -155,7 +159,27 @@ class StaffController extends TenantController
         }
 
         try {
-            Staff::create($validated);
+            DB::transaction(function () use ($validated) {
+                $role = $this->resolveRoleForPost(StaffPost::from($validated['post']));
+
+                $user = User::create([
+                    'school_id'           => $this->getSchoolId(),
+                    'name'                => $validated['name'],
+                    'email'               => $validated['email'],
+                    'password'            => Hash::make($validated['password']),
+                    'role_id'             => $role->id,
+                    'phone'               => $validated['mobile'] ?? null,
+                    'status'              => UserStatus::Active,
+                    'must_change_password' => true,
+                ]);
+
+                unset($validated['password']);
+                $validated['school_id'] = $this->getSchoolId();
+                $validated['user_id']   = $user->id;
+
+                Staff::create($validated);
+            });
+
             return response()->json(['success' => true, 'message' => 'Staff registered successfully.']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to create staff: ' . $e->getMessage()], 500);
@@ -177,7 +201,26 @@ class StaffController extends TenantController
         }
 
         try {
-            $staff->update($validated);
+            DB::transaction(function () use ($staff, $validated, $request) {
+                // Sync name/email/role/phone on the linked User
+                if ($staff->user_id) {
+                    $role = $this->resolveRoleForPost(StaffPost::from($validated['post']));
+                    $userUpdate = [
+                        'name'    => $validated['name'],
+                        'email'   => $validated['email'],
+                        'phone'   => $validated['mobile'] ?? null,
+                        'role_id' => $role->id,
+                    ];
+                    if ($request->filled('password')) {
+                        $userUpdate['password'] = Hash::make($request->password);
+                    }
+                    $staff->user->update($userUpdate);
+                }
+
+                unset($validated['password']);
+                $staff->update($validated);
+            });
+
             return response()->json(['success' => true, 'message' => 'Staff record updated successfully.']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to update staff: ' . $e->getMessage()], 500);
@@ -191,7 +234,12 @@ class StaffController extends TenantController
         if ($staff->aadhaar_card) Storage::disk('public')->delete($staff->aadhaar_card);
         if ($staff->staff_image) Storage::disk('public')->delete($staff->staff_image);
 
-        $staff->delete();
+        DB::transaction(function () use ($staff) {
+            $staff->delete();
+            if ($staff->user_id) {
+                $staff->user?->delete();
+            }
+        });
 
         return response()->json(['success' => true, 'message' => 'Staff record deleted successfully.']);
     }
@@ -206,6 +254,19 @@ class StaffController extends TenantController
         return response()->json(['sections' => $sections]);
     }
 
+    private function resolveRoleForPost(StaffPost $post): Role
+    {
+        $slug = match ($post) {
+            StaffPost::Teacher    => Role::TEACHER,
+            StaffPost::Principal,
+            StaffPost::Assistant,
+            StaffPost::Counselor  => Role::SCHOOL_ADMIN,
+            default               => Role::RECEPTIONIST,
+        };
+
+        return Role::where('slug', $slug)->firstOrFail();
+    }
+
     private function validateStaff(Request $request, ?Staff $staff = null): array
     {
         return $request->validate([
@@ -215,6 +276,7 @@ class StaffController extends TenantController
             'name'                         => 'required|string|max:255',
             'mobile'                       => 'required|string|max:20',
             'email'                        => ['required', 'email', 'max:255', Rule::unique('staff', 'email')->where('school_id', $this->getSchoolId())->ignore($staff?->id)],
+            'password'                     => $staff ? 'nullable|string|min:8' : 'required|string|min:8',
             'gender'                       => ['required', 'integer', Rule::enum(Gender::class)],
             'total_experience'             => 'nullable|integer|min:0',
             'previous_school_salary'       => 'nullable|numeric|min:0',

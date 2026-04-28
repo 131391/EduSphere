@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Enums\Gender;
 use App\Enums\StaffPost;
+use App\Models\User;
 
 class Staff extends Model
 {
@@ -17,6 +18,7 @@ class Staff extends Model
 
     protected $fillable = [
         'school_id',
+        'user_id',
         'post',
         'class_id',
         'section_id',
@@ -51,6 +53,11 @@ class Staff extends Model
         'city_id' => 'integer',
         'joining_date' => 'date',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Get the school that owns the staff.
