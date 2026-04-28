@@ -3,66 +3,74 @@
 @section('title', 'Financial Reports')
 
 @section('content')
-<div class="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
-    <div class="mb-8 sm:flex sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Financial Reports</h1>
-            <p class="mt-2 text-sm text-gray-600">Export daily collection logs and fee defaulter lists to Excel.</p>
-        </div>
-    </div>
+<div class="space-y-6">
 
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <!-- Header -->
+    <x-page-header
+        title="Financial Reports"
+        description="Export daily collection logs and fee defaulter lists to Excel."
+        icon="fas fa-chart-bar">
+    </x-page-header>
+
+    <!-- Report Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
         <!-- Daily Collection Report -->
-        <div class="overflow-hidden bg-white shadow sm:rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 p-3 bg-emerald-100 rounded-md">
-                        <i class="fas fa-file-excel text-emerald-600 text-xl"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="p-6 sm:p-8">
+                <div class="flex items-start gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <i class="fas fa-file-excel text-lg"></i>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium leading-6 text-gray-900">Daily Collection Report</h3>
-                        <p class="mt-1 text-sm text-gray-500">Export a detailed list of all fee payments received on a specific date.</p>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-800 dark:text-white">Daily Collection Report</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Export a detailed list of all fee payments received on a specific date.</p>
                     </div>
                 </div>
-                <form action="{{ route('school.reports.fees.daily-collection') }}" method="GET" class="mt-6">
-                    <div class="flex items-end gap-4">
-                        <div class="flex-grow">
-                            <label for="collection_date" class="block text-sm font-medium text-gray-700">Target Date</label>
-                            <input type="date" id="collection_date" name="date" value="{{ date('Y-m-d') }}" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" required>
-                        </div>
-                        <button type="submit" class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white transition-colors bg-emerald-600 border border-transparent rounded-md shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
-                            <i class="mr-2 fas fa-download"></i> Export
-                        </button>
+
+                <form action="{{ route('school.reports.fees.daily-collection') }}" method="GET">
+                    <div class="space-y-2 mb-4">
+                        <label class="modal-label-premium">Target Date</label>
+                        <input type="date" name="date" value="{{ date('Y-m-d') }}"
+                            class="modal-input-premium cursor-pointer" required>
                     </div>
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 w-full justify-center">
+                        <i class="fas fa-download text-xs"></i>
+                        Export to Excel
+                    </button>
                 </form>
             </div>
         </div>
 
         <!-- Defaulters List -->
-        <div class="overflow-hidden bg-white shadow sm:rounded-lg">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 p-3 bg-red-100 rounded-md">
-                        <i class="fas fa-file-invoice-dollar text-red-600 text-xl"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="p-6 sm:p-8">
+                <div class="flex items-start gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+                        <i class="fas fa-file-invoice-dollar text-lg"></i>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium leading-6 text-gray-900">Defaulters List</h3>
-                        <p class="mt-1 text-sm text-gray-500">Export a list of all students with pending fees past their due date.</p>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-800 dark:text-white">Defaulters List</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Export a list of all students with pending fees past their due date.</p>
                     </div>
                 </div>
-                <form action="{{ route('school.reports.fees.defaulters') }}" method="GET" class="mt-6">
-                    <div class="flex items-end gap-4">
-                        <div class="flex-grow">
-                            <label for="defaulter_date" class="block text-sm font-medium text-gray-700">As Of Date</label>
-                            <input type="date" id="defaulter_date" name="date" value="{{ date('Y-m-d') }}" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm" required>
-                        </div>
-                        <button type="submit" class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white transition-colors bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                            <i class="mr-2 fas fa-download"></i> Export
-                        </button>
+
+                <form action="{{ route('school.reports.fees.defaulters') }}" method="GET">
+                    <div class="space-y-2 mb-4">
+                        <label class="modal-label-premium">As Of Date</label>
+                        <input type="date" name="date" value="{{ date('Y-m-d') }}"
+                            class="modal-input-premium cursor-pointer" required>
                     </div>
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 w-full justify-center">
+                        <i class="fas fa-download text-xs"></i>
+                        Export to Excel
+                    </button>
                 </form>
             </div>
         </div>
+
     </div>
 </div>
 @endsection

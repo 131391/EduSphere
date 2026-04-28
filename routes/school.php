@@ -75,6 +75,7 @@ Route::delete('favorites/{userFavorite}', [UserFavoriteController::class, 'destr
 Route::get('/fees', [FeeController::class, 'index'])->name('fees.index');
 Route::get('/fees/create', [FeeController::class, 'create'])->name('fees.create');
 Route::get('/ad-hoc-fees/create', [AdhocFeeController::class, 'create'])->name('ad-hoc-fees.create');
+Route::get('/ad-hoc-fees/students/{classId}', [AdhocFeeController::class, 'getStudentsByClass'])->name('ad-hoc-fees.students');
 Route::post('/ad-hoc-fees', [AdhocFeeController::class, 'store'])->name('ad-hoc-fees.store');
 Route::post('/fees', [FeeController::class, 'store'])->name('fees.store');
 Route::get('/fees/{fee}', [FeeController::class, 'show'])->name('fees.show');

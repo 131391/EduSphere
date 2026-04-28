@@ -22,7 +22,7 @@
                     </li>
                 </ol>
             </nav>
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight">Basic Information</h1>
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Basic Information</h1>
             <p class="text-base text-gray-500 mt-1 flex items-center font-medium">
                 <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
                 School identity, contact and location details
@@ -34,13 +34,13 @@
         @csrf
 
         {{-- School Identity --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-university text-indigo-600"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-university text-indigo-600 dark:text-indigo-400"></i>
                 </div>
                 <div>
-                    <h2 class="text-base font-bold text-gray-900">School Identity</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">School Identity</h2>
                     <p class="text-xs text-gray-400 mt-0.5">Core details used across all documents and reports.</p>
                 </div>
             </div>
@@ -49,14 +49,14 @@
 
                 {{-- School Name --}}
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-semibold text-gray-700">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         School Name <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="name"
                            x-model="formData.name"
                            @input="clearError('name')"
                            placeholder="e.g. Delhi Public School"
-                           class="w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                           class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                            :class="errors.name ? 'border-red-500 bg-red-50' : 'border-gray-200'">
                     <template x-if="errors.name">
                         <p class="text-xs text-red-500 flex items-center gap-1">
@@ -68,7 +68,7 @@
 
                 {{-- Email --}}
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-semibold text-gray-700">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Official Email <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
@@ -79,7 +79,7 @@
                                x-model="formData.email"
                                @input="clearError('email')"
                                placeholder="admin@school.com"
-                               class="w-full pl-9 pr-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                               class="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                :class="errors.email ? 'border-red-500 bg-red-50' : 'border-gray-200'">
                     </div>
                     <template x-if="errors.email">
@@ -92,7 +92,7 @@
 
                 {{-- Phone --}}
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-semibold text-gray-700">Contact Number</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Contact Number</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 pointer-events-none">
                             <i class="fas fa-phone text-xs"></i>
@@ -101,7 +101,7 @@
                                x-model="formData.phone"
                                @input="clearError('phone')"
                                placeholder="+91 98765 43210"
-                               class="w-full pl-9 pr-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                               class="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                :class="errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200'">
                     </div>
                     <template x-if="errors.phone">
@@ -114,7 +114,7 @@
 
                 {{-- Website --}}
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-semibold text-gray-700">Official Website</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Official Website</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 pointer-events-none">
                             <i class="fas fa-globe text-xs"></i>
@@ -123,7 +123,7 @@
                                x-model="formData.website"
                                @input="clearError('website')"
                                placeholder="https://www.school.com"
-                               class="w-full pl-9 pr-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                               class="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                :class="errors.website ? 'border-red-500 bg-red-50' : 'border-gray-200'">
                     </div>
                     <template x-if="errors.website">
@@ -138,13 +138,13 @@
         </div>
 
         {{-- Address & Location --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-map-marker-alt text-blue-600"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-map-marker-alt text-blue-600 dark:text-blue-400"></i>
                 </div>
                 <div>
-                    <h2 class="text-base font-bold text-gray-900">Address & Location</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Address & Location</h2>
                     <p class="text-xs text-gray-400 mt-0.5">Used on receipts, ID cards and official correspondence.</p>
                 </div>
             </div>
@@ -153,7 +153,7 @@
 
                 {{-- Full Address --}}
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-semibold text-gray-700">Full Address</label>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Full Address</label>
                     <div class="relative">
                         <span class="absolute top-3 left-4 text-gray-400 pointer-events-none">
                             <i class="fas fa-map-pin text-xs"></i>
@@ -162,7 +162,7 @@
                                   x-model="formData.address"
                                   @input="clearError('address')"
                                   placeholder="Street, Area, Landmark..."
-                                  class="w-full pl-9 pr-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                                  class="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
                                   :class="errors.address ? 'border-red-500 bg-red-50' : 'border-gray-200'"></textarea>
                     </div>
                     <template x-if="errors.address">
@@ -187,12 +187,12 @@
                 {{-- Pincode --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="space-y-1.5">
-                        <label class="block text-sm font-semibold text-gray-700">PIN / ZIP Code</label>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">PIN / ZIP Code</label>
                         <input type="text" name="pincode"
                                x-model="formData.pincode"
                                @input="clearError('pincode')"
                                placeholder="e.g. 110001"
-                               class="w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                               class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                :class="errors.pincode ? 'border-red-500 bg-red-50' : 'border-gray-200'">
                         <template x-if="errors.pincode">
                             <p class="text-xs text-red-500 flex items-center gap-1">

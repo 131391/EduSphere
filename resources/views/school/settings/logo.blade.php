@@ -21,7 +21,7 @@
                     </li>
                 </ol>
             </nav>
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight">School Logo</h1>
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">School Logo</h1>
             <p class="text-base text-gray-500 mt-1 flex items-center font-medium">
                 <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
                 Appears on reports, receipts and the sidebar
@@ -29,15 +29,15 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
          x-data="logoUpload()">
 
-        <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-image text-indigo-600"></i>
+        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-image text-indigo-600 dark:text-indigo-400"></i>
             </div>
             <div>
-                <h2 class="text-base font-bold text-gray-900">Upload Logo</h2>
+                <h2 class="text-base font-bold text-gray-900 dark:text-white">Upload Logo</h2>
                 <p class="text-xs text-gray-400 mt-0.5">PNG with transparent background recommended. Max 2MB.</p>
             </div>
         </div>
@@ -51,7 +51,7 @@
 
                 {{-- Preview --}}
                 <div class="flex-shrink-0">
-                    <div class="w-32 h-32 rounded-2xl border-2 border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
+                    <div class="w-32 h-32 rounded-2xl border-2 border-gray-100 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
                         <img x-show="preview" :src="preview" alt="Logo preview"
                              class="w-full h-full object-contain p-2" x-cloak>
                         @if($school->logo)
@@ -59,8 +59,8 @@
                                  class="w-full h-full object-contain p-2" x-show="!preview">
                         @else
                             <div x-show="!preview" class="text-center">
-                                <i class="fas fa-image text-3xl text-gray-200"></i>
-                                <p class="text-[10px] text-gray-300 mt-1 font-semibold uppercase tracking-wide">No logo</p>
+                                <i class="fas fa-image text-3xl text-gray-200 dark:text-gray-600"></i>
+                                <p class="text-[10px] text-gray-300 dark:text-gray-600 mt-1 font-semibold uppercase tracking-wide">No logo</p>
                             </div>
                         @endif
                     </div>
@@ -75,16 +75,16 @@
                         class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-2xl cursor-pointer transition-all"
                         :class="dragging
                             ? 'border-indigo-400 bg-indigo-50'
-                            : 'border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50/40'"
+                            : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:border-indigo-300 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/20'"
                         @dragover.prevent="dragging = true"
                         @dragleave.prevent="dragging = false"
                         @drop.prevent="handleDrop($event)">
 
                         <div class="flex flex-col items-center gap-2 pointer-events-none">
-                            <div class="w-10 h-10 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-xl bg-white dark:bg-gray-700 shadow-sm border border-gray-100 dark:border-gray-600 flex items-center justify-center">
                                 <i class="fas fa-cloud-upload-alt text-indigo-500"></i>
                             </div>
-                            <p class="text-sm font-semibold text-gray-700">
+                            <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                 <span class="text-indigo-600">Click to upload</span> or drag & drop
                             </p>
                             <p class="text-xs text-gray-400">PNG, JPG, GIF — max 2MB</p>
@@ -96,11 +96,11 @@
                     </label>
 
                     {{-- Selected file name --}}
-                    <div x-show="fileName" class="mt-3 flex items-center gap-2 text-sm text-gray-600" x-cloak>
+                    <div x-show="fileName" class="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300" x-cloak>
                         <i class="fas fa-file-image text-indigo-400 text-xs"></i>
                         <span x-text="fileName" class="font-medium truncate"></span>
                         <button type="button" @click="clearFile()"
-                                class="ml-auto text-gray-300 hover:text-red-400 transition-colors">
+                                class="ml-auto text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors">
                             <i class="fas fa-times text-xs"></i>
                         </button>
                     </div>
@@ -114,7 +114,7 @@
             </div>
 
             {{-- Footer --}}
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
                 <p class="text-xs text-gray-400">
                     <i class="fas fa-info-circle mr-1"></i>
                     Use a square image with transparent background for best results on ID cards and PDFs.

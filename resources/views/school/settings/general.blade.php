@@ -22,7 +22,7 @@
                     </li>
                 </ol>
             </nav>
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight">General Settings</h1>
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">General Settings</h1>
             <p class="text-base text-gray-500 mt-1 flex items-center font-medium">
                 <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
                 Configure fees and receipt defaults for your school
@@ -34,13 +34,13 @@
         @csrf
 
         {{-- Fee & Fine Configuration --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-money-bill-wave text-indigo-600"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-money-bill-wave text-indigo-600 dark:text-indigo-400"></i>
                 </div>
                 <div>
-                    <h2 class="text-base font-bold text-gray-900">Fee & Fine Defaults</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Fee & Fine Defaults</h2>
                     <p class="text-xs text-gray-400 mt-0.5">These values apply school-wide unless overridden per student.</p>
                 </div>
             </div>
@@ -49,7 +49,7 @@
 
                 {{-- Registration Fee --}}
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-semibold text-gray-700">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Registration Fee
                     </label>
                     <div class="relative">
@@ -58,7 +58,7 @@
                                x-model="formData.registration_fee"
                                @input="clearError('registration_fee')"
                                placeholder="0.00"
-                               class="w-full pl-8 pr-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                               class="w-full pl-8 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                :class="errors.registration_fee ? 'border-red-500 bg-red-50' : 'border-gray-200'">
                     </div>
                     <template x-if="errors.registration_fee">
@@ -71,7 +71,7 @@
 
                 {{-- Admission Fee --}}
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-semibold text-gray-700">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Admission Fee
                     </label>
                     <div class="relative">
@@ -80,7 +80,7 @@
                                x-model="formData.admission_fee"
                                @input="clearError('admission_fee')"
                                placeholder="0.00"
-                               class="w-full pl-8 pr-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                               class="w-full pl-8 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                :class="errors.admission_fee ? 'border-red-500 bg-red-50' : 'border-gray-200'">
                     </div>
                     <template x-if="errors.admission_fee">
@@ -100,7 +100,7 @@
 
                 {{-- Library Fine --}}
                 <div class="space-y-1.5">
-                    <label class="block text-sm font-semibold text-gray-700">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                         Library Late Return Fine
                         <span class="text-gray-400 font-normal text-xs">(per day)</span>
                     </label>
@@ -110,7 +110,7 @@
                                x-model="formData.late_return_library_book_fine"
                                @input="clearError('late_return_library_book_fine')"
                                placeholder="0.00"
-                               class="w-full pl-8 pr-4 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                               class="w-full pl-8 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm font-medium text-gray-900 dark:text-gray-100 focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                :class="errors.late_return_library_book_fine ? 'border-red-500 bg-red-50' : 'border-gray-200'">
                     </div>
                     <template x-if="errors.late_return_library_book_fine">
@@ -125,13 +125,13 @@
         </div>
 
         {{-- Receipt Footer Note --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-file-alt text-amber-500"></i>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-file-alt text-amber-500 dark:text-amber-400"></i>
                 </div>
                 <div>
-                    <h2 class="text-base font-bold text-gray-900">Default Receipt Footer</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Default Receipt Footer</h2>
                     <p class="text-xs text-gray-400 mt-0.5">Printed at the bottom of all fee receipts.</p>
                 </div>
             </div>
@@ -141,7 +141,7 @@
                           x-model="formData.receipt_note"
                           @input="clearError('receipt_note')"
                           placeholder="e.g. This receipt is computer generated and does not require a signature."
-                          class="w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm text-gray-800 leading-relaxed focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                          class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm text-gray-800 dark:text-gray-100 leading-relaxed focus:bg-white dark:focus:bg-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
                           :class="errors.receipt_note ? 'border-red-500 bg-red-50' : 'border-gray-200'"></textarea>
                 <div class="flex items-center justify-between">
                     <template x-if="errors.receipt_note">

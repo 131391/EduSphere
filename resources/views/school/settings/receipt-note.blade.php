@@ -22,7 +22,7 @@
                     </li>
                 </ol>
             </nav>
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight">Receipt Notes</h1>
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Receipt Notes</h1>
             <p class="text-base text-gray-500 mt-1 flex items-center font-medium">
                 <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
                 Footer text printed on each receipt type
@@ -62,15 +62,15 @@
 
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
             @foreach($notes as $note)
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
+                <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0
                         @if($note['color'] === 'indigo') bg-indigo-50 @elseif($note['color'] === 'blue') bg-blue-50 @else bg-teal-50 @endif">
                         <i class="{{ $note['icon'] }} text-sm
                             @if($note['color'] === 'indigo') text-indigo-600 @elseif($note['color'] === 'blue') text-blue-600 @else text-teal-600 @endif"></i>
                     </div>
                     <div>
-                        <h2 class="text-sm font-bold text-gray-900">{{ $note['label'] }}</h2>
+                        <h2 class="text-sm font-bold text-gray-900 dark:text-white">{{ $note['label'] }}</h2>
                         <p class="text-xs text-gray-400 mt-0.5">{{ $note['description'] }}</p>
                     </div>
                 </div>
@@ -83,7 +83,7 @@
                         x-model="formData.{{ $note['key'] }}"
                         @input="clearError('{{ $note['key'] }}')"
                         placeholder="e.g. This receipt is computer generated..."
-                        class="w-full flex-1 px-4 py-3 bg-gray-50 border rounded-xl text-sm text-gray-800 leading-relaxed focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                        class="w-full flex-1 px-4 py-3 bg-gray-50 dark:bg-gray-700 border rounded-xl text-sm text-gray-800 dark:text-gray-100 leading-relaxed focus:bg-white dark:focus:bg-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
                         :class="errors.{{ $note['key'] }} ? 'border-red-500 bg-red-50' : 'border-gray-200'"></textarea>
 
                     <div class="flex items-center justify-between">

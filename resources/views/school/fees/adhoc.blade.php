@@ -61,7 +61,7 @@
                 <div class="space-y-2">
                     <label class="modal-label-premium">Fee Period <span class="text-red-600 font-bold">*</span></label>
                     <input type="month" x-model="rawFeePeriod" @change="formatPeriod" 
-                        class="modal-input-premium" required>
+                        class="modal-input-premium cursor-pointer" required>
                     <input type="hidden" name="fee_period" x-model="formData.fee_period">
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-show="formData.fee_period">
                         Target Period: <span x-text="formData.fee_period" class="font-semibold text-indigo-600 dark:text-indigo-400"></span>
@@ -72,7 +72,7 @@
                 <div class="space-y-2">
                     <label class="modal-label-premium">Due Date <span class="text-red-600 font-bold">*</span></label>
                     <input type="date" x-model="formData.due_date" 
-                        class="modal-input-premium" required>
+                        class="modal-input-premium cursor-pointer" required>
                 </div>
             </div>
 
@@ -189,7 +189,7 @@
                 this.selectAll = false;
 
                 try {
-                    const response = await fetch(`/api/school/classes/${this.formData.class_id}/students`, {
+                    const response = await fetch(`/school/ad-hoc-fees/students/${this.formData.class_id}`, {
                         headers: {
                             'Accept': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

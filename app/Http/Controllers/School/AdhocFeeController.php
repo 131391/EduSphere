@@ -27,6 +27,26 @@ class AdhocFeeController extends TenantController
         $this->numberingService = $numberingService;
     }
 
+    public function getStudentsByClass(Request $request, $classId)
+    {
+        $this->ensureSchoolActive();
+
+        $students = Student::where('school_id', $this->getSchoolId())
+            ->where('class_id', $classId)
+            ->active()
+            ->orderByRaw('COALESCE(roll_no, 999999999)')
+            ->orderBy('first_name')
+            ->get()
+            ->map(fn($s) => [
+                'id' => $s->id,
+                'full_name' => $s->full_name,
+                'admission_no' => $s->admission_no,
+                'section_name' => $s->section?->name ?? '—',
+            ]);
+
+        return response()->json(['success' => true, 'data' => $students]);
+    }
+
     public function create()
     {
         $this->ensureSchoolActive();
