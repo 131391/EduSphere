@@ -8,8 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // MySQL uses the composite unique index to back the student_id FK.
+        // Add a plain index on student_id AND drop the unique in one atomic ALTER
+        // so MySQL never sees a moment where the FK has no backing index.
+        DB::statement('
+            ALTER TABLE student_transport_assignments
+                ADD INDEX sta_student_id_idx (student_id),
+                DROP INDEX student_transport_assignments_student_id_academic_year_id_unique
+        ');
+
         Schema::table('student_transport_assignments', function (Blueprint $table) {
-            $table->dropUnique('student_transport_assignments_student_id_academic_year_id_unique');
             $table->index(['school_id', 'status', 'academic_year_id'], 'sta_school_status_year_idx');
             $table->index(['vehicle_id', 'academic_year_id', 'status'], 'sta_vehicle_year_status_idx');
             $table->index(['route_id', 'academic_year_id', 'status'], 'sta_route_year_status_idx');
@@ -38,6 +46,7 @@ return new class extends Migration
             $table->dropIndex('sta_school_status_year_idx');
             $table->dropIndex('sta_vehicle_year_status_idx');
             $table->dropIndex('sta_route_year_status_idx');
+            $table->dropIndex('sta_student_id_idx');
             $table->unique(['student_id', 'academic_year_id']);
         });
     }
