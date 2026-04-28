@@ -5,6 +5,37 @@
     </div>
     <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-b-lg border border-gray-200 dark:border-gray-600">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @isset($studentEnquiry)
+            @php $isAdmitted = $studentEnquiry->form_status === \App\Enums\EnquiryStatus::Admitted; @endphp
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Enquiry Status</label>
+                <div class="flex flex-wrap gap-2">
+                    @foreach(\App\Enums\EnquiryStatus::cases() as $s)
+                    @php $c = $s->color(); @endphp
+                    <label class="relative cursor-pointer {{ $isAdmitted && $s !== \App\Enums\EnquiryStatus::Admitted ? 'opacity-40 cursor-not-allowed' : '' }}">
+                        <input type="radio" name="form_status" value="{{ $s->value }}"
+                               x-model="formData.form_status"
+                               {{ $isAdmitted && $s !== \App\Enums\EnquiryStatus::Admitted ? 'disabled' : '' }}
+                               class="sr-only peer">
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border-2 text-sm font-semibold transition-all cursor-pointer
+                                     border-gray-200 text-gray-500 bg-white dark:bg-gray-800 dark:border-gray-600
+                                     peer-checked:border-{{ $c }}-500 peer-checked:bg-{{ $c }}-50 peer-checked:text-{{ $c }}-700">
+                            <i class="fas {{ match($s) {
+                                \App\Enums\EnquiryStatus::Pending   => 'fa-clock',
+                                \App\Enums\EnquiryStatus::Completed => 'fa-check-circle',
+                                \App\Enums\EnquiryStatus::Cancelled => 'fa-times-circle',
+                                \App\Enums\EnquiryStatus::Admitted  => 'fa-user-check',
+                            } }} text-xs"></i>
+                            {{ $s->label() }}
+                        </span>
+                    </label>
+                    @endforeach
+                </div>
+                @if($isAdmitted)
+                <p class="text-xs text-amber-600 mt-2"><i class="fas fa-lock mr-1"></i>Status is locked for admitted enquiries.</p>
+                @endif
+            </div>
+            @endisset
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Academic Year <span class="text-red-500">*</span>
@@ -437,12 +468,20 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Whatsapp No <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="whatsapp_no" 
-                       x-model="formData.whatsapp_no"
-                       @input="clearError('whatsapp_no')"
-                       placeholder="Enter whatsapp  no"
-                       :class="{'border-red-500 ring-red-500/10': errors.whatsapp_no}"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
+                <div class="relative">
+                    <input type="text" name="whatsapp_no"
+                           x-model="formData.whatsapp_no"
+                           @input="clearError('whatsapp_no')"
+                           placeholder="Enter WhatsApp no"
+                           :class="{'border-red-500 ring-red-500/10': errors.whatsapp_no}"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white pr-36">
+                    <button type="button"
+                            @click="formData.whatsapp_no = formData.contact_no; clearError('whatsapp_no')"
+                            x-show="formData.contact_no && formData.whatsapp_no !== formData.contact_no"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-teal-600 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-2 py-1 rounded-md transition-colors whitespace-nowrap">
+                        <i class="fas fa-copy mr-1"></i>Same as Contact
+                    </button>
+                </div>
                 <template x-if="errors.whatsapp_no">
                     <p class="text-red-500 text-xs mt-1" x-text="errors.whatsapp_no[0]"></p>
                 </template>

@@ -213,10 +213,10 @@ function enquiryManagement() {
             no_of_sisters: '{{ $studentEnquiry->no_of_sisters }}',
             blood_group_id: '{{ $studentEnquiry->blood_group_id }}',
             category_id: '{{ $studentEnquiry->category_id }}',
-            minority: '{{ $studentEnquiry->minority?->value ?? '' }}',
+            minority: '{{ $studentEnquiry->minority }}',
             religion_id: '{{ $studentEnquiry->religion_id }}',
-            transport_facility: '{{ $studentEnquiry->transport_facility?->value ?? '' }}',
-            hostel_facility: '{{ $studentEnquiry->hostel_facility?->value ?? '' }}',
+            transport_facility: '{{ $studentEnquiry->transport_facility }}',
+            hostel_facility: '{{ $studentEnquiry->hostel_facility }}',
             previous_class: @js($studentEnquiry->previous_class),
             identity_marks: @js($studentEnquiry->identity_marks),
             permanent_address: @js($studentEnquiry->permanent_address),
@@ -333,9 +333,7 @@ function enquiryManagement() {
             if (Object.keys(errors).some(f => step4Fields.includes(f))) { this.currentStep = 4; return; }
         },
 
-        clearError(field) {
-                if (this.errors && this.errors[field]) { const e = { ...this.errors }; delete e[field]; this.errors = e; }
-            },
+        clearError(field) { delete this.errors[field]; },
 
         previewPhoto(event, previewId, iconId, removeBtnId) {
             const file = event.target.files?.[0];

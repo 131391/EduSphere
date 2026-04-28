@@ -220,10 +220,10 @@ function enquiryManagement() {
             no_of_sisters: '{{ $studentEnquiry->no_of_sisters }}',
             blood_group_id: '{{ $studentEnquiry->blood_group_id }}',
             category_id: '{{ $studentEnquiry->category_id }}',
-            minority: '{{ $studentEnquiry->minority?->value ?? '' }}',
+            minority: '{{ $studentEnquiry->minority }}',
             religion_id: '{{ $studentEnquiry->religion_id }}',
-            transport_facility: '{{ $studentEnquiry->transport_facility?->value ?? '' }}',
-            hostel_facility: '{{ $studentEnquiry->hostel_facility?->value ?? '' }}',
+            transport_facility: '{{ $studentEnquiry->transport_facility }}',
+            hostel_facility: '{{ $studentEnquiry->hostel_facility }}',
             previous_class: @js($studentEnquiry->previous_class),
             identity_marks: @js($studentEnquiry->identity_marks),
             permanent_address: @js($studentEnquiry->permanent_address),
@@ -364,7 +364,7 @@ function enquiryManagement() {
         },
 
         clearError(field) {
-            if (this.errors && this.errors[field]) { const e = { ...this.errors }; delete e[field]; this.errors = e; }
+            delete this.errors[field];
         },
 
         previewPhoto(event, previewId, iconId, removeBtnId) {

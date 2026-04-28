@@ -17,17 +17,19 @@
         </a>
     </div>
 
+    {{-- Alpine-driven section: cloak the entire block so it paints in one frame --}}
+    <div x-cloak>
+
     {{-- Progress Bar --}}
     <div class="mb-6">
         <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                Step <span x-text="currentStep">1</span> of 4
+                Step <span x-text="currentStep"></span> of 4
             </span>
-            <span class="text-xs font-semibold text-teal-600" x-text="stepLabels[currentStep - 1]">Basic Info</span>
+            <span class="text-xs font-semibold text-teal-600" x-text="stepLabels[currentStep - 1]"></span>
         </div>
         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
             <div class="bg-gradient-to-r from-teal-500 to-emerald-500 h-1.5 rounded-full transition-all duration-500"
-                 style="width: 25%;"
                  :style="`width: ${(currentStep / 4) * 100}%`"></div>
         </div>
     </div>
@@ -48,22 +50,22 @@
         <div class="flex items-center {{ $i < count($steps) - 1 ? 'flex-1' : '' }}">
             <button type="button" @click="goToStep({{ $n }})"
                     class="flex flex-col items-center gap-1 group focus:outline-none">
-                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 border-2 {{ $n === 1 ? 'bg-teal-600 border-teal-600 text-white shadow-lg shadow-teal-200 dark:shadow-none' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400' }}"
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 border-2"
                      :class="currentStep === {{ $n }}
                         ? 'bg-teal-600 border-teal-600 text-white shadow-lg shadow-teal-200 dark:shadow-none'
                         : currentStep > {{ $n }}
                             ? 'bg-emerald-500 border-emerald-500 text-white'
                             : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400 group-hover:border-teal-400'">
-                    <i class="fas fa-check text-xs hidden" :class="currentStep > {{ $n }} ? '!inline-block' : 'hidden'"></i>
-                    <i class="fas {{ $step['icon'] }} text-xs {{ $n === 1 ? 'inline-block' : 'inline-block' }}" :class="currentStep > {{ $n }} ? 'hidden' : '!inline-block'"></i>
+                    <i class="fas fa-check text-xs" x-show="currentStep > {{ $n }}"></i>
+                    <i class="fas {{ $step['icon'] }} text-xs" x-show="currentStep <= {{ $n }}"></i>
                 </div>
-                <span class="text-[10px] font-semibold hidden sm:block transition-colors {{ $n === 1 ? 'text-teal-600' : 'text-gray-400' }}"
+                <span class="text-[10px] font-semibold hidden sm:block transition-colors"
                       :class="currentStep === {{ $n }} ? 'text-teal-600' : currentStep > {{ $n }} ? 'text-emerald-500' : 'text-gray-400'">
                     {{ $step['label'] }}
                 </span>
             </button>
             @if($i < count($steps) - 1)
-            <div class="flex-1 h-0.5 mx-2 rounded transition-all duration-500 bg-gray-200 dark:bg-gray-700"
+            <div class="flex-1 h-0.5 mx-2 rounded transition-all duration-500"
                  :class="currentStep > {{ $n }} ? 'bg-emerald-400' : 'bg-gray-200 dark:bg-gray-700'"></div>
             @endif
         </div>
@@ -79,9 +81,13 @@
             <div class="p-6 md:p-8 min-h-[420px]">
 
                 {{-- Only the active step is in the DOM at any time (x-if removes others instantly) --}}
-                <div x-show="currentStep === 1">
-                    @include('school.student-enquiries.partials.step1')
-                </div>
+                <template x-if="currentStep === 1">
+                    <div x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        @include('school.student-enquiries.partials.step1')
+                    </div>
+                </template>
 
                 <template x-if="currentStep === 2">
                     <div x-transition:enter="transition ease-out duration-200"
@@ -111,12 +117,15 @@
 
             {{-- Step Navigation Footer --}}
             <div class="px-6 md:px-8 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-2xl flex items-center justify-between gap-4">
-                <div class="min-w-[118px]">
-                    <button type="button" @click="prevStep()" x-show="currentStep > 1" x-cloak
+                <template x-if="currentStep > 1">
+                    <button type="button" @click="prevStep()"
                             class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                         <i class="fas fa-arrow-left text-xs"></i> Previous
                     </button>
-                </div>
+                </template>
+                <template x-if="currentStep === 1">
+                    <span aria-hidden="true"></span>
+                </template>
 
                 <div class="flex items-center gap-3">
                     <a href="{{ route('school.student-enquiries.index') }}"
@@ -124,23 +133,29 @@
                         Cancel
                     </a>
 
-                    <button type="button" @click="nextStep()" x-show="currentStep < 4"
-                            class="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all">
-                        Next <i class="fas fa-arrow-right text-xs"></i>
-                    </button>
+                    <template x-if="currentStep < 4">
+                        <button type="button" @click="nextStep()"
+                                class="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all">
+                            Next <i class="fas fa-arrow-right text-xs"></i>
+                        </button>
+                    </template>
 
-                    <button type="submit" x-show="currentStep === 4" x-cloak
-                            :disabled="submitting"
-                            :class="submitting ? 'opacity-75 cursor-wait' : ''"
-                            class="inline-flex items-center gap-2 px-8 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-bold rounded-lg shadow-md transition-all">
-                        <template x-if="!submitting"><i class="fas fa-check-circle text-xs"></i></template>
-                        <template x-if="submitting"><i class="fas fa-circle-notch animate-spin text-xs"></i></template>
-                        <span x-text="submitting ? 'Processing...' : 'Record Enquiry'"></span>
-                    </button>
+                    <template x-if="currentStep === 4">
+                        <button type="submit"
+                                :disabled="submitting"
+                                :class="submitting ? 'opacity-75 cursor-wait' : ''"
+                                class="inline-flex items-center gap-2 px-8 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-bold rounded-lg shadow-md transition-all">
+                            <template x-if="!submitting"><i class="fas fa-check-circle text-xs"></i></template>
+                            <template x-if="submitting"><i class="fas fa-circle-notch animate-spin text-xs"></i></template>
+                            <span x-text="submitting ? 'Processing...' : 'Record Enquiry'"></span>
+                        </button>
+                    </template>
                 </div>
             </div>
         </div>
     </form>
+
+    </div> {{-- end x-cloak wrapper --}}
 </div>
 @endsection
 
@@ -344,7 +359,7 @@ function enquiryManagement() {
         },
 
         clearError(field) {
-            if (this.errors && this.errors[field]) { const e = { ...this.errors }; delete e[field]; this.errors = e; }
+            delete this.errors[field];
         },
 
         previewPhoto(event, previewId, iconId, removeBtnId) {
