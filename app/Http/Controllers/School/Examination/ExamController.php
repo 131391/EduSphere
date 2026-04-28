@@ -4,9 +4,11 @@ namespace App\Http\Controllers\School\Examination;
 
 use App\Enums\ExamStatus;
 use App\Http\Controllers\TenantController;
+use App\Http\Requests\School\Examination\AssignExamSubjectTeacherRequest;
 use App\Http\Requests\School\Examination\StoreExamRequest;
 use App\Http\Requests\School\Examination\StoreMarksRequest;
 use App\Http\Requests\School\Examination\UpdateExamRequest;
+use App\Models\ExamSubject;
 use App\Models\ClassModel;
 use App\Models\Exam;
 use App\Models\ExamType;
@@ -39,7 +41,8 @@ class ExamController extends TenantController
         $this->ensureSchoolActive();
 
         $schoolId = $this->getSchoolId();
-        $this->examService->syncSchoolStatuses($this->school);
+        // Status sync is now driven by the `exams:sync-statuses` scheduled command
+        // (registered in routes/console.php). Listing endpoints stay read-only.
 
         $transformer = function (Exam $row) {
             return [
@@ -239,16 +242,14 @@ class ExamController extends TenantController
     public function marksEntry()
     {
         $this->ensureSchoolActive();
-        $this->examService->syncSchoolStatuses($this->school);
 
+        // Read-only listing. Subject snapshot is ensured at scheduling time and on
+        // the per-exam mark-entry endpoint, not here.
         $exams = Exam::with(['examType', 'class', 'examSubjects.subject'])
             ->where('school_id', $this->getSchoolId())
             ->orderByDesc('start_date')
             ->orderByDesc('created_at')
             ->get();
-
-        $exams->each(fn (Exam $exam) => $exam->ensureSubjectSnapshot());
-        $exams->load(['examType', 'class', 'examSubjects.subject']);
 
         return view('school.examination.marks.index', compact('exams'));
     }
@@ -269,6 +270,7 @@ class ExamController extends TenantController
         $this->authorize('enterMarks', $exam);
         $this->authorizeTenant($exam);
 
+        // Snapshot + status are state-changing; only run on the actual entry path.
         $exam->ensureSubjectSnapshot();
         $exam->syncStatus();
 
@@ -331,6 +333,11 @@ class ExamController extends TenantController
         $this->authorize('enterMarks', $exam);
         $this->authorizeTenant($exam);
 
+        $examSubject = ExamSubject::where('exam_id', $exam->id)
+            ->findOrFail($validated['exam_subject_id']);
+
+        $this->authorize('enterSubjectMarks', [$exam, $examSubject]);
+
         try {
             $result = $this->resultService->saveMarks($this->school, $validated);
 
@@ -362,14 +369,43 @@ class ExamController extends TenantController
         }
     }
 
+    /**
+     * Assign or clear a teacher on a single exam subject row.
+     */
+    public function assignSubjectTeacher(AssignExamSubjectTeacherRequest $request, Exam $exam, ExamSubject $examSubject)
+    {
+        $this->authorize('update', $exam);
+        $this->ensureSchoolActive();
+        $this->authorizeTenant($exam);
+
+        if ((int) $examSubject->exam_id !== (int) $exam->id) {
+            abort(404, 'Exam subject does not belong to this exam.');
+        }
+
+        $examSubject->forceFill([
+            'teacher_id' => $request->validated()['teacher_id'] ?? null,
+        ])->save();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Teacher assignment updated.',
+                'data' => $examSubject->fresh()->load('teacher'),
+            ]);
+        }
+
+        return back()->with('success', 'Teacher assignment updated.');
+    }
+
     public function tabulate(Exam $exam)
     {
         $this->authorize('view', $exam);
         $this->authorizeTenant($exam);
         $this->ensureSchoolActive();
 
+        // Snapshot is idempotent and protects legacy exams that pre-date the snapshot
+        // logic. Status sync runs from the scheduled command, not from this read.
         $exam->ensureSubjectSnapshot();
-        $exam->syncStatus();
 
         $exam->load(['class', 'examType', 'academicYear', 'examSubjects.subject']);
 

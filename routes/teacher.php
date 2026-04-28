@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\AttendanceController;
+use App\Http\Controllers\Teacher\MarksController;
 use App\Http\Controllers\Teacher\StudentController;
 
 /*
@@ -24,5 +25,9 @@ Route::post('/attendance', [AttendanceController::class, 'store'])->name('attend
 Route::get('/students', [StudentController::class, 'index'])->name('students.index');
 Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
 
-// Other teacher routes...
+// Mark Entry (per-subject, scoped to teacher's assigned exam_subjects)
+Route::get('/marks', [MarksController::class, 'index'])->name('marks.index');
+Route::get('/marks/enter', [MarksController::class, 'entry'])->name('marks.entry');
+Route::post('/marks', [MarksController::class, 'store'])->name('marks.store');
 
+// Other teacher routes...

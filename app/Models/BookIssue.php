@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Traits\Tenantable;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,15 +19,32 @@ class BookIssue extends Model
         'due_date',
         'return_date',
         'fine_amount',
+        'fine_paid_at',
         'status',
     ];
 
     protected $casts = [
-        'issue_date' => 'date',
-        'due_date' => 'date',
-        'return_date' => 'date',
-        'fine_amount' => 'decimal:2',
+        'issue_date'   => 'date',
+        'due_date'     => 'date',
+        'return_date'  => 'date',
+        'fine_amount'  => 'decimal:2',
+        'fine_paid_at' => 'datetime',
     ];
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $schoolId = app()->bound('currentSchool') ? app('currentSchool')->id : null;
+        $query = $this->where($this->getRouteKeyName(), $value);
+        if ($schoolId) {
+            $query->where('school_id', $schoolId);
+        }
+        return $query->firstOrFail();
+    }
+
+    public function isFineSettled(): bool
+    {
+        return $this->fine_paid_at !== null;
+    }
 
     public function school()
     {

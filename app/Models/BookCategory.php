@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Traits\Tenantable;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BookCategory extends Model
 {
-    use HasFactory, Tenantable;
+    use HasFactory, Tenantable, SoftDeletes;
 
     protected $fillable = [
         'school_id',

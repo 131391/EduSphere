@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('exam_types', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        if (!Schema::hasColumn('exam_types', 'deleted_at')) {
+            Schema::table('exam_types', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('exam_types', function (Blueprint $table) {
-            $table->dropSoftDeletes();
-        });
+        if (Schema::hasColumn('exam_types', 'deleted_at')) {
+            Schema::table('exam_types', function (Blueprint $table) {
+                $table->dropSoftDeletes();
+            });
+        }
     }
 };

@@ -39,9 +39,10 @@ class GradeController extends TenantController
         }
 
         $stats = $this->getTableStats();
+        $coverage = $this->coverageReport();
 
         if ($request->expectsJson() || $request->ajax()) {
-            return $this->traitHandleAjaxTable($query, $transformer, $stats);
+            return $this->traitHandleAjaxTable($query, $transformer, array_merge($stats, ['coverage' => $coverage]));
         }
 
         $initialData = $this->getHydrationData($query, $transformer, [
@@ -51,6 +52,7 @@ class GradeController extends TenantController
         return view('school.examination.grades.index', array_merge($initialData, [
             'initialData' => $initialData,
             'stats' => $stats,
+            'coverage' => $coverage,
         ]));
     }
 
@@ -58,6 +60,66 @@ class GradeController extends TenantController
     {
         return [
             'total_grades' => Grade::where('school_id', $this->getSchoolId())->count(),
+        ];
+    }
+
+    /**
+     * Returns information about whether the configured bands cover 0–100%.
+     *
+     * Shape: ['is_complete' => bool, 'gaps' => array<int, array{from:int,to:int}>].
+     * Used by the UI to surface a banner and by callers/tests to assert coverage.
+     *
+     * Accepts an optional `$schoolId` so it can be invoked outside the request
+     * lifecycle (e.g. tests, console). When omitted it falls back to the
+     * tenant context if bound.
+     */
+    public function coverageReport(?int $schoolId = null): array
+    {
+        if ($schoolId === null) {
+            $schoolId = app()->bound('currentSchool')
+                ? optional(app('currentSchool'))->id
+                : null;
+        }
+
+        if ($schoolId === null) {
+            return [
+                'is_complete' => false,
+                'gaps' => [['from' => 0, 'to' => 100]],
+            ];
+        }
+
+        $bands = Grade::where('school_id', $schoolId)
+            ->orderBy('range_start')
+            ->get(['range_start', 'range_end']);
+
+        if ($bands->isEmpty()) {
+            return [
+                'is_complete' => false,
+                'gaps' => [['from' => 0, 'to' => 100]],
+            ];
+        }
+
+        $gaps = [];
+        $cursor = 0;
+
+        foreach ($bands as $band) {
+            $start = (int) $band->range_start;
+            $end = (int) $band->range_end;
+
+            if ($start > $cursor) {
+                $gaps[] = ['from' => $cursor, 'to' => $start - 1];
+            }
+
+            $cursor = max($cursor, $end + 1);
+        }
+
+        if ($cursor <= 100) {
+            $gaps[] = ['from' => $cursor, 'to' => 100];
+        }
+
+        return [
+            'is_complete' => $gaps === [],
+            'gaps' => $gaps,
         ];
     }
 

@@ -1,36 +1,50 @@
 @props([
+    'id' => 'confirm-modal',
     'title' => 'Confirm Action',
     'message' => 'Are you sure you want to proceed?',
-    'confirmText' => 'OK',
+    'confirmText' => 'Confirm',
     'cancelText' => 'Cancel',
+    'confirmClass' => 'bg-red-600 hover:bg-red-700',
+    'cancelClass' => 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500',
 ])
 
 <div 
+    id="{{ $id }}"
     x-data="{ 
         show: false, 
         formToSubmit: null,
-        actionCallback: null,
         modalTitle: '{{ $title }}',
         modalMessage: '{{ $message }}',
-        modalConfirmText: '{{ $confirmText }}',
+        confirmCallback: null,
         
-        openModal(target, title = null, message = null, confirmText = null) {
-            if (typeof target === 'function') {
-                this.actionCallback = target;
-                this.formToSubmit = null;
-            } else {
-                this.formToSubmit = target;
-                this.actionCallback = null;
-            }
+        openModal(form, title = null, message = null, callback = null) {
+            this.formToSubmit = form;
             this.modalTitle = title || '{{ $title }}';
             this.modalMessage = message || '{{ $message }}';
-            this.modalConfirmText = confirmText || '{{ $confirmText }}';
+            this.confirmCallback = callback;
             this.show = true;
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+            // Ensure modal is visible and on top
+            this.$nextTick(() => {
+                if (this.$el) {
+                    this.$el.style.display = 'block';
+                    this.$el.style.zIndex = '99999';
+                    // Close any other modals that might be open
+                    const otherModals = document.querySelectorAll('[x-show*="show"], [class*="modal"], [class*="z-50"]');
+                    otherModals.forEach(modal => {
+                        if (modal !== this.$el && modal.closest('[x-data*="enquiryManagement"]')) {
+                            // Don't close modals that are part of the same component
+                            return;
+                        }
+                    });
+                }
+            });
         },
         
         confirmAction() {
-            if (this.actionCallback) {
-                this.actionCallback();
+            if (this.confirmCallback && typeof this.confirmCallback === 'function') {
+                this.confirmCallback();
             } else if (this.formToSubmit) {
                 this.formToSubmit.submit();
             }
@@ -40,78 +54,67 @@
         closeModal() {
             this.show = false;
             this.formToSubmit = null;
-            this.actionCallback = null;
+            this.confirmCallback = null;
+            // Restore body scroll
+            document.body.style.overflow = '';
         }
     }"
-    @open-confirm-modal.window="openModal($event.detail.callback || $event.detail.form, $event.detail.title, $event.detail.message, $event.detail.confirmText)"
+    @open-confirm-modal.window="openModal($event.detail.form, $event.detail.title, $event.detail.message, $event.detail.callback)"
+    x-show="show"
     x-cloak
+    style="z-index: 99999 !important;"
 >
-    <!-- Modal Backdrop -->
+    <!-- Modal Backdrop - Full screen with very high z-index to appear above all modals -->
     <div 
         x-show="show"
-        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-[110] flex items-center justify-center modal-backdrop-premium"
+        class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4"
+        style="z-index: 99999 !important; position: fixed !important;"
         @click.self="closeModal()"
+        @keydown.escape.window="closeModal()"
     >
         <!-- Modal Content -->
         <div 
             x-show="show"
-            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 transform scale-95 translate-y-4"
             x-transition:enter-end="opacity-100 transform scale-100 translate-y-0"
-            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave="transition ease-in duration-150"
             x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
             x-transition:leave-end="opacity-0 transform scale-95 translate-y-4"
-            class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden border border-gray-100 dark:border-gray-700"
+            class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 relative"
+            style="z-index: 100000 !important; position: relative !important;"
             @click.stop
         >
-            <!-- Red danger stripe at top -->
-            <div class="h-1.5 w-full bg-gradient-to-r from-red-500 to-red-600"></div>
-
-            <!-- Header -->
-            <div class="flex items-center justify-between px-6 pt-5 pb-0">
-                <span class="text-sm font-semibold text-red-600 uppercase tracking-widest">Destructive Action</span>
-                <button @click="closeModal()" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Icon & Message -->
-            <div class="px-8 pt-6 pb-8 text-center">
-                <div class="relative mx-auto flex items-center justify-center h-20 w-20 mb-6">
-                    <span class="absolute inset-0 rounded-full bg-red-100 animate-ping opacity-30"></span>
-                    <span class="absolute inset-1 rounded-full bg-red-50"></span>
-                    <div class="relative flex items-center justify-center h-16 w-16 rounded-full bg-red-100 ring-4 ring-red-50">
-                        <i class="fas fa-trash-alt text-red-500 text-2xl"></i>
-                    </div>
+            <!-- Icon & Title -->
+            <div class="px-6 py-5 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
                 </div>
-                <h4 class="text-gray-900 dark:text-gray-100 font-bold text-xl mb-2" x-text="modalTitle"></h4>
-                <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed" x-text="modalMessage"></p>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-200 mb-2" x-text="modalTitle"></h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400" x-text="modalMessage"></p>
             </div>
 
             <!-- Actions -->
-            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg flex items-center justify-center gap-3">
                 <button 
                     type="button"
                     @click="closeModal()"
-                    class="btn-premium-cancel !px-6"
+                    class="px-6 py-2 {{ $cancelClass }} text-gray-700 dark:text-gray-200 rounded-md transition-colors font-medium"
                 >
                     {{ $cancelText }}
                 </button>
                 <button 
                     type="button"
                     @click="confirmAction()"
-                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-red-200 transition-all duration-200 hover:shadow-lg hover:shadow-red-300 active:scale-95"
+                    class="px-6 py-2 {{ $confirmClass }} text-white rounded-md transition-colors font-medium"
                 >
-                    <i class="fas fa-trash-alt text-xs"></i>
-                    <span x-text="modalConfirmText"></span>
+                    {{ $confirmText }}
                 </button>
             </div>
         </div>

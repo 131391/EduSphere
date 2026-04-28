@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Book;
+use App\Models\BookIssue;
 use App\Models\Exam;
 use App\Models\ExamType;
 use App\Models\Fee;
@@ -14,6 +16,7 @@ use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use App\Models\User;
+use App\Policies\BookPolicy;
 use App\Policies\ExamPolicy;
 use App\Policies\ExamTypePolicy;
 use App\Policies\FeePolicy;
@@ -42,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Force HTTPS in production (must be in register to affect asset URLs)
         if (app()->environment('production')) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+            URL::forceScheme('https');
         }
     }
 
@@ -51,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Book::class, BookPolicy::class);
+        Gate::policy(BookIssue::class, BookPolicy::class);
         Gate::policy(Exam::class, ExamPolicy::class);
         Gate::policy(ExamType::class, ExamTypePolicy::class);
         Gate::policy(Fee::class, FeePolicy::class);

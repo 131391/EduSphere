@@ -220,6 +220,7 @@ Route::prefix('examination')->name('examination.')->group(function () {
     Route::get('exams/{exam}/edit', [ExamController::class, 'edit'])->name('exams.edit');
     Route::post('exams/{exam}/cancel', [ExamController::class, 'cancel'])->name('exams.cancel');
     Route::post('exams/{exam}/lock', [ExamController::class, 'lock'])->name('exams.lock');
+    Route::patch('exams/{exam}/subjects/{examSubject}/teacher', [ExamController::class, 'assignSubjectTeacher'])->name('exams.assign-subject-teacher');
     Route::get('exams/{exam}/tabulate', [ExamController::class, 'tabulate'])->name('exams.tabulate');
 
     Route::post('grades/fetch', [GradeController::class, 'index'])->name('grades.fetch');
@@ -229,9 +230,6 @@ Route::prefix('examination')->name('examination.')->group(function () {
     Route::get('marks', [ExamController::class, 'marksEntry'])->name('marks.index');
     Route::get('marks/enter', [ExamController::class, 'enterMarks'])->name('marks.entry');
     Route::post('marks', [ExamController::class, 'storeMarks'])->name('marks.store');
-    // Backward-compat alias for the previous route name; remove once external
-    // callers (front-end fetch in marks/entry.blade.php) have been migrated.
-    Route::post('marksGroup', [ExamController::class, 'storeMarks'])->name('marks.store-legacy');
 });
 
 // Subject Management
@@ -268,14 +266,7 @@ Route::resource('admission', \App\Http\Controllers\School\AdmissionController::c
     'admission' => 'student'
 ]);
 
-// Library Management
-Route::prefix('library')->name('library.')->group(function () {
-    Route::get('/', [LibraryController::class, 'index'])->name('index');
-    Route::post('/books', [LibraryController::class, 'storeBook'])->name('books.store');
-    Route::get('/issues', [LibraryController::class, 'issues'])->name('issues');
-    Route::post('/issue', [LibraryController::class, 'issueBook'])->name('issue.store');
-    Route::post('/return/{issue}', [LibraryController::class, 'returnBook'])->name('return');
-});
+// Library Management — moved to routes/library.php (accessible to school_admin + librarian)
 
 // Reports
 Route::prefix('reports')->name('reports.')->group(function () {
@@ -315,4 +306,3 @@ Route::prefix('transport')->name('transport.')->group(function () {
 });
 
 // Other school admin routes...
-

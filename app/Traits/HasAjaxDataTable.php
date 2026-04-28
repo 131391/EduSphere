@@ -66,7 +66,7 @@ trait HasAjaxDataTable
      */
     protected function handleAjaxTable($query, $transformer, $stats = [])
     {
-        $perPage = request('per_page', 15);
+        $perPage = min(max(1, (int) request('per_page', 15)), 100);
         $paginator = $query->paginate($perPage);
         return $this->ajaxResponse($paginator, $stats, $transformer);
     }
@@ -76,7 +76,7 @@ trait HasAjaxDataTable
      */
     protected function getHydrationData($query, $transformer, $extraData = [])
     {
-        $perPage = request('per_page', 15);
+        $perPage = min(max(1, (int) request('per_page', 15)), 100);
         $paginator = $query->paginate($perPage);
 
         $data = [

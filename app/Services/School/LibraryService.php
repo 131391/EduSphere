@@ -4,90 +4,193 @@ namespace App\Services\School;
 
 use App\Models\Book;
 use App\Models\BookIssue;
-use App\Models\School;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class LibraryService
 {
-    /**
-     * Issue a book to a student or staff
-     */
     public function issueBook(array $data)
     {
         return DB::transaction(function () use ($data) {
-            $book = Book::where('school_id', $data['school_id'])->findOrFail($data['book_id']);
+            $book = Book::query()
+                ->where('school_id', $data['school_id'])
+                ->whereKey($data['book_id'])
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($book->available_quantity > $book->quantity) {
+                throw new RuntimeException('Book inventory is inconsistent. Please review available stock levels.');
+            }
 
             if ($book->available_quantity <= 0) {
                 return ['success' => false, 'message' => 'Book not available in stock.'];
             }
 
+            // Prevent same student holding multiple active copies of the same book
+            if (!empty($data['student_id'])) {
+                $alreadyHeld = BookIssue::where('school_id', $data['school_id'])
+                    ->where('book_id', $data['book_id'])
+                    ->where('student_id', $data['student_id'])
+                    ->where('status', 'issued')
+                    ->exists();
+
+                if ($alreadyHeld) {
+                    return ['success' => false, 'message' => 'This student already has an active issue for this book.'];
+                }
+            }
+
             $issue = BookIssue::create([
-                'school_id' => $data['school_id'],
-                'book_id' => $data['book_id'],
+                'school_id'  => $data['school_id'],
+                'book_id'    => $data['book_id'],
                 'student_id' => $data['student_id'] ?? null,
-                'staff_id' => $data['staff_id'] ?? null,
+                'staff_id'   => $data['staff_id'] ?? null,
                 'issue_date' => $data['issue_date'] ?? now(),
-                'due_date' => $data['due_date'],
-                'status' => 'issued',
+                'due_date'   => $data['due_date'],
+                'status'     => 'issued',
             ]);
 
-            $book->decrement('available_quantity');
+            $book->available_quantity -= 1;
+            $book->save();
+
+            activity('library')
+                ->causedBy(auth()->user())
+                ->performedOn($issue)
+                ->withProperties(['book_id' => $book->id, 'student_id' => $data['student_id'] ?? null])
+                ->log('book_issued');
 
             return ['success' => true, 'message' => 'Book issued successfully.', 'issue' => $issue];
         });
     }
 
-    /**
-     * Return an issued book
-     */
     public function returnBook(BookIssue $issue, $returnDate = null)
     {
         return DB::transaction(function () use ($issue, $returnDate) {
-            if ($issue->status !== 'issued') {
-                return ['success' => false, 'message' => 'This book is already marked as ' . $issue->status];
+            $lockedIssue = BookIssue::query()
+                ->where('school_id', $issue->school_id)
+                ->whereKey($issue->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedIssue->status !== 'issued') {
+                return ['success' => false, 'message' => 'This book is already marked as ' . $lockedIssue->status];
             }
 
-            $returnDate = $returnDate ? Carbon::parse($returnDate) : now();
-            $issue->return_date = $returnDate;
+            $book = Book::query()
+                ->where('school_id', $lockedIssue->school_id)
+                ->whereKey($lockedIssue->book_id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            // Calculate fine if overdue — rate is configurable via school settings
-            if ($returnDate->gt($issue->due_date)) {
-                $daysOverdue = $returnDate->diffInDays($issue->due_date);
-                $school = \App\Models\School::find($issue->school_id);
-                $finePerDay = $school?->settings['library_fine_per_day'] ?? 5;
-                $issue->fine_amount = $daysOverdue * $finePerDay;
+            if ($book->available_quantity >= $book->quantity) {
+                return [
+                    'success' => false,
+                    'message' => 'Book inventory is already fully available. Please review this issue record before retrying.',
+                ];
             }
 
-            $issue->status = 'returned';
-            $issue->save();
+            $returnDate = $returnDate ? Carbon::parse($returnDate)->startOfDay() : now()->startOfDay();
+            $lockedIssue->return_date = $returnDate;
+            $lockedIssue->fine_amount = 0;
 
-            $issue->book->increment('available_quantity');
+            if ($returnDate->gt($lockedIssue->due_date)) {
+                $daysOverdue    = $lockedIssue->due_date->diffInDays($returnDate);
+                $schoolSettings = $lockedIssue->school?->settings ?? [];
+                $finePerDay     = (float) ($schoolSettings['late_return_library_book_fine'] ?? 5);
+                $lockedIssue->fine_amount = $daysOverdue * $finePerDay;
+            }
 
-            return ['success' => true, 'message' => 'Book returned successfully.', 'fine' => $issue->fine_amount];
+            $lockedIssue->status = 'returned';
+            $lockedIssue->save();
+
+            $book->available_quantity += 1;
+            $book->save();
+
+            activity('library')
+                ->causedBy(auth()->user())
+                ->performedOn($lockedIssue)
+                ->withProperties(['fine' => (float) $lockedIssue->fine_amount])
+                ->log('book_returned');
+
+            return ['success' => true, 'message' => 'Book returned successfully.', 'fine' => (float) $lockedIssue->fine_amount];
         });
     }
 
-    /**
-     * Mark a book as lost
-     */
     public function markAsLost(BookIssue $issue)
     {
         return DB::transaction(function () use ($issue) {
-            $issue->status = 'lost';
-            $issue->fine_amount = $issue->book->price ?? 0;
-            $issue->save();
+            $lockedIssue = BookIssue::query()
+                ->where('school_id', $issue->school_id)
+                ->whereKey($issue->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            // Atomically decrement only if quantity > 0
-            $decremented = \App\Models\Book::where('id', $issue->book_id)
-                ->where('quantity', '>', 0)
-                ->decrement('quantity');
-
-            if (!$decremented) {
-                throw new \Exception('Book quantity is already zero and cannot be decremented.');
+            if ($lockedIssue->status !== 'issued') {
+                return ['success' => false, 'message' => 'This book is already marked as ' . $lockedIssue->status];
             }
 
+            $book = Book::query()
+                ->where('school_id', $lockedIssue->school_id)
+                ->whereKey($lockedIssue->book_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($book->quantity <= 0) {
+                throw new RuntimeException('Book quantity is already zero and cannot be decremented.');
+            }
+
+            $lockedIssue->status      = 'lost';
+            $lockedIssue->return_date = now()->toDateString();
+            $lockedIssue->fine_amount = $book->price ?? 0;
+            $lockedIssue->save();
+
+            $book->quantity -= 1;
+            if ($book->available_quantity > $book->quantity) {
+                $book->available_quantity = $book->quantity;
+            }
+            $book->save();
+
+            activity('library')
+                ->causedBy(auth()->user())
+                ->performedOn($lockedIssue)
+                ->withProperties(['fine' => (float) $lockedIssue->fine_amount])
+                ->log('book_lost');
+
             return ['success' => true, 'message' => 'Book marked as lost. Fine applied.'];
+        });
+    }
+
+    public function settleFine(BookIssue $issue)
+    {
+        return DB::transaction(function () use ($issue) {
+            $locked = BookIssue::query()
+                ->where('school_id', $issue->school_id)
+                ->whereKey($issue->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($locked->status === 'issued') {
+                return ['success' => false, 'message' => 'Book has not been returned or marked lost yet.'];
+            }
+
+            if ($locked->fine_paid_at !== null) {
+                return ['success' => false, 'message' => 'Fine has already been settled.'];
+            }
+
+            if ((float) $locked->fine_amount <= 0) {
+                return ['success' => false, 'message' => 'No outstanding fine on this record.'];
+            }
+
+            $locked->fine_paid_at = now();
+            $locked->save();
+
+            activity('library')
+                ->causedBy(auth()->user())
+                ->performedOn($locked)
+                ->withProperties(['fine' => (float) $locked->fine_amount])
+                ->log('fine_settled');
+
+            return ['success' => true, 'message' => 'Fine settled successfully.', 'fine' => (float) $locked->fine_amount];
         });
     }
 }

@@ -47,12 +47,54 @@ class ExamPolicy
 
     public function enterMarks(User $user, Exam $exam): bool
     {
-        return $this->belongsToCurrentSchool($exam->school_id)
-            && $user->isActive()
-            && (
-                $user->hasRole(Role::SCHOOL_ADMIN)
-                || $user->hasRole(Role::TEACHER)
-            );
+        if (!$this->belongsToCurrentSchool($exam->school_id) || !$user->isActive()) {
+            return false;
+        }
+
+        if ($user->hasRole(Role::SCHOOL_ADMIN)) {
+            return true;
+        }
+
+        if ($user->hasRole(Role::TEACHER)) {
+            $teacherId = optional($user->teacher)->id;
+            if (!$teacherId) {
+                return false;
+            }
+
+            return $exam->examSubjects()
+                ->where('teacher_id', $teacherId)
+                ->exists();
+        }
+
+        return false;
+    }
+
+    /**
+     * Per-subject mark-entry check — admin can always enter; a teacher must
+     * own (be assigned to) the specific exam_subject.
+     */
+    public function enterSubjectMarks(User $user, Exam $exam, \App\Models\ExamSubject $examSubject): bool
+    {
+        if (!$this->belongsToCurrentSchool($exam->school_id) || !$user->isActive()) {
+            return false;
+        }
+
+        if ((int) $examSubject->exam_id !== (int) $exam->id) {
+            return false;
+        }
+
+        if ($user->hasRole(Role::SCHOOL_ADMIN)) {
+            return true;
+        }
+
+        if ($user->hasRole(Role::TEACHER)) {
+            $teacherId = optional($user->teacher)->id;
+
+            return $teacherId !== null
+                && (int) $examSubject->teacher_id === (int) $teacherId;
+        }
+
+        return false;
     }
 
     protected function canManageExams(User $user): bool

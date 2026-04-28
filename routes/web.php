@@ -57,6 +57,11 @@ Route::prefix('school')->name('school.')->middleware(['auth', 'tenant', 'school.
     require __DIR__.'/school.php';
 });
 
+// Library routes — school_admin AND librarian
+Route::prefix('school')->name('school.')->middleware(['auth', 'tenant', 'school.access', 'role:school_admin,librarian'])->group(function () {
+    require __DIR__.'/library.php';
+});
+
 // Teacher routes (with tenant middleware)
 Route::prefix('teacher')->name('teacher.')->middleware(['auth', 'tenant', 'school.access', 'role:teacher'])->group(function () {
     require __DIR__.'/teacher.php';

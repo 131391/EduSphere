@@ -189,6 +189,11 @@ class User extends Authenticatable
         return $this->hasRole(Role::RECEPTIONIST);
     }
 
+    public function isLibrarian(): bool
+    {
+        return $this->hasRole(Role::LIBRARIAN);
+    }
+
     public function canAccessSchool($schoolId): bool
     {
         if ($this->isSuperAdmin()) {

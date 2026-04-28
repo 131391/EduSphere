@@ -161,27 +161,30 @@
                 <div class="space-y-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">Targeted Asset <span class="text-red-500">*</span></label>
-                        <select x-model="formData.book_id" class="modal-input-premium no-select2 appearance-none pr-10">
+                        <select x-model="formData.book_id" @change="clearError('book_id')" class="modal-input-premium no-select2 appearance-none pr-10">
                             <option value="">-- Choose Book --</option>
                             @foreach($books as $book)
                                 <option value="{{ $book->id }}">{{ $book->title }} ({{ $book->available_quantity }} units left)</option>
                             @endforeach
                         </select>
+                        <template x-if="errors.book_id"><p class="modal-error-message" x-text="errors.book_id[0]"></p></template>
                     </div>
 
                     <div class="space-y-2">
                         <label class="modal-label-premium">Beneficiary Student <span class="text-red-500">*</span></label>
-                        <select x-model="formData.student_id" class="modal-input-premium no-select2 appearance-none pr-10">
+                        <select x-model="formData.student_id" @change="clearError('student_id')" class="modal-input-premium no-select2 appearance-none pr-10">
                             <option value="">-- Choose Student --</option>
                             @foreach($students as $student)
                                 <option value="{{ $student->id }}">{{ $student->admission_no }} - {{ $student->full_name }}</option>
                             @endforeach
                         </select>
+                        <template x-if="errors.student_id"><p class="modal-error-message" x-text="errors.student_id[0]"></p></template>
                     </div>
 
                     <div class="space-y-2">
                         <label class="modal-label-premium">Return Obligation (Due Date) <span class="text-red-500">*</span></label>
-                        <input type="date" x-model="formData.due_date" min="{{ date('Y-m-d') }}" class="modal-input-premium">
+                        <input type="date" x-model="formData.due_date" @input="clearError('due_date')" min="{{ date('Y-m-d') }}" class="modal-input-premium">
+                        <template x-if="errors.due_date"><p class="modal-error-message" x-text="errors.due_date[0]"></p></template>
                     </div>
                 </div>
 
@@ -220,6 +223,7 @@
             function circulationManager() {
                 return {
                     submitting: false,
+                    errors: {},
                     formData: {
                         book_id: '',
                         student_id: '',
@@ -228,6 +232,7 @@
                     returnIssueId: null,
 
                     openIssueModal() {
+                        this.errors = {};
                         this.formData = { book_id: '', student_id: '', due_date: '{{ date('Y-m-d', strtotime('+14 days')) }}' };
                         this.$dispatch('open-modal', 'issue-book-modal');
                     },
@@ -235,6 +240,7 @@
                     async submitIssue() {
                         if (this.submitting) return;
                         this.submitting = true;
+                        this.errors = {};
 
                         try {
                             const response = await fetch('{{ route('school.library.issue.store') }}', {
@@ -252,6 +258,10 @@
                                 if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                                 this.$dispatch('close-modal', 'issue-book-modal');
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else if (response.status === 422) {
+                                this.errors = result.errors || {};
+                                const firstError = Object.values(this.errors)[0]?.[0];
+                                if (firstError && window.Toast) window.Toast.fire({ icon: 'error', title: firstError });
                             } else {
                                 throw new Error(result.message || 'Issuance failed');
                             }
@@ -269,7 +279,7 @@
 
                     async confirmReturn() {
                         try {
-                            const response = await fetch(`/school/library/return/${this.returnIssueId}`, {
+                            const response = await fetch(`{{ route('school.library.return', ['issue' => '__ISSUE__']) }}`.replace('__ISSUE__', this.returnIssueId), {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',

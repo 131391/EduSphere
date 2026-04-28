@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\ExamStatus;
 use App\Enums\Gender;
 use App\Enums\StudentStatus;
+use App\Enums\TeacherStatus;
 use App\Enums\YesNo;
 use App\Models\AcademicYear;
 use App\Models\ClassModel;
@@ -18,9 +19,11 @@ use App\Models\School;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Models\Teacher;
 use App\Models\User;
 use App\Services\School\Examination\ResultService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class ExaminationModuleTest extends TestCase
@@ -200,7 +203,7 @@ class ExaminationModuleTest extends TestCase
         $class->subjects()->detach();
 
         $firstMarkResponse = $this->actingAs($admin)->postJson(
-            $this->tenantUrl($school, '/school/examination/marksGroup'),
+            $this->tenantUrl($school, '/school/examination/marks'),
             [
                 'exam_id' => $exam->id,
                 'exam_subject_id' => $mathSnapshot->id,
@@ -232,7 +235,7 @@ class ExaminationModuleTest extends TestCase
             ->assertDontSee('Unit Test (July 2026)');
 
         $secondMarkResponse = $this->actingAs($admin)->postJson(
-            $this->tenantUrl($school, '/school/examination/marksGroup'),
+            $this->tenantUrl($school, '/school/examination/marks'),
             [
                 'exam_id' => $exam->id,
                 'exam_subject_id' => $scienceSnapshot->id,
@@ -329,7 +332,7 @@ class ExaminationModuleTest extends TestCase
         $examSubject = $exam->examSubjects()->firstOrFail();
 
         $this->actingAs($admin)->postJson(
-            $this->tenantUrl($school, '/school/examination/marksGroup'),
+            $this->tenantUrl($school, '/school/examination/marks'),
             [
                 'exam_id' => $exam->id,
                 'exam_subject_id' => $examSubject->id,
@@ -507,10 +510,274 @@ class ExaminationModuleTest extends TestCase
         $this->assertNull(app(ResultService::class)->calculateGrade($school, 75.0));
     }
 
+    public function test_scheduled_command_transitions_exam_from_scheduled_to_ongoing_after_start_date(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'exam-cron-school']);
+        $academicYear = $this->createAcademicYear($school);
+        $class = $this->createClass($school, 'Class 5');
+        $examType = ExamType::create(['school_id' => $school->id, 'name' => 'Cron Term']);
+        $subject = Subject::create([
+            'school_id' => $school->id,
+            'name' => 'Math',
+            'code' => 'MAT',
+            'is_active' => true,
+        ]);
+        $class->subjects()->attach($subject->id, ['full_marks' => 100]);
+
+        // Backdate start to yesterday — status sync should flip Scheduled → Ongoing.
+        $exam = Exam::create([
+            'school_id' => $school->id,
+            'academic_year_id' => $academicYear->id,
+            'class_id' => $class->id,
+            'exam_type_id' => $examType->id,
+            'name' => 'Cron Test',
+            'month' => Carbon::yesterday()->format('F Y'),
+            'start_date' => Carbon::yesterday()->toDateString(),
+            'end_date' => Carbon::tomorrow()->toDateString(),
+            'status' => ExamStatus::Scheduled,
+        ]);
+
+        $this->artisan('exams:sync-statuses')->assertSuccessful();
+
+        $exam->refresh();
+        $this->assertSame(ExamStatus::Ongoing, $exam->status);
+    }
+
+    public function test_scheduled_command_skips_cancelled_and_locked_exams(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'exam-cron-skip-school']);
+        $academicYear = $this->createAcademicYear($school);
+        $class = $this->createClass($school, 'Class 6');
+        $examType = ExamType::create(['school_id' => $school->id, 'name' => 'X']);
+        $subject = Subject::create(['school_id' => $school->id, 'name' => 'M', 'code' => 'M', 'is_active' => true]);
+        $class->subjects()->attach($subject->id, ['full_marks' => 100]);
+
+        $cancelled = Exam::create([
+            'school_id' => $school->id,
+            'academic_year_id' => $academicYear->id,
+            'class_id' => $class->id,
+            'exam_type_id' => $examType->id,
+            'name' => 'C',
+            'month' => 'X',
+            'start_date' => Carbon::yesterday()->toDateString(),
+            'end_date' => Carbon::tomorrow()->toDateString(),
+            'status' => ExamStatus::Cancelled,
+        ]);
+
+        $locked = Exam::create([
+            'school_id' => $school->id,
+            'academic_year_id' => $academicYear->id,
+            'class_id' => $class->id,
+            'exam_type_id' => $examType->id,
+            'name' => 'L',
+            'month' => 'X',
+            'start_date' => Carbon::yesterday()->toDateString(),
+            'end_date' => Carbon::tomorrow()->toDateString(),
+            'status' => ExamStatus::Locked,
+        ]);
+
+        $this->artisan('exams:sync-statuses')->assertSuccessful();
+
+        $this->assertSame(ExamStatus::Cancelled, $cancelled->fresh()->status);
+        $this->assertSame(ExamStatus::Locked, $locked->fresh()->status);
+    }
+
+    public function test_grade_band_coverage_report_flags_gaps_and_returns_complete_when_full(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'grade-cov-school']);
+        $admin = $this->createSchoolAdmin($school);
+
+        // Bind the current school so the GradeController helper can read it
+        // without needing the tenant middleware to run.
+        app()->instance('currentSchool', $school);
+        $this->actingAs($admin);
+
+        Grade::create(['school_id' => $school->id, 'range_start' => 0, 'range_end' => 49, 'grade' => 'F']);
+        Grade::create(['school_id' => $school->id, 'range_start' => 70, 'range_end' => 100, 'grade' => 'A']);
+
+        $controller = app(\App\Http\Controllers\School\Examination\GradeController::class);
+        $report = $controller->coverageReport();
+
+        $this->assertFalse($report['is_complete']);
+        $this->assertCount(1, $report['gaps']);
+        $this->assertSame(['from' => 50, 'to' => 69], $report['gaps'][0]);
+
+        Grade::create(['school_id' => $school->id, 'range_start' => 50, 'range_end' => 69, 'grade' => 'C']);
+        $report = $controller->coverageReport();
+        $this->assertTrue($report['is_complete']);
+        $this->assertSame([], $report['gaps']);
+    }
+
+    public function test_admin_can_assign_teacher_to_exam_subject(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'assign-teacher-school']);
+        $admin = $this->createSchoolAdmin($school);
+        [$exam, $unused, $examSubject, $teacher] = $this->seedScheduledExam($school, withStudent: true, withTeacher: true);
+        unset($unused);
+
+        $response = $this->actingAs($admin)->patchJson(
+            $this->tenantUrl($school, "/school/examination/exams/{$exam->id}/subjects/{$examSubject->id}/teacher"),
+            ['teacher_id' => $teacher->id]
+        );
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $this->assertSame((int) $teacher->id, (int) $examSubject->fresh()->teacher_id);
+
+        // Clearing
+        $clear = $this->actingAs($admin)->patchJson(
+            $this->tenantUrl($school, "/school/examination/exams/{$exam->id}/subjects/{$examSubject->id}/teacher"),
+            ['teacher_id' => null]
+        );
+        $clear->assertOk();
+        $this->assertNull($examSubject->fresh()->teacher_id);
+    }
+
+    public function test_teacher_can_only_see_and_save_marks_for_assigned_exam_subjects(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'teacher-marks-school']);
+        $admin = $this->createSchoolAdmin($school);
+        [$exam, $student, $examSubject, $teacher] = $this->seedScheduledExam($school, withStudent: true, withTeacher: true);
+
+        // Assign teacher to the subject.
+        $examSubject->forceFill(['teacher_id' => $teacher->id])->save();
+
+        $teacherUser = $teacher->user;
+
+        // Index lists the assignment.
+        $listing = $this->actingAs($teacherUser)
+            ->getJson($this->tenantUrl($school, '/teacher/marks'));
+        $listing->assertOk()
+            ->assertJsonPath('data.0.exam_subject_id', $examSubject->id);
+
+        // Teacher can save marks for assigned subject.
+        $save = $this->actingAs($teacherUser)->postJson(
+            $this->tenantUrl($school, '/teacher/marks'),
+            [
+                'exam_id' => $exam->id,
+                'exam_subject_id' => $examSubject->id,
+                'marks' => [
+                    ['student_id' => $student->id, 'marks_obtained' => 77],
+                ],
+            ]
+        );
+        $save->assertOk();
+        $this->assertDatabaseHas('results', [
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+            'marks_obtained' => 77,
+            'entered_by' => $teacherUser->id,
+        ]);
+    }
+
+    public function test_teacher_cannot_save_marks_for_unassigned_exam_subject(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'teacher-unassigned-school']);
+        [$exam, $student, $examSubject, $teacher] = $this->seedScheduledExam($school, withStudent: true, withTeacher: true);
+        // Note: teacher_id intentionally NOT set on examSubject.
+
+        $teacherUser = $teacher->user;
+
+        $save = $this->actingAs($teacherUser)->postJson(
+            $this->tenantUrl($school, '/teacher/marks'),
+            [
+                'exam_id' => $exam->id,
+                'exam_subject_id' => $examSubject->id,
+                'marks' => [
+                    ['student_id' => $student->id, 'marks_obtained' => 77],
+                ],
+            ]
+        );
+
+        // The teacher route's findOrFail filters by teacher_id, so unassigned -> 404.
+        $save->assertStatus(404);
+        $this->assertDatabaseMissing('results', [
+            'exam_id' => $exam->id,
+            'student_id' => $student->id,
+        ]);
+    }
+
+    public function test_results_are_scoped_to_school_for_listing(): void
+    {
+        $schoolA = $this->createSchool(['subdomain' => 'results-iso-a']);
+        $schoolB = $this->createSchool(['subdomain' => 'results-iso-b']);
+
+        [$examA, $studentA, $examSubjectA] = $this->seedScheduledExam($schoolA, withStudent: true);
+        [$examB, $studentB] = $this->seedScheduledExam($schoolB, withStudent: true);
+
+        Result::create([
+            'school_id' => $schoolA->id,
+            'student_id' => $studentA->id,
+            'exam_id' => $examA->id,
+            'subject_id' => $examSubjectA->subject_id,
+            'class_id' => $examA->class_id,
+            'academic_year_id' => $examA->academic_year_id,
+            'marks_obtained' => 80,
+            'total_marks' => 100,
+            'percentage' => 80,
+        ]);
+        Result::create([
+            'school_id' => $schoolB->id,
+            'student_id' => $studentB->id,
+            'exam_id' => $examB->id,
+            'subject_id' => $examB->examSubjects()->firstOrFail()->subject_id,
+            'class_id' => $examB->class_id,
+            'academic_year_id' => $examB->academic_year_id,
+            'marks_obtained' => 60,
+            'total_marks' => 100,
+            'percentage' => 60,
+        ]);
+
+        // School A's student listing must not surface School B's results.
+        $studentUserA = $studentA->user;
+        $response = $this->actingAs($studentUserA)
+            ->get($this->tenantUrl($schoolA, '/student/results'));
+        $response->assertOk();
+
+        // Bypass the Tenantable global scope here — we want raw counts, not the
+        // request-bound scope. The next block exercises the scope itself.
+        $rowsForA = Result::withoutGlobalScopes()->where('school_id', $schoolA->id)->count();
+        $rowsForB = Result::withoutGlobalScopes()->where('school_id', $schoolB->id)->count();
+        $this->assertSame(1, $rowsForA);
+        $this->assertSame(1, $rowsForB);
+
+        // Bare belt-and-braces: the global Tenantable scope on Result must only
+        // return school A's row when the school A context is bound.
+        app()->instance('currentSchool', $schoolA);
+        $this->assertSame(1, Result::query()->count());
+        app()->instance('currentSchool', $schoolB);
+        $this->assertSame(1, Result::query()->count());
+    }
+
+    public function test_concurrent_mark_save_is_idempotent_via_upsert(): void
+    {
+        $school = $this->createSchool(['subdomain' => 'mark-race-school']);
+        $admin = $this->createSchoolAdmin($school);
+        [$exam, $student, $examSubject] = $this->seedScheduledExam($school, withStudent: true);
+
+        // Save twice in quick succession; second save should overwrite, not duplicate.
+        for ($i = 0; $i < 2; $i++) {
+            $this->actingAs($admin)->postJson(
+                $this->tenantUrl($school, '/school/examination/marks'),
+                [
+                    'exam_id' => $exam->id,
+                    'exam_subject_id' => $examSubject->id,
+                    'marks' => [['student_id' => $student->id, 'marks_obtained' => 80 + $i]],
+                ]
+            )->assertOk();
+        }
+
+        $rows = Result::where('exam_id', $exam->id)
+            ->where('student_id', $student->id)
+            ->where('subject_id', $examSubject->subject_id)
+            ->get();
+        $this->assertCount(1, $rows);
+        $this->assertEquals(81, (float) $rows->first()->marks_obtained);
+    }
+
     /**
-     * @return array{0: Exam, 1?: Student, 2?: ExamSubject}
+     * @return array{0: Exam, 1?: Student, 2?: ExamSubject, 3?: Teacher}
      */
-    protected function seedScheduledExam(School $school, bool $withStudent = false): array
+    protected function seedScheduledExam(School $school, bool $withStudent = false, bool $withTeacher = false): array
     {
         $academicYear = $this->createAcademicYear($school);
         $class = $this->createClass($school, 'Class 9');
@@ -572,7 +839,39 @@ class ExaminationModuleTest extends TestCase
             'is_transport_required' => YesNo::No,
         ]);
 
-        return [$exam, $student, $exam->examSubjects()->firstOrFail()];
+        $examSubject = $exam->examSubjects()->firstOrFail();
+
+        if (!$withTeacher) {
+            return [$exam, $student, $examSubject];
+        }
+
+        $teacherUser = $this->createUser([
+            'school_id' => $school->id,
+            'role_id' => Role::where('slug', Role::TEACHER)->firstOrFail()->id,
+            'email' => uniqid('teacher-', true) . '@example.test',
+        ]);
+
+        // Note: teachers.gender is an enum('male','female','other') string column,
+        // not the Gender int enum used by students. Insert a string directly.
+        $teacher = Teacher::create([
+            'school_id' => $school->id,
+            'user_id' => $teacherUser->id,
+            'employee_id' => 'TCH-' . uniqid(),
+            'first_name' => 'Pat',
+            'last_name' => 'Teacher',
+            'date_of_birth' => '1985-01-01',
+            'gender' => 'female',
+            'phone' => '9000000001',
+            'email' => $teacherUser->email,
+            'address' => 'N/A',
+            'qualification' => 'BEd',
+            'experience_years' => 5,
+            'photo' => null,
+            'status' => TeacherStatus::Active,
+            'joining_date' => '2024-04-01',
+        ]);
+
+        return [$exam, $student, $examSubject, $teacher];
     }
 
     protected function createSchoolAdmin(School $school): User

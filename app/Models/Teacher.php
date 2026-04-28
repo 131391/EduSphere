@@ -70,6 +70,11 @@ class Teacher extends Model
             ->withTimestamps();
     }
 
+    public function examSubjects()
+    {
+        return $this->hasMany(ExamSubject::class);
+    }
+
     // Scopes
     public function scopeForSchool($query, $schoolId)
     {

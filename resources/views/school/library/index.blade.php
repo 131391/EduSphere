@@ -28,6 +28,11 @@
         <!-- Header Section -->
         <x-page-header title="Digital Knowledge Repository" description="Manage institutional book catalog, inventory levels, and asset valuation across diverse subject categories." icon="fas fa-book">
             <div class="flex items-center gap-3">
+                <button @click="openCategoryModal()"
+                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
+                    <i class="fas fa-tags mr-2 text-xs text-amber-500"></i>
+                    {{ $categories->isEmpty() ? 'Create First Category' : 'Add Category' }}
+                </button>
                 <a href="{{ route('school.library.issues') }}" 
                     class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
                     <i class="fas fa-exchange-alt mr-2 text-xs text-indigo-500"></i>
@@ -40,6 +45,17 @@
                 </button>
             </div>
         </x-page-header>
+
+        <div x-show="!hasCategories" x-cloak class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900">
+            <div>
+                <div class="text-sm font-bold">Book categories are required before cataloging inventory.</div>
+                <p class="text-xs font-medium text-amber-800/80 mt-1">Create your first category so library staff can add books without leaving this page.</p>
+            </div>
+            <button @click="openCategoryModal()" class="inline-flex items-center justify-center px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition-all shadow-sm">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                Create Category
+            </button>
+        </div>
 
         <!-- AJAX Data Table -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -207,10 +223,12 @@
                                     <option value="{{ $category->id }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
+                            <template x-if="errors.category_id"><p class="modal-error-message" x-text="errors.category_id[0]"></p></template>
                         </div>
                         <div class="space-y-2">
                             <label class="modal-label-premium">ISBN</label>
                             <input type="text" x-model="formData.isbn" placeholder="978-..." class="modal-input-premium font-mono">
+                            <template x-if="errors.isbn"><p class="modal-error-message" x-text="errors.isbn[0]"></p></template>
                         </div>
                     </div>
 
@@ -240,6 +258,36 @@
                 </x-slot>
             </form>
         </x-modal>
+
+        <x-modal name="book-category-modal" alpineTitle="'Create Book Category'" maxWidth="xl">
+            <form @submit.prevent="submitCategoryForm()" method="POST" class="p-1">
+                @csrf
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Category Name <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="categoryFormData.name" @input="clearCategoryError('name')" placeholder="e.g., Fiction, Science, Reference"
+                            class="modal-input-premium" :class="categoryErrors.name ? 'border-red-500' : ''">
+                        <template x-if="categoryErrors.name"><p class="modal-error-message" x-text="categoryErrors.name[0]"></p></template>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Description</label>
+                        <textarea x-model="categoryFormData.description" @input="clearCategoryError('description')" rows="4"
+                            placeholder="Optional notes for librarians and catalog staff."
+                            class="modal-input-premium resize-none" :class="categoryErrors.description ? 'border-red-500' : ''"></textarea>
+                        <template x-if="categoryErrors.description"><p class="modal-error-message" x-text="categoryErrors.description[0]"></p></template>
+                    </div>
+                </div>
+
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'book-category-modal')" class="btn-premium-cancel px-10">Discard</button>
+                    <button type="submit" :disabled="categorySubmitting" class="btn-premium-primary min-w-[200px] !from-slate-700 !to-slate-900 shadow-slate-200">
+                        <template x-if="categorySubmitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
+                        <span x-text="categorySubmitting ? 'Creating...' : 'Save Category'"></span>
+                    </button>
+                </x-slot>
+            </form>
+        </x-modal>
     </div>
 
     @push('scripts')
@@ -247,7 +295,10 @@
             function libraryCatalogManager() {
                 return {
                     submitting: false,
+                    categorySubmitting: false,
+                    hasCategories: @js($categories->isNotEmpty()),
                     errors: {},
+                    categoryErrors: {},
                     formData: {
                         title: '',
                         author: '',
@@ -255,6 +306,10 @@
                         isbn: '',
                         quantity: 1,
                         price: ''
+                    },
+                    categoryFormData: {
+                        name: '',
+                        description: ''
                     },
 
                     clearError(field) {
@@ -265,7 +320,27 @@
                         }
                     },
 
+                    clearCategoryError(field) {
+                        if (this.categoryErrors && this.categoryErrors[field]) {
+                            const e = { ...this.categoryErrors };
+                            delete e[field];
+                            this.categoryErrors = e;
+                        }
+                    },
+
+                    openCategoryModal() {
+                        this.categoryErrors = {};
+                        this.categoryFormData = { name: '', description: '' };
+                        this.$dispatch('open-modal', 'book-category-modal');
+                    },
+
                     openAddModal() {
+                        if (!this.hasCategories) {
+                            if (window.Toast) window.Toast.fire({ icon: 'info', title: 'Create a book category before adding catalog entries.' });
+                            this.openCategoryModal();
+                            return;
+                        }
+
                         this.errors = {};
                         this.formData = { title: '', author: '', category_id: '', isbn: '', quantity: 1, price: '' };
                         this.$dispatch('open-modal', 'add-book-modal');
@@ -277,7 +352,7 @@
                         this.errors = {};
 
                         try {
-                            const response = await fetch('{{ route('school.library.store') }}', {
+                            const response = await fetch('{{ route('school.library.books.store') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -301,6 +376,40 @@
                             if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
                         } finally {
                             this.submitting = false;
+                        }
+                    },
+
+                    async submitCategoryForm() {
+                        if (this.categorySubmitting) return;
+                        this.categorySubmitting = true;
+                        this.categoryErrors = {};
+
+                        try {
+                            const response = await fetch('{{ route('school.library.categories.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify(this.categoryFormData)
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.hasCategories = true;
+                                this.$dispatch('close-modal', 'book-category-modal');
+                                window.location.reload();
+                            } else if (response.status === 422) {
+                                this.categoryErrors = result.errors || {};
+                            } else {
+                                throw new Error(result.message || 'Category creation failed');
+                            }
+                        } catch (e) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                        } finally {
+                            this.categorySubmitting = false;
                         }
                     }
                 }

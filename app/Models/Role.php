@@ -13,6 +13,7 @@ class Role extends Model
     const SUPER_ADMIN = 'super_admin';
     const SCHOOL_ADMIN = 'school_admin';
     const RECEPTIONIST = 'receptionist';
+    const LIBRARIAN = 'librarian';
     const TEACHER = 'teacher';
     const STUDENT = 'student';
     const PARENT = 'parent';
@@ -54,6 +55,11 @@ class Role extends Model
     public function isReceptionist(): bool
     {
         return $this->slug === self::RECEPTIONIST;
+    }
+
+    public function isLibrarian(): bool
+    {
+        return $this->slug === self::LIBRARIAN;
     }
 
     /**
