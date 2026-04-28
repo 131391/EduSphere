@@ -336,7 +336,7 @@
                 <div class="grid grid-cols-2 gap-6 mb-6">
                     <!-- Email -->
                     <div class="space-y-2">
-                        <label class="modal-label-premium">Email Address</label>
+                        <label class="modal-label-premium">Email Address <span class="text-red-600 font-bold">*</span></label>
                         <div class="relative group">
                             <input type="email" name="email" x-model="formData.email"
                                 @input="clearError('email')" placeholder="staff@school.com"

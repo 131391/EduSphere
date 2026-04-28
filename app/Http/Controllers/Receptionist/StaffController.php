@@ -214,7 +214,7 @@ class StaffController extends TenantController
             'section_id'                   => ['nullable', Rule::exists('sections', 'id')->where('school_id', $this->getSchoolId())],
             'name'                         => 'required|string|max:255',
             'mobile'                       => 'required|string|max:20',
-            'email'                        => 'nullable|email|max:255',
+            'email'                        => ['required', 'email', 'max:255', Rule::unique('staff', 'email')->where('school_id', $this->getSchoolId())->ignore($staff?->id)],
             'gender'                       => ['required', 'integer', Rule::enum(Gender::class)],
             'total_experience'             => 'nullable|integer|min:0',
             'previous_school_salary'       => 'nullable|numeric|min:0',
