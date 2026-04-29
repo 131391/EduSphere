@@ -106,14 +106,12 @@
                     <label for="fee_period" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                         Fee Period <span class="text-red-500">*</span>
                     </label>
-                    <input type="text"
-                           id="fee_period"
-                           name="fee_period"
-                           x-model="formData.fee_period"
-                           placeholder="e.g. {{ date('F Y') }}"
-                           required
+                    <input type="month"
+                           id="fee_period_picker"
+                           x-model="feePeriodRaw"
+                           @change="formData.fee_period = formatFeePeriod(feePeriodRaw)"
                            class="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Enter the month and year, e.g. "April 2025"</p>
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Selected: <span x-text="formData.fee_period"></span></p>
                 </div>
 
                 {{-- Due Date --}}
@@ -181,7 +179,7 @@
                                    class="sr-only">
                             <div class="flex items-center gap-3 p-3.5 rounded-lg border transition-all duration-150 hover:shadow-sm"
                                  :class="formData.fee_name_ids.includes('{{ $name->id }}')
-                                    ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700'
+                                    ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-400 dark:border-indigo-600'
                                     : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 hover:border-indigo-200 dark:hover:border-indigo-700'">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
                                      :class="formData.fee_name_ids.includes('{{ $name->id }}')
@@ -260,6 +258,7 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
         allSelected: false,
         errors: {},
+        feePeriodRaw: '{{ date('Y-m') }}',
         formData: {
             class_id: '{{ old('class_id') }}',
             academic_year_id: '{{ $academicYears->where('is_current', \App\Enums\YesNo::Yes)->first()?->id ?? ($academicYears->first()?->id ?? '') }}',
@@ -267,6 +266,13 @@ document.addEventListener('alpine:init', () => {
             fee_period: '{{ date('F Y') }}',
             due_date: '{{ date('Y-m-d', strtotime('+10 days')) }}',
             fee_name_ids: []
+        },
+
+        formatFeePeriod(raw) {
+            if (!raw) return '';
+            const [year, month] = raw.split('-');
+            const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            return months[parseInt(month) - 1] + ' ' + year;
         },
 
         async generateFees() {

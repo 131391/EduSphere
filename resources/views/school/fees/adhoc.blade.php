@@ -66,9 +66,10 @@
                 <!-- Fee Period -->
                 <div class="space-y-2">
                     <label class="modal-label-premium">Fee Period <span class="text-red-600 font-bold">*</span></label>
-                    <input type="text" x-model="formData.fee_period" placeholder="e.g. {{ date('F Y') }}"
+                    <input type="month" x-model="feePeriodRaw"
+                        @change="formData.fee_period = formatFeePeriod(feePeriodRaw)"
                         class="modal-input-premium" required>
-                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Enter the month and year, e.g. "April 2026"</p>
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Selected: <span x-text="formData.fee_period"></span></p>
                 </div>
 
                 <!-- Due Date -->
@@ -158,6 +159,7 @@
 <script>
     function adhocFeeForm() {
         return {
+            feePeriodRaw: '{{ date('Y-m') }}',
             formData: {
                 academic_year_id: '{{ $academicYears->firstWhere("is_current", \App\Enums\YesNo::Yes)?->id ?? "" }}',
                 class_id: '',
@@ -169,6 +171,13 @@
             students: [],
             selectAll: false,
             loadingStudents: false,
+
+            formatFeePeriod(raw) {
+                if (!raw) return '';
+                const [year, month] = raw.split('-');
+                const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                return months[parseInt(month) - 1] + ' ' + year;
+            },
             isSubmitting: false,
 
             async fetchStudents() {

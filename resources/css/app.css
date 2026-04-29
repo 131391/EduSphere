@@ -644,6 +644,12 @@ select:focus {
     border-color: #ef4444 !important;
 }
 
+/* Fee component card selected state - thin border */
+.fee-card-selected {
+    border-color: #818cf8 !important;
+    border-width: 1px !important;
+}
+
 .modal-input-premium:focus {
     outline: none;
     border-color: var(--primary);
