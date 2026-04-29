@@ -143,14 +143,20 @@
                     <span class="text-xs text-gray-400 dark:text-gray-500">— select all that apply to this class</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-gray-500 dark:text-gray-400" x-show="formData.fee_name_ids.length > 0">
+                    <span class="text-xs text-gray-500 dark:text-gray-400" x-show="formData.fee_name_ids.length > 0" x-cloak>
                         <span class="font-semibold text-indigo-600 dark:text-indigo-400" x-text="formData.fee_name_ids.length"></span> selected
                     </span>
-                    <label class="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition select-none">
+                    {{-- Interactive checkbox (hidden until Alpine hydrates) --}}
+                    <label class="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition select-none" x-cloak>
                         <input type="checkbox"
                                @change="toggleAll"
                                x-model="allSelected"
                                class="rounded w-4 h-4 text-indigo-600 border-gray-300 dark:border-gray-600 focus:ring-indigo-500 dark:bg-gray-800">
+                        Select all
+                    </label>
+                    {{-- Static placeholder shown before Alpine hydrates --}}
+                    <label class="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 select-none" x-show="false" style="display:inline-flex">
+                        <input type="checkbox" disabled class="rounded w-4 h-4 border-gray-300 dark:border-gray-600 dark:bg-gray-800">
                         Select all
                     </label>
                 </div>
@@ -164,7 +170,7 @@
                         <p class="text-xs mt-1">Please add fee names first before generating fees.</p>
                     </div>
                 @else
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" x-cloak>
                         @foreach($feeNames as $name)
                         <label class="cursor-pointer">
                             <input type="checkbox"
@@ -189,6 +195,18 @@
                                 >{{ $name->name }}</span>
                             </div>
                         </label>
+                        @endforeach
+                    </div>
+
+                    {{-- Static skeleton shown before Alpine hydrates --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" x-show="false" style="display: grid">
+                        @foreach($feeNames as $name)
+                        <div class="flex items-center gap-3 p-3.5 rounded-lg border bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700">
+                                <i class="fas fa-receipt text-xs"></i>
+                            </div>
+                            <span class="text-sm font-medium leading-tight text-gray-700 dark:text-gray-200">{{ $name->name }}</span>
+                        </div>
                         @endforeach
                     </div>
 
