@@ -635,13 +635,17 @@ select:focus {
 }
 
 .modal-input-premium.border-red-500,
-.modal-input-premium.border-red-400 {
+.modal-input-premium.border-red-400,
+.modal-input-premium.input-error {
     border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
 }
 
 .dark .modal-input-premium.border-red-500,
-.dark .modal-input-premium.border-red-400 {
+.dark .modal-input-premium.border-red-400,
+.dark .modal-input-premium.input-error {
     border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
 }
 
 /* Fee component card selected state - thin border */
