@@ -36,32 +36,18 @@
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-900 h-screen overflow-hidden transition-colors">
-    @php
-        $school = auth()->user()->school;
-        $currentAcademicYear = $school ? \App\Models\AcademicYear::where('school_id', $school->id)->where('is_current', true)->first() : null;
-
-        // If no current academic year set, try to get the most recent one
-        if (!$currentAcademicYear && $school) {
-            $currentAcademicYear = \App\Models\AcademicYear::where('school_id', $school->id)->orderBy('start_date', 'desc')->first();
-        }
-    @endphp
-
-    <div class="flex h-screen overflow-hidden" x-data="{ 
-        sidebarOpen: false, 
+    <div class="flex h-screen overflow-hidden" x-data="{
+        sidebarOpen: false,
         isMobile: window.innerWidth < 1024,
         sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
         scrollActiveItemIntoView() {
             if (this.sidebarCollapsed) return;
             const nav = document.querySelector('aside nav');
             const activeItem = nav ? nav.querySelector('a.text-white') : null;
-            if (nav && activeItem) {
-                activeItem.scrollIntoView({ block: 'nearest' });
-            }
+            if (nav && activeItem) activeItem.scrollIntoView({ block: 'nearest' });
         },
         init() {
-            if (this.isMobile) {
-                this.sidebarCollapsed = false;
-            }
+            if (this.isMobile) this.sidebarCollapsed = false;
             document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
             window.addEventListener('resize', () => {
                 this.isMobile = window.innerWidth < 1024;
@@ -72,11 +58,8 @@
                     this.sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
                     document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
                 }
-                if (!this.isMobile) {
-                    this.sidebarOpen = false;
-                }
+                if (!this.isMobile) this.sidebarOpen = false;
             });
-            // Remove no-transition after first paint so subsequent transitions are smooth
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 const aside = document.querySelector('aside');
                 if (aside) aside.classList.remove('no-transition');
@@ -87,9 +70,7 @@
             this.sidebarCollapsed = !this.sidebarCollapsed;
             localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
             document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
-            if (!this.sidebarCollapsed) {
-                this.$nextTick(() => this.scrollActiveItemIntoView());
-            }
+            if (!this.sidebarCollapsed) this.$nextTick(() => this.scrollActiveItemIntoView());
         }
     }">
         <!-- Mobile Sidebar Overlay -->
@@ -99,449 +80,14 @@
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
             class="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 lg:hidden" style="display: none;"></div>
 
-        <!-- Sidebar -->
-        <aside
-            class="fixed inset-y-0 left-0 z-50 bg-[#1a237e] text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
-            :style="(isMobile || sidebarOpen) ? 'width: 16rem;' : (sidebarCollapsed ? 'width: 5rem;' : 'width: 16rem;')" :class="{
-                   '-translate-x-full': !sidebarOpen, 
-                    'translate-x-0': sidebarOpen,
-                   'sidebar-collapsed': sidebarCollapsed && !isMobile,
-                   'mobile-open': sidebarOpen
-               }">
-            <!-- Logo Section -->
-            <div class="p-4 border-b border-[#283593] flex-shrink-0 relative group">
-                <div class="flex items-center justify-center mb-2">
-                    <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 logo-container"
-                        style="width: 4rem; height: 4rem;"
-                        :style="sidebarCollapsed ? 'width: 2.5rem; height: 2.5rem;' : 'width: 4rem; height: 4rem;'">
-                        @if($school && $school->logo)
-                            <img src="{{ asset('storage/' . $school->logo) }}" alt="{{ $school->name }}"
-                                class="rounded-full object-cover logo-img" style="width: 4rem; height: 4rem;"
-                                :style="sidebarCollapsed ? 'width: 2.5rem; height: 2.5rem;' : 'width: 4rem; height: 4rem;'">
-                        @else
-                            <i class="fas fa-book text-[#1a237e]" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
-                        @endif
-                    </div>
-                </div>
-
-                <div x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="sidebar-text">
-                    <h2 class="text-xs font-bold text-center leading-tight">
-                        {{ strtoupper($school->name ?? 'SCHOOL NAME') }}</h2>
-                    @if($school)
-                        <p class="text-xs text-indigo-100 text-center mt-1">{{ $school->city->name ?? '' }},
-                            {{ $school->state->name ?? '' }}</p>
-                    @endif
-                </div>
-
-                <!-- Toggle Button -->
-                <button @click="toggleSidebar()"
-                    class="absolute top-6 -right-4 w-8 h-8 flex items-center justify-center bg-teal-50 text-teal-600 rounded-full shadow-lg hover:bg-white hover:text-teal-700 transition-all duration-200 hidden lg:flex focus:outline-none z-50 border border-gray-200">
-                    <i class="fas fa-chevron-left" x-show="!sidebarCollapsed"></i>
-                    <i class="fas fa-chevron-right" x-show="sidebarCollapsed" style="display: none;"></i>
-                </button>
-            </div>
-
-            <!-- Session Info -->
-            <div class="px-4 py-2 bg-[#283593] text-xs flex-shrink-0 overflow-hidden whitespace-nowrap">
-                <p class="font-semibold sidebar-text" x-show="!sidebarCollapsed">SESSION:
-                    {{ $currentAcademicYear?->name ?? '2025 - 2026' }}</p>
-                <p class="font-semibold text-center" x-show="sidebarCollapsed && !isMobile" style="display: none;"
-                    :style="(sidebarCollapsed && !isMobile) ? 'display: block;' : 'display: none;'">
-                    {{ preg_replace('/^.*?(\d{2})[^\d]*(\d{2})$/', '$1-$2', $currentAcademicYear?->name ?? '25-26') }}
-                </p>
-            </div>
-
-            <!-- Navigation Menu - Scrollable -->
-            <!-- Navigation Menu - Scrollable -->
-            @php
-                $frontDeskOpen = request()->routeIs('receptionist.visitors.*') || request()->routeIs('receptionist.student-enquiries.*') || request()->routeIs('receptionist.student-registrations.*') || request()->routeIs('receptionist.admission.*');
-                $transportOpen = request()->routeIs('receptionist.vehicles.*') || request()->routeIs('receptionist.routes.*') || request()->routeIs('receptionist.bus-stops.*');
-                $hostelOpen = request()->routeIs('receptionist.hostels.*') || request()->routeIs('receptionist.hostel-floors.*') || request()->routeIs('receptionist.hostel-rooms.*') || request()->routeIs('receptionist.hostel-bed-assignments.*') || request()->routeIs('receptionist.hostel-attendance.*');
-                $reportOpen = request()->routeIs('receptionist.transport-attendance.month-wise-report') || request()->routeIs('receptionist.hostel-attendance.report');
-                $staffOpen = request()->routeIs('receptionist.staff.*');
-            @endphp
-            <nav class="flex-1 py-4 sidebar-scroll"
-                :class="{ 'overflow-y-auto': !sidebarCollapsed, 'overflow-visible': sidebarCollapsed }" x-data="{
-                    frontDeskOpen: {{ $frontDeskOpen ? 'true' : 'false' }},
-                    transportOpen: {{ $transportOpen ? 'true' : 'false' }},
-                    hostelOpen: {{ $hostelOpen ? 'true' : 'false' }},
-                    reportOpen: {{ $reportOpen ? 'true' : 'false' }},
-                    staffOpen: {{ $staffOpen ? 'true' : 'false' }}
-                 }">
-                <ul class="space-y-1 px-2">
-                    <!-- Dashboard -->
-                    <li>
-                        <a href="{{ route('receptionist.dashboard') }}"
-                            class="flex items-center px-4 py-2 rounded-lg {{ request()->routeIs('receptionist.dashboard') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}"
-                            :class="{ 'justify-center': sidebarCollapsed }">
-                            <i class="fas fa-tachometer-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                            <span x-show="!sidebarCollapsed" class="sidebar-text">Dashboard</span>
-                        </a>
-                    </li>
-
-                    <!-- Front Desk -->
-                    <li class="relative group">
-                        <button @click="sidebarCollapsed ? (frontDeskOpen = false) : (frontDeskOpen = !frontDeskOpen)"
-                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
-                            :class="{ 'justify-center': sidebarCollapsed }">
-                            <div class="flex items-center">
-                                <i class="fas fa-concierge-bell w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                <span x-show="!sidebarCollapsed">Front Desk</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform"
-                                :class="{ 'rotate-180': frontDeskOpen }" x-show="!sidebarCollapsed"></i>
-                        </button>
-                        <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && frontDeskOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$frontDeskOpen) x-cloak @endif>
-                            <li>
-                                <a href="{{ route('receptionist.visitors.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-user-friends w-4"></i>
-                                    <span>Visitor List</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.student-enquiries.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-question-circle w-4"></i>
-                                    <span>Student Enquiry</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.student-registrations.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-clipboard-list w-4"></i>
-                                    <span>Student Registration</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.admission.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.admission.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-user-graduate w-4"></i>
-                                    <span>Admission List</span>
-                                </a>
-                            </li>
-                        </ul>
-                        <!-- Collapsed Menu -->
-                        <ul x-show="sidebarCollapsed"
-                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
-                            style="display: none;">
-                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
-                                Front Desk
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.visitors.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.visitors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-user-friends w-4"></i>
-                                    <span>Visitor List</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.student-enquiries.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-enquiries.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-question-circle w-4"></i>
-                                    <span>Student Enquiry</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.student-registrations.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.student-registrations.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-clipboard-list w-4"></i>
-                                    <span>Student Registration</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.admission.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.admission.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-user-graduate w-4"></i>
-                                    <span>Admission List</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <!-- Transport Management -->
-                    <li class="relative group">
-                        <button @click="sidebarCollapsed ? (transportOpen = false) : (transportOpen = !transportOpen)"
-                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
-                            :class="{ 'justify-center': sidebarCollapsed }">
-                            <div class="flex items-center">
-                                <i class="fas fa-bus w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                <span x-show="!sidebarCollapsed">Transport Management</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform"
-                                :class="{ 'rotate-180': transportOpen }" x-show="!sidebarCollapsed"></i>
-                        </button>
-                        <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && transportOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$transportOpen) x-cloak @endif>
-                            <li>
-                                <a href="{{ route('receptionist.routes.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-route w-4"></i>
-                                    <span>Routes</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.vehicles.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bus-alt w-4"></i>
-                                    <span>Vehicles</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.bus-stops.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.bus-stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-map-marker-alt w-4"></i>
-                                    <span>Bus Stops</span>
-                                </a>
-                            </li>
-                        </ul>
-                        <!-- Collapsed Menu -->
-                        <ul x-show="sidebarCollapsed"
-                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
-                            style="display: none;">
-                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
-                                Transport Management
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.routes.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.routes.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-route w-4"></i>
-                                    <span>Routes</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.vehicles.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.vehicles.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bus-alt w-4"></i>
-                                    <span>Vehicles</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.bus-stops.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.bus-stops.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-map-marker-alt w-4"></i>
-                                    <span>Bus Stops</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <!-- Hostel Management -->
-                    <li class="relative group">
-                        <button @click="sidebarCollapsed ? (hostelOpen = false) : (hostelOpen = !hostelOpen)"
-                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
-                            :class="{ 'justify-center': sidebarCollapsed }">
-                            <div class="flex items-center">
-                                <i class="fas fa-building w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                <span x-show="!sidebarCollapsed">Hostel Management</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform"
-                                :class="{ 'rotate-180': hostelOpen }" x-show="!sidebarCollapsed"></i>
-                        </button>
-                        <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && hostelOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$hostelOpen) x-cloak @endif>
-                            <li>
-                                <a href="{{ route('receptionist.hostels.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostels.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-hotel w-4"></i>
-                                    <span>Hostel List</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-floors.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-floors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-layer-group w-4"></i>
-                                    <span>Hostel Floor</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-rooms.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-rooms.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-door-open w-4"></i>
-                                    <span>Hostel Room</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-bed-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bed w-4"></i>
-                                    <span>Bed Assignment</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-attendance.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-clipboard-check w-4"></i>
-                                    <span>Hostel Attendance</span>
-                                </a>
-                            </li>
-                        </ul>
-                        <!-- Collapsed Menu -->
-                        <ul x-show="sidebarCollapsed"
-                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
-                            style="display: none;">
-                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
-                                Hostel Management
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostels.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostels.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-hotel w-4"></i>
-                                    <span>Hostel List</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-floors.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-floors.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-layer-group w-4"></i>
-                                    <span>Hostel Floor</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-rooms.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-rooms.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-door-open w-4"></i>
-                                    <span>Hostel Room</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-bed-assignments.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-bed-assignments.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bed w-4"></i>
-                                    <span>Bed Assignment</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-attendance.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-clipboard-check w-4"></i>
-                                    <span>Hostel Attendance</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <!-- Report -->
-                    <li class="relative group">
-                        <button @click="sidebarCollapsed ? (reportOpen = false) : (reportOpen = !reportOpen)"
-                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
-                            :class="{ 'justify-center': sidebarCollapsed }">
-                            <div class="flex items-center">
-                                <i class="fas fa-chart-bar w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                <span x-show="!sidebarCollapsed">Report</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform"
-                                :class="{ 'rotate-180': reportOpen }" x-show="!sidebarCollapsed"></i>
-                        </button>
-                        <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && reportOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$reportOpen) x-cloak @endif>
-                            <li>
-                                <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bus w-4"></i>
-                                    <span>Transport Attendance</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-attendance.report') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bed w-4"></i>
-                                    <span>Hostel Attendance</span>
-                                </a>
-                            </li>
-                        </ul>
-                        <!-- Collapsed Menu -->
-                        <ul x-show="sidebarCollapsed"
-                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
-                            style="display: none;">
-                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
-                                Report
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.transport-attendance.month-wise-report') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.transport-attendance.month-wise-report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bus w-4"></i>
-                                    <span>Transport Attendance</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.hostel-attendance.report') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.hostel-attendance.report') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-bed w-4"></i>
-                                    <span>Hostel Attendance</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <!-- Staff -->
-                    <li class="relative group">
-                        <button @click="sidebarCollapsed ? (staffOpen = false) : (staffOpen = !staffOpen)"
-                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593]"
-                            :class="{ 'justify-center': sidebarCollapsed }">
-                            <div class="flex items-center">
-                                <i class="fas fa-users w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                <span x-show="!sidebarCollapsed">Staff</span>
-                            </div>
-                            <i class="fas fa-chevron-down text-xs transition-transform"
-                                :class="{ 'rotate-180': staffOpen }" x-show="!sidebarCollapsed"></i>
-                        </button>
-                        <!-- Expanded Menu -->
-                        <ul x-show="!sidebarCollapsed && staffOpen" x-collapse class="ml-4 mt-1 space-y-1 sidebar-submenu" @if(!$staffOpen) x-cloak @endif>
-                            <li>
-                                <a href="{{ route('receptionist.staff.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-list w-4"></i>
-                                    <span>Staff List</span>
-                                </a>
-                            </li>
-                        </ul>
-                        <!-- Collapsed Menu -->
-                        <ul x-show="sidebarCollapsed"
-                            class="absolute left-full top-0 w-56 bg-[#1a237e] p-2 rounded-r-lg shadow-xl z-50 hidden group-hover:!block border-l border-blue-800"
-                            style="display: none;">
-                            <li class="px-4 py-2 text-xs font-bold text-white border-b border-blue-800 mb-2">
-                                Staff
-                            </li>
-                            <li>
-                                <a href="{{ route('receptionist.staff.index') }}"
-                                    class="flex items-center gap-3 px-4 py-2 rounded-lg text-sm {{ request()->routeIs('receptionist.staff.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
-                                    <i class="fas fa-list w-4"></i>
-                                    <span>Staff List</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    <!-- Logout -->
-                    <li>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit"
-                                class="w-full flex items-center px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] text-left"
-                                :class="{ 'justify-center': sidebarCollapsed }">
-                                <i class="fas fa-sign-out-alt w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
-                                <span x-show="!sidebarCollapsed">LogOut</span>
-                            </button>
-                        </form>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- Footer -->
-            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center">
-                <p>{{ date('Y') }} ©</p>
-            </div>
-        </aside>
+        @include('partials.receptionist-sidebar')
 
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Header -->
             <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
                 <div class="flex items-center justify-between px-4 sm:px-6 py-4">
-                    <!-- Left: Menu -->
+                    <!-- Left: Mobile menu toggle -->
                     <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
                         <button @click="sidebarOpen = !sidebarOpen"
                             class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 lg:hidden focus:outline-none transition-colors">
@@ -552,15 +98,13 @@
                     <!-- Right: Actions & User -->
                     <div class="flex items-center space-x-2 sm:space-x-4" x-data="headerActions">
 
-                        <!-- Bookmark (Saved List) -->
+                        <!-- Saved Pages -->
                         <div class="relative hidden md:block">
                             <button @click="showFavorites = !showFavorites"
-                                class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors" title="Saved Pages">
-                                <i class="far fa-bookmark text-xl" x-cloak></i>
-                                <i class="text-xl far fa-bookmark ssr-icon-fallback"></i>
+                                class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors"
+                                title="Saved Pages">
+                                <i class="far fa-bookmark text-xl"></i>
                             </button>
-
-                            <!-- Favorites Dropdown -->
                             <div x-show="showFavorites" @click.outside="showFavorites = false"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 scale-95"
@@ -575,17 +119,12 @@
                                 </div>
                                 <div class="max-h-64 overflow-y-auto">
                                     <template x-if="favorites.length === 0">
-                                        <div class="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-                                            No saved pages yet.
-                                        </div>
+                                        <div class="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">No saved pages yet.</div>
                                     </template>
                                     <template x-for="fav in favorites" :key="fav.id">
                                         <div class="group flex items-center justify-between px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/60">
-                                            <a :href="fav.url"
-                                                class="text-sm text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 truncate flex-1"
-                                                x-text="fav.title"></a>
-                                            <button @click="removeFavorite(fav.id)"
-                                                class="ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <a :href="fav.url" class="text-sm text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 truncate flex-1" x-text="fav.title"></a>
+                                            <button @click="removeFavorite(fav.id)" class="ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <i class="fas fa-times text-xs"></i>
                                             </button>
                                         </div>
@@ -598,35 +137,28 @@
                         <button @click="toggleFullscreen()"
                             class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden md:block"
                             title="Toggle Fullscreen">
-                            <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
-                            <i class="text-xl fas fa-expand ssr-icon-fallback"></i>
+                            <i class="text-xl fas fa-expand"></i>
                         </button>
 
                         <!-- Dark Mode -->
                         <button @click="toggleDarkMode()"
                             class="transition-colors hidden sm:block"
-                            :class="isDark ? 'text-yellow-400 dark:text-yellow-400 hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
+                            :class="isDark ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
                             title="Toggle Dark Mode">
                             <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
                             <i class="text-xl far fa-moon" x-show="false" style="display:inline-block" id="dark-mode-fallback-icon"></i>
                         </button>
                         <script>if(localStorage.getItem('darkMode')==='true'||(!('darkMode'in localStorage)&&window.matchMedia('(prefers-color-scheme: dark)').matches)){var _d=document.getElementById('dark-mode-fallback-icon');if(_d){_d.className='text-xl fas fa-sun';}}</script>
-                        </button>
 
                         <!-- User Dropdown -->
                         <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open"
-                                class="flex items-center space-x-1 sm:space-x-2 focus:outline-none">
-                                <div
-                                    class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                            <button @click="open = !open" class="flex items-center space-x-1 sm:space-x-2 focus:outline-none">
+                                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">
                                     <i class="fas fa-user text-sm"></i>
                                 </div>
-                                <span
-                                    class="text-gray-700 dark:text-gray-200 font-medium hidden sm:inline text-sm">{{ Auth::user()->name ?? 'Receptionist' }}</span>
+                                <span class="text-gray-700 dark:text-gray-200 font-medium hidden sm:inline text-sm">{{ Auth::user()->name ?? 'Receptionist' }}</span>
                                 <i class="fas fa-chevron-down text-gray-500 dark:text-gray-400 text-xs hidden sm:inline"></i>
                             </button>
-
-                            <!-- Dropdown Menu -->
                             <div x-show="open" x-cloak @click.outside="open = false"
                                 x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 scale-95"
@@ -635,18 +167,14 @@
                                 x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
                                 class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                                <a href="#"
-                                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
-                                    <i class="fas fa-user-circle mr-3 text-gray-500 dark:text-gray-400"></i>
-                                    Profile
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
+                                    <i class="fas fa-user-circle mr-3 text-gray-500 dark:text-gray-400"></i>Profile
                                 </a>
                                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit"
-                                        class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center">
-                                        <i class="fas fa-sign-out-alt mr-3"></i>
-                                        Logout
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center">
+                                        <i class="fas fa-sign-out-alt mr-3"></i>Logout
                                     </button>
                                 </form>
                             </div>
@@ -662,119 +190,47 @@
         </div>
     </div>
 
-
-    <!-- jQuery (required for Select2) -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    <!-- Global Select2 Initialization -->
     <script>
-        // Track initialized selects to prevent double initialization
         window.select2Initialized = window.select2Initialized || new Set();
-
-        // Helper function to safely initialize Select2
         function initSelect2($select) {
-            // Skip if already initialized or should be excluded
-            if ($select.hasClass('select2-hidden-accessible') ||
-                $select.hasClass('no-select2') ||
-                $select.is('[data-table-select]')) {
-                return false;
-            }
-
-            // Check if this select has already been processed
+            if ($select.hasClass('select2-hidden-accessible') || $select.hasClass('no-select2') || $select.is('[data-table-select]')) return false;
             const selectId = $select.attr('id') || $select.attr('name') || $select[0].outerHTML;
-            if (window.select2Initialized.has(selectId)) {
-                return false;
-            }
-
-            // Mark as initialized before actually initializing (prevents race conditions)
+            if (window.select2Initialized.has(selectId)) return false;
             window.select2Initialized.add(selectId);
-
-            // Initialize Select2
             try {
                 $select.select2({
-                    placeholder: function () {
-                        return $(this).data('placeholder') || 'Select an option';
-                    },
-                    allowClear: $select.data("allow-clear") !== undefined ? $select.data("allow-clear") : false,
-                    width: "100%"
+                    placeholder: function() { return $(this).data('placeholder') || 'Select an option'; },
+                    allowClear: $select.data('allow-clear') !== undefined ? $select.data('allow-clear') : false,
+                    width: '100%'
                 });
-
-                // Global rule: Default Country to India (102) if empty or auto-defaulted
                 if ($select.attr('name') && $select.attr('name').includes('country_id')) {
-                    let hasExplicitSelection = $select.find('option[selected]').length > 0;
-                    if (!hasExplicitSelection || !$select.val() || $select.val() === "") {
-                        setTimeout(() => $select.val('102').trigger('change'), 50);
-                    }
+                    let hasExplicit = $select.find('option[selected]').length > 0;
+                    if (!hasExplicit || !$select.val() || $select.val() === '') setTimeout(() => $select.val('102').trigger('change'), 50);
                 }
-
                 return true;
-            } catch (e) {
-                // If initialization fails, remove from set so it can be retried
-                window.select2Initialized.delete(selectId);
-                console.warn('Select2 initialization failed:', e);
-                return false;
-            }
+            } catch(e) { window.select2Initialized.delete(selectId); return false; }
         }
-
-        $(document).ready(function () {
-            // Initialize Select2 immediately on load
-            $('select').each(function () {
-                initSelect2($(this));
-            });
-
-            // Debounce function to prevent multiple rapid initializations
+        $(document).ready(function() {
+            $('select').each(function() { initSelect2($(this)); });
             let initTimeout;
-
-            function debouncedInitSelect2($selects) {
-                clearTimeout(initTimeout);
-                initTimeout = setTimeout(function () {
-                    $selects.each(function () {
-                        initSelect2($(this));
-                    });
-                }, 50); // Reduced delay for snappier UI
-            }
-
-            // Re-initialize Select2 when new content is loaded dynamically
-            const observer = new MutationObserver(function (mutations) {
+            const observer = new MutationObserver(function(mutations) {
                 let newSelects = [];
-                mutations.forEach(function (mutation) {
+                mutations.forEach(function(mutation) {
                     if (mutation.addedNodes.length) {
-                        $(mutation.addedNodes).find('select').each(function () {
-                            const $select = $(this);
-                            // Skip if already initialized, excluded, or inside x-cloak
-                            if (!$select.hasClass('select2-hidden-accessible') &&
-                                !$select.hasClass('no-select2') &&
-                                !$select.is('[data-table-select]') &&
-                                $select.closest('[x-cloak]').length === 0) {
-                                newSelects.push(this);
-                            }
+                        $(mutation.addedNodes).find('select').each(function() {
+                            const $s = $(this);
+                            if (!$s.hasClass('select2-hidden-accessible') && !$s.hasClass('no-select2') && !$s.is('[data-table-select]') && $s.closest('[x-cloak]').length === 0) newSelects.push(this);
                         });
                     }
                 });
-
-                if (newSelects.length > 0) {
-                    debouncedInitSelect2($(newSelects));
-                }
+                if (newSelects.length > 0) { clearTimeout(initTimeout); initTimeout = setTimeout(() => $(newSelects).each(function() { initSelect2($(this)); }), 50); }
             });
-
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        });
-    </script>
-
-    <script>
-        // Listen for fullscreen changes (e.g., when user presses ESC)
-        document.addEventListener('fullscreenchange', function () {
-            // This will be handled by Alpine.js state in the header
-            const event = new CustomEvent('fullscreen-changed', {
-                detail: { isFullscreen: !!document.fullscreenElement }
-            });
-            document.dispatchEvent(event);
+            observer.observe(document.body, { childList: true, subtree: true });
         });
     </script>
 
@@ -782,99 +238,47 @@
 
     <x-delete-confirmation />
 
-    <!-- Alpine.js is now loaded in <head> with defer for earlier initialization -->
-
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data("headerActions", () => ({
+            Alpine.data('headerActions', () => ({
                 isFullscreen: false,
-                isDark: localStorage.getItem("darkMode") === "true",
-                isFavorite: false,
+                isDark: localStorage.getItem('darkMode') === 'true',
                 favorites: [],
                 showFavorites: false,
 
                 init() {
                     this.$el.querySelectorAll('.ssr-icon-fallback').forEach(el => el.remove());
                     this.loadFavorites();
-                    this.checkFavorite();
-
-                    // Listen for fullscreen changes
-                    document.addEventListener('fullscreenchange', () => {
-                        this.isFullscreen = !!document.fullscreenElement;
-                    });
+                    document.addEventListener('fullscreenchange', () => { this.isFullscreen = !!document.fullscreenElement; });
                 },
 
                 toggleFullscreen() {
                     if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(err => {
-                            console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-                        });
-                    } else {
-                        if (document.exitFullscreen) {
-                            document.exitFullscreen();
-                        }
+                        document.documentElement.requestFullscreen().catch(err => console.error(err));
+                    } else if (document.exitFullscreen) {
+                        document.exitFullscreen();
                     }
                 },
 
                 toggleDarkMode() {
                     this.isDark = !this.isDark;
-                    localStorage.setItem("darkMode", this.isDark);
-                    if (this.isDark) {
-                        document.documentElement.classList.add("dark");
-                    } else {
-                        document.documentElement.classList.remove("dark");
-                    }
-                },
-
-                toggleFavorite() {
-                    const currentUrl = window.location.href;
-                    const currentTitle = document.title;
-
-                    if (this.isFavorite) {
-                        // Remove from favorites
-                        this.favorites = this.favorites.filter(f => f.url !== currentUrl);
-                        this.isFavorite = false;
-                    } else {
-                        // Add to favorites
-                        this.favorites.push({
-                            id: Date.now(),
-                            title: currentTitle,
-                            url: currentUrl
-                        });
-                        this.isFavorite = true;
-                    }
-
-                    // Save to localStorage
-                    localStorage.setItem("receptionist_favorites", JSON.stringify(this.favorites));
-                    this.checkFavorite();
-                },
-
-                checkFavorite() {
-                    const currentUrl = window.location.href;
-                    this.isFavorite = this.favorites.some(f => f.url === currentUrl);
+                    localStorage.setItem('darkMode', this.isDark);
+                    document.documentElement.classList.toggle('dark', this.isDark);
                 },
 
                 loadFavorites() {
-                    try {
-                        const stored = localStorage.getItem("receptionist_favorites");
-                        this.favorites = stored ? JSON.parse(stored) : [];
-                    } catch (error) {
-                        console.error("Error loading favorites:", error);
-                        this.favorites = [];
-                    }
+                    try { this.favorites = JSON.parse(localStorage.getItem('receptionist_favorites') || '[]'); }
+                    catch(e) { this.favorites = []; }
                 },
 
                 removeFavorite(id) {
                     this.favorites = this.favorites.filter(f => f.id !== id);
-                    localStorage.setItem("receptionist_favorites", JSON.stringify(this.favorites));
-                    this.checkFavorite();
+                    localStorage.setItem('receptionist_favorites', JSON.stringify(this.favorites));
                 }
             }));
         });
     </script>
-    <!-- Global Form Validation Error Handler -->
     <script src="{{ asset('js/form-validation-handler.js') }}"></script>
-    <!-- Location Cascade Handler -->
     <script src="{{ asset('js/location-cascade.js') }}"></script>
     <x-toast />
 </body>
