@@ -11,11 +11,11 @@ return new class extends Migration
         Schema::create('fees', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained('schools')->onDelete('cascade');
-            $table->foreignId('student_id')->nullable()->constrained('students')->onDelete('cascade');
+            $table->foreignId('student_id')->nullable()->constrained('students')->onDelete('restrict');
             $table->unsignedBigInteger('registration_id')->nullable();
             $table->foreignId('academic_year_id')->constrained('academic_years')->onDelete('cascade');
-            $table->foreignId('fee_type_id')->constrained('fee_types')->onDelete('cascade');
-            $table->foreignId('fee_name_id')->nullable()->constrained('fee_names')->onDelete('cascade');
+            $table->foreignId('fee_type_id')->constrained('fee_types')->onDelete('restrict');
+            $table->foreignId('fee_name_id')->nullable()->constrained('fee_names')->onDelete('restrict');
             $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
             $table->string('bill_no')->unique();
             $table->string('fee_period');
@@ -34,6 +34,10 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
+            $table->unique(
+                ['school_id', 'student_id', 'academic_year_id', 'fee_type_id', 'fee_name_id', 'fee_period'],
+                'uq_fees_student_period'
+            );
             $table->index('school_id');
             $table->index('student_id');
             $table->index('bill_no');

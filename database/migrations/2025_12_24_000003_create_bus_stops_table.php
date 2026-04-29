@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('bus_stops', function (Blueprint $table) {
@@ -24,12 +21,11 @@ return new class extends Migration
             $table->decimal('charge_per_month', 10, 2)->nullable();
             $table->string('area_pin_code')->nullable();
             $table->timestamps();
+
+            $table->index(['school_id', 'route_id'], 'bs_school_route_idx');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('bus_stops');

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('online_transactions', function (Blueprint $table) {
@@ -18,20 +15,20 @@ return new class extends Migration
             $table->foreignId('fee_id')->constrained()->cascadeOnDelete();
             $table->decimal('amount', 10, 2);
             $table->string('gateway_name')->default('razorpay');
-            $table->string('gateway_order_id')->nullable()->index();
-            $table->string('gateway_transaction_id')->nullable()->index();
-            $table->string('status')->default('pending'); // pending, success, failed
-            $table->json('payload')->nullable(); // Store webhook responses
+            $table->string('gateway_order_id')->nullable();
+            $table->string('gateway_transaction_id')->nullable();
+            $table->string('status')->default('pending')->comment('pending, success, failed');
+            $table->json('payload')->nullable();
             $table->timestamp('failed_at')->nullable();
-            $table->string('error_message')->nullable();
+            $table->text('error_message')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->unique('gateway_order_id', 'uq_online_txn_order_id');
+            $table->unique('gateway_transaction_id', 'uq_online_txn_payment_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('online_transactions');

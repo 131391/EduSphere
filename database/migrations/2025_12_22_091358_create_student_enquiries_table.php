@@ -15,7 +15,6 @@ return new class extends Migration
             $table->foreignId('academic_year_id')->nullable()->constrained();
             $table->foreignId('class_id')->nullable()->constrained('classes');
 
-            // Enquiry Form
             $table->string('subject_name')->nullable();
             $table->string('student_name');
             $table->integer('gender')->nullable()->comment('1=Male, 2=Female, 3=Other');
@@ -70,9 +69,9 @@ return new class extends Migration
             $table->decimal('annual_income', 12, 2)->nullable();
             $table->integer('no_of_brothers')->default(0);
             $table->integer('no_of_sisters')->default(0);
-            $table->enum('minority', ['Yes', 'No'])->nullable();
-            $table->enum('transport_facility', ['Yes', 'No'])->nullable();
-            $table->enum('hostel_facility', ['Yes', 'No'])->nullable();
+            $table->tinyInteger('minority')->default(0)->comment('0=No, 1=Yes');
+            $table->tinyInteger('transport_facility')->default(0)->comment('0=No, 1=Yes');
+            $table->tinyInteger('hostel_facility')->default(0)->comment('0=No, 1=Yes');
             $table->string('previous_class')->nullable();
             $table->text('identity_marks')->nullable();
             $table->text('permanent_address')->nullable();
@@ -89,10 +88,8 @@ return new class extends Migration
             $table->string('mother_photo')->nullable();
             $table->string('student_photo')->nullable();
 
-            // Status & Dates
             $table->tinyInteger('form_status')->default(1)->comment('1=Pending, 2=Completed, 3=Cancelled, 4=Admitted');
             $table->date('enquiry_date');
-
             $table->timestamps();
 
             $table->index('enquiry_no');

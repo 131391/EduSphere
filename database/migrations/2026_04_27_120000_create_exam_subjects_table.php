@@ -12,7 +12,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('exam_id')->constrained('exams')->onDelete('cascade');
             $table->foreignId('subject_id')->nullable()->constrained('subjects')->nullOnDelete();
+            $table->foreignId('teacher_id')->nullable()->constrained('teachers')->nullOnDelete();
             $table->string('subject_name');
+            $table->date('exam_date')->nullable();
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
+            $table->string('room_no')->nullable();
             $table->unsignedInteger('full_marks')->default(100);
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('vehicles', function (Blueprint $table) {
@@ -16,12 +13,12 @@ return new class extends Migration
             $table->foreignId('school_id')->constrained()->onDelete('cascade');
             $table->string('registration_no')->nullable();
             $table->string('vehicle_no')->nullable();
-            $table->tinyInteger('fuel_type')->nullable(); // 1=Diesel, 2=Petrol, 3=CNG, 4=Electric
+            $table->tinyInteger('fuel_type')->nullable()->comment('1=Diesel, 2=Petrol, 3=CNG, 4=Electric');
             $table->integer('capacity')->nullable();
             $table->integer('initial_reading')->nullable();
             $table->string('engine_no')->nullable();
             $table->string('chassis_no')->nullable();
-            $table->string('vehicle_type')->nullable(); // Bus, Van, Car, etc.
+            $table->string('vehicle_type')->nullable();
             $table->string('model_no')->nullable();
             $table->date('date_of_purchase')->nullable();
             $table->string('vehicle_group')->nullable();
@@ -29,17 +26,14 @@ return new class extends Migration
             $table->string('tracking_url')->nullable();
             $table->year('manufacturing_year')->nullable();
             $table->date('vehicle_create_date')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            // Indexes
             $table->index('school_id');
             $table->index('registration_no');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('vehicles');

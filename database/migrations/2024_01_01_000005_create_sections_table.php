@@ -12,9 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('school_id')->constrained('schools')->onDelete('cascade');
             $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
-            $table->string('name'); // e.g., "A", "B", "C"
+            $table->string('name');
             $table->integer('capacity')->default(50);
             $table->integer('current_strength')->default(0);
+            $table->boolean('is_available')->default(true);
             $table->timestamps();
             $table->softDeletes();
 
@@ -29,4 +30,3 @@ return new class extends Migration
         Schema::dropIfExists('sections');
     }
 };
-

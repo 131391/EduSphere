@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('transport_routes', function (Blueprint $table) {
@@ -17,18 +14,14 @@ return new class extends Migration
             $table->string('route_name');
             $table->foreignId('vehicle_id')->nullable()->constrained('vehicles')->onDelete('set null');
             $table->date('route_create_date')->nullable();
-            $table->tinyInteger('status')->default(1); // 1=active, 0=inactive
+            $table->tinyInteger('status')->default(1)->comment('1=Active, 0=Inactive');
             $table->timestamps();
 
-            // Indexes
-            $table->index('school_id');
             $table->index('vehicle_id');
+            $table->index(['school_id', 'status'], 'tr_school_status_idx');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('transport_routes');

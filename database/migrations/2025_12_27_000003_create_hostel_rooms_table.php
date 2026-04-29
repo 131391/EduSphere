@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('hostel_rooms', function (Blueprint $table) {
@@ -17,6 +14,7 @@ return new class extends Migration
             $table->foreignId('hostel_id')->constrained('hostels')->onDelete('cascade');
             $table->foreignId('hostel_floor_id')->constrained('hostel_floors')->onDelete('cascade');
             $table->string('room_name');
+            $table->integer('no_of_beds')->default(2);
             $table->tinyInteger('ac')->default(0)->comment('0=No, 1=Yes');
             $table->tinyInteger('cooler')->default(0)->comment('0=No, 1=Yes');
             $table->tinyInteger('fan')->default(0)->comment('0=No, 1=Yes');
@@ -31,12 +29,8 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('hostel_rooms');
     }
 };
-

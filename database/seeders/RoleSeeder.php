@@ -50,6 +50,12 @@ class RoleSeeder extends Seeder
                 'guard_name' => 'web',
                 'description' => 'Parent/guardian with access to their children\'s information',
             ],
+            [
+                'name' => 'librarian',
+                'slug' => 'librarian',
+                'guard_name' => 'web',
+                'description' => 'Library staff with full library management access',
+            ],
         ];
 
         foreach ($roles as $role) {

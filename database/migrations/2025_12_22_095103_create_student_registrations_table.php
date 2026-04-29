@@ -128,10 +128,22 @@ return new class extends Migration
             $table->index('registration_date');
             $table->index('admission_status');
         });
+
+        // Add the deferred FK from fees.registration_id now that student_registrations exists
+        Schema::table('fees', function (Blueprint $table) {
+            $table->foreign('registration_id')
+                ->references('id')
+                ->on('student_registrations')
+                ->onDelete('set null');
+        });
     }
 
     public function down(): void
     {
+        Schema::table('fees', function (Blueprint $table) {
+            $table->dropForeign(['registration_id']);
+        });
+
         Schema::dropIfExists('student_registrations');
     }
 };

@@ -23,7 +23,10 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['student_id', 'academic_year_id']);
+            $table->index('student_id', 'sta_student_id_idx');
+            $table->index(['school_id', 'status', 'academic_year_id'], 'sta_school_status_year_idx');
+            $table->index(['vehicle_id', 'academic_year_id', 'status'], 'sta_vehicle_year_status_idx');
+            $table->index(['route_id', 'academic_year_id', 'status'], 'sta_route_year_status_idx');
         });
     }
 

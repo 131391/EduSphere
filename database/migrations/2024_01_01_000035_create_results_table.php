@@ -16,10 +16,13 @@ return new class extends Migration
             $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
             $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
             $table->foreignId('academic_year_id')->constrained('academic_years')->onDelete('cascade');
-            $table->decimal('marks_obtained', 5, 2)->default(0);
-            $table->decimal('total_marks', 5, 2);
+            $table->decimal('marks_obtained', 8, 2)->default(0);
+            $table->decimal('total_marks', 8, 2);
             $table->decimal('percentage', 5, 2)->nullable();
             $table->string('grade')->nullable();
+            $table->boolean('is_absent')->default(false);
+            $table->foreignId('entered_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('locked_at')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
             $table->softDeletes();

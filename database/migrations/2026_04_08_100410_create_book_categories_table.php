@@ -14,7 +14,9 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
+            $table->unique(['school_id', 'name'], 'book_categories_school_name_unique');
             $table->index('school_id');
         });
     }
