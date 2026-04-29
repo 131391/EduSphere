@@ -19,8 +19,30 @@ class SchoolSettingsController extends TenantController
     {
         $school = $this->getSchool();
         $this->authorize('viewSettings', $school);
-        $countries = app(\App\Services\LocationService::class)->getCountries();
-        return view('school.settings.basic-info', compact('school', 'countries'));
+        $locationService = app(\App\Services\LocationService::class);
+        $countries = $locationService->getCountries();
+
+        $selectedCountry = old('country_id', $school->country_id);
+        $selectedState = old('state_id', $school->state_id);
+        $selectedCity = old('city_id', $school->city_id);
+
+        if (!$selectedCountry) {
+            $india = collect($countries)->firstWhere('name', 'India');
+            $selectedCountry = $india['id'] ?? null;
+        }
+
+        $states = $selectedCountry ? $locationService->getStates($selectedCountry) : [];
+        $cities = $selectedState ? $locationService->getCities($selectedState) : [];
+
+        return view('school.settings.basic-info', compact(
+            'school',
+            'countries',
+            'states',
+            'cities',
+            'selectedCountry',
+            'selectedState',
+            'selectedCity'
+        ));
     }
 
     public function updateBasicInfo(Request $request)

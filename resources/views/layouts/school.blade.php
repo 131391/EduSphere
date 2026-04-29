@@ -32,7 +32,7 @@
     @include('partials.sidebar-scripts')
 </head>
 
-<body class="bg-gray-100 dark:bg-gray-900 h-screen overflow-hidden transition-colors">
+<body class="bg-gray-100 dark:bg-gray-900 h-screen overflow-hidden">
     <div class="flex h-screen overflow-hidden" x-data="{ 
         sidebarOpen: false, 
         isMobile: window.innerWidth < 1024,
@@ -91,7 +91,7 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Header -->
-            <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
+            <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between px-4 sm:px-6 py-4">
                     <!-- Left: Menu -->
                     <div class="flex items-center space-x-3 sm:space-x-4 flex-1">
@@ -189,7 +189,7 @@
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 transition-colors">
+            <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
                 @yield('content')
             </main>
         </div>
@@ -322,7 +322,7 @@
         });
     </script>
     <script src="{{ asset('js/form-validation-handler.js') }}"></script>
-    <script src="{{ asset('js/location-cascade.js') }}"></script>
+    <script src="{{ asset('js/location-cascade.js') }}?v={{ filemtime(public_path('js/location-cascade.js')) }}"></script>
     <x-toast />
 </body>
 

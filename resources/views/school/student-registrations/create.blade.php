@@ -434,7 +434,7 @@ function registrationManagement() {
             const fd = new FormData();
             fd.append('_token', document.querySelector('input[name="_token"]').value);
 
-            // Scalar fields from Alpine formData — skip address location IDs (managed by location-selector.js DOM)
+            // Scalar fields from Alpine formData — skip address location IDs (managed by the location cascade DOM)
             const locationFields = new Set(['permanent_country_id','permanent_state_id','permanent_city_id',
                                             'correspondence_country_id','correspondence_state_id','correspondence_city_id']);
             Object.entries(this.formData).forEach(([key, value]) => {
@@ -443,7 +443,7 @@ function registrationManagement() {
                 fd.append(key, value === true ? '1' : value === false ? '0' : value);
             });
 
-            // Address location fields: always read from DOM (location-selector.js is authoritative)
+            // Address location fields: always read from DOM (the location cascade is authoritative)
             locationFields.forEach(name => {
                 const el = document.querySelector(`[name="${name}"]`);
                 if (el && el.value) fd.append(name, el.value);

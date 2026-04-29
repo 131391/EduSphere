@@ -1,5 +1,5 @@
 {{-- Step 4: Address --}}
-{{-- NOTE: rendered with x-show (not x-if) in parent so location-selector.js DOM stays alive --}}
+{{-- NOTE: rendered with x-show (not x-if) in parent so the location cascade DOM stays alive --}}
 
 {{-- Permanent Address --}}
 <div class="mb-8">

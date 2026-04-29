@@ -45,7 +45,6 @@ class LocationCascade {
                 const container = countrySelect.closest('.grid') || countrySelect.closest('.fieldset') || countrySelect.closest('form') || document.body;
                 const stateSelect = container.querySelector('[data-state-select]');
                 const citySelect = container.querySelector('[data-city-select]');
-
                 if (!stateSelect || !citySelect) return;
 
                 // Mark as initialized
@@ -118,6 +117,7 @@ class LocationCascade {
                             }
                         }
                     }, 300);
+
                 };
 
                 syncChain();

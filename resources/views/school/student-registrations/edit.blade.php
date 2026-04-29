@@ -341,7 +341,7 @@ function registrationManagement() {
             fd.append('_token', document.querySelector('input[name="_token"]').value);
             fd.append('_method', 'PUT');
 
-            // Skip location fields from formData — read exclusively from DOM (location-selector.js is authoritative)
+            // Skip location fields from formData — read exclusively from DOM (the location cascade is authoritative)
             const locationFields = new Set(['permanent_country_id','permanent_state_id','permanent_city_id',
                                             'correspondence_country_id','correspondence_state_id','correspondence_city_id']);
             Object.entries(this.formData).forEach(([key, value]) => {

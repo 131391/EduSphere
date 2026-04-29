@@ -3,7 +3,7 @@
 @section('title', 'Basic Information - ' . $school->name)
 
 @section('content')
-<div class="w-full space-y-6 animate-in fade-in duration-500"
+<div class="w-full space-y-6"
      x-data="basicInfoSettings()">
 
     {{-- Page Header --}}
@@ -177,9 +177,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <x-location-selector
                         :countries="$countries"
-                        :selectedCountry="old('country_id', $school->country_id)"
-                        :selectedState="old('state_id', $school->state_id)"
-                        :selectedCity="old('city_id', $school->city_id)"
+                        :states="$states"
+                        :cities="$cities"
+                        :selectedCountry="$selectedCountry"
+                        :selectedState="$selectedState"
+                        :selectedCity="$selectedCity"
                         :required="false"
                     />
                 </div>
