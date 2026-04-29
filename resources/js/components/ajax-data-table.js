@@ -71,26 +71,35 @@ document.addEventListener('alpine:init', () => {
         },
 
         _finishHydration() {
-            // Fade out the SSR tbody first, then swap to Alpine tbody.
-            // Using opacity instead of display:none prevents the table from
-            // recalculating column widths and row heights (layout shift).
             const ssrTbody = this.$el?.querySelector('tbody[data-ssr]');
-            if (ssrTbody) {
-                ssrTbody.classList.add('opacity-0');
-                // After the CSS transition (120ms), fully remove from layout
-                setTimeout(() => {
-                    this.hydrated = true;
-                    // Remove SSR tbody from DOM after Alpine tbody is visible
-                    requestAnimationFrame(() => {
-                        if (ssrTbody.parentNode) ssrTbody.parentNode.removeChild(ssrTbody);
-                    });
-                }, 130);
-            } else {
-                // No SSR tbody — swap immediately
+            if (!ssrTbody) {
                 requestAnimationFrame(() => requestAnimationFrame(() => {
                     this.hydrated = true;
                 }));
+                return;
             }
+
+            // Empty initial dataset: SSR empty-state and Alpine empty-state
+            // render identically, so swap synchronously. Fading here causes a
+            // visible blank gap because the opacity-0 CSS pulls the SSR row
+            // out of layout flow before Alpine's empty-state is allowed to
+            // appear (x-show gates it on `hydrated`).
+            if (this.rows.length === 0) {
+                this.hydrated = true;
+                requestAnimationFrame(() => {
+                    if (ssrTbody.parentNode) ssrTbody.parentNode.removeChild(ssrTbody);
+                });
+                return;
+            }
+
+            // Populated dataset: fade SSR rows out, then let Alpine take over.
+            ssrTbody.classList.add('opacity-0');
+            setTimeout(() => {
+                this.hydrated = true;
+                requestAnimationFrame(() => {
+                    if (ssrTbody.parentNode) ssrTbody.parentNode.removeChild(ssrTbody);
+                });
+            }, 130);
         },
 
         // ─── Core Fetch ─────────────────────────────────────────────────

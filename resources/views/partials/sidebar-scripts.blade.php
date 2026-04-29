@@ -80,18 +80,20 @@
         display: none !important;
     }
 
-    /* Nav icon default margin-right: matches Alpine's :class="{ 'mr-3': !sidebarCollapsed }".
+    /* Sidebar icon default margin-right: matches Alpine's :class="{ 'mr-3': !sidebarCollapsed }".
        Without this, text sits flush against the icon pre-hydration and jerks right ~12px
-       once Alpine attaches mr-3. Collapsed state resets it to 0 below. */
-    aside nav a i,
-    aside nav button i {
+       once Alpine attaches mr-3. The .w-5 marker is shared by every nav-item icon and the
+       Support/Logout footer icons, but absent from the toggle chevrons and logo glyphs —
+       so this selector covers the footer (which lives outside <nav>) without affecting them. */
+    aside a i.w-5,
+    aside button i.w-5 {
         flex-shrink: 0;
         margin-right: 0.75rem;
     }
-    html.sidebar-collapsed aside nav a i,
-    html.sidebar-collapsed aside nav button i,
-    aside.sidebar-collapsed nav a i,
-    aside.sidebar-collapsed nav button i {
+    html.sidebar-collapsed aside a i.w-5,
+    html.sidebar-collapsed aside button i.w-5,
+    aside.sidebar-collapsed a i.w-5,
+    aside.sidebar-collapsed button i.w-5 {
         margin-right: 0 !important;
     }
 

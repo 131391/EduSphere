@@ -113,7 +113,7 @@
                 'label' => 'Student Details',
                 'sortable' => false,
                 'render' => function($row) {
-                    $photoUrl = $row->photo ? asset('storage/'.$row->photo) : null;
+                    $photoUrl = $row->student_photo ? asset('storage/'.$row->student_photo) : null;
                     $initials = strtoupper(substr($row->first_name, 0, 1));
                     
                     $imgHtml = $photoUrl 
@@ -155,7 +155,7 @@
                 'label' => 'Contact Info',
                 'sortable' => false,
                 'render' => function($row) {
-                    return '<div class="text-xs font-semibold text-gray-500">'.($row->phone ?? '—').'</div>';
+                    return '<div class="text-xs font-semibold text-gray-500">'.e($row->mobile_no ?? '—').'</div>';
                 }
             ],
         ];
