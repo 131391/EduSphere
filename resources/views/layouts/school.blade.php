@@ -995,8 +995,7 @@
                         <div class="relative hidden md:block">
                             <button @click="showFavorites = !showFavorites"
                                 class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors" title="Saved Pages">
-                                <i class="far fa-bookmark text-xl" x-cloak></i>
-                                <i class="text-xl far fa-bookmark ssr-icon-fallback" x-show="false" style="display:inline-block"></i>
+                                <i class="far fa-bookmark text-xl"></i>
                             </button>
 
                             <!-- Favorites Dropdown -->
@@ -1037,8 +1036,7 @@
                         <button @click="toggleFullscreen()"
                             class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 transition-colors hidden md:block"
                             title="Toggle Fullscreen">
-                            <i class="text-xl" :class="isFullscreen ? 'fas fa-compress' : 'fas fa-expand'" x-cloak></i>
-                            <i class="text-xl fas fa-expand ssr-icon-fallback" x-show="false" style="display:inline-block"></i>
+                            <i class="text-xl fas fa-expand"></i>
                         </button>
 
                         <!-- Dark Mode -->
@@ -1046,8 +1044,7 @@
                             class="transition-colors hidden sm:block"
                             :class="isDark ? 'text-yellow-400 dark:text-yellow-400 hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
                             title="Toggle Dark Mode">
-                            <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
-                            <i class="text-xl far fa-moon ssr-icon-fallback" x-show="false" style="display:inline-block"></i>
+                            <i class="text-xl far fa-moon"></i>
                         </button>
 
                         <!-- User Dropdown -->
