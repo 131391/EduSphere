@@ -14,6 +14,7 @@ use App\Models\Vehicle;
 use App\Services\School\StudentTransportService;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class StudentTransportAssignmentController extends TenantController
@@ -165,10 +166,15 @@ class StudentTransportAssignmentController extends TenantController
                 'message' => 'Validation failed',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Failed to assign transport', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to assign transport: ' . $e->getMessage(),
+                'message' => 'Unable to assign transport. Please try again.',
             ], 500);
         }
     }
@@ -202,10 +208,16 @@ class StudentTransportAssignmentController extends TenantController
                 'message' => 'Validation failed',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Failed to update transport assignment', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+                'assignment_id' => $id,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update assignment: ' . $e->getMessage(),
+                'message' => 'Unable to update assignment. Please try again.',
             ], 500);
         }
     }
@@ -228,10 +240,16 @@ class StudentTransportAssignmentController extends TenantController
                 'message' => 'Validation failed',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Failed to remove transport assignment', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+                'assignment_id' => $id,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to remove assignment: ' . $e->getMessage(),
+                'message' => 'Unable to remove assignment. Please try again.',
             ], 500);
         }
     }

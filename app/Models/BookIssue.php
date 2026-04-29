@@ -28,15 +28,17 @@ class BookIssue extends Model
         'return_date',
         'fine_amount',
         'fine_paid_at',
+        'last_notified_at',
         'status',
     ];
 
     protected $casts = [
-        'issue_date'   => 'date',
-        'due_date'     => 'date',
-        'return_date'  => 'date',
-        'fine_amount'  => 'decimal:2',
-        'fine_paid_at' => 'datetime',
+        'issue_date'       => 'date',
+        'due_date'         => 'date',
+        'return_date'      => 'date',
+        'fine_amount'      => 'decimal:2',
+        'fine_paid_at'     => 'datetime',
+        'last_notified_at' => 'datetime',
     ];
 
     public function resolveRouteBinding($value, $field = null)
@@ -70,7 +72,10 @@ class BookIssue extends Model
     public function getBeneficiaryIdAttribute(): string
     {
         if ($this->student_id) return $this->student?->admission_no ?? 'N/A';
-        if ($this->staff_id) return 'Staff ID: ' . $this->staff_id;
+        if ($this->staff_id) {
+            $staff = $this->staff;
+            return $staff?->mobile ?? $staff?->email ?? 'Staff #' . $this->staff_id;
+        }
         return 'N/A';
     }
 

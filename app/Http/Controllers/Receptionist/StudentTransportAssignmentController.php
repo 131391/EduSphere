@@ -12,6 +12,7 @@ use App\Models\AcademicYear;
 use App\Models\ClassModel;
 use App\Services\School\StudentTransportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class StudentTransportAssignmentController extends TenantController
@@ -89,80 +90,32 @@ class StudentTransportAssignmentController extends TenantController
         }
 
         // Paginate the results
-        $perPage = $request->input('per_page', 15);
-        $assignments = $query->latest()->paginate($perPage)->withQueryString();
+        $perPage = (int) $request->input('per_page', 15);
+        $assignments = (clone $query)->latest()->paginate($perPage)->withQueryString();
 
-        // Calculate statistics from full query (before pagination, but after filters)
-        $statsQuery = StudentTransportAssignment::with([
-            'student.class',
-            'route',
-            'busStop',
-            'vehicle',
-            'academicYear'
-        ])
-            ->where('school_id', $schoolId);
-
-        // Apply same filters as main query
-        if ($currentAcademicYear) {
-            $statsQuery->where('academic_year_id', $currentAcademicYear->id);
-        } else {
-            $statsQuery->whereRaw('1 = 0');
-        }
-
-        if ($request->filled('class_id')) {
-            $statsQuery->whereHas('student', function($q) use ($request) {
-                $q->where('class_id', $request->class_id);
-            });
-        }
-
-        if ($request->filled('vehicle_id')) {
-            $statsQuery->where('vehicle_id', $request->vehicle_id);
-        }
-
-        if ($request->filled('route_id')) {
-            $statsQuery->where('route_id', $request->route_id);
-        }
-
-        if ($request->filled('bus_stop_id')) {
-            $statsQuery->where('bus_stop_id', $request->bus_stop_id);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $statsQuery->where(function($q) use ($search) {
-                $q->whereHas('student', function($sq) use ($search) {
-                    $sq->where('first_name', 'like', "%{$search}%")
-                       ->orWhere('middle_name', 'like', "%{$search}%")
-                       ->orWhere('last_name', 'like', "%{$search}%")
-                       ->orWhere('admission_no', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        $allAssignments = $statsQuery->get();
-        $totalAssigned = $allAssignments->count();
-        $activeRoutes = $allAssignments->pluck('route_id')->unique()->count();
-        $totalFees = $allAssignments->sum('fee_per_month');
+        $statsAggregate = (clone $query)
+            ->selectRaw('COUNT(*) as total_assigned, COUNT(DISTINCT route_id) as active_routes, COALESCE(SUM(fee_per_month), 0) as total_fees')
+            ->first();
 
         // Get data for dropdowns
         $students = Student::where('school_id', $schoolId)
             ->where('status', \App\Enums\StudentStatus::Active)
             ->with('class')
             ->get();
-        
+
         $routes = TransportRoute::where('school_id', $schoolId)->get();
         $vehicles = Vehicle::where('school_id', $schoolId)->get();
         $busStops = BusStop::where('school_id', $schoolId)->get();
-        
+
         // Get classes for filter
         $classes = ClassModel::where('school_id', $schoolId)
             ->orderBy('name')
             ->get();
 
         $stats = [
-            'total_assigned' => $totalAssigned,
-            'active_routes' => $activeRoutes,
-            'total_fees' => $totalFees,
+            'total_assigned' => (int) ($statsAggregate->total_assigned ?? 0),
+            'active_routes' => (int) ($statsAggregate->active_routes ?? 0),
+            'total_fees' => (float) ($statsAggregate->total_fees ?? 0),
             'available_vehicles' => $vehicles->count(),
         ];
 
@@ -212,12 +165,17 @@ class StudentTransportAssignmentController extends TenantController
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Receptionist transport assignment action failed', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'System exception: ' . $e->getMessage()
+                'message' => 'Unable to complete the request. Please try again.',
             ], 500);
         }
     }
@@ -265,12 +223,17 @@ class StudentTransportAssignmentController extends TenantController
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Receptionist transport assignment action failed', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'System exception: ' . $e->getMessage()
+                'message' => 'Unable to complete the request. Please try again.',
             ], 500);
         }
     }

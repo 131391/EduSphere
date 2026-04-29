@@ -98,10 +98,10 @@ class LibraryService
             $lockedIssue->fine_amount = 0;
 
             if ($returnDate->gt(Carbon::parse($lockedIssue->due_date))) {
-                $daysOverdue    = Carbon::parse($lockedIssue->due_date)->diffInDays($returnDate);
+                $daysOverdue    = (int) Carbon::parse($lockedIssue->due_date)->startOfDay()->diffInDays($returnDate->copy()->startOfDay());
                 $schoolSettings = $lockedIssue->school?->settings ?? [];
                 $finePerDay     = (float) ($schoolSettings['late_return_library_book_fine'] ?? 5);
-                $lockedIssue->fine_amount = $daysOverdue * $finePerDay;
+                $lockedIssue->fine_amount = round($daysOverdue * $finePerDay, 2);
             }
 
             $lockedIssue->status = 'returned';
@@ -116,7 +116,7 @@ class LibraryService
                 ->withProperties(['fine' => (float) $lockedIssue->fine_amount])
                 ->log('book_returned');
 
-            return ['success' => true, 'message' => 'Book returned successfully.', 'fine' => (float) $lockedIssue->fine_amount];
+            return ['success' => true, 'message' => 'Book returned successfully.', 'fine' => number_format((float) $lockedIssue->fine_amount, 2, '.', '')];
         });
     }
 

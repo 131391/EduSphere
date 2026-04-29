@@ -203,7 +203,7 @@
         </div>
 
         <!-- Add/Edit Book Modal -->
-        <x-modal name="book-modal" :alpineTitle="isEdit ? 'Refine Catalog Entry' : 'Catalog New Acquisition'" maxWidth="2xl">
+        <x-modal name="book-modal" alpineTitle="isEdit ? 'Refine Catalog Entry' : 'Catalog New Acquisition'" maxWidth="2xl">
             <form @submit.prevent="submitForm()" method="POST" class="p-1">
                 @csrf
                 <div class="space-y-6">

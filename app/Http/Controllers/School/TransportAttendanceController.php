@@ -10,6 +10,7 @@ use App\Models\TransportRoute;
 use App\Models\Vehicle;
 use App\Services\School\TransportAttendanceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -81,10 +82,15 @@ class TransportAttendanceController extends TenantController
                 'message' => 'Validation failed',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('School transport getRoutes failed', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load routes: ' . $e->getMessage(),
+                'message' => 'Unable to load routes. Please try again.',
             ], 500);
         }
     }
@@ -115,10 +121,15 @@ class TransportAttendanceController extends TenantController
                 'message' => 'Validation failed',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('School transport getStudents failed', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load students: ' . $e->getMessage(),
+                'message' => 'Unable to load students. Please try again.',
             ], 500);
         }
     }
@@ -174,15 +185,22 @@ class TransportAttendanceController extends TenantController
             }
 
             return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('School transport mark attendance failed', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+            ]);
+
+            $message = 'Unable to save attendance. Please try again.';
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to mark attendance: ' . $e->getMessage(),
+                    'message' => $message,
                 ], 500);
             }
 
-            return $this->backWithError('Failed to mark attendance: ' . $e->getMessage());
+            return $this->backWithError($message);
         }
     }
 

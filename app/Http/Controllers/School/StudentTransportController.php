@@ -6,6 +6,7 @@ use App\Http\Controllers\TenantController;
 use App\Http\Requests\School\AssignTransportRequest;
 use App\Models\Student;
 use App\Services\School\StudentTransportService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class StudentTransportController extends TenantController
@@ -58,14 +59,22 @@ class StudentTransportController extends TenantController
             }
 
             return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Failed to process transport assignment', [
+                'exception' => $e,
+                'student_id' => $student->id,
+                'school_id' => $student->school_id,
+            ]);
+
+            $message = 'Unable to process transport assignment. Please try again.';
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to process transport assignment: ' . $e->getMessage()
+                    'message' => $message,
                 ], 500);
             }
-            return $this->backWithError('Failed to process transport assignment: ' . $e->getMessage());
+            return $this->backWithError($message);
         }
     }
 }

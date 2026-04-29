@@ -170,19 +170,23 @@ class LibraryController extends TenantController
         $this->authorizeTenant($book);
         Gate::authorize('manage', Book::class);
 
-        try {
-            $book->delete();
-            $this->bustStatsCache();
+        $hasActiveIssues = BookIssue::where('school_id', $this->getSchoolId())
+            ->where('book_id', $book->id)
+            ->where('status', 'issued')
+            ->exists();
 
+        if ($hasActiveIssues) {
             return request()->wantsJson()
-                ? response()->json(['success' => true, 'message' => 'Book removed from catalog.'])
-                : back()->with('success', 'Book removed from catalog.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            // FK restrict fires when active issues exist
-            return request()->wantsJson()
-                ? response()->json(['success' => false, 'message' => 'Cannot delete a book that has circulation history.'], 422)
-                : back()->with('error', 'Cannot delete a book that has circulation history.');
+                ? response()->json(['success' => false, 'message' => 'Cannot delete a book that is currently issued. Process all returns first.'], 422)
+                : back()->with('error', 'Cannot delete a book that is currently issued. Process all returns first.');
         }
+
+        $book->delete();
+        $this->bustStatsCache();
+
+        return request()->wantsJson()
+            ? response()->json(['success' => true, 'message' => 'Book removed from catalog.'])
+            : back()->with('success', 'Book removed from catalog.');
     }
 
     // -------------------------------------------------------------------------
@@ -324,17 +328,17 @@ class LibraryController extends TenantController
         $this->ensureSchoolActive();
         Gate::authorize('manage', Book::class);
 
-        $request->validate([
+        $validated = $request->validate([
             'book_id'    => ['required', Rule::exists('books', 'id')->where('school_id', $this->getSchoolId())],
             'student_id' => ['nullable', 'required_without:staff_id', Rule::exists('students', 'id')->where('school_id', $this->getSchoolId())],
             'staff_id'   => ['nullable', 'required_without:student_id', Rule::exists('staff', 'id')->where('school_id', $this->getSchoolId())],
-            'due_date'   => 'required|date|after:today',
+            'issue_date' => 'nullable|date|before_or_equal:today',
+            'due_date'   => 'required|date|after:today|after:issue_date',
         ]);
 
         try {
-            $data              = $request->all();
-            $data['school_id'] = $this->getSchoolId();
-            $result            = $this->libraryService->issueBook($data);
+            $validated['school_id'] = $this->getSchoolId();
+            $result                 = $this->libraryService->issueBook($validated);
             $this->bustStatsCache();
 
             return $request->wantsJson()
@@ -448,13 +452,13 @@ class LibraryController extends TenantController
         }
 
         if ($request->filled('from_date')) {
-            $query->where('updated_at', '>=', Carbon::parse($request->input('from_date'))->startOfDay());
+            $query->where('return_date', '>=', Carbon::parse($request->input('from_date'))->toDateString());
         }
         if ($request->filled('to_date')) {
-            $query->where('updated_at', '<=', Carbon::parse($request->input('to_date'))->endOfDay());
+            $query->where('return_date', '<=', Carbon::parse($request->input('to_date'))->toDateString());
         }
 
-        $query->orderBy('updated_at', 'desc');
+        $query->orderBy('return_date', 'desc');
 
         $currency    = $this->getSchool()->settings['currency_symbol'] ?? '₹';
         $transformer = fn($row) => [
@@ -525,7 +529,9 @@ class LibraryController extends TenantController
             ->get(['id', 'name', 'post', 'mobile'])
             ->map(fn($s) => [
                 'id'    => $s->id,
-                'label' => $s->name . ' [' . $s->post->name . '] — ' . $s->mobile,
+                'label' => $s->name
+                    . ($s->post ? ' [' . $s->post->label() . ']' : '')
+                    . ' — ' . $s->mobile,
             ]);
 
         return response()->json($results);
@@ -537,12 +543,14 @@ class LibraryController extends TenantController
         $this->authorizeTenant($issue);
         Gate::authorize('manageIssue', $issue);
 
-        $request->validate([
-            'due_date' => 'required|date|after:today',
+        $currentDueDate = Carbon::parse($issue->due_date)->toDateString();
+
+        $validated = $request->validate([
+            'due_date' => ['required', 'date', 'after:today', 'after:' . $currentDueDate],
         ]);
 
         try {
-            $result = $this->libraryService->renewBook($issue, $request->due_date);
+            $result = $this->libraryService->renewBook($issue, $validated['due_date']);
             return $request->wantsJson()
                 ? response()->json(['success' => $result['success'], 'message' => $result['message']], $result['success'] ? 200 : 422)
                 : ($result['success'] ? back()->with('success', $result['message']) : back()->with('error', $result['message']));

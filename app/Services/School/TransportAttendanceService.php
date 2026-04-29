@@ -7,6 +7,7 @@ use App\Enums\TransportAttendanceType;
 use App\Models\School;
 use App\Models\StudentTransportAssignment;
 use App\Models\TransportAttendance;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -159,18 +160,24 @@ class TransportAttendanceService
 
     public function getMonthWiseReport(School $school, int $vehicleId, int $routeId, string $month): array
     {
-        if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+        if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
             throw ValidationException::withMessages([
                 'month' => ['The selected month format is invalid.'],
             ]);
         }
 
-        $year = (int) substr($month, 0, 4);
-        $monthNum = (int) substr($month, 5, 2);
-        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $monthNum, $year);
+        try {
+            $start = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfDay();
+        } catch (\Exception $e) {
+            throw ValidationException::withMessages([
+                'month' => ['The selected month is invalid.'],
+            ]);
+        }
 
-        $startDate = sprintf('%04d-%02d-01', $year, $monthNum);
-        $endDate = sprintf('%04d-%02d-%02d', $year, $monthNum, $daysInMonth);
+        $end = $start->copy()->endOfMonth();
+        $daysInMonth = $start->daysInMonth;
+        $startDate = $start->toDateString();
+        $endDate = $end->toDateString();
         $academicYear = $this->transportIntegrityService->getAcademicYearForSchool($school, null, true);
         $route = $this->transportIntegrityService->getRouteForSchool($school, $routeId, false);
         $vehicle = $this->transportIntegrityService->getVehicleForSchool($school, $vehicleId, false);
@@ -236,7 +243,7 @@ class TransportAttendanceService
         return [
             'students' => $report,
             'days_in_month' => $daysInMonth,
-            'month_name' => date('F Y', strtotime($startDate)),
+            'month_name' => $start->format('F Y'),
         ];
     }
 

@@ -11,6 +11,7 @@ use App\Enums\RouteStatus;
 use App\Services\School\TransportRouteService;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class TransportRouteController extends TenantController
@@ -156,14 +157,21 @@ class TransportRouteController extends TenantController
             }
 
             return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Failed to create transport route', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+            ]);
+
+            $message = 'Unable to create route. Please try again.';
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to create route: ' . $e->getMessage()
+                    'message' => $message,
                 ], 500);
             }
-            return $this->backWithError('Failed to create route: ' . $e->getMessage());
+            return $this->backWithError($message);
         }
     }
 
@@ -197,14 +205,22 @@ class TransportRouteController extends TenantController
             }
 
             return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Failed to update transport route', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+                'route_id' => $id,
+            ]);
+
+            $message = 'Unable to update route. Please try again.';
+
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update route: ' . $e->getMessage()
+                    'message' => $message,
                 ], 500);
             }
-            return $this->backWithError('Failed to update route: ' . $e->getMessage());
+            return $this->backWithError($message);
         }
     }
 
@@ -238,16 +254,24 @@ class TransportRouteController extends TenantController
             }
 
             return back()->withErrors($e->errors());
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Failed to delete transport route', [
+                'exception' => $e,
+                'school_id' => $this->getSchoolId(),
+                'route_id' => $id,
+            ]);
+
+            $message = 'Unable to delete route. Please try again.';
+
             if (request()->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to delete route: ' . $e->getMessage()
+                    'message' => $message,
                 ], 500);
             }
             return $this->redirectWithError(
                 'school.transport.transport_routes.index',
-                'Failed to delete route: ' . $e->getMessage()
+                $message
             );
         }
     }
