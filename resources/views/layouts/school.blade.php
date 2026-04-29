@@ -1036,7 +1036,7 @@
                             class="transition-colors hidden sm:block"
                             :class="isDark ? 'text-yellow-400 dark:text-yellow-400 hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
                             title="Toggle Dark Mode">
-                            <i class="text-xl far fa-moon"></i>
+                            <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'"></i>
                         </button>
 
                         <!-- User Dropdown -->
