@@ -27,9 +27,17 @@
     <div class="flex items-center justify-between">
         <div>
             <p class="text-[13px] font-medium text-gray-600 dark:text-gray-400">{{ $label }}</p>
+            @if($alpineText)
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1 leading-none"
-                @if($alpineText) x-text="{{ $alpineText }}" @endif
+                x-text="{{ $alpineText }}" x-cloak
+            ></h3>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1 leading-none"
+                x-show="false" style="display:block"
             ><span class="{{ $c['value'] }}">{{ $value }}</span></h3>
+            @else
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1 leading-none"
+            ><span class="{{ $c['value'] }}">{{ $value }}</span></h3>
+            @endif
         </div>
         <div class="w-10 h-10 {{ $c['bg'] }} rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
             <i class="{{ $icon }} {{ $c['icon'] }} text-lg"></i>
