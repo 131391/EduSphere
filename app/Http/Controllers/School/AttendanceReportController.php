@@ -27,20 +27,21 @@ class AttendanceReportController extends TenantController
     public function monthly(Request $request)
     {
         $this->ensureSchoolActive();
-        
-        $classes = ClassModel::where('school_id', $this->getSchoolId())->get();
+
+        $schoolId = $this->getSchoolId();
+        $classes  = ClassModel::where('school_id', $schoolId)->orderBy('order')->get();
         $sections = Section::whereIn('class_id', $classes->pluck('id'))->get();
-        
-        $classId = $request->input('class_id');
+
+        $classId   = $request->input('class_id');
         $sectionId = $request->input('section_id');
         $monthYear = $request->input('month', now()->format('Y-m'));
-        
-        $year = (int) date('Y', strtotime($monthYear));
+
+        $year  = (int) date('Y', strtotime($monthYear));
         $month = (int) date('m', strtotime($monthYear));
 
         $reportData = null;
         if ($classId && $sectionId) {
-            $reportData = $this->reportService->getMonthlyReport($classId, $sectionId, $year, $month);
+            $reportData = $this->reportService->getMonthlyReport($classId, $sectionId, $year, $month, $schoolId);
         }
 
         return view('school.reports.attendance.monthly', compact('classes', 'sections', 'reportData', 'classId', 'sectionId', 'monthYear'));
@@ -52,13 +53,14 @@ class AttendanceReportController extends TenantController
     public function student(Request $request)
     {
         $this->ensureSchoolActive();
-        
-        $students = Student::where('school_id', $this->getSchoolId())->active()->get();
-        $academicYear = AcademicYear::where('school_id', $this->getSchoolId())->where('is_active', true)->first();
-        
+
+        $schoolId    = $this->getSchoolId();
+        $students    = Student::where('school_id', $schoolId)->active()->orderBy('first_name')->get();
+        $academicYear = AcademicYear::where('school_id', $schoolId)->current()->first();
+
         $studentId = $request->input('student_id');
-        $history = null;
-        
+        $history   = null;
+
         if ($studentId && $academicYear) {
             $history = $this->reportService->getStudentAttendanceHistory($studentId, $academicYear->id);
         }
@@ -72,9 +74,13 @@ class AttendanceReportController extends TenantController
     public function daily(Request $request)
     {
         $this->ensureSchoolActive();
-        
-        $date = $request->input('date', now()->format('Y-m-d'));
+
+        $date    = $request->input('date', now()->format('Y-m-d'));
         $summary = $this->reportService->getDailySummary($date, $this->getSchoolId());
+
+        if ($request->ajax()) {
+            return response()->json(['summary' => $summary]);
+        }
 
         return view('school.reports.attendance.daily', compact('summary', 'date'));
     }
