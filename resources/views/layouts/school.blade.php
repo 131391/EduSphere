@@ -1036,8 +1036,10 @@
                             class="transition-colors hidden sm:block"
                             :class="isDark ? 'text-yellow-400 dark:text-yellow-400 hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
                             title="Toggle Dark Mode">
-                            <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'"></i>
+                            <i class="text-xl" :class="isDark ? 'fas fa-sun' : 'far fa-moon'" x-cloak></i>
+                            <i class="text-xl far fa-moon" x-show="false" style="display:inline-block" id="dark-mode-fallback-icon"></i>
                         </button>
+                        <script>if(localStorage.getItem('darkMode')==='true'||(!('darkMode'in localStorage)&&window.matchMedia('(prefers-color-scheme: dark)').matches)){var _d=document.getElementById('dark-mode-fallback-icon');if(_d){_d.className='text-xl fas fa-sun';}}</script>
 
                         <!-- User Dropdown -->
                         <div class="relative" x-data="{ open: false }">
