@@ -52,7 +52,7 @@
     {{-- ── Trigger button ──────────────────────────────────────────────── --}}
     <button x-ref="trigger" @click="toggle()" title="{{ $label }}"
         class="group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors duration-150 relative
-               {{ $anyActive ? 'bg-[#283593] text-white font-medium' : 'text-indigo-100 hover:bg-[#283593] hover:text-white' }}"
+               {{ $anyActive ? 'text-teal-300 font-medium' : 'text-indigo-100 hover:bg-white/10 hover:text-white' }}"
         :class="{ 'justify-center': sidebarCollapsed }">
 
         @if($anyActive)
@@ -60,7 +60,7 @@
         @endif
 
         <div class="flex items-center min-w-0">
-            <i class="{{ $icon }} w-5 flex-shrink-0 text-center" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+            <i class="{{ $icon }} w-5 flex-shrink-0 text-center {{ $anyActive ? 'text-teal-400' : '' }}" :class="{ 'mr-3': !sidebarCollapsed }"></i>
             <span x-show="!sidebarCollapsed" class="sidebar-text truncate">{{ $label }}</span>
         </div>
         <i class="fas fa-chevron-down text-xs flex-shrink-0 transition-transform duration-200 ml-1"

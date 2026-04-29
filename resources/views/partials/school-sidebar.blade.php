@@ -451,7 +451,7 @@
     <div class="flex-shrink-0 border-t border-[#283593]">
         <a href="{{ route('school.support') }}"
             title="Support"
-            class="flex items-center px-4 py-3 text-indigo-200 hover:bg-[#283593] hover:text-white transition-colors {{ request()->routeIs('school.support') ? 'bg-[#283593] text-white' : '' }}"
+            class="flex items-center px-4 py-3 text-indigo-200 hover:bg-white/10 hover:text-white transition-colors {{ request()->routeIs('school.support') ? 'text-teal-300 font-medium' : '' }}"
             :class="{ 'justify-center': sidebarCollapsed }">
             <i class="fas fa-life-ring w-5 flex-shrink-0" :class="{ 'mr-3': !sidebarCollapsed }"></i>
             <span x-show="!sidebarCollapsed" class="sidebar-text text-sm">Support</span>

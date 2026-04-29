@@ -13,8 +13,8 @@
         title="{{ $label }}"
         class="group flex items-center px-3 py-2 rounded-lg text-sm transition-colors duration-150 relative
                {{ $isActive
-                    ? 'bg-[#283593] text-white font-medium'
-                    : 'text-indigo-100 hover:bg-[#283593] hover:text-white' }}"
+                    ? 'text-teal-300 font-medium'
+                    : 'text-indigo-100 hover:bg-white/10 hover:text-white' }}"
         :class="{ 'justify-center': sidebarCollapsed }">
 
         {{-- Active left-border accent --}}
@@ -22,7 +22,7 @@
             <span class="absolute left-0 top-1 bottom-1 w-0.5 bg-teal-400 rounded-full"></span>
         @endif
 
-        <i class="{{ $icon }} w-5 flex-shrink-0 text-center" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+        <i class="{{ $icon }} w-5 flex-shrink-0 text-center {{ $isActive ? 'text-teal-400' : '' }}" :class="{ 'mr-3': !sidebarCollapsed }"></i>
         <span x-show="!sidebarCollapsed" class="sidebar-text truncate">{{ $label }}</span>
 
         {{-- Tooltip shown only when collapsed --}}
