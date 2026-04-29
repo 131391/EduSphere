@@ -650,6 +650,11 @@ select:focus {
     border-width: 1px !important;
 }
 
+/* SSR fallback icons: always hidden — Alpine x-cloak icons handle the display */
+.ssr-icon-fallback {
+    display: none !important;
+}
+
 /* Global thin border for all native selects and inputs */
 select.no-select2 {
     -webkit-appearance: none;
