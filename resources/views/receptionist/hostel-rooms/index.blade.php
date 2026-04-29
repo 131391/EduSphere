@@ -91,10 +91,10 @@
                     <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
                         <tr>
                             <x-table.sort-header column="room_name" label="Room Name" sort-var="sort" direction-var="direction" />
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Hostel / Floor</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Amenities</th>
-                            <x-table.sort-header column="room_create_date" label="Established" sort-var="sort" direction-var="direction" />
-                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Hostel</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Capacity</th>
+                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Assignments</th>
+                            <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
 
@@ -120,24 +120,13 @@
                                     <span class="font-bold text-gray-800 dark:text-gray-100">{{ $row['room_name'] }}</span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">
-                                        <i class="fas fa-building text-[10px] text-gray-400"></i>
-                                        {{ $row['hostel_name'] }}
-                                    </div>
-                                    <div class="flex items-center gap-1.5 text-[10px] text-gray-400">
-                                        <i class="fas fa-layer-group text-[9px]"></i>
-                                        {{ $row['floor_name'] }}
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 {{ $row['amenities_label'] !== 'None' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500' }} rounded-full text-xs font-bold">
-                                    {{ $row['amenities_label'] }}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $row['hostel_name'] }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $row['no_of_beds'] }} Beds</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <span class="px-2 py-1 {{ $row['occupancy_count'] >= $row['no_of_beds'] ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600' }} rounded-md">
+                                    {{ $row['occupancy_count'] }} / {{ $row['no_of_beds'] }} Occupied
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-xs font-medium text-gray-500">{{ $row['room_create_date'] }}</td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <button @click="open({{ json_encode($row) }})" title="Edit"
@@ -167,24 +156,13 @@
                                         <span class="font-bold text-gray-800 dark:text-gray-100" x-text="row.room_name"></span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">
-                                            <i class="fas fa-building text-[10px] text-gray-400"></i>
-                                            <span x-text="row.hostel_name"></span>
-                                        </div>
-                                        <div class="flex items-center gap-1.5 text-[10px] text-gray-400">
-                                            <i class="fas fa-layer-group text-[9px]"></i>
-                                            <span x-text="row.floor_name"></span>
-                                        </div>
-                                    </div>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" x-text="row.hostel_name"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><span x-text="row.no_of_beds + ' Beds'"></span></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    <span class="px-2 py-1 bg-green-50 text-green-600 rounded-md" 
+                                          :class="{'bg-red-50 text-red-600': row.occupancy_count >= row.no_of_beds}"
+                                          x-text="row.occupancy_count + ' / ' + row.no_of_beds + ' Occupied'"></span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold"
-                                        :class="row.amenities_label !== 'None' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'"
-                                        x-text="row.amenities_label"></span>
-                                </td>
-                                <td class="px-6 py-4 text-xs font-medium text-gray-500" x-text="row.room_create_date"></td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <button @click="open(row)" title="Edit"
@@ -251,15 +229,16 @@
                         </template>
                     </div>
 
-                    <div class="space-y-2 md:col-span-2">
-                        <label class="modal-label-premium">Room Name <span class="text-red-600 font-bold">*</span></label>
-                        <input type="text" x-model="formData.room_name" @input="clearError('room_name')"
-                            placeholder="e.g., Room 101"
-                            class="w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.room_name ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
-                        <template x-if="errors.room_name">
-                            <template x-if="errors.room_name[0]"><p class="modal-error-message" x-text="errors.room_name[0]"></p></template>
-                        </template>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Room Name/Number <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="formData.room_name" required placeholder="e.g. Room 101, A-1" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            :class="errors.room_name ? 'border-red-500' : 'border-gray-300'">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Number of Beds (Capacity) <span class="text-red-500">*</span></label>
+                        <input type="number" min="1" x-model="formData.no_of_beds" required placeholder="e.g. 2" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
                     </div>
 
                     <div class="space-y-2">
@@ -335,6 +314,7 @@
                         hostel_id: '',
                         hostel_floor_id: '',
                         room_name: '',
+                        no_of_beds: '',
                         ac: '{{ YesNo::No->value }}',
                         cooler: '{{ YesNo::No->value }}',
                         fan: '{{ YesNo::Yes->value }}',
@@ -391,6 +371,7 @@
                             hostel_id: '',
                             hostel_floor_id: '',
                             room_name: '',
+                            no_of_beds: '',
                             ac: '{{ YesNo::No->value }}',
                             cooler: '{{ YesNo::No->value }}',
                             fan: '{{ YesNo::Yes->value }}',
@@ -407,6 +388,7 @@
                                 hostel_id: String(room.raw.hostel_id),
                                 hostel_floor_id: '', // Will be set by loadFloors after options render
                                 room_name: room.raw.room_name,
+                                no_of_beds: room.raw.no_of_beds,
                                 ac: String(room.raw.ac),
                                 cooler: String(room.raw.cooler),
                                 fan: String(room.raw.fan),
@@ -420,6 +402,7 @@
                                 hostel_id: '',
                                 hostel_floor_id: '',
                                 room_name: '',
+                                no_of_beds: '',
                                 ac: '{{ YesNo::No->value }}',
                                 cooler: '{{ YesNo::No->value }}',
                                 fan: '{{ YesNo::Yes->value }}',

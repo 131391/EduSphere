@@ -44,4 +44,40 @@ class UpdateHostelBedAssignmentRequest extends FormRequest
             'starting_month' => 'nullable|string|max:255',
         ];
     }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $roomId = $this->input('hostel_room_id');
+            $bedNo = $this->input('bed_no');
+            $schoolId = app('currentSchool')->id;
+            $assignment = $this->route('hostelBedAssignment'); // route parameter
+
+            if ($roomId && $assignment) {
+                $room = \App\Models\HostelRoom::where('school_id', $schoolId)->find($roomId);
+                if ($room) {
+                    // Check capacity only if room is changing
+                    if ($roomId != $assignment->hostel_room_id) {
+                        if (!$room->hasAvailableBeds()) {
+                            $validator->errors()->add('hostel_room_id', "This room has reached its maximum capacity of {$room->no_of_beds} beds.");
+                        }
+                    }
+
+                    // Check bed collision if bed_no is provided
+                    if ($bedNo) {
+                        $collision = \App\Models\HostelBedAssignment::where('school_id', $schoolId)
+                            ->where('hostel_room_id', $roomId)
+                            ->where('bed_no', $bedNo)
+                            ->where('id', '!=', $assignment->id)
+                            ->active()
+                            ->exists();
+                            
+                        if ($collision) {
+                            $validator->errors()->add('bed_no', "Bed number '{$bedNo}' is already assigned to another student in this room.");
+                        }
+                    }
+                }
+            }
+        });
+    }
 }

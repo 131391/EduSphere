@@ -19,6 +19,12 @@
         <form @submit.prevent="submitForm" class="p-6 sm:p-8 space-y-6">
             @csrf
 
+            <!-- Section 1: Fee Configuration -->
+            <div class="px-6 py-3 -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 bg-gray-50 dark:bg-gray-800/70 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
+                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Fee Configuration</h2>
+            </div>
+
             <!-- Selection Grid -->
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 <!-- Academic Year -->
@@ -60,12 +66,9 @@
                 <!-- Fee Period -->
                 <div class="space-y-2">
                     <label class="modal-label-premium">Fee Period <span class="text-red-600 font-bold">*</span></label>
-                    <input type="month" x-model="rawFeePeriod" @change="formatPeriod" 
-                        class="modal-input-premium cursor-pointer" required>
-                    <input type="hidden" name="fee_period" x-model="formData.fee_period">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-show="formData.fee_period">
-                        Target Period: <span x-text="formData.fee_period" class="font-semibold text-indigo-600 dark:text-indigo-400"></span>
-                    </p>
+                    <input type="text" x-model="formData.fee_period" placeholder="e.g. {{ date('F Y') }}"
+                        class="modal-input-premium" required>
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Enter the month and year, e.g. "April 2026"</p>
                 </div>
 
                 <!-- Due Date -->
@@ -76,10 +79,13 @@
                 </div>
             </div>
 
-            <!-- Student Selection Table -->
-            <div class="pt-6 border-t border-gray-200 dark:border-gray-700" x-show="formData.class_id">
+            <!-- Section 2: Student Selection -->
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6" x-show="formData.class_id">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Select Students to Bill</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
+                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-100">Select Students to Bill</h3>
+                    </div>
                     <div class="flex items-center gap-4">
                         <label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                             <input type="checkbox" x-model="selectAll" @change="toggleAllStudents" 
@@ -156,24 +162,14 @@
                 academic_year_id: '{{ $academicYears->firstWhere("is_current", \App\Enums\YesNo::Yes)?->id ?? "" }}',
                 class_id: '',
                 miscellaneous_fee_id: '',
-                fee_period: '',
-                due_date: '',
+                fee_period: '{{ date("F Y") }}',
+                due_date: '{{ date("Y-m-d", strtotime("+10 days")) }}',
                 student_ids: []
             },
-            rawFeePeriod: '',
             students: [],
             selectAll: false,
             loadingStudents: false,
             isSubmitting: false,
-
-            formatPeriod() {
-                if (this.rawFeePeriod) {
-                    const date = new Date(this.rawFeePeriod + '-01');
-                    this.formData.fee_period = date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-                } else {
-                    this.formData.fee_period = '';
-                }
-            },
 
             async fetchStudents() {
                 if (!this.formData.class_id) {

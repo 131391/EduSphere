@@ -29,6 +29,7 @@ class StoreHostelRoomRequest extends FormRequest
                     ->where('hostel_id', $this->input('hostel_id')),
             ],
             'room_name' => 'required|string|max:255',
+            'no_of_beds' => 'required|integer|min:1',
             'ac' => ['nullable', 'integer', Rule::enum(YesNo::class)],
             'cooler' => ['nullable', 'integer', Rule::enum(YesNo::class)],
             'fan' => ['nullable', 'integer', Rule::enum(YesNo::class)],

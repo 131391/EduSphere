@@ -32,19 +32,6 @@ class FeePaymentController extends TenantController
         $this->ensureSchoolActive();
         $this->authorize('viewAny', FeePayment::class);
 
-        if ($request->expectsJson()) {
-            return $this->handleAjaxTable($request);
-        }
-
-        $hydrationData = $this->getHydrationData($request);
-
-        return view('school.fee-payments.index', array_merge($hydrationData, [
-            'classes' => ClassModel::where('school_id', $this->getSchoolId())->get()
-        ]));
-    }
-
-    protected function handleAjaxTable(Request $request)
-    {
         $query = Student::where('school_id', $this->getSchoolId())
             ->active()
             ->with(['class', 'section'])
@@ -67,11 +54,8 @@ class FeePaymentController extends TenantController
                   ->orWhere('admission_no', 'like', "%{$search}%");
             });
         }
-
-        return $this->processAjaxTable($query, $request, [
-            'first_name' => 'first_name',
-            'admission_no' => 'admission_no'
-        ], function($row) {
+        
+        $transformer = function($row) {
             return [
                 'id' => $row->id,
                 'full_name' => $row->full_name,
@@ -82,7 +66,33 @@ class FeePaymentController extends TenantController
                 'total_due' => number_format($row->total_due ?? 0, 2),
                 'collect_url' => route('school.fee-payments.collect', $row->id),
             ];
-        });
+        };
+        
+        // Handle sorting
+        $sortField = $request->input('sort', 'id');
+        $sortDirection = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+        
+        // We only allow sorting by certain fields to prevent SQL injection
+        $allowedSorts = ['id', 'first_name', 'admission_no'];
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
+        $stats = $this->getTableStats();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return $this->handleAjaxTable($query, $transformer, $stats);
+        }
+
+        $hydrationData = $this->getHydrationData($query, $transformer, ['stats' => $stats]);
+
+        return view('school.fee-payments.index', [
+            'initialData' => $hydrationData,
+            'stats' => $stats,
+            'classes' => ClassModel::where('school_id', $this->getSchoolId())->get()
+        ]);
     }
 
     protected function getTableStats()

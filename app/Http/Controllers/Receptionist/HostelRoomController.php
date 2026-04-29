@@ -41,6 +41,9 @@ class HostelRoomController extends TenantController
                 'fan'               => $room->fan?->value ?? YesNo::No->value,
                 'amenities'         => $amenities,
                 'amenities_label'   => empty($amenities) ? 'None' : implode(', ', $amenities),
+                'no_of_beds'        => $room->no_of_beds ?? 0,
+                'occupancy_count'   => $room->occupancy_count,
+                'available_beds'    => $room->available_beds,
                 'room_create_date'  => $room->room_create_date ? $room->room_create_date->format('d M, Y') : 'N/A',
                 'raw' => [
                     'hostel_id'        => $room->hostel_id,
@@ -49,6 +52,7 @@ class HostelRoomController extends TenantController
                     'ac'               => $room->ac?->value ?? YesNo::No->value,
                     'cooler'           => $room->cooler?->value ?? YesNo::No->value,
                     'fan'              => $room->fan?->value ?? YesNo::No->value,
+                    'no_of_beds'       => $room->no_of_beds ?? 0,
                     'room_create_date' => $room->room_create_date ? $room->room_create_date->format('Y-m-d') : '',
                 ],
             ];
@@ -110,12 +114,14 @@ class HostelRoomController extends TenantController
 
         $callback = function () use ($query) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Hostel', 'Floor', 'Room Name', 'AC', 'Cooler', 'Fan', 'Created On']);
+            fputcsv($file, ['Hostel', 'Floor', 'Room Name', 'Capacity', 'Occupancy', 'AC', 'Cooler', 'Fan', 'Created On']);
             $query->orderBy('created_at', 'desc')->cursor()->each(function ($room) use ($file) {
                 fputcsv($file, [
                     $room->hostel->hostel_name ?? '',
                     $room->floor->floor_name ?? '',
                     $room->room_name,
+                    $room->no_of_beds ?? 0,
+                    $room->occupancy_count,
                     $room->ac === YesNo::Yes ? 'Yes' : 'No',
                     $room->cooler === YesNo::Yes ? 'Yes' : 'No',
                     $room->fan === YesNo::Yes ? 'Yes' : 'No',

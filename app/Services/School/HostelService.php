@@ -33,7 +33,7 @@ class HostelService
     {
         return DB::transaction(function () use ($school, $student, $data) {
             // Validate capacity
-            $this->validateCapacity($school->id, $data['hostel_id']);
+            $this->validateCapacity($school->id, $data['hostel_id'], $data['hostel_room_id'] ?? null);
 
             // Check if student already has active assignment
             $existingAssignment = HostelBedAssignment::where('school_id', $school->id)
@@ -44,6 +44,19 @@ class HostelService
 
             if ($existingAssignment) {
                 throw new \Exception('Student already has an active hostel assignment.');
+            }
+
+            // Check bed collision
+            if (!empty($data['bed_no'])) {
+                $collision = HostelBedAssignment::where('school_id', $school->id)
+                    ->where('hostel_room_id', $data['hostel_room_id'])
+                    ->where('bed_no', $data['bed_no'])
+                    ->active()
+                    ->exists();
+
+                if ($collision) {
+                    throw new \Exception("Bed number '{$data['bed_no']}' is already assigned to another student in this room.");
+                }
             }
 
             // Create assignment
@@ -85,7 +98,24 @@ class HostelService
         return DB::transaction(function () use ($assignment, $data) {
             // If changing rooms, validate capacity
             if (isset($data['hostel_room_id']) && $data['hostel_room_id'] != $assignment->hostel_room_id) {
-                $this->validateCapacity($assignment->school_id, $data['hostel_id']);
+                $this->validateCapacity($assignment->school_id, $data['hostel_id'] ?? $assignment->hostel_id, $data['hostel_room_id']);
+            }
+
+            // Check bed collision
+            $roomId = $data['hostel_room_id'] ?? $assignment->hostel_room_id;
+            $bedNo = $data['bed_no'] ?? $assignment->bed_no;
+            
+            if (!empty($bedNo)) {
+                $collision = HostelBedAssignment::where('school_id', $assignment->school_id)
+                    ->where('hostel_room_id', $roomId)
+                    ->where('bed_no', $bedNo)
+                    ->where('id', '!=', $assignment->id)
+                    ->active()
+                    ->exists();
+
+                if ($collision) {
+                    throw new \Exception("Bed number '{$bedNo}' is already assigned to another student in this room.");
+                }
             }
 
             $assignment->update($data);
@@ -124,16 +154,18 @@ class HostelService
     }
 
     /**
-     * Validate hostel capacity
+     * Validate hostel room capacity
      *
      * @param int $schoolId
      * @param int $hostelId
+     * @param int|null $roomId
      * @throws \Exception
      */
-    public function validateCapacity(int $schoolId, int $hostelId): void
+    public function validateCapacity(int $schoolId, int $hostelId, ?int $roomId = null): void
     {
         $hostel = Hostel::where('school_id', $schoolId)->findOrFail($hostelId);
         
+        // 1. Validate Hostel Capacity
         $currentOccupancy = HostelBedAssignment::where('school_id', $schoolId)
             ->where('hostel_id', $hostelId)
             ->where('status', GeneralStatus::Active)
@@ -142,8 +174,16 @@ class HostelService
 
         $capacity = $hostel->capability ?? 0;
 
-        if ($currentOccupancy >= $capacity) {
+        if ($capacity > 0 && $currentOccupancy >= $capacity) {
             throw new \Exception("Hostel {$hostel->hostel_name} has reached its maximum capacity of {$capacity} beds.");
+        }
+
+        // 2. Validate Room Capacity
+        if ($roomId) {
+            $room = HostelRoom::where('school_id', $schoolId)->findOrFail($roomId);
+            if (!$room->hasAvailableBeds()) {
+                throw new \Exception("Room {$room->room_name} has reached its maximum capacity of {$room->no_of_beds} beds.");
+            }
         }
     }
 

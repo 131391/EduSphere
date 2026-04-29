@@ -24,9 +24,11 @@ class HostelRoomController extends TenantController
                 'room_name'     => $room->room_name,
                 'floor_name'    => $room->floor?->floor_name,
                 'hostel_name'   => $room->hostel?->hostel_name,
-                'assignment_count' => $room->assignments()->count(),
+                'no_of_beds'    => $room->no_of_beds ?? 0,
+                'occupancy_count' => $room->occupancy_count,
                 'raw' => [
                     'room_name'       => $room->room_name,
+                    'no_of_beds'      => $room->no_of_beds,
                     'hostel_floor_id' => $room->hostel_floor_id,
                     'hostel_id'       => $room->hostel_id,
                 ],
@@ -70,6 +72,7 @@ class HostelRoomController extends TenantController
                 'hostel_id' => 'required|exists:hostels,id,school_id,' . $this->getSchoolId(),
                 'hostel_floor_id' => 'required|exists:hostel_floors,id,school_id,' . $this->getSchoolId(),
                 'room_name' => 'required|string|max:255',
+                'no_of_beds' => 'required|integer|min:1',
             ]);
             $validated['school_id'] = $this->getSchoolId();
 
@@ -97,6 +100,7 @@ class HostelRoomController extends TenantController
                 'hostel_id' => 'required|exists:hostels,id,school_id,' . $this->getSchoolId(),
                 'hostel_floor_id' => 'required|exists:hostel_floors,id,school_id,' . $this->getSchoolId(),
                 'room_name' => 'required|string|max:255',
+                'no_of_beds' => 'required|integer|min:1',
             ]);
 
             $room->update($validated);

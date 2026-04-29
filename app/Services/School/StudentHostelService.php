@@ -38,6 +38,25 @@ class StudentHostelService
                 }
             }
 
+            // Validate Room Capacity
+            $room = \App\Models\HostelRoom::where('school_id', $school->id)->findOrFail($data['hostel_room_id']);
+            if (!$room->hasAvailableBeds()) {
+                throw new Exception("Cannot assign student. Room '{$room->room_name}' has reached its maximum capacity of {$room->no_of_beds} beds.");
+            }
+
+            // Check bed collision
+            if (!empty($data['bed_no'])) {
+                $collision = HostelBedAssignment::where('school_id', $school->id)
+                    ->where('hostel_room_id', $data['hostel_room_id'])
+                    ->where('bed_no', $data['bed_no'])
+                    ->active()
+                    ->exists();
+
+                if ($collision) {
+                    throw new Exception("Bed number '{$data['bed_no']}' is already assigned to another student in this room.");
+                }
+            }
+
             // End current active assignments for the student
             HostelBedAssignment::where('student_id', $student->id)
                 ->where('status', GeneralStatus::Active)

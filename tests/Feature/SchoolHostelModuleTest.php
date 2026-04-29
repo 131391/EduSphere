@@ -83,6 +83,7 @@ class SchoolHostelModuleTest extends TestCase
                 'hostel_id' => $hostel->id,
                 'hostel_floor_id' => $floor->id,
                 'room_name' => 'Room 101',
+                'no_of_beds' => 2,
             ]);
 
         $response->assertStatus(200)->assertJson(['success' => true]);
@@ -93,7 +94,7 @@ class SchoolHostelModuleTest extends TestCase
     {
         $hostel = Hostel::create(['school_id' => $this->school->id, 'hostel_name' => 'Hostel A', 'capability' => 10]);
         $floor = HostelFloor::create(['school_id' => $this->school->id, 'hostel_id' => $hostel->id, 'floor_name' => 'Floor 1']);
-        $room = HostelRoom::create(['school_id' => $this->school->id, 'hostel_id' => $hostel->id, 'hostel_floor_id' => $floor->id, 'room_name' => 'Room 101']);
+        $room = HostelRoom::create(['school_id' => $this->school->id, 'hostel_id' => $hostel->id, 'hostel_floor_id' => $floor->id, 'room_name' => 'Room 101', 'no_of_beds' => 2]);
         $academicYear = \App\Models\AcademicYear::factory()->create(['school_id' => $this->school->id, 'is_current' => true]);
 
         // Assignment

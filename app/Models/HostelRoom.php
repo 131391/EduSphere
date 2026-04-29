@@ -24,7 +24,9 @@ use App\Enums\YesNo;
  * @property YesNo $ac
  * @property YesNo $cooler
  * @property YesNo $fan
+ * @property int $no_of_beds
  * @property \Carbon\Carbon|null $room_create_date
+ * @property-read int $available_beds
  */
 class HostelRoom extends Model
 {
@@ -35,6 +37,7 @@ class HostelRoom extends Model
         'hostel_id',
         'hostel_floor_id',
         'room_name',
+        'no_of_beds',
         'ac',
         'cooler',
         'fan',
@@ -45,6 +48,7 @@ class HostelRoom extends Model
         'ac' => YesNo::class,
         'cooler' => YesNo::class,
         'fan' => YesNo::class,
+        'no_of_beds' => 'integer',
         'room_create_date' => 'date',
     ];
 
@@ -129,11 +133,19 @@ class HostelRoom extends Model
     }
 
     /**
+     * Get available beds count
+     */
+    public function getAvailableBedsAttribute(): int
+    {
+        return max(0, ($this->no_of_beds ?? 0) - $this->occupancy_count);
+    }
+
+    /**
      * Check if room has available beds
      */
     public function hasAvailableBeds(): bool
     {
-        return $this->occupancy_count > 0;
+        return $this->available_beds > 0;
     }
 }
 

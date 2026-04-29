@@ -28,16 +28,23 @@
                     </div>
                 </div>
 
-                <form action="{{ route('school.reports.fees.daily-collection') }}" method="GET">
+                <form x-data="{ date: '{{ date('Y-m-d') }}', isExporting: false }" 
+                      @submit="isExporting = true; setTimeout(() => isExporting = false, 2500)" 
+                      action="{{ route('school.reports.fees.daily-collection') }}" method="GET">
                     <div class="space-y-2 mb-4">
                         <label class="modal-label-premium">Target Date</label>
-                        <input type="date" name="date" value="{{ date('Y-m-d') }}"
+                        <input type="date" name="date" x-model="date"
                             class="modal-input-premium cursor-pointer" required>
                     </div>
-                    <button type="submit"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 w-full justify-center">
-                        <i class="fas fa-download text-xs"></i>
-                        Export to Excel
+                    <button type="submit" :disabled="isExporting"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 w-full justify-center disabled:opacity-75 disabled:cursor-wait">
+                        <template x-if="isExporting">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        </template>
+                        <template x-if="!isExporting">
+                            <i class="fas fa-download text-xs"></i>
+                        </template>
+                        <span x-text="isExporting ? 'Generating...' : 'Export to Excel'"></span>
                     </button>
                 </form>
             </div>
@@ -56,16 +63,23 @@
                     </div>
                 </div>
 
-                <form action="{{ route('school.reports.fees.defaulters') }}" method="GET">
+                <form x-data="{ date: '{{ date('Y-m-d') }}', isExporting: false }" 
+                      @submit="isExporting = true; setTimeout(() => isExporting = false, 2500)"
+                      action="{{ route('school.reports.fees.defaulters') }}" method="GET">
                     <div class="space-y-2 mb-4">
                         <label class="modal-label-premium">As Of Date</label>
-                        <input type="date" name="date" value="{{ date('Y-m-d') }}"
+                        <input type="date" name="date" x-model="date"
                             class="modal-input-premium cursor-pointer" required>
                     </div>
-                    <button type="submit"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 w-full justify-center">
-                        <i class="fas fa-download text-xs"></i>
-                        Export to Excel
+                    <button type="submit" :disabled="isExporting"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 w-full justify-center disabled:opacity-75 disabled:cursor-wait">
+                        <template x-if="isExporting">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        </template>
+                        <template x-if="!isExporting">
+                            <i class="fas fa-download text-xs"></i>
+                        </template>
+                        <span x-text="isExporting ? 'Generating...' : 'Export to Excel'"></span>
                     </button>
                 </form>
             </div>

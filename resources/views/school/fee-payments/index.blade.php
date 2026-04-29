@@ -4,7 +4,7 @@
 
 @section('content')
     <div x-data="Object.assign(ajaxDataTable({
-        fetchUrl: '{{ route('school.fee-payments.fetch') }}',
+        fetchUrl: '{{ route('school.fee-payments.index') }}',
         defaultSort: 'first_name',
         defaultDirection: 'asc',
         defaultPerPage: 25,

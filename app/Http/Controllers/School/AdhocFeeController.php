@@ -30,6 +30,7 @@ class AdhocFeeController extends TenantController
     public function getStudentsByClass(Request $request, $classId)
     {
         $this->ensureSchoolActive();
+        $this->authorize('create', Fee::class);
 
         $students = Student::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
