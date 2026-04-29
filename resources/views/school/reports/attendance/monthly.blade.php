@@ -10,7 +10,7 @@
                 <div class="card-body">
                     <h4 class="card-title mb-4">Monthly Attendance Report</h4>
                     
-                    <form action="{{ route('reports.attendance.monthly') }}" method="GET" class="row g-3">
+                    <form action="{{ route('school.reports.attendance.monthly') }}" method="GET" class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label">Class</label>
                             <select name="class_id" class="form-select" required>
