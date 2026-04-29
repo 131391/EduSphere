@@ -45,7 +45,7 @@
                             required
                             @change="if(errors.class_id) delete errors.class_id"
                             class="no-select2 w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                            :class="errors.class_id ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'">
+                            :class="errors.class_id ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-gray-700'">
                         <option value="">Select a class</option>
                         @foreach($classes as $class)
                             <option value="{{ $class->id }}">{{ $class->name }}</option>
@@ -67,7 +67,7 @@
                     <select id="academic_year_id" name="academic_year_id"
                             x-model="formData.academic_year_id"
                             required
-                            class="no-select2 w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                            class="no-select2 w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                         <option value="">Select academic year</option>
                         @foreach($academicYears as $year)
                             <option value="{{ $year->id }}" @if($year->is_current === \App\Enums\YesNo::Yes) selected @endif>
@@ -87,7 +87,7 @@
                             required
                             @change="if(errors.fee_type_id) delete errors.fee_type_id"
                             class="no-select2 w-full px-3 py-2.5 bg-white dark:bg-gray-800 border rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                            :class="errors.fee_type_id ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'">
+                            :class="errors.fee_type_id ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-gray-700'">
                         <option value="">Select fee type</option>
                         @foreach($feeTypes as $type)
                             <option value="{{ $type->id }}">{{ $type->name }}</option>
