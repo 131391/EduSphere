@@ -110,7 +110,7 @@
                            id="fee_period_picker"
                            x-model="feePeriodRaw"
                            @change="formData.fee_period = formatFeePeriod(feePeriodRaw)"
-                           class="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                           class="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                     <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Selected: <span x-text="formData.fee_period"></span></p>
                 </div>
 
@@ -125,7 +125,7 @@
                            x-model="formData.due_date"
                            min="{{ date('Y-m-d') }}"
                            required
-                           class="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                           class="w-full px-3 py-2.5 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                     <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">Must be today or a future date.</p>
                 </div>
 
