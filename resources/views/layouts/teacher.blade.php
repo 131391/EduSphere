@@ -175,6 +175,10 @@
                 <p>{{ Auth::user()->name ?? 'Teacher' }}</p>
                 <p class="mt-1 opacity-75">{{ date('Y') }} © EduSphere</p>
             </div>
+            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center sidebar-text flex-shrink-0" x-show="false" style="display:block">
+                <p>{{ Auth::user()->name ?? 'Teacher' }}</p>
+                <p class="mt-1 opacity-75">{{ date('Y') }} © EduSphere</p>
+            </div>
         </aside>
 
         <!-- Main Content -->

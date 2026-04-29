@@ -962,6 +962,9 @@
             <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center sidebar-text flex-shrink-0" x-show="!sidebarCollapsed" x-cloak>
                 <p>{{ date('Y') }} ©</p>
             </div>
+            <div class="p-4 border-t border-[#283593] text-xs text-indigo-100 text-center sidebar-text flex-shrink-0" x-show="false" style="display:block">
+                <p>{{ date('Y') }} ©</p>
+            </div>
         </aside>
 
         <!-- Main Content -->
