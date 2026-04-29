@@ -28,24 +28,32 @@ class SchoolBankController extends TenantController
 
         $transformer = function ($item) {
             return [
-                'id' => $item->id,
-                'name' => $item->name,
-                'created_at' => $item->created_at?->format('M d, Y'),
+                'id'             => $item->id,
+                'bank_name'      => $item->bank_name,
+                'account_number' => $item->account_number,
+                'branch_name'    => $item->branch_name,
+                'ifsc_code'      => $item->ifsc_code,
+                'is_active'      => $item->is_active,
+                'created_at'     => $item->created_at?->format('M d, Y'),
             ];
         };
 
         $query = SchoolBank::where('school_id', $schoolId);
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->input('search') . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('bank_name', 'like', '%' . $request->input('search') . '%')
+                  ->orWhere('account_number', 'like', '%' . $request->input('search') . '%')
+                  ->orWhere('branch_name', 'like', '%' . $request->input('search') . '%');
+            });
         }
 
-        $sort = $request->input('sort', 'name');
+        $sort = $request->input('sort', 'bank_name');
         $direction = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
-        if (\in_array($sort, ['id', 'name', 'created_at'], true)) {
+        if (\in_array($sort, ['id', 'bank_name', 'created_at'], true)) {
             $query->orderBy($sort, $direction);
         } else {
-            $query->orderBy('name', 'asc');
+            $query->orderBy('bank_name', 'asc');
         }
 
         $stats = [
