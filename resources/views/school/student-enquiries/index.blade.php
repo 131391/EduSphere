@@ -86,15 +86,14 @@
                         <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
 
                         {{-- Follow-up Today chip --}}
-                        {{-- defaultFilters passes the initial value so Alpine starts correct — no blink. --}}
+                        @php
+                            $followUpTodayActive = filled($activeFilters['follow_up_today']);
+                        @endphp
                         <button @click="applyFilter('follow_up_today', filters.follow_up_today ? '' : '1')"
                                 :class="filters.follow_up_today
                                     ? 'bg-rose-500 text-white border-rose-500'
                                     : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-rose-400 hover:text-rose-600'"
-                                class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap">
-                            <i class="fas fa-bell text-[10px]"></i>
-                            Follow-up Today
-                        </button>
+                                class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap {{ $followUpTodayActive ? 'bg-rose-500 text-white border-rose-500' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-rose-400 hover:text-rose-600' }}">
                             <i class="fas fa-bell text-[10px]"></i>
                             Follow-up Today
                         </button>
@@ -136,7 +135,7 @@
                     </thead>
 
                     <!-- Initial Blade Render (Zero Blink) -->
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" :class="{ 'hidden': true }">
+                    <tbody data-ssr x-show="!hydrated" class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150">
                         @if(empty($initialData['rows']))
                         <tr>
                             <td colspan="7" class="px-6 py-12 text-center">
@@ -219,7 +218,7 @@
                     </tbody>
 
                     <!-- Dynamic Table Body -->
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
+                    <tbody x-cloak class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-xs font-bold text-teal-600">
@@ -292,15 +291,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Server-rendered pagination: visible instantly, hidden once Alpine takes over -->
-            @if($initialData['pagination']['total'] > 0)
-            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" :class="{ 'hidden': true }">
-                <div class="text-sm text-gray-700 dark:text-gray-300">
-                    Showing {{ $initialData['pagination']['from'] }} to {{ $initialData['pagination']['to'] }} of {{ $initialData['pagination']['total'] }} results
-                </div>
-            </div>
-            @endif
 
             <x-table.pagination :initial="$initialData['pagination']" />
         </div>
@@ -382,4 +372,3 @@
         </script>
     @endpush
 @endsection
-
