@@ -679,6 +679,29 @@ select:focus {
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
 }
 
+/* ── Global error border fix ─────────────────────────────────────────────
+   Alpine's :class adds border-red-500 dynamically. Because Tailwind's
+   `border` shorthand (border-color: currentColor) can win over
+   `border-red-500` depending on stylesheet order, we force red with
+   higher specificity here. Covers inputs, selects, textareas and any
+   wrapper div that gets border-red-500 for error state.
+──────────────────────────────────────────────────────────────────────── */
+input.border-red-500,
+select.border-red-500,
+textarea.border-red-500,
+div.border-red-500 {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+.dark input.border-red-500,
+.dark select.border-red-500,
+.dark textarea.border-red-500,
+.dark div.border-red-500 {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+}
+
 /* Fee component card selected state - thin border */
 .fee-card-selected {
     border-color: #818cf8 !important;
