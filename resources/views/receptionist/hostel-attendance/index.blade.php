@@ -293,10 +293,10 @@ document.addEventListener('alpine:init', () => {
                 } else {
                     this.students = [];
                     this.checkedStudents = [];
-                    if (window.Toast) window.Toast.fire({ icon: 'warning', title: data.message || 'No students found.' });
+                    if (window.Toast) window.Toast.fire({ icon: 'warning', title: window.resolveApiMessage(data, '') });
                 }
             } catch (error) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message || 'Failed to load students.' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || '') });
                 this.students = [];
                 this.checkedStudents = [];
             } finally {
@@ -359,10 +359,10 @@ document.addEventListener('alpine:init', () => {
                         window.location.href = window.location.href;
                     }
                 } else {
-                    throw new Error(result.message || 'Failed to save attendance.');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (error) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'Something went wrong') });
                 else alert(error.message);
             } finally {
                 this.submitting = false;

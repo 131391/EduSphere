@@ -335,10 +335,10 @@ function enquiryManagement() {
                     if (window.Toast) await window.Toast.fire({ icon: 'success', title: result.message || 'Enquiry updated successfully' });
                     window.location.href = result.redirect || "{{ route('school.student-enquiries.index') }}";
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (error) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message || 'Failed to update enquiry' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || '') });
             } finally {
                 this.submitting = false;
             }

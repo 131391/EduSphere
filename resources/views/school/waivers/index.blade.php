@@ -425,7 +425,7 @@
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
                             } else {
-                                throw new Error(result.message || 'Failed to apply waiver.');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (e) {
                             window.dispatchEvent(new CustomEvent('show-toast', {

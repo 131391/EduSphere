@@ -402,10 +402,10 @@
                                 this.$dispatch('close-modal', 'renew-modal');
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else {
-                                throw new Error(result.message || 'Renewal failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (e) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                         } finally {
                             this.submitting = false;
                         }
@@ -429,10 +429,10 @@
                                         if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                                         if (typeof this.refreshTable === 'function') this.refreshTable();
                                     } else {
-                                        throw new Error(result.message || 'Operation failed');
+                                        throw new Error(window.resolveApiMessage(result, ''));
                                     }
                                 } catch (e) {
-                                    if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                                 }
                             }
                         });
@@ -472,10 +472,10 @@
                                 const firstError = Object.values(this.errors)[0]?.[0];
                                 if (firstError && window.Toast) window.Toast.fire({ icon: 'error', title: firstError });
                             } else {
-                                throw new Error(result.message || 'Issuance failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (e) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                         } finally {
                             this.submitting = false;
                         }
@@ -511,7 +511,7 @@
                                 this.$dispatch('close-modal', 'return-modal');
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else {
-                                if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Operation failed' });
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                             }
                         } catch (e) {
                             if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });

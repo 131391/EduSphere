@@ -337,11 +337,14 @@ document.addEventListener('alpine:init', () => {
 
                             const result = response.data;
                             if (window.Toast) {
-                                window.Toast.fire({ icon: 'success', title: result.message || `${label} successful` });
+                                window.Toast.fire({ icon: 'success', title: window.resolveApiMessage(result, `${label} successful`) });
                             }
                             self.fetchData();
                         } catch (error) {
-                            const msg = error.response?.data?.message || `${label} failed. Please try again.`;
+                            const msg = window.resolveApiMessage(
+                                error.response?.data || { message: error.message },
+                                `${label} failed. Please try again.`
+                            );
                             if (window.Toast) {
                                 window.Toast.fire({ icon: 'error', title: msg });
                             }

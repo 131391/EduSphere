@@ -115,7 +115,7 @@
                         if (response.ok) {
                             if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                         } else {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Validation failed' });
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                         }
                     } catch (e) {
                         if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });

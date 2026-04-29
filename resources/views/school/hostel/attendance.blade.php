@@ -270,7 +270,7 @@ document.addEventListener('alpine:init', () => {
                 console.error('Hostel attendance load failed:', error);
                 this.students = [];
                 this.checkedStudents = [];
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message || 'Failed to load students.' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || '') });
             } finally {
                 this.loading = false;
             }
@@ -332,10 +332,10 @@ document.addEventListener('alpine:init', () => {
                         window.location.href = window.location.href;
                     }
                 } else {
-                    throw new Error(result.message || 'Failed to save attendance.');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (error) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message || 'Failed to save attendance' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || '') });
             } finally {
                 this.submitting = false;
             }

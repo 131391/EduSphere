@@ -25,5 +25,32 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Handle duplicate entry DB errors globally for JSON requests
+        $exceptions->render(function (
+            \Illuminate\Database\UniqueConstraintViolationException $e,
+            \Illuminate\Http\Request $request
+        ) {
+            if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This record already exists. Please check for duplicates.',
+                ], 422);
+            }
+        });
+
+        // Handle generic query exceptions (FK violations, etc.) for JSON requests
+        $exceptions->render(function (
+            \Illuminate\Database\QueryException $e,
+            \Illuminate\Http\Request $request
+        ) {
+            if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
+                $code = $e->errorInfo[1] ?? 0;
+                $message = match ((int) $code) {
+                    1062 => 'This record already exists. Please check for duplicates.',
+                    1451, 1452 => 'This record is linked to other data and cannot be modified.',
+                    default => 'A database error occurred. Please try again.',
+                };
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+        });
     })->create();

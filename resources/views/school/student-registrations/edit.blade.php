@@ -378,10 +378,10 @@ function registrationManagement() {
                     if (window.Toast) await window.Toast.fire({ icon: 'success', title: result.message || 'Registration updated' });
                     window.location.href = result.redirect || "{{ route('school.student-registrations.index') }}";
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (err) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: err.message || 'Failed to update registration' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(err.response?.data || { message: err.message }, err.message || '') });
             } finally {
                 this.submitting = false;
             }

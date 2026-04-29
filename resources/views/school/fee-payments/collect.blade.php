@@ -279,7 +279,7 @@ document.addEventListener('alpine:init', () => {
                     this.receiptUrl = result.redirect;
                     this.showSuccessOverlay = true;
                 } else {
-                    throw new Error(result.message || 'Payment processing failed');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (err) {
                 if (window.Toast) {

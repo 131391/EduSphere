@@ -331,10 +331,10 @@
                             if (typeof this.refreshStats === 'function') this.refreshStats();
                             if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                         } else {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Update failed' });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, 'Update failed') });
                         }
                     } catch (e) {
-                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });
+                        window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, 'Connection error') });
                     }
                 },
 
@@ -356,10 +356,10 @@
                                         if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Done' });
                                         if (typeof self.refreshTable === 'function') self.refreshTable();
                                     } else {
-                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Failed' });
+                                        window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, 'Failed') });
                                     }
                                 } catch (e) {
-                                    if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });
+                                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, 'Connection error') });
                                 }
                             }
                         }
@@ -370,4 +370,3 @@
     </script>
     @endpush
 @endsection
-

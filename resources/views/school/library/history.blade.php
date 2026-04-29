@@ -52,10 +52,10 @@
                             if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                             if (typeof this.refreshTable === 'function') this.refreshTable();
                         } else {
-                            throw new Error(result.message || 'Operation failed');
+                            throw new Error(window.resolveApiMessage(result, ''));
                         }
                     } catch (e) {
-                        if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                        window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                     }
                 }
             });
@@ -88,10 +88,10 @@
                 } else if (response.status === 422 && result.errors) {
                     this.settleErrors = result.errors;
                 } else {
-                    throw new Error(result.message || 'Settlement failed');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (e) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
             } finally {
                 this.settleSubmitting = false;
             }

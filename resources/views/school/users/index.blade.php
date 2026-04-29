@@ -406,10 +406,10 @@ function userManagementData() {
                                 if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'User deleted.' });
                                 this.refreshTable();
                             } else {
-                                throw new Error(result.message || 'Delete failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (e) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                         }
                     }
                 }
@@ -445,10 +445,10 @@ function userManagementData() {
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (e) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
             } finally {
                 this.submitting = false;
             }

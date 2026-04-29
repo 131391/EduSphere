@@ -251,6 +251,12 @@
                         is_available: true
                     },
 
+                    showToast(message, type = 'info') {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message, type }
+                        }));
+                    },
+
                     clearError(field) {
                         if (this.errors && this.errors[field]) {
                             const e = { ...this.errors };
@@ -313,16 +319,17 @@
                             const result = await response.json();
 
                             if (response.ok) {
-                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.showToast(result.message || (this.editMode ? 'Section updated successfully.' : 'Section created successfully.'), 'success');
                                 this.$dispatch('close-modal', 'section-modal');
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
+                                this.showToast(result.message || Object.values(this.errors)[0]?.[0] || 'Validation failed.', 'error');
                             } else {
-                                throw new Error(result.message || 'Something went wrong');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (error) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
+                            this.showToast(error.message, 'error');
                         } finally {
                             this.submitting = false;
                         }
@@ -349,13 +356,13 @@
                                         const result = await response.json();
 
                                         if (response.ok) {
-                                            if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Deleted successfully' });
+                                            self.showToast(result.message || 'Deleted successfully', 'success');
                                             if (typeof self.refreshTable === 'function') self.refreshTable();
                                         } else {
-                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Delete failed' });
+                                            self.showToast(result.message || 'Delete failed', 'error');
                                         }
                                     } catch (error) {
-                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Delete failed' });
+                                        self.showToast('Delete failed', 'error');
                                     }
                                 }
                             }

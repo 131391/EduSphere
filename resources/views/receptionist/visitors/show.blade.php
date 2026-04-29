@@ -362,7 +362,7 @@
                                 }
                                 setTimeout(() => window.location.reload(), 1000);
                             } else {
-                                throw new Error(result.message || 'Operation failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (error) {
                             if (window.Toast) {

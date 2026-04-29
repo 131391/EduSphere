@@ -242,7 +242,7 @@ document.addEventListener('alpine:init', () => {
                     }
                     setTimeout(() => window.location.href = '{{ route('school.examination.marks.index') }}', 1000);
                 } else {
-                    throw new Error(result.message || 'Transmission failed');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (error) {
                 if (window.Toast) {

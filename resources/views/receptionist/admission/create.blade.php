@@ -443,17 +443,17 @@ function admissionManagement() {
                     if (window.Toast) await window.Toast.fire({ icon: 'success', title: result.message || 'Student admitted successfully' });
                     if (result.redirect) window.location.href = result.redirect;
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, 'Something went wrong'));
                 }
             } catch (err) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: err.message || 'Failed to process admission' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(err.response?.data || { message: err.message }, err.message || 'Failed to process admission') });
             } finally {
                 this.submitting = false;
             }
         },
 
         handleValidationErrors(errors) {
-            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Please check the form for errors' });
+            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage({ errors }, 'Please check the form for errors') });
             const step3Fields = Object.keys(errors).filter(f => f.startsWith('father_') || f.startsWith('mother_'));
             const map = {
                 1: ['registration_id','academic_year_id','class_id','section_id','roll_no','receipt_no','admission_date','admission_fee'],

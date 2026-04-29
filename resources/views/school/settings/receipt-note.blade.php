@@ -166,7 +166,7 @@ function receiptNoteSettings() {
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
                 } else {
-                    throw new Error(result.message || 'Something went wrong.');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (error) {
                 window.dispatchEvent(new CustomEvent('show-toast', {

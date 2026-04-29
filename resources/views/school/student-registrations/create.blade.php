@@ -472,10 +472,10 @@ function registrationManagement() {
                     if (window.Toast) await window.Toast.fire({ icon: 'success', title: result.message || 'Registration completed' });
                     if (result.redirect) window.location.href = result.redirect;
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (err) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: err.message || 'Failed to process registration' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(err.response?.data || { message: err.message }, err.message || '') });
             } finally {
                 this.submitting = false;
             }

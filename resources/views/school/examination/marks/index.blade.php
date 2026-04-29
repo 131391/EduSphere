@@ -217,7 +217,7 @@
                         this.$dispatch('close-modal', 'import-modal');
                         this.file = null;
                     } else {
-                        if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Import failed' });
+                        if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                     }
                 } catch (e) {
                     if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });

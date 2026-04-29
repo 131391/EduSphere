@@ -376,10 +376,10 @@ function registrationManagement() {
                     if (window.Toast) await window.Toast.fire({ icon: 'success', title: result.message || 'Registration updated' });
                     window.location.href = result.redirect || "{{ route('receptionist.student-registrations.index') }}";
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, 'Something went wrong'));
                 }
             } catch (err) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: err.message || 'Failed to update registration' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(err.response?.data || { message: err.message }, err.message || 'Failed to update registration') });
             } finally {
                 this.submitting = false;
             }
@@ -387,7 +387,7 @@ function registrationManagement() {
 
         // Bug 3 fix: evaluate step3 fields at call time, not at map-creation time
         handleValidationErrors(errors) {
-            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Please check the form for errors' });
+            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage({ errors }, 'Please check the form for errors') });
             const step3Fields = Object.keys(errors).filter(f => f.startsWith('father_') || f.startsWith('mother_'));
             const map = {
                 1: ['academic_year_id','class_id','registration_fee','admission_status'],

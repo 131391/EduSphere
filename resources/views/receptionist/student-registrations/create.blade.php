@@ -507,17 +507,17 @@ function registrationManagement() {
                     if (window.Toast) await window.Toast.fire({ icon: 'success', title: result.message || 'Registration completed' });
                     if (result.redirect) window.location.href = result.redirect;
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, 'Something went wrong'));
                 }
             } catch (err) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: err.message || 'Failed to process registration' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(err.response?.data || { message: err.message }, err.message || 'Failed to process registration') });
             } finally {
                 this.submitting = false;
             }
         },
 
         handleValidationErrors(errors) {
-            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Please check the form for errors' });
+            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage({ errors }, 'Please check the form for errors') });
             const step3Fields = Object.keys(errors).filter(f => f.startsWith('father_') || f.startsWith('mother_'));
             const map = {
                 1: ['academic_year_id','class_id','registration_fee','enquiry_id'],

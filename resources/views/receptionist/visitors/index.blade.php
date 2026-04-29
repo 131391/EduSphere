@@ -718,10 +718,10 @@
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
                             } else {
-                                throw new Error(result.message || 'Operation failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (error) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'Something went wrong') });
                         } finally {
                             this.submitting = false;
                         }

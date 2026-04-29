@@ -307,17 +307,17 @@ function enquiryManagement() {
                     if (window.Toast) await window.Toast.fire({ icon: 'success', title: result.message || 'Enquiry updated successfully' });
                     window.location.href = result.redirect || "{{ route('receptionist.student-enquiries.index') }}";
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, 'Something went wrong'));
                 }
             } catch (error) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message || 'Failed to update enquiry' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'Failed to update enquiry') });
             } finally {
                 this.submitting = false;
             }
         },
 
         handleValidationErrors(errors) {
-            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Please check the form for errors' });
+            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage({ errors }, 'Please check the form for errors') });
             const step1Fields = ['academic_year_id','class_id','student_name','gender','subject_name','follow_up_date','form_status'];
             const step2Fields = Object.keys(errors).filter(f => f.startsWith('father_') || f.startsWith('mother_'));
             const step3Fields = ['contact_no','whatsapp_no','email_id','country_id','dob','aadhaar_no','category','religion'];

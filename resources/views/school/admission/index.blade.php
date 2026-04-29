@@ -330,7 +330,7 @@
                                             if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Action completed successfully' });
                                             if (typeof self.refreshTable === 'function') self.refreshTable();
                                         } else {
-                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Action failed' });
+                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                                         }
                                     } catch (error) {
                                         if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });

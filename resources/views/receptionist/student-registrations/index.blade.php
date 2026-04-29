@@ -350,10 +350,10 @@
                                     if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Action completed successfully' });
                                     if (typeof self.refreshTable === 'function') self.refreshTable();
                                 } else {
-                                    if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Action failed' });
+                                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, 'Action failed') });
                                 }
                             } catch (error) {
-                                if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Connection error' });
+                                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, 'Connection error') });
                             }
                         }
                     }

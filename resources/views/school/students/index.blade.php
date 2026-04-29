@@ -248,7 +248,7 @@
                                             if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                                             if (typeof self.refreshTable === 'function') self.refreshTable();
                                         } else {
-                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Archive failed' });
+                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                                         }
                                     } catch (error) {
                                         if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Archive operation failed' });

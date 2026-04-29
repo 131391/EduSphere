@@ -262,11 +262,11 @@
                             window.location.href = '{{ route("school.fees.index") }}';
                         }
                     } else {
-                        throw new Error(result.message || 'Validation failed');
+                        throw new Error(window.resolveApiMessage(result, ''));
                     }
                 } catch (error) {
                     console.error('Submission error:', error);
-                    if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message || 'An unexpected error occurred while assigning the fee.' });
+                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || '') });
                 } finally {
                     this.isSubmitting = false;
                 }

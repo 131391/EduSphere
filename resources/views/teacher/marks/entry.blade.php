@@ -104,10 +104,10 @@ function teacherMarksGrid() {
                     if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                     setTimeout(() => window.location.href = '{{ route('teacher.marks.index') }}', 800);
                 } else {
-                    if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Save failed' });
+                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, 'Save failed') });
                 }
             } catch (e) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Save failed') });
             } finally {
                 this.submitting = false;
             }

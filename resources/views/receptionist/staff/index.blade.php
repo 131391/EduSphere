@@ -800,11 +800,12 @@ document.addEventListener('alpine:init', () => {
                     this.$dispatch('close-modal', 'staff-modal');
                 } else if (response.status === 422) {
                     this.errors = result.errors || {};
+                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.errors)) });
                 } else {
-                    throw new Error(result.message || 'System error');
+                    throw new Error(window.resolveApiMessage(result, 'System error'));
                 }
             } catch (error) {
-                window.Toast?.fire({ icon: 'error', title: error.message });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'System error') });
             } finally {
                 this.submitting = false;
             }
@@ -940,4 +941,3 @@ document.addEventListener('alpine:init', () => {
 </script>
 @endpush
 @endsection
-

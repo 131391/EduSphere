@@ -495,13 +495,13 @@
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
                                 if (Object.keys(this.errors).length === 0 && window.Toast) {
-                                    window.Toast.fire({ icon: 'error', title: result.message || 'Please check your inputs.' });
+                                    window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                                 }
                             } else {
-                                throw new Error(result.message || 'Bulk assignment failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (e) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                         } finally {
                             this.submitting = false;
                         }
@@ -531,10 +531,10 @@
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
                             } else {
-                                throw new Error(result.message || 'Update failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (e) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                         } finally {
                             this.submitting = false;
                         }
@@ -596,13 +596,13 @@
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
                                 if (Object.keys(this.errors).length === 0 && window.Toast) {
-                                    window.Toast.fire({ icon: 'error', title: result.message || 'Please check your inputs.' });
+                                    window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                                 }
                             } else {
-                                throw new Error(result.message || 'Single entry failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (e) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                         } finally {
                             this.submitting = false;
                         }
@@ -631,10 +631,10 @@
                                             if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Deleted successfully' });
                                             if (typeof self.refreshTable === 'function') self.refreshTable();
                                         } else {
-                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Delete failed' });
+                                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, 'Delete failed') });
                                         }
                                     } catch (error) {
-                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Delete failed' });
+                                        window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, 'Delete failed') });
                                     }
                                 }
                             }

@@ -230,11 +230,12 @@
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
+                                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.errors)) });
                             } else {
-                                throw new Error(result.message || 'Operation failed');
+                                throw new Error(window.resolveApiMessage(result, 'Something went wrong'));
                             }
                         } catch (error) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'Something went wrong') });
                         } finally {
                             this.submitting = false;
                         }
@@ -264,10 +265,10 @@
                                             if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Deleted successfully' });
                                             if (typeof self.refreshTable === 'function') self.refreshTable();
                                         } else {
-                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Delete failed' });
+                                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, 'Delete failed') });
                                         }
                                     } catch (error) {
-                                        if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Delete failed' });
+                                        window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, 'Delete failed') });
                                     }
                                 }
                             }

@@ -425,11 +425,14 @@
                                 if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                                 this.$dispatch('close-modal', 'route-modal');
                                 this.fetchData();
-                            } else {
+                            } else if (response.status === 422) {
                                 this.errors = result.errors || {};
+                                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.errors)) });
+                            } else {
+                                throw new Error(window.resolveApiMessage(result, 'Failed to save route'));
                             }
                         } catch (e) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Failed to save route' });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, 'Failed to save route') });
                         } finally {
                             this.submitting = false;
                         }

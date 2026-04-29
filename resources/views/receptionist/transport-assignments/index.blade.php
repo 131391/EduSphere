@@ -390,14 +390,13 @@
                             } else {
                                 if (response.status === 422) {
                                     this.errors = result.errors || {};
+                                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.errors)) });
                                 } else {
-                                    throw new Error(result.message || 'Save failed');
+                                    throw new Error(window.resolveApiMessage(result, 'Save failed'));
                                 }
                             }
                         } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: 'error', title: error.message });
-                            }
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'Save failed') });
                         } finally {
                             this.submitting = false;
                         }
@@ -430,12 +429,10 @@
                                 }
                                 setTimeout(() => window.location.reload(), 1000);
                             } else {
-                                throw new Error(result.message || 'Delete failed');
+                                throw new Error(window.resolveApiMessage(result, 'Delete failed'));
                             }
                         } catch (error) {
-                            if (window.Toast) {
-                                window.Toast.fire({ icon: 'error', title: error.message });
-                            }
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'Delete failed') });
                         }
                     },
 

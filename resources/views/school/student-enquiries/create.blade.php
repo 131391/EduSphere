@@ -330,10 +330,10 @@ function enquiryManagement() {
                     if (window.Toast) await window.Toast.fire({ icon: 'success', title: result.message || 'Enquiry recorded successfully' });
                     if (result.redirect) window.location.href = result.redirect;
                 } else {
-                    throw new Error(result.message || 'Something went wrong');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (error) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message || 'Failed to process enquiry' });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || '') });
             } finally {
                 this.submitting = false;
             }

@@ -353,10 +353,10 @@ function transportAttendanceManagement() {
                         window.location.href = window.location.href;
                     }
                 } else {
-                    throw new Error(result.message || 'Failed to save attendance.');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (e) {
-                if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(e.response?.data || { message: e.message }, e.message || 'Something went wrong') });
                 else alert(e.message);
             } finally {
                 this.submitting = false;

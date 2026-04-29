@@ -370,7 +370,7 @@
                                 };
                                 this.$dispatch('open-modal', 'exam-modal');
                             } else {
-                                if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Failed to load exam' });
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                             }
                         } catch (error) {
                             if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Failed to load exam data' });
@@ -412,13 +412,13 @@
                                 if (result.errors && Object.keys(result.errors).length > 0) {
                                     this.errors = result.errors;
                                 } else {
-                                    throw new Error(result.message || 'Scheduling failed');
+                                    throw new Error(window.resolveApiMessage(result, ''));
                                 }
                             } else {
-                                throw new Error(result.message || 'Scheduling failed');
+                                throw new Error(window.resolveApiMessage(result, ''));
                             }
                         } catch (error) {
-                            if (window.Toast) window.Toast.fire({ icon: 'error', title: error.message });
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'Something went wrong') });
                         } finally {
                             this.submitting = false;
                         }
@@ -443,7 +443,7 @@
                                 if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Exam cancelled' });
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else {
-                                if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Cancellation failed' });
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                             }
                         } catch (error) {
                             if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Cancellation failed' });
@@ -469,7 +469,7 @@
                                 if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Exam locked' });
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else {
-                                if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Lock failed' });
+                                if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                             }
                         } catch (error) {
                             if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Lock failed' });
@@ -500,7 +500,7 @@
                                             if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Removed successfully' });
                                             if (typeof self.refreshTable === 'function') self.refreshTable();
                                         } else {
-                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: result.message || 'Removal failed' });
+                                            if (window.Toast) window.Toast.fire({ icon: 'error', title: window.resolveApiMessage(result, '') });
                                         }
                                     } catch (error) {
                                         if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Removal failed' });

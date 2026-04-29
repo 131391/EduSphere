@@ -304,7 +304,7 @@ document.addEventListener('alpine:init', () => {
                         window.Toast.fire({ icon: 'error', title: 'Please correct the highlighted errors.' });
                     }
                 } else {
-                    throw new Error(result.message || 'Generation failed');
+                    throw new Error(window.resolveApiMessage(result, ''));
                 }
             } catch (err) {
                 if (window.Toast) {
