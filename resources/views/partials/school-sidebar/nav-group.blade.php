@@ -91,12 +91,12 @@
                 <a href="{{ route($item['route']) }}"
                     class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors duration-150 relative
                            {{ $childActive
-                                ? 'bg-[#283593] text-white font-medium'
-                                : 'text-indigo-200 hover:bg-[#283593] hover:text-white' }}">
+                                ? 'text-teal-300 font-medium'
+                                : 'text-indigo-300 hover:text-white hover:bg-white/10' }}">
                     @if($childActive)
-                        <span class="absolute left-0 top-1 bottom-1 w-0.5 bg-teal-300 rounded-full"></span>
+                        <span class="absolute left-0 top-1 bottom-1 w-0.5 bg-teal-400 rounded-full"></span>
                     @endif
-                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $childActive ? 'bg-teal-300' : 'bg-indigo-400' }}"></span>
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $childActive ? 'bg-teal-400' : 'bg-indigo-500' }}"></span>
                     <span class="truncate">{{ $item['label'] }}</span>
                 </a>
             </li>
@@ -132,12 +132,12 @@
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors duration-150 relative
                                    {{ $childActive
-                                        ? 'bg-[#283593] text-white font-medium'
-                                        : 'text-indigo-200 hover:bg-[#283593] hover:text-white' }}">
+                                        ? 'text-teal-300 font-medium'
+                                        : 'text-indigo-300 hover:text-white hover:bg-white/10' }}">
                             @if($childActive)
-                                <span class="absolute left-0 top-1 bottom-1 w-0.5 bg-teal-300 rounded-full"></span>
+                                <span class="absolute left-0 top-1 bottom-1 w-0.5 bg-teal-400 rounded-full"></span>
                             @endif
-                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $childActive ? 'bg-teal-300' : 'bg-indigo-400' }}"></span>
+                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $childActive ? 'bg-teal-400' : 'bg-indigo-500' }}"></span>
                             {{ $item['label'] }}
                         </a>
                     </li>
