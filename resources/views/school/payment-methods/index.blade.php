@@ -137,7 +137,7 @@
                         <div class="relative group">
                             <input type="text" name="name" x-model="formData.name" @input="clearError('name')"
                                 placeholder="e.g., Online Gateway"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 transition-all pr-10"
+                                class="modal-input-premium pr-10"
                                 :class="errors.name ? 'border-red-500' : 'border-slate-200'">
                             <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-wallet text-sm"></i>
@@ -153,7 +153,7 @@
                         <div class="relative group">
                             <input type="text" name="code" x-model="formData.code" @input="clearError('code')"
                                 placeholder="e.g., ONLINE_PG"
-                                class="w-full bg-white border rounded-xl py-3 px-4 text-sm font-bold uppercase focus:ring-2 focus:ring-emerald-500/20 transition-all pr-10"
+                                class="modal-input-premium pr-10 uppercase"
                                 :class="errors.code ? 'border-red-500' : 'border-slate-200'">
                             <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors group-focus-within:text-emerald-500">
                                 <i class="fas fa-barcode text-sm"></i>
