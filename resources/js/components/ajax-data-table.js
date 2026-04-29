@@ -71,7 +71,26 @@ document.addEventListener('alpine:init', () => {
         },
 
         _finishHydration() {
-            this.hydrated = true;
+            // Fade out the SSR tbody first, then swap to Alpine tbody.
+            // Using opacity instead of display:none prevents the table from
+            // recalculating column widths and row heights (layout shift).
+            const ssrTbody = this.$el?.querySelector('tbody[data-ssr]');
+            if (ssrTbody) {
+                ssrTbody.classList.add('opacity-0');
+                // After the CSS transition (120ms), fully remove from layout
+                setTimeout(() => {
+                    this.hydrated = true;
+                    // Remove SSR tbody from DOM after Alpine tbody is visible
+                    requestAnimationFrame(() => {
+                        if (ssrTbody.parentNode) ssrTbody.parentNode.removeChild(ssrTbody);
+                    });
+                }, 130);
+            } else {
+                // No SSR tbody — swap immediately
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    this.hydrated = true;
+                }));
+            }
         },
 
         // ─── Core Fetch ─────────────────────────────────────────────────

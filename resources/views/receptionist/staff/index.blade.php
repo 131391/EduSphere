@@ -124,7 +124,7 @@
                             </tr>
                         </thead>
                         {{-- Server-rendered rows (Hidden once Alpine initializes, prevents FOUC flash) --}}
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700" data-ssr x-show="!hydrated">
                             @forelse($initialData['rows'] as $index => $row)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
                                     <td class="px-6 py-4 text-sm font-medium text-gray-400">{{ ($initialData['pagination']['current_page'] - 1) * $initialData['pagination']['per_page'] + $index + 1 }}</td>

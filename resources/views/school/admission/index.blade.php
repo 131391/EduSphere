@@ -117,7 +117,7 @@
                     </thead>
 
                     <!-- Initial Blade Render (Zero Blink) -->
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" data-ssr x-show="!hydrated">
                         @if(empty($initialData['rows']))
                             <tr>
                                 <td colspan="7" class="px-6 py-12 text-center">

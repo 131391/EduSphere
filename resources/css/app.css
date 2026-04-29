@@ -32,13 +32,23 @@ input[type=number] {
     min-height: 260px;
 }
 
-/* Keep AJAX listing columns stable during SSR -> Alpine hydration.
-   Auto table layout re-measures widths when the server-rendered tbody is
-   replaced by the Alpine-managed tbody, which causes visible header/column
-   shifting on refresh. Fixed layout preserves the initial geometry. */
-.ajax-table-wrapper > table {
-    table-layout: fixed;
+/* ── Ajax table: prevent height fluctuation on hydration ──────────────
+   The SSR tbody must stay visible until Alpine has painted its rows.
+   We achieve this by keeping the wrapper at a stable height and letting
+   the SSR tbody fade out only after the Alpine tbody is ready.
+   The opacity transition masks the swap without a layout jump. */
+.ajax-table-wrapper tbody[data-ssr] {
+    transition: opacity 120ms ease;
 }
+.ajax-table-wrapper tbody[data-ssr].opacity-0 {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
 
 /* Sidebar scroll styling - Comprehensive */
 .sidebar-scroll {

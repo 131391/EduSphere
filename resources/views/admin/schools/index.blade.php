@@ -109,7 +109,7 @@
                 </thead>
 
                 {{-- Server-rendered rows --}}
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700" data-ssr x-show="!hydrated">
                     @foreach($schools as $school)
                     <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-500 dark:text-gray-400">#{{ $school->id }}</td>
