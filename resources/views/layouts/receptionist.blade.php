@@ -551,14 +551,6 @@
 
                     <!-- Right: Actions & User -->
                     <div class="flex items-center space-x-2 sm:space-x-4" x-data="headerActions">
-                        <!-- Star (Favorite) -->
-                        <button @click="toggleFavorite()"
-                            class="hidden sm:block transition-colors"
-                            :class="isFavorite ? 'text-yellow-500 hover:text-yellow-600 dark:text-yellow-400 dark:hover:text-yellow-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100'"
-                            title="Add to Favorites">
-                            <i class="text-xl" :class="isFavorite ? 'fas fa-star' : 'far fa-star'" x-cloak></i>
-                            <i class="text-xl far fa-star ssr-icon-fallback"></i>
-                        </button>
 
                         <!-- Bookmark (Saved List) -->
                         <div class="relative hidden md:block">
