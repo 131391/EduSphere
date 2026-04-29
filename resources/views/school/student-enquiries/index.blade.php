@@ -8,7 +8,12 @@
         defaultSort: 'created_at',
         defaultDirection: 'desc',
         defaultPerPage: 25,
-        defaultFilters: { status: '', class_id: '', academic_year_id: '', follow_up_today: '' },
+        defaultFilters: {
+            status: '{{ $activeFilters['status'] }}',
+            class_id: '{{ $activeFilters['class_id'] }}',
+            academic_year_id: '{{ $activeFilters['academic_year_id'] }}',
+            follow_up_today: '{{ $activeFilters['follow_up_today'] }}'
+        },
         initialRows: @js($initialData['rows']),
         initialPagination: @js($initialData['pagination']),
         initialStats: @js($initialData['stats']),
@@ -81,9 +86,15 @@
                         <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
 
                         {{-- Follow-up Today chip --}}
+                        {{-- defaultFilters passes the initial value so Alpine starts correct — no blink. --}}
                         <button @click="applyFilter('follow_up_today', filters.follow_up_today ? '' : '1')"
-                                :class="filters.follow_up_today ? 'bg-rose-500 text-white border-rose-500' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-rose-400 hover:text-rose-600'"
+                                :class="filters.follow_up_today
+                                    ? 'bg-rose-500 text-white border-rose-500'
+                                    : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-rose-400 hover:text-rose-600'"
                                 class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap">
+                            <i class="fas fa-bell text-[10px]"></i>
+                            Follow-up Today
+                        </button>
                             <i class="fas fa-bell text-[10px]"></i>
                             Follow-up Today
                         </button>

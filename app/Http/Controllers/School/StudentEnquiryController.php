@@ -108,10 +108,16 @@ class StudentEnquiryController extends TenantController
 
         return view('school.student-enquiries.index', [
             'initialData' => $initialData,
-            'enquiries' => $initialData['rows'],
-            'stats' => $initialData['stats'],
+            'enquiries'   => $initialData['rows'],
+            'stats'       => $initialData['stats'],
             'academicYears' => $academicYears,
-            'classes' => $classes,
+            'classes'     => $classes,
+            'activeFilters' => [
+                'status'           => $request->input('status', ''),
+                'class_id'         => $request->input('class_id', ''),
+                'academic_year_id' => $request->input('academic_year_id', ''),
+                'follow_up_today'  => $request->input('follow_up_today', ''),
+            ],
         ]);
     }
 
