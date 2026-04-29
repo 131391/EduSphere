@@ -651,12 +651,27 @@ select:focus {
 }
 
 /* Global thin border for all native selects and inputs */
-select.no-select2,
+select.no-select2 {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid #e2e8f0 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.5rem;
+}
+
+.dark select.no-select2 {
+    border: 1px solid #374151 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+}
+
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
     border-color: #e2e8f0;
 }
 
-.dark select.no-select2,
 .dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
     border-color: #374151;
 }
