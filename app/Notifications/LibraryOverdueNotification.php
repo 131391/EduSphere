@@ -4,12 +4,16 @@ namespace App\Notifications;
 
 use App\Models\BookIssue;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class LibraryOverdueNotification extends Notification
+class LibraryOverdueNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 3;
+    public int $backoff = 60;
 
     public function __construct(public readonly BookIssue $issue) {}
 

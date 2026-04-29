@@ -127,6 +127,8 @@ class SchoolSettingsController extends TenantController
             'admission_fee' => 'nullable|numeric|min:0',
             'receipt_note' => 'nullable|string|max:1000',
             'late_return_library_book_fine' => 'nullable|numeric|min:0',
+            'library_max_books_per_borrower' => 'nullable|integer|min:1|max:100',
+            'library_max_renewals' => 'nullable|integer|min:0|max:20',
             'admission_fee_applicable' => 'nullable|boolean',
         ]);
 
@@ -137,6 +139,8 @@ class SchoolSettingsController extends TenantController
         $settings['admission_fee'] = $request->input('admission_fee');
         $settings['receipt_note'] = $request->input('receipt_note');
         $settings['late_return_library_book_fine'] = $request->input('late_return_library_book_fine');
+        $settings['library_max_books_per_borrower'] = $request->input('library_max_books_per_borrower');
+        $settings['library_max_renewals'] = $request->input('library_max_renewals');
         $settings['admission_fee_applicable'] = $request->boolean('admission_fee_applicable');
 
         $school->update(['settings' => $settings]);

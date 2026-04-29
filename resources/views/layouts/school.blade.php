@@ -413,6 +413,64 @@
                         </ul>
                     </li>
 
+                    <!-- Library Management -->
+                    <li x-data="{
+                        open: {{ request()->routeIs('school.library.*') ? 'true' : 'false' }},
+                        flyoutStyle: '',
+                        syncFlyout() {
+                            if (!this.sidebarCollapsed || !this.open || !this.$refs.trigger) return;
+                            const rect = this.$refs.trigger.getBoundingClientRect();
+                            const top = Math.max(12, Math.min(rect.top, window.innerHeight - 360));
+                            this.flyoutStyle = `top: ${top}px; left: ${rect.right}px;`;
+                        },
+                        toggleMenu() {
+                            this.open = !this.open;
+                            if (this.sidebarCollapsed && this.open) {
+                                this.$nextTick(() => this.syncFlyout());
+                            }
+                        },
+                        closeMenu() {
+                            if (this.sidebarCollapsed) this.open = false;
+                        }
+                    }" class="relative"
+                        @resize.window="syncFlyout()"
+                        @scroll.window="syncFlyout()"
+                        @keydown.escape.window="closeMenu()">
+                        <button x-ref="trigger" @click="toggleMenu()"
+                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg text-indigo-100 hover:bg-[#283593] focus:outline-none"
+                            :class="{ 'justify-center': sidebarCollapsed }">
+                            <div class="flex items-center">
+                                <i class="fas fa-book w-5" :class="{ 'mr-3': !sidebarCollapsed }"></i>
+                                <span x-show="!sidebarCollapsed">Library</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-200"
+                                :class="{ 'transform rotate-180': open }" x-show="!sidebarCollapsed"></i>
+                        </button>
+                        <ul x-show="!sidebarCollapsed && open" x-collapse class="pl-4 mt-1 space-y-1 sidebar-submenu" x-cloak>
+                            <li>
+                                <a href="{{ route('school.library.index') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.library.index') || request()->routeIs('school.library.fetch') || request()->routeIs('school.library.books.*') || request()->routeIs('school.library.categories.*') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Catalog</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.library.issues') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.library.issues') || request()->routeIs('school.library.issue.*') || request()->routeIs('school.library.return') || request()->routeIs('school.library.lost') || request()->routeIs('school.library.renew') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>Circulation</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('school.library.history') }}"
+                                    class="flex items-center gap-3 px-4 py-2 rounded-lg {{ request()->routeIs('school.library.history') || request()->routeIs('school.library.history.fetch') || request()->routeIs('school.library.settle-fine') ? 'bg-[#283593] text-white' : 'text-indigo-100 hover:bg-[#283593]' }}">
+                                    <i class="fas fa-minus w-3"></i>
+                                    <span>History &amp; Fines</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Fee Masters -->
                     <li class="pt-2 sidebar-text" x-show="!sidebarCollapsed">
                         <p class="px-4 py-2 text-xs font-semibold text-blue-300 uppercase">Fee Masters</p>

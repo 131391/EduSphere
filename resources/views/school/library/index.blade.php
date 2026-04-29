@@ -33,7 +33,12 @@
                     <i class="fas fa-tags mr-2 text-xs text-amber-500"></i>
                     {{ $categories->isEmpty() ? 'Create First Category' : 'Add Category' }}
                 </button>
-                <a href="{{ route('school.library.issues') }}" 
+                <a href="{{ route('school.library.export.catalog') }}"
+                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
+                    <i class="fas fa-file-csv mr-2 text-xs text-emerald-500"></i>
+                    Export CSV
+                </a>
+                <a href="{{ route('school.library.issues') }}"
                     class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
                     <i class="fas fa-exchange-alt mr-2 text-xs text-indigo-500"></i>
                     Circulation Desk
@@ -183,6 +188,9 @@
                                 <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-700 dark:text-gray-200" x-text="'₹' + row.price"></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex justify-center items-center gap-2">
+                                        <button @click="openStockModal(row)" class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-emerald-600 transition-colors" title="Adjust Stock">
+                                            <i class="fas fa-boxes-stacked text-xs"></i>
+                                        </button>
                                         <button @click="openEditModal(row)" class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-amber-600 transition-colors" title="Edit Book">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
@@ -273,6 +281,68 @@
             </form>
         </x-modal>
 
+        <!-- Adjust Stock Modal -->
+        <x-modal name="stock-modal" alpineTitle="'Adjust Stock — ' + (stockTarget?.title || '')" maxWidth="lg">
+            <form @submit.prevent="submitStockAdjust()" method="POST" class="p-1">
+                @csrf
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Current Stock</div>
+                            <div class="text-2xl font-black text-gray-800 dark:text-gray-100" x-text="stockTarget?.total_quantity ?? '—'"></div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Available</div>
+                            <div class="text-2xl font-black text-emerald-600" x-text="stockTarget?.available_quantity ?? '—'"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Adjustment <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2">
+                            <button type="button" @click="stockData.delta = -Math.abs(stockData.delta || 1)"
+                                class="px-3 py-2 text-xs font-bold rounded-lg border" :class="stockData.delta < 0 ? 'bg-rose-50 border-rose-300 text-rose-700' : 'bg-white border-gray-200 text-gray-500'">−</button>
+                            <input type="number" x-model.number="stockData.delta" @input="clearStockError('delta')"
+                                placeholder="e.g. 5 or -2" class="modal-input-premium text-center font-bold flex-1"
+                                :class="stockErrors.delta ? 'border-red-500' : ''">
+                            <button type="button" @click="stockData.delta = Math.abs(stockData.delta || 1)"
+                                class="px-3 py-2 text-xs font-bold rounded-lg border" :class="stockData.delta > 0 ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-gray-200 text-gray-500'">+</button>
+                        </div>
+                        <p class="text-[10px] text-gray-400 italic">Positive to add new copies, negative to remove. Cannot reduce below copies currently issued.</p>
+                        <template x-if="stockErrors.delta"><p class="modal-error-message" x-text="stockErrors.delta[0]"></p></template>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Reason <span class="text-red-500">*</span></label>
+                        <select x-model="stockData.reason" @change="clearStockError('reason')" class="modal-input-premium no-select2 appearance-none pr-10">
+                            <option value="purchase">Purchase / New Acquisition</option>
+                            <option value="donation">Donation</option>
+                            <option value="damage">Damage</option>
+                            <option value="shrinkage">Shrinkage / Missing</option>
+                            <option value="audit_correction">Audit Correction</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <template x-if="stockErrors.reason"><p class="modal-error-message" x-text="stockErrors.reason[0]"></p></template>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="modal-label-premium">Note</label>
+                        <input type="text" x-model="stockData.note" maxlength="500" placeholder="Optional context for the audit log"
+                            class="modal-input-premium">
+                        <template x-if="stockErrors.note"><p class="modal-error-message" x-text="stockErrors.note[0]"></p></template>
+                    </div>
+                </div>
+
+                <x-slot name="footer">
+                    <button type="button" @click="$dispatch('close-modal', 'stock-modal')" class="btn-premium-cancel px-10">Cancel</button>
+                    <button type="submit" :disabled="stockSubmitting" class="btn-premium-primary min-w-[200px] !from-emerald-600 !to-teal-700">
+                        <template x-if="stockSubmitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
+                        <span x-text="stockSubmitting ? 'Applying...' : 'Apply Adjustment'"></span>
+                    </button>
+                </x-slot>
+            </form>
+        </x-modal>
+
         <x-modal name="book-category-modal" alpineTitle="'Create Book Category'" maxWidth="xl">
             <form @submit.prevent="submitCategoryForm()" method="POST" class="p-1">
                 @csrf
@@ -329,6 +399,14 @@
                         name: '',
                         description: ''
                     },
+                    stockSubmitting: false,
+                    stockErrors: {},
+                    stockTarget: null,
+                    stockData: {
+                        delta: 1,
+                        reason: 'purchase',
+                        note: ''
+                    },
 
                     clearError(field) {
                         if (this.errors && this.errors[field]) {
@@ -364,6 +442,55 @@
                         this.errors = {};
                         this.formData = { title: '', author: '', category_id: '', isbn: '', quantity: 1, price: '' };
                         this.$dispatch('open-modal', 'book-modal');
+                    },
+
+                    clearStockError(field) {
+                        if (this.stockErrors && this.stockErrors[field]) {
+                            const e = { ...this.stockErrors };
+                            delete e[field];
+                            this.stockErrors = e;
+                        }
+                    },
+
+                    openStockModal(book) {
+                        this.stockErrors = {};
+                        this.stockTarget = book;
+                        this.stockData = { delta: 1, reason: 'purchase', note: '' };
+                        this.$dispatch('open-modal', 'stock-modal');
+                    },
+
+                    async submitStockAdjust() {
+                        if (this.stockSubmitting || !this.stockTarget) return;
+                        this.stockSubmitting = true;
+                        this.stockErrors = {};
+
+                        try {
+                            const url = `{{ route('school.library.books.adjust-stock', ['book' => '__BOOK__']) }}`.replace('__BOOK__', this.stockTarget.id);
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify(this.stockData)
+                            });
+
+                            const result = await response.json();
+                            if (response.ok && result.success) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
+                                this.$dispatch('close-modal', 'stock-modal');
+                                if (typeof this.refreshTable === 'function') this.refreshTable();
+                            } else if (response.status === 422 && result.errors) {
+                                this.stockErrors = result.errors;
+                            } else {
+                                throw new Error(result.message || 'Stock adjustment failed');
+                            }
+                        } catch (e) {
+                            if (window.Toast) window.Toast.fire({ icon: 'error', title: e.message });
+                        } finally {
+                            this.stockSubmitting = false;
+                        }
                     },
 
                     openEditModal(book) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Student\FeeController;
 use App\Http\Controllers\Student\AttendanceController;
 use App\Http\Controllers\Student\ResultController;
 use App\Http\Controllers\Student\TimetableController;
+use App\Http\Controllers\Student\LibraryController as StudentLibraryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +32,9 @@ Route::get('/results/{result}', [ResultController::class, 'show'])->name('result
 
 // Timetable
 Route::get('/timetable', [TimetableController::class, 'index'])->name('timetable.index');
+
+// Library — read-only "My borrowed books" view
+Route::get('/library', [StudentLibraryController::class, 'index'])->name('library.index');
 
 // Other student routes...
 

@@ -24,7 +24,12 @@
         <!-- Header Section -->
         <x-page-header title="Library Circulation Desk" description="Track book issuances, facilitate returns, and manage overdue assessments for student beneficiaries." icon="fas fa-exchange-alt">
             <div class="flex items-center gap-3">
-                <a href="{{ route('school.library.index') }}" 
+                <a href="{{ route('school.library.export.circulation') }}"
+                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
+                    <i class="fas fa-file-csv mr-2 text-xs text-emerald-500"></i>
+                    Export CSV
+                </a>
+                <a href="{{ route('school.library.index') }}"
                     class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm">
                     <i class="fas fa-atlas mr-2 text-xs text-amber-500"></i>
                     Knowledge Repository
@@ -44,7 +49,7 @@
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
                         <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Active Circulation Ledger</h2>
-                        <x-table.search placeholder="Search by student, book title..." />
+                        <x-table.search placeholder="Search by student / staff / book title..." />
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -82,8 +87,13 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-bold text-gray-700 dark:text-gray-200">{{ $row['student_name'] }}</div>
-                                    <div class="text-[10px] font-medium text-gray-400 tracking-tighter">{{ $row['admission_no'] }}</div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tighter rounded {{ $row['beneficiary_type'] === 'student' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700' }}">{{ $row['beneficiary_type'] }}</span>
+                                        <div>
+                                            <div class="text-sm font-bold text-gray-700 dark:text-gray-200">{{ $row['beneficiary_name'] }}</div>
+                                            <div class="text-[10px] font-medium text-gray-400 tracking-tighter">{{ $row['beneficiary_id'] }}</div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col gap-1">
@@ -225,7 +235,7 @@
 
                     <div class="space-y-2">
                         <label class="modal-label-premium">Return Obligation (Due Date) <span class="text-red-500">*</span></label>
-                        <input type="date" x-model="formData.due_date" @input="clearError('due_date')" min="{{ date('Y-m-d') }}" class="modal-input-premium">
+                        <input type="date" x-model="formData.due_date" @input="clearError('due_date')" min="{{ date('Y-m-d', strtotime('+1 day')) }}" class="modal-input-premium">
                         <template x-if="errors.due_date"><p class="modal-error-message" x-text="errors.due_date[0]"></p></template>
                     </div>
                 </div>
@@ -242,13 +252,19 @@
 
         <!-- Return Confirmation Modal -->
         <x-modal name="return-modal" alpineTitle="'Validate Return Process'" maxWidth="md">
-            <div class="px-8 py-8 space-y-6 text-center">
+            <div class="px-8 py-8 space-y-6">
                 <div class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-3xl flex items-center justify-center text-3xl mx-auto shadow-inner border border-emerald-100 dark:border-emerald-800">
                     <i class="fas fa-check-double"></i>
                 </div>
-                <div>
+                <div class="text-center">
                     <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Confirm Retrieval?</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">This will update inventory levels and clear student obligations.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">This will update inventory levels and clear borrower obligations.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Return Date <span class="text-[10px] text-gray-400 font-medium normal-case">(leave blank for today)</span></label>
+                    <input type="date" x-model="returnData.return_date" :max="returnMaxDate" class="modal-input-premium font-bold">
+                    <p class="text-[10px] text-gray-400 italic">Useful for back-dating drop-box returns. Cannot be in the future.</p>
                 </div>
             </div>
             <div class="px-8 py-6 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-center gap-4 rounded-b-3xl border-t border-gray-100 dark:border-gray-700">
@@ -263,7 +279,8 @@
                 <div class="space-y-6">
                     <div class="space-y-2">
                         <label class="modal-label-premium">New Return Obligation <span class="text-red-500">*</span></label>
-                        <input type="date" x-model="renewData.due_date" min="{{ date('Y-m-d') }}" class="modal-input-premium font-bold">
+                        <input type="date" x-model="renewData.due_date" :min="renewMinDate" class="modal-input-premium font-bold">
+                        <p class="text-[10px] text-gray-400 italic">Must be after the current due date (<span x-text="renewData.current_due_date"></span>).</p>
                     </div>
                     <p class="text-[10px] text-gray-500 italic">Extending the due date will delay overdue penalty calculations.</p>
                 </div>
@@ -293,10 +310,14 @@
                     },
                     beneficiarySearch: '',
                     returnIssueId: null,
+                    returnData: { return_date: '' },
+                    returnMaxDate: '{{ date('Y-m-d') }}',
                     renewData: {
                         issue_id: null,
-                        due_date: ''
+                        due_date: '',
+                        current_due_date: ''
                     },
+                    renewMinDate: '{{ date('Y-m-d', strtotime('+1 day')) }}',
 
                     openIssueModal() {
                         this.errors = {};
@@ -343,7 +364,20 @@
 
                     openRenewModal(issueId, currentDueDate) {
                         this.renewData.issue_id = issueId;
-                        this.renewData.due_date = currentDueDate;
+                        this.renewData.current_due_date = currentDueDate;
+                        // Compute the min selectable date: max(today+1, current_due_date+1).
+                        // currentDueDate arrives as "DD MMM, YYYY"; parse it safely.
+                        const parsed = new Date(currentDueDate);
+                        const next = isNaN(parsed) ? new Date() : parsed;
+                        next.setDate(next.getDate() + 1);
+                        const today = new Date();
+                        today.setDate(today.getDate() + 1);
+                        const min = next > today ? next : today;
+                        const yyyy = min.getFullYear();
+                        const mm = String(min.getMonth() + 1).padStart(2, '0');
+                        const dd = String(min.getDate()).padStart(2, '0');
+                        this.renewMinDate = `${yyyy}-${mm}-${dd}`;
+                        this.renewData.due_date = this.renewMinDate;
                         this.$dispatch('open-modal', 'renew-modal');
                     },
 
@@ -449,18 +483,23 @@
 
                     processReturn(issueId) {
                         this.returnIssueId = issueId;
+                        this.returnData = { return_date: '' };
                         this.$dispatch('open-modal', 'return-modal');
                     },
 
                     async confirmReturn() {
                         try {
+                            const payload = this.returnData.return_date
+                                ? { return_date: this.returnData.return_date }
+                                : {};
                             const response = await fetch(`{{ route('school.library.return', ['issue' => '__ISSUE__']) }}`.replace('__ISSUE__', this.returnIssueId), {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
+                                },
+                                body: JSON.stringify(payload)
                             });
 
                             const result = await response.json();

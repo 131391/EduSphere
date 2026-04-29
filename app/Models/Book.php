@@ -11,8 +11,9 @@ class Book extends Model
 {
     use HasFactory, Tenantable, SoftDeletes;
 
+    // school_id is intentionally excluded — it is set automatically by the
+    // Tenantable trait at creation time and must not be overridable from input.
     protected $fillable = [
-        'school_id',
         'title',
         'author',
         'isbn',
@@ -50,5 +51,10 @@ class Book extends Model
     public function issues()
     {
         return $this->hasMany(BookIssue::class);
+    }
+
+    public function copies()
+    {
+        return $this->hasMany(BookCopy::class);
     }
 }

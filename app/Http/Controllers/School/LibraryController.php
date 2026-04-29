@@ -164,6 +164,46 @@ class LibraryController extends TenantController
         }
     }
 
+    public function adjustStock(Request $request, Book $book)
+    {
+        $this->ensureSchoolActive();
+        $this->authorizeTenant($book);
+        Gate::authorize('manage', Book::class);
+
+        $validated = $request->validate([
+            'delta'  => 'required|integer|not_in:0|min:-1000|max:1000',
+            'reason' => 'required|string|in:purchase,donation,damage,shrinkage,audit_correction,other',
+            'note'   => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $result = $this->libraryService->adjustStock(
+                $book,
+                (int) $validated['delta'],
+                $validated['reason'] . ($validated['note'] ?? '' ? ': ' . $validated['note'] : '')
+            );
+            $this->bustStatsCache();
+
+            return $request->wantsJson()
+                ? response()->json([
+                    'success'            => $result['success'],
+                    'message'            => $result['message'],
+                    'quantity'           => $result['quantity'] ?? null,
+                    'available_quantity' => $result['available_quantity'] ?? null,
+                ], $result['success'] ? 200 : 422)
+                : ($result['success'] ? back()->with('success', $result['message']) : back()->with('error', $result['message']));
+        } catch (\Exception $e) {
+            Log::error('Failed to adjust library stock.', [
+                'school_id' => $this->getSchoolId(),
+                'book_id'   => $book->id,
+                'exception' => $e,
+            ]);
+            return $request->wantsJson()
+                ? response()->json(['success' => false, 'message' => 'Failed to adjust stock. Please try again.'], 500)
+                : back()->with('error', 'Failed to adjust stock. Please try again.');
+        }
+    }
+
     public function destroyBook(Book $book)
     {
         $this->ensureSchoolActive();
@@ -247,16 +287,19 @@ class LibraryController extends TenantController
         $this->authorizeTenant($category);
         Gate::authorize('manage', Book::class);
 
-        try {
-            $category->delete();
-            return request()->wantsJson()
-                ? response()->json(['success' => true, 'message' => 'Category deleted.'])
-                : back()->with('success', 'Category deleted.');
-        } catch (\Illuminate\Database\QueryException $e) {
+        // Explicit check beats relying on a DB-level FK exception: clearer error,
+        // works even if a future migration relaxes the FK, and avoids the
+        // QueryException leaking through if Postgres happens to defer the constraint.
+        if ($category->books()->exists()) {
             return request()->wantsJson()
                 ? response()->json(['success' => false, 'message' => 'Cannot delete a category that has books assigned to it.'], 422)
                 : back()->with('error', 'Cannot delete a category that has books assigned to it.');
         }
+
+        $category->delete();
+        return request()->wantsJson()
+            ? response()->json(['success' => true, 'message' => 'Category deleted.'])
+            : back()->with('success', 'Category deleted.');
     }
 
     // -------------------------------------------------------------------------
@@ -270,7 +313,7 @@ class LibraryController extends TenantController
 
         $query = BookIssue::where('school_id', $this->getSchoolId())
             ->where('status', 'issued')
-            ->with(['book', 'student']);
+            ->with(['book', 'student', 'staff']);
 
         if ($request->filled('search')) {
             $search = '%' . addcslashes((string) $request->input('search'), '%_\\') . '%';
@@ -279,6 +322,10 @@ class LibraryController extends TenantController
                     ->where('first_name', 'like', $search)
                     ->orWhere('last_name', 'like', $search)
                     ->orWhere('admission_no', 'like', $search))
+                ->orWhereHas('staff', fn($st) => $st
+                    ->where('name', 'like', $search)
+                    ->orWhere('email', 'like', $search)
+                    ->orWhere('mobile', 'like', $search))
                 ->orWhereHas('book', fn($b) => $b
                     ->where('title', 'like', $search)
                     ->orWhere('author', 'like', $search)
@@ -297,14 +344,18 @@ class LibraryController extends TenantController
             $dueDate   = $row->due_date->copy()->startOfDay();
             $isOverdue = $today->greaterThan($dueDate);
             return [
-                'id'           => $row->id,
-                'book_title'   => $row->book?->title ?? 'N/A',
-                'student_name' => $row->student?->full_name ?? 'N/A',
-                'admission_no' => $row->student?->admission_no ?? 'N/A',
-                'issue_date'   => $row->issue_date->format('d M, Y'),
-                'due_date'     => $row->due_date->format('d M, Y'),
-                'overdue'      => $isOverdue,
-                'overdue_days' => $isOverdue ? $dueDate->diffInDays($today) : 0,
+                'id'               => $row->id,
+                'book_title'       => $row->book?->title ?? 'N/A',
+                'beneficiary_type' => $row->student_id ? 'student' : 'staff',
+                'beneficiary_name' => $row->beneficiary_name,
+                'beneficiary_id'   => $row->beneficiary_id,
+                // legacy keys for views still referencing student_name/admission_no
+                'student_name'     => $row->beneficiary_name,
+                'admission_no'     => $row->beneficiary_id,
+                'issue_date'       => $row->issue_date->format('d M, Y'),
+                'due_date'         => $row->due_date->format('d M, Y'),
+                'overdue'          => $isOverdue,
+                'overdue_days'     => $isOverdue ? $dueDate->diffInDays($today) : 0,
             ];
         };
 
@@ -333,7 +384,8 @@ class LibraryController extends TenantController
             'student_id' => ['nullable', 'required_without:staff_id', Rule::exists('students', 'id')->where('school_id', $this->getSchoolId())],
             'staff_id'   => ['nullable', 'required_without:student_id', Rule::exists('staff', 'id')->where('school_id', $this->getSchoolId())],
             'issue_date' => 'nullable|date|before_or_equal:today',
-            'due_date'   => 'required|date|after:today|after:issue_date',
+            // Allow same-day returns (reference titles) — only reject in-the-past dates.
+            'due_date'   => 'required|date|after_or_equal:today|after_or_equal:issue_date',
         ]);
 
         try {
@@ -356,17 +408,27 @@ class LibraryController extends TenantController
         }
     }
 
-    public function returnBook(BookIssue $issue)
+    public function returnBook(Request $request, BookIssue $issue)
     {
         $this->ensureSchoolActive();
         $this->authorizeTenant($issue);
         Gate::authorize('manageIssue', $issue);
 
+        // Allow librarian to back-date a return (e.g., processing weekend dropbox
+        // on Monday). The date must be on/after issue_date and on/before today.
+        $validated = $request->validate([
+            'return_date' => [
+                'nullable', 'date',
+                'before_or_equal:today',
+                'after_or_equal:' . Carbon::parse($issue->issue_date)->toDateString(),
+            ],
+        ]);
+
         try {
-            $result = $this->libraryService->returnBook($issue);
+            $result = $this->libraryService->returnBook($issue, $validated['return_date'] ?? null);
             $this->bustStatsCache();
 
-            return request()->wantsJson()
+            return $request->wantsJson()
                 ? response()->json([
                     'success' => $result['success'],
                     'message' => $result['message'],
@@ -375,7 +437,7 @@ class LibraryController extends TenantController
                 : ($result['success'] ? back()->with('success', $result['message']) : back()->with('error', $result['message']));
         } catch (\Exception $e) {
             Log::error('Failed to return library book.', ['school_id' => $this->getSchoolId(), 'issue_id' => $issue->id, 'exception' => $e]);
-            return request()->wantsJson()
+            return $request->wantsJson()
                 ? response()->json(['success' => false, 'message' => 'Failed to process return. Please try again.'], 500)
                 : back()->with('error', 'Failed to process return. Please try again.');
         }
@@ -402,21 +464,54 @@ class LibraryController extends TenantController
         }
     }
 
-    public function settleFine(BookIssue $issue)
+    public function recoverLost(BookIssue $issue)
     {
         $this->ensureSchoolActive();
         $this->authorizeTenant($issue);
         Gate::authorize('manageIssue', $issue);
 
         try {
-            $result = $this->libraryService->settleFine($issue);
+            $result = $this->libraryService->recoverLostBook($issue);
+            $this->bustStatsCache();
 
             return request()->wantsJson()
-                ? response()->json(['success' => $result['success'], 'message' => $result['message'], 'fine' => $result['fine'] ?? null], $result['success'] ? 200 : 422)
+                ? response()->json(['success' => $result['success'], 'message' => $result['message']], $result['success'] ? 200 : 422)
+                : ($result['success'] ? back()->with('success', $result['message']) : back()->with('error', $result['message']));
+        } catch (\Exception $e) {
+            Log::error('Failed to recover lost book.', ['school_id' => $this->getSchoolId(), 'issue_id' => $issue->id, 'exception' => $e]);
+            return request()->wantsJson()
+                ? response()->json(['success' => false, 'message' => 'Failed to recover book.'], 500)
+                : back()->with('error', 'Failed to recover book.');
+        }
+    }
+
+    public function settleFine(Request $request, BookIssue $issue)
+    {
+        $this->ensureSchoolActive();
+        $this->authorizeTenant($issue);
+        Gate::authorize('manageIssue', $issue);
+
+        $validated = $request->validate([
+            'paid_amount'    => 'nullable|numeric|min:0.01',
+            'payment_method' => 'nullable|string|in:cash,upi,card,bank_transfer,cheque,other',
+            'note'           => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $result = $this->libraryService->settleFine($issue, $validated);
+
+            return $request->wantsJson()
+                ? response()->json([
+                    'success'        => $result['success'],
+                    'message'        => $result['message'],
+                    'fine'           => $result['fine'] ?? null,
+                    'paid_amount'    => $result['paid_amount'] ?? null,
+                    'payment_method' => $result['payment_method'] ?? null,
+                ], $result['success'] ? 200 : 422)
                 : ($result['success'] ? back()->with('success', $result['message']) : back()->with('error', $result['message']));
         } catch (\Exception $e) {
             Log::error('Failed to settle library fine.', ['school_id' => $this->getSchoolId(), 'issue_id' => $issue->id, 'exception' => $e]);
-            return request()->wantsJson()
+            return $request->wantsJson()
                 ? response()->json(['success' => false, 'message' => 'Failed to settle fine.'], 500)
                 : back()->with('error', 'Failed to settle fine.');
         }
@@ -433,7 +528,11 @@ class LibraryController extends TenantController
 
         $query = BookIssue::where('school_id', $this->getSchoolId())
             ->whereIn('status', ['returned', 'lost'])
-            ->with(['book', 'student']);
+            ->with([
+                'book' => fn($q) => $q->withTrashed(),
+                'student',
+                'staff',
+            ]);
 
         if ($request->filled('search')) {
             $search = '%' . addcslashes((string) $request->input('search'), '%_\\') . '%';
@@ -458,7 +557,20 @@ class LibraryController extends TenantController
             $query->where('return_date', '<=', Carbon::parse($request->input('to_date'))->toDateString());
         }
 
-        $query->orderBy('return_date', 'desc');
+        if ($request->filled('status_filter') && in_array($request->input('status_filter'), ['returned', 'lost'], true)) {
+            $query->where('status', $request->input('status_filter'));
+        }
+
+        if ($request->input('fines_pending') === '1') {
+            $query->where('fine_amount', '>', 0)->whereNull('fine_paid_at');
+        }
+
+        $sort      = $request->input('sort', 'return_date');
+        $direction = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
+        if (!in_array($sort, ['return_date', 'issue_date', 'due_date', 'fine_amount'], true)) {
+            $sort = 'return_date';
+        }
+        $query->orderBy($sort, $direction);
 
         $currency    = $this->getSchool()->settings['currency_symbol'] ?? '₹';
         $transformer = fn($row) => [
@@ -560,6 +672,134 @@ class LibraryController extends TenantController
                 ? response()->json(['success' => false, 'message' => 'Failed to process renewal.'], 500)
                 : back()->with('error', 'Failed to process renewal.');
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // CSV Exports
+    // -------------------------------------------------------------------------
+
+    public function exportCatalog()
+    {
+        $this->ensureSchoolActive();
+        Gate::authorize('manage', Book::class);
+
+        $schoolId = $this->getSchoolId();
+
+        return $this->streamCsv(
+            "library_catalog_{$schoolId}_" . now()->format('Ymd_His') . '.csv',
+            ['Title', 'Author', 'ISBN', 'Category', 'Total Qty', 'Available Qty', 'Price'],
+            function (callable $write) use ($schoolId) {
+                Book::where('school_id', $schoolId)->with('category')->chunk(500, function ($books) use ($write) {
+                    foreach ($books as $book) {
+                        $write([
+                            $book->title,
+                            $book->author,
+                            $book->isbn ?? '',
+                            $book->category?->name ?? '',
+                            $book->quantity,
+                            $book->available_quantity,
+                            number_format((float) ($book->price ?? 0), 2, '.', ''),
+                        ]);
+                    }
+                });
+            }
+        );
+    }
+
+    public function exportCirculation()
+    {
+        $this->ensureSchoolActive();
+        Gate::authorize('manage', Book::class);
+
+        $schoolId = $this->getSchoolId();
+
+        return $this->streamCsv(
+            "library_active_circulation_{$schoolId}_" . now()->format('Ymd_His') . '.csv',
+            ['Book', 'Beneficiary Type', 'Beneficiary', 'Beneficiary ID', 'Issue Date', 'Due Date', 'Renewals', 'Overdue (days)'],
+            function (callable $write) use ($schoolId) {
+                BookIssue::where('school_id', $schoolId)
+                    ->where('status', 'issued')
+                    ->with(['book', 'student', 'staff'])
+                    ->chunk(500, function ($issues) use ($write) {
+                        foreach ($issues as $issue) {
+                            $overdue = $issue->isOverdue()
+                                ? (int) Carbon::parse($issue->due_date)->startOfDay()->diffInDays(now()->startOfDay())
+                                : 0;
+                            $write([
+                                $issue->book?->title ?? '',
+                                $issue->student_id ? 'student' : 'staff',
+                                $issue->beneficiary_name,
+                                $issue->beneficiary_id,
+                                Carbon::parse($issue->issue_date)->toDateString(),
+                                Carbon::parse($issue->due_date)->toDateString(),
+                                (int) ($issue->renewal_count ?? 0),
+                                $overdue,
+                            ]);
+                        }
+                    });
+            }
+        );
+    }
+
+    public function exportHistory(Request $request)
+    {
+        $this->ensureSchoolActive();
+        Gate::authorize('manage', Book::class);
+
+        $schoolId = $this->getSchoolId();
+        $query = BookIssue::where('school_id', $schoolId)
+            ->whereIn('status', ['returned', 'lost'])
+            ->with(['book' => fn($q) => $q->withTrashed(), 'student', 'staff']);
+
+        if ($request->filled('from_date')) {
+            $query->where('return_date', '>=', Carbon::parse($request->input('from_date'))->toDateString());
+        }
+        if ($request->filled('to_date')) {
+            $query->where('return_date', '<=', Carbon::parse($request->input('to_date'))->toDateString());
+        }
+
+        return $this->streamCsv(
+            "library_history_{$schoolId}_" . now()->format('Ymd_His') . '.csv',
+            ['Book', 'Beneficiary', 'Beneficiary ID', 'Issue Date', 'Return Date', 'Status', 'Fine', 'Paid Amount', 'Payment Method', 'Settled At'],
+            function (callable $write) use ($query) {
+                $query->orderByDesc('return_date')->chunk(500, function ($issues) use ($write) {
+                    foreach ($issues as $issue) {
+                        $write([
+                            $issue->book?->title ?? '',
+                            $issue->beneficiary_name,
+                            $issue->beneficiary_id,
+                            Carbon::parse($issue->issue_date)->toDateString(),
+                            $issue->return_date ? Carbon::parse($issue->return_date)->toDateString() : '',
+                            $issue->status,
+                            number_format((float) $issue->fine_amount, 2, '.', ''),
+                            $issue->fine_paid_amount ? number_format((float) $issue->fine_paid_amount, 2, '.', '') : '',
+                            $issue->fine_payment_method ?? '',
+                            $issue->fine_paid_at ? $issue->fine_paid_at->toDateTimeString() : '',
+                        ]);
+                    }
+                });
+            }
+        );
+    }
+
+    /**
+     * Streamed CSV writer. Memory stays flat regardless of dataset size — each
+     * row is fputcsv'd directly to the output handle inside the chunk callback.
+     */
+    protected function streamCsv(string $filename, array $headers, \Closure $emitRows): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        return response()->streamDownload(function () use ($headers, $emitRows) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $headers);
+            $emitRows(function (array $row) use ($handle) {
+                fputcsv($handle, $row);
+            });
+            fclose($handle);
+        }, $filename, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Cache-Control'       => 'no-store, no-cache, must-revalidate',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     // -------------------------------------------------------------------------

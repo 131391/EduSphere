@@ -11,8 +11,8 @@ class BookCategory extends Model
 {
     use HasFactory, Tenantable, SoftDeletes;
 
+    // school_id is intentionally excluded — set automatically by Tenantable.
     protected $fillable = [
-        'school_id',
         'name',
         'description',
     ];

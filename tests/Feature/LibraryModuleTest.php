@@ -356,6 +356,299 @@ class LibraryModuleTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_books_from_school_a_invisible_to_school_b(): void
+    {
+        // Book belongs to default $this->school. Spin up a sibling school + admin.
+        $bookA = $this->createBook($this->createBookCategory(), ['title' => 'Tenant-A Title']);
+
+        $schoolB = $this->createSchool();
+        $adminB  = $this->createUser([
+            'school_id' => $schoolB->id,
+            'role_id'   => Role::where('slug', Role::SCHOOL_ADMIN)->first()->id,
+        ]);
+
+        $payload = ['title' => 'Updated', 'author' => 'X', 'category_id' => 0];
+
+        // Index list of school B must not include school A's book.
+        $this->actingAsUser($adminB)
+            ->postJson('http://' . $schoolB->subdomain . '.localhost/school/library/fetch')
+            ->assertOk()
+            ->assertJsonMissing(['title' => 'Tenant-A Title']);
+
+        // Direct route-model binding to school A's book id from school B context — 404.
+        $this->actingAsUser($adminB)
+            ->putJson('http://' . $schoolB->subdomain . '.localhost/school/library/books/' . $bookA->id, $payload)
+            ->assertNotFound();
+    }
+
+    public function test_duplicate_active_issue_for_same_student_rejected(): void
+    {
+        Carbon::setTestNow('2026-01-10 09:00:00');
+
+        $category = $this->createBookCategory();
+        $book     = $this->createBook($category, ['quantity' => 5, 'available_quantity' => 5]);
+        $student  = $this->createStudent();
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl('/school/library/issue'), [
+                'book_id'    => $book->id,
+                'student_id' => $student->id,
+                'due_date'   => '2026-01-20',
+            ])->assertOk();
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl('/school/library/issue'), [
+                'book_id'    => $book->id,
+                'student_id' => $student->id,
+                'due_date'   => '2026-01-22',
+            ])->assertStatus(422)
+              ->assertJsonPath('message', 'This student already has an active issue for this book.');
+
+        $this->assertSame(1, BookIssue::where('book_id', $book->id)->where('student_id', $student->id)->count());
+    }
+
+    public function test_renew_rejected_when_already_overdue(): void
+    {
+        Carbon::setTestNow('2026-01-10 09:00:00');
+
+        $category = $this->createBookCategory();
+        $book     = $this->createBook($category, ['quantity' => 1, 'available_quantity' => 1]);
+        $student  = $this->createStudent();
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl('/school/library/issue'), [
+                'book_id'    => $book->id,
+                'student_id' => $student->id,
+                'due_date'   => '2026-01-15',
+            ])->assertOk();
+
+        $issue = BookIssue::firstOrFail();
+
+        // Move time past the due date — renewal must now be refused.
+        Carbon::setTestNow('2026-01-20 09:00:00');
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl("/school/library/renew/{$issue->id}"), [
+                'due_date' => '2026-01-30',
+            ])->assertStatus(422)
+              ->assertJsonPath('success', false);
+    }
+
+    public function test_renew_extends_due_date_and_increments_renewal_count(): void
+    {
+        Carbon::setTestNow('2026-01-10 09:00:00');
+
+        $category = $this->createBookCategory();
+        $book     = $this->createBook($category, ['quantity' => 1, 'available_quantity' => 1]);
+        $student  = $this->createStudent();
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl('/school/library/issue'), [
+                'book_id'    => $book->id,
+                'student_id' => $student->id,
+                'due_date'   => '2026-01-15',
+            ])->assertOk();
+
+        $issue = BookIssue::firstOrFail();
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl("/school/library/renew/{$issue->id}"), [
+                'due_date' => '2026-01-25',
+            ])->assertOk()
+              ->assertJsonPath('success', true);
+
+        $issue->refresh();
+        $this->assertSame('2026-01-25', $issue->due_date->toDateString());
+        $this->assertSame(1, (int) $issue->renewal_count);
+    }
+
+    public function test_recover_lost_book_restores_inventory_and_voids_unpaid_fine(): void
+    {
+        $category = $this->createBookCategory();
+        $book     = $this->createBook($category, ['quantity' => 2, 'available_quantity' => 1, 'price' => 400]);
+        $student  = $this->createStudent();
+
+        $issue = BookIssue::create([
+            'school_id'   => $this->school->id,
+            'book_id'     => $book->id,
+            'student_id'  => $student->id,
+            'issue_date'  => '2026-01-10',
+            'due_date'    => '2026-01-20',
+            'status'      => 'lost',
+            'fine_amount' => 400,
+        ]);
+        // Simulate lost-state inventory adjustment that markAsLost() would do.
+        $book->update(['quantity' => 1]);
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl("/school/library/recover/{$issue->id}"))
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $issue->refresh();
+        $book->refresh();
+
+        $this->assertSame('returned', $issue->status);
+        $this->assertSame('0.00', (string) $issue->fine_amount);
+        $this->assertSame(2, $book->quantity);
+        $this->assertSame(2, $book->available_quantity);
+    }
+
+    public function test_adjust_stock_increases_total_and_available(): void
+    {
+        $category = $this->createBookCategory();
+        $book     = $this->createBook($category, ['quantity' => 3, 'available_quantity' => 2]);
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl("/school/library/books/{$book->id}/adjust-stock"), [
+                'delta' => 5, 'reason' => 'purchase',
+            ])->assertOk()
+              ->assertJsonPath('success', true)
+              ->assertJsonPath('quantity', 8)
+              ->assertJsonPath('available_quantity', 7);
+    }
+
+    public function test_adjust_stock_cannot_drop_below_currently_issued(): void
+    {
+        $category = $this->createBookCategory();
+        // 3 total, 1 available => 2 currently out
+        $book     = $this->createBook($category, ['quantity' => 3, 'available_quantity' => 1]);
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl("/school/library/books/{$book->id}/adjust-stock"), [
+                'delta' => -2, 'reason' => 'shrinkage',
+            ])->assertStatus(422)
+              ->assertJsonPath('success', false);
+    }
+
+    public function test_borrower_cap_blocks_extra_issues(): void
+    {
+        $this->school->update(['settings' => ['library_max_books_per_borrower' => 2]]);
+
+        $category = $this->createBookCategory();
+        $b1 = $this->createBook($category, ['title' => 'B1']);
+        $b2 = $this->createBook($category, ['title' => 'B2']);
+        $b3 = $this->createBook($category, ['title' => 'B3']);
+        $student = $this->createStudent();
+
+        foreach ([$b1, $b2] as $b) {
+            $this->actingAsUser($this->adminUser)
+                ->postJson($this->tenantUrl('/school/library/issue'), [
+                    'book_id'    => $b->id,
+                    'student_id' => $student->id,
+                    'due_date'   => '2030-01-01',
+                ])->assertOk()->assertJsonPath('success', true);
+        }
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl('/school/library/issue'), [
+                'book_id'    => $b3->id,
+                'student_id' => $student->id,
+                'due_date'   => '2030-01-01',
+            ])->assertStatus(422)
+              ->assertJsonPath('success', false);
+    }
+
+    public function test_back_dated_return_lowers_calculated_fine(): void
+    {
+        $this->school->update(['settings' => ['late_return_library_book_fine' => 10]]);
+
+        Carbon::setTestNow('2026-01-10 09:00:00');
+
+        $category = $this->createBookCategory();
+        $book     = $this->createBook($category, ['quantity' => 1, 'available_quantity' => 1]);
+        $student  = $this->createStudent();
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl('/school/library/issue'), [
+                'book_id'    => $book->id,
+                'student_id' => $student->id,
+                'due_date'   => '2026-01-15',
+            ])->assertOk();
+
+        $issue = BookIssue::firstOrFail();
+
+        // It is now 25 Jan; if back-dated to 18 Jan, only 3 days overdue × 10 = 30.
+        Carbon::setTestNow('2026-01-25 09:00:00');
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl("/school/library/return/{$issue->id}"), [
+                'return_date' => '2026-01-18',
+            ])->assertOk()
+              ->assertJsonPath('fine', '30.00');
+    }
+
+    public function test_fine_settlement_records_amount_method_and_collector(): void
+    {
+        $category = $this->createBookCategory();
+        $book     = $this->createBook($category);
+        $student  = $this->createStudent();
+
+        $issue = BookIssue::create([
+            'school_id'   => $this->school->id,
+            'book_id'     => $book->id,
+            'student_id'  => $student->id,
+            'issue_date'  => '2026-01-01',
+            'due_date'    => '2026-01-05',
+            'return_date' => '2026-01-10',
+            'fine_amount' => 50.00,
+            'status'      => 'returned',
+        ]);
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl("/school/library/settle-fine/{$issue->id}"), [
+                'paid_amount'    => 50,
+                'payment_method' => 'upi',
+                'note'           => 'Receipt #42',
+            ])->assertOk()
+              ->assertJsonPath('success', true);
+
+        $issue->refresh();
+        $this->assertNotNull($issue->fine_paid_at);
+        $this->assertSame('50.00', (string) $issue->fine_paid_amount);
+        $this->assertSame('upi', $issue->fine_payment_method);
+        $this->assertSame($this->adminUser->id, (int) $issue->fine_collected_by);
+        $this->assertSame('Receipt #42', $issue->fine_settlement_note);
+    }
+
+    public function test_partial_settlement_amount_capped_at_outstanding(): void
+    {
+        $category = $this->createBookCategory();
+        $book     = $this->createBook($category);
+        $student  = $this->createStudent();
+
+        $issue = BookIssue::create([
+            'school_id'   => $this->school->id,
+            'book_id'     => $book->id,
+            'student_id'  => $student->id,
+            'issue_date'  => '2026-01-01',
+            'due_date'    => '2026-01-05',
+            'return_date' => '2026-01-10',
+            'fine_amount' => 25.00,
+            'status'      => 'returned',
+        ]);
+
+        $this->actingAsUser($this->adminUser)
+            ->postJson($this->tenantUrl("/school/library/settle-fine/{$issue->id}"), [
+                'paid_amount'    => 100,
+                'payment_method' => 'cash',
+            ])->assertStatus(422)
+              ->assertJsonPath('success', false);
+    }
+
+    public function test_csv_export_catalog_returns_csv(): void
+    {
+        $category = $this->createBookCategory();
+        $this->createBook($category, ['title' => 'Exported Book']);
+
+        $response = $this->actingAsUser($this->adminUser)
+            ->get($this->tenantUrl('/school/library/export/catalog'));
+
+        $response->assertOk();
+        $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('Exported Book', $response->streamedContent());
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------

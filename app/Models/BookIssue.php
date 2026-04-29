@@ -18,8 +18,8 @@ class BookIssue extends Model
 {
     use HasFactory, Tenantable, SoftDeletes;
 
+    // school_id is intentionally excluded — set automatically by Tenantable.
     protected $fillable = [
-        'school_id',
         'book_id',
         'student_id',
         'staff_id',
@@ -28,8 +28,13 @@ class BookIssue extends Model
         'return_date',
         'fine_amount',
         'fine_paid_at',
+        'fine_paid_amount',
+        'fine_payment_method',
+        'fine_collected_by',
+        'fine_settlement_note',
         'last_notified_at',
         'status',
+        'renewal_count',
     ];
 
     protected $casts = [
@@ -37,6 +42,7 @@ class BookIssue extends Model
         'due_date'         => 'date',
         'return_date'      => 'date',
         'fine_amount'      => 'decimal:2',
+        'fine_paid_amount' => 'decimal:2',
         'fine_paid_at'     => 'datetime',
         'last_notified_at' => 'datetime',
     ];
