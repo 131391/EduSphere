@@ -277,7 +277,7 @@
             </div>
 
             <!-- Table Footer/Pagination -->
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
     {{-- Add/Edit Staff Modal --}}

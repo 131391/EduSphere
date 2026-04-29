@@ -116,7 +116,7 @@
                         @endforeach
                     </tbody>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading && rows.length > 0 ? 'opacity-50' : 'opacity-100'">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" x-cloak :class="loading && rows.length > 0 ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                                 <td class="px-6 py-4">
@@ -163,7 +163,7 @@
                 </table>
             </div>
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <x-confirm-modal />
@@ -190,16 +190,17 @@
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Propulsion / Fuel Type <span class="text-red-500">*</span></label>
+                        <div :class="errors.fuel_type ? 'border border-red-500 rounded-xl' : 'border border-slate-200 dark:border-gray-600 rounded-xl'">
                         <select x-model="formData.fuel_type" 
-                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.fuel_type ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border-0 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             @change="clearError('fuel_type')">
                             <option value="">Select Propulsion</option>
                             @foreach(\App\Enums\FuelType::cases() as $fuel)
                                 <option value="{{ $fuel->value }}">{{ $fuel->name }}</option>
                             @endforeach
                         </select>
-                        <template x-if="errors.fuel_type">
+                        </div>
+                        <template x-if="errors.fuel_type && errors.fuel_type[0]">
                             <p class="text-[10px] text-red-500 font-bold mt-1 ml-1" x-text="errors.fuel_type[0]"></p>
                         </template>
                     </div>
@@ -238,9 +239,9 @@
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Vehicle Variant</label>
+                        <div :class="errors.vehicle_type ? 'border border-red-500 rounded-xl' : 'border border-slate-200 dark:border-gray-600 rounded-xl'">
                         <select x-model="formData.vehicle_type" 
-                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.vehicle_type ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border-0 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             @change="clearError('vehicle_type')">
                             <option value="">Select Configuration</option>
                             <option value="bus">School Bus</option>
@@ -248,7 +249,8 @@
                             <option value="car">Staff Car</option>
                             <option value="truck">Utility Truck</option>
                         </select>
-                        <template x-if="errors.vehicle_type">
+                        </div>
+                        <template x-if="errors.vehicle_type && errors.vehicle_type[0]">
                             <p class="text-[10px] text-red-500 font-bold mt-1 ml-1" x-text="errors.vehicle_type[0]"></p>
                         </template>
                     </div>

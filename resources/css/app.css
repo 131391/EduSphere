@@ -32,6 +32,14 @@ input[type=number] {
     min-height: 260px;
 }
 
+/* Keep AJAX listing columns stable during SSR -> Alpine hydration.
+   Auto table layout re-measures widths when the server-rendered tbody is
+   replaced by the Alpine-managed tbody, which causes visible header/column
+   shifting on refresh. Fixed layout preserves the initial geometry. */
+.ajax-table-wrapper > table {
+    table-layout: fixed;
+}
+
 /* Sidebar scroll styling - Comprehensive */
 .sidebar-scroll {
     scrollbar-width: thin;
@@ -624,6 +632,16 @@ select:focus {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+.modal-input-premium.border-red-500,
+.modal-input-premium.border-red-400 {
+    border-color: #ef4444 !important;
+}
+
+.dark .modal-input-premium.border-red-500,
+.dark .modal-input-premium.border-red-400 {
+    border-color: #ef4444 !important;
 }
 
 .modal-input-premium:focus {

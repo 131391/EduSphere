@@ -108,7 +108,7 @@
                         @endforeach
                     </tbody>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -148,7 +148,7 @@
                 </table>
             </div>
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <!-- Add/Edit Modal -->
@@ -163,10 +163,10 @@
                     <!-- Class Selection -->
                     <div class="space-y-2">
                         <label class="modal-label-premium">Assign to Class <span class="text-red-600 font-bold">*</span></label>
-                        <div class="relative group">
+                        <div class="relative group" :class="errors.class_id ? 'border border-red-500 rounded-xl' : ''">
                             <select name="class_id" x-model="formData.class_id" @change="clearError('class_id')"
                                 class="no-select2 modal-input-premium appearance-none pr-10"
-                                :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
+                                :class="errors.class_id ? 'border-0' : 'border-slate-200'">
                                 <option value="">Choose a class</option>
                                 @foreach($classes as $class)
                                     <option value="{{ $class->id }}">{{ $class->name }}</option>
@@ -176,7 +176,7 @@
                                 <i class="fas fa-chevron-down text-sm"></i>
                             </div>
                         </div>
-                        <template x-if="errors.class_id">
+                        <template x-if="errors.class_id && errors.class_id[0]">
                             <p class="modal-error-message" x-text="errors.class_id[0]"></p>
                         </template>
                     </div>
@@ -193,7 +193,7 @@
                                 <i class="fas fa-tag text-sm"></i>
                             </div>
                         </div>
-                        <template x-if="errors.name">
+                        <template x-if="errors.name && errors.name[0]">
                             <p class="modal-error-message" x-text="errors.name[0]"></p>
                         </template>
                     </div>

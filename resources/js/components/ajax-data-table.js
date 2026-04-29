@@ -43,7 +43,7 @@ document.addEventListener('alpine:init', () => {
         stats: config.initialStats || {},
         filterLabels: config.filterLabels || {},
         exporting: false,
-        hydrated: !!config.initialRows,
+        hydrated: !config.initialRows,
 
         // Track whether we're still showing the initial server-rendered content.
         // If the server pre-loaded rows (even an empty array), we're already past
@@ -66,6 +66,7 @@ document.addEventListener('alpine:init', () => {
             } else {
                 this.loading = false;
                 this.initialLoad = false;
+                this._finishHydration();
             }
         },
 

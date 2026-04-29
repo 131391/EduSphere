@@ -49,7 +49,13 @@
             <div class="overflow-x-auto relative ajax-table-wrapper">
                 <x-table.loading-overlay />
 
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse table-fixed">
+                    <colgroup>
+                        <col class="w-24">
+                        <col>
+                        <col class="w-40">
+                        <col class="w-32">
+                    </colgroup>
                     <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
                         <tr>
                             <x-table.sort-header column="order" label="Order" sort-var="sort" direction-var="direction" />
@@ -59,7 +65,7 @@
                         </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated" x-cloak>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" x-show="!hydrated">
                         @foreach($initialData['rows'] as $row)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">
@@ -90,7 +96,7 @@
                         @endforeach
                     </tbody>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500" x-text="row.order"></td>
@@ -124,7 +130,7 @@
                 </table>
             </div>
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <!-- Add/Edit Modal -->

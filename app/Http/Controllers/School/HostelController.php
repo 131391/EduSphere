@@ -9,6 +9,7 @@ use App\Models\HostelRoom;
 use App\Models\HostelBedAssignment;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 
 class HostelController extends TenantController
@@ -50,6 +51,10 @@ class HostelController extends TenantController
             return $this->handleAjaxTable($query, $transformer);
         }
 
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
+
         $stats = [
             'total_hostels' => Hostel::where('school_id', $schoolId)->count(),
             'total_floors' => HostelFloor::where('school_id', $schoolId)->count(),
@@ -68,11 +73,8 @@ class HostelController extends TenantController
         ]);
     }
 
-    public function export()
+    private function exportToCsv($query)
     {
-        $schoolId = $this->getSchoolId();
-        $query = Hostel::where('school_id', $schoolId);
-
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="hostels_' . now()->format('Y-m-d') . '.csv"',
@@ -95,6 +97,11 @@ class HostelController extends TenantController
         return response()->stream($callback, 200, $headers);
     }
 
+    public function export()
+    {
+        return redirect()->route('school.hostel.hostels.index', ['export' => 'csv']);
+    }
+
     public function store(Request $request)
     {
         try {
@@ -113,6 +120,12 @@ class HostelController extends TenantController
                 'message' => 'Hostel added successfully.',
                 'data' => $hostel,
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

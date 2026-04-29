@@ -111,7 +111,7 @@
                         @endforeach
                     </tbody>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading && rows.length > 0 ? 'opacity-50' : 'opacity-100'">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" x-cloak :class="loading && rows.length > 0 ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                                 <td class="px-6 py-4">
@@ -158,7 +158,7 @@
                 </table>
             </div>
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <x-confirm-modal />
@@ -175,32 +175,34 @@
                 <div class="space-y-4">
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Select Student <span class="text-red-500">*</span></label>
+                        <div :class="errors.student_id ? 'border border-red-500 rounded-xl' : 'border border-slate-200 dark:border-gray-600 rounded-xl'">
                         <select x-model="formData.student_id" 
-                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.student_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border-0 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             @change="clearError('student_id')">
                             <option value="">Select Student</option>
                             @foreach($students as $student)
                                 <option value="{{ $student->id }}">{{ $student->first_name }} {{ $student->last_name }} ({{ $student->admission_no }})</option>
                             @endforeach
                         </select>
-                        <template x-if="errors.student_id">
+                        </div>
+                        <template x-if="errors.student_id && errors.student_id[0]">
                             <p class="text-[10px] text-red-500 font-bold mt-1 ml-1" x-text="errors.student_id[0]"></p>
                         </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Route <span class="text-red-500">*</span></label>
+                        <div :class="errors.route_id ? 'border border-red-500 rounded-xl' : 'border border-slate-200 dark:border-gray-600 rounded-xl'">
                         <select x-model="formData.route_id" 
-                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.route_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border-0 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             @change="clearError('route_id'); fetchBusStops()">
                             <option value="">Select Route</option>
                             @foreach($routes as $route)
                                 <option value="{{ $route->id }}">{{ $route->route_name }}</option>
                             @endforeach
                         </select>
-                        <template x-if="errors.route_id">
+                        </div>
+                        <template x-if="errors.route_id && errors.route_id[0]">
                             <p class="text-[10px] text-red-500 font-bold mt-1 ml-1" x-text="errors.route_id[0]"></p>
                         </template>
                     </div>
@@ -209,16 +211,17 @@
                 <div class="space-y-4">
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Bus Stop <span class="text-red-500">*</span></label>
+                        <div :class="errors.bus_stop_id ? 'border border-red-500 rounded-xl' : 'border border-slate-200 dark:border-gray-600 rounded-xl'">
                         <select x-model="formData.bus_stop_id" 
-                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.bus_stop_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'"
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border-0 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
                             @change="clearError('bus_stop_id'); updateFee()">
                             <option value="">Select Bus Stop</option>
                             <template x-for="stop in busStops" :key="stop.id">
                                 <option :value="stop.id" x-text="stop.bus_stop_name + ' (' + stop.bus_stop_no + ')'"></option>
                             </template>
                         </select>
-                        <template x-if="errors.bus_stop_id">
+                        </div>
+                        <template x-if="errors.bus_stop_id && errors.bus_stop_id[0]">
                             <p class="text-[10px] text-red-500 font-bold mt-1 ml-1" x-text="errors.bus_stop_id[0]"></p>
                         </template>
                     </div>

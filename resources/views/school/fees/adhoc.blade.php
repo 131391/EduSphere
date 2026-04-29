@@ -80,7 +80,7 @@
             </div>
 
             <!-- Section 2: Student Selection -->
-            <div class="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6" x-show="formData.class_id">
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6" x-show="formData.class_id" x-cloak>
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
@@ -97,17 +97,17 @@
                     </div>
                 </div>
 
-                <div x-show="loadingStudents" class="py-12 text-center">
+                <div x-show="loadingStudents" x-cloak class="py-12 text-center">
                     <i class="text-indigo-500 fas fa-circle-notch fa-spin fa-2x"></i>
                     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading students...</p>
                 </div>
 
-                <div x-show="!loadingStudents && students.length === 0" class="py-12 text-center">
+                <div x-show="!loadingStudents && students.length === 0" x-cloak class="py-12 text-center">
                     <i class="fas fa-users text-4xl text-gray-300 dark:text-gray-600 mb-4"></i>
                     <p class="text-gray-500 dark:text-gray-400">No active students found in this class.</p>
                 </div>
 
-                <div x-show="!loadingStudents && students.length > 0" 
+                <div x-show="!loadingStudents && students.length > 0" x-cloak
                     class="border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="sticky top-0 bg-gray-50 dark:bg-gray-700/50 z-10">
@@ -142,8 +142,8 @@
                     class="btn-premium-cancel px-8">
                     Cancel
                 </button>
-                <button type="submit" :disabled="isSubmitting || formData.student_ids.length === 0" 
-                    class="btn-premium-primary min-w-[200px] !from-indigo-600 !to-violet-600 shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="submit" disabled :disabled="isSubmitting || formData.student_ids.length === 0" 
+                    class="btn-premium-primary min-w-[200px] !from-indigo-600 !to-violet-600 shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100">
                     <template x-if="isSubmitting">
                         <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2 inline-block"></span>
                     </template>

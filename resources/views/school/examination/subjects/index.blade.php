@@ -119,7 +119,7 @@
                         @endforeach
                     </tbody>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -154,7 +154,7 @@
                 </table>
             </div>
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <!-- Add Subject Modal -->
@@ -165,10 +165,10 @@
                     <!-- Target Class -->
                     <div class="space-y-2">
                         <label class="modal-label-premium">Target Class <span class="text-red-600 font-bold">*</span></label>
-                        <div class="relative group">
+                        <div class="relative group" :class="errors.class_id ? 'border border-red-500 rounded-xl' : ''">
                             <select x-model="formData.class_id" @change="clearError('class_id')"
                                 class="modal-input-premium appearance-none pr-10 no-select2"
-                                :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
+                                :class="errors.class_id ? 'border-0' : 'border-slate-200'">
                                 <option value="">Choose Class</option>
                                 @foreach($classes as $class)
                                     <option value="{{ $class->id }}">{{ $class->name }}</option>
@@ -178,7 +178,7 @@
                                 <i class="fas fa-chevron-down text-[10px]"></i>
                             </div>
                         </div>
-                        <template x-if="errors.class_id">
+                        <template x-if="errors.class_id && errors.class_id[0]">
                             <p class="modal-error-message" x-text="errors.class_id[0]"></p>
                         </template>
                     </div>
@@ -186,10 +186,10 @@
                     <!-- Subject Name -->
                     <div class="space-y-2">
                         <label class="modal-label-premium">Subject Name <span class="text-red-600 font-bold">*</span></label>
-                        <div class="relative group">
+                        <div class="relative group" :class="errors.subject_id ? 'border border-red-500 rounded-xl' : ''">
                             <select x-model="formData.subject_id" @change="clearError('subject_id')"
                                 class="modal-input-premium appearance-none pr-10 no-select2"
-                                :class="errors.subject_id ? 'border-red-500' : 'border-slate-200'">
+                                :class="errors.subject_id ? 'border-0' : 'border-slate-200'">
                                 <option value="">Choose Subject</option>
                                 @foreach($subjects as $subject)
                                     <option value="{{ $subject->id }}">{{ $subject->name }}</option>
@@ -199,7 +199,7 @@
                                 <i class="fas fa-chevron-down text-[10px]"></i>
                             </div>
                         </div>
-                        <template x-if="errors.subject_id">
+                        <template x-if="errors.subject_id && errors.subject_id[0]">
                             <p class="modal-error-message" x-text="errors.subject_id[0]"></p>
                         </template>
                     </div>

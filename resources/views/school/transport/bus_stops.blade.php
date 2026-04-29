@@ -202,7 +202,7 @@
                 </table>
             </div>
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <x-confirm-modal title="Delete Bus Stop?"
@@ -221,15 +221,16 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">Route Designation
                             <span class="text-red-500">*</span></label>
+                        <div :class="errors.route_id ? 'border border-red-500 rounded-xl' : 'border border-slate-200 dark:border-gray-600 rounded-xl'">
                         <select x-model="formData.route_id" @change="clearError('route_id')"
-                            class="no-select2 w-full bg-white dark:bg-gray-700 border rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all"
-                            :class="errors.route_id ? 'border-red-500' : 'border-slate-200 dark:border-gray-600'">
+                            class="no-select2 w-full bg-white dark:bg-gray-700 border-0 rounded-xl py-3 px-4 text-sm font-bold text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500/20 transition-all">
                             <option value="">Select Primary Route</option>
                             @foreach($routes as $route)
                                 <option value="{{ $route->id }}">{{ $route->route_name }}</option>
                             @endforeach
                         </select>
-                        <template x-if="errors.route_id">
+                        </div>
+                        <template x-if="errors.route_id && errors.route_id[0]">
                             <p class="text-[10px] text-red-500 font-bold mt-1 ml-1" x-text="errors.route_id[0]"></p>
                         </template>
                     </div>

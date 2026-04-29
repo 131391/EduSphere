@@ -208,7 +208,7 @@
             </table>
         </div>
 
-        <x-table.pagination />
+        <x-table.pagination :initial="$initialData['pagination']" />
     </div>
 
     {{-- ── Add / Edit Modal ── --}}

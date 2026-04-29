@@ -7,7 +7,7 @@ use App\Models\Hostel;
 use App\Models\HostelFloor;
 use App\Traits\HasAjaxDataTable;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class HostelFloorController extends TenantController
 {
@@ -19,13 +19,18 @@ class HostelFloorController extends TenantController
 
         $transformer = function ($floor) {
             return [
-                'id'            => $floor->id,
-                'floor_name'    => $floor->floor_name,
-                'hostel_name'   => $floor->hostel?->hostel_name,
-                'room_count'    => $floor->rooms()->count(),
+                'id'                => $floor->id,
+                'floor_name'        => $floor->floor_name,
+                'hostel_id'         => $floor->hostel_id,
+                'hostel_name'       => $floor->hostel->hostel_name ?? 'N/A',
+                'total_room'        => $floor->total_room ?? 0,
+                'total_room_label'  => ($floor->total_room ?? 0) . ' Rooms',
+                'floor_create_date' => $floor->floor_create_date ? $floor->floor_create_date->format('d M, Y') : 'N/A',
                 'raw' => [
-                    'floor_name' => $floor->floor_name,
-                    'hostel_id'  => $floor->hostel_id,
+                    'hostel_id'         => $floor->hostel_id,
+                    'floor_name'        => $floor->floor_name,
+                    'total_room'        => $floor->total_room,
+                    'floor_create_date' => $floor->floor_create_date ? $floor->floor_create_date->format('Y-m-d') : '',
                 ],
             ];
         };
@@ -38,23 +43,62 @@ class HostelFloorController extends TenantController
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('floor_name', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('floor_name', 'like', "%{$search}%")
+                    ->orWhereHas('hostel', function ($hq) use ($search) {
+                        $hq->where('hostel_name', 'like', "%{$search}%");
+                    });
+            });
         }
 
         if ($request->expectsJson() || $request->ajax()) {
             return $this->handleAjaxTable($query, $transformer);
         }
 
+        if ($request->has('export')) {
+            return $this->exportToCsv($query);
+        }
+
         $hostels = Hostel::where('school_id', $schoolId)->orderBy('hostel_name')->get();
-        
+        $stats = [
+            'total_floors'  => HostelFloor::where('school_id', $schoolId)->count(),
+            'total_rooms'   => (int) HostelFloor::where('school_id', $schoolId)->sum('total_room'),
+            'total_hostels' => Hostel::where('school_id', $schoolId)->count(),
+        ];
+
         $initialData = $this->getHydrationData($query, $transformer, [
-            'hostels' => $hostels,
+            'stats' => $stats,
         ]);
 
         return view('school.hostel.floors', [
             'initialData' => $initialData,
+            'stats' => $stats,
             'hostels' => $hostels,
         ]);
+    }
+
+    private function exportToCsv($query)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="hostel_floors_' . now()->format('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Hostel', 'Floor Name', 'Total Rooms', 'Established On']);
+            $query->orderBy('created_at', 'desc')->cursor()->each(function ($floor) use ($file) {
+                fputcsv($file, [
+                    $floor->hostel->hostel_name ?? 'N/A',
+                    $floor->floor_name,
+                    $floor->total_room ?? 0,
+                    $floor->floor_create_date ? $floor->floor_create_date->format('Y-m-d') : 'N/A',
+                ]);
+            });
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function store(Request $request)
@@ -63,6 +107,8 @@ class HostelFloorController extends TenantController
             $validated = $request->validate([
                 'hostel_id' => 'required|exists:hostels,id,school_id,' . $this->getSchoolId(),
                 'floor_name' => 'required|string|max:255',
+                'total_room' => 'nullable|integer|min:0',
+                'floor_create_date' => 'nullable|date',
             ]);
             $validated['school_id'] = $this->getSchoolId();
 
@@ -73,6 +119,12 @@ class HostelFloorController extends TenantController
                 'message' => 'Floor added successfully.',
                 'data' => $floor,
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -89,6 +141,8 @@ class HostelFloorController extends TenantController
             $validated = $request->validate([
                 'hostel_id' => 'required|exists:hostels,id,school_id,' . $this->getSchoolId(),
                 'floor_name' => 'required|string|max:255',
+                'total_room' => 'nullable|integer|min:0',
+                'floor_create_date' => 'nullable|date',
             ]);
 
             $floor->update($validated);
@@ -141,5 +195,10 @@ class HostelFloorController extends TenantController
             ->get();
 
         return response()->json($floors);
+    }
+
+    public function export()
+    {
+        return redirect()->route('school.hostel.floors.index', ['export' => 'csv']);
     }
 }

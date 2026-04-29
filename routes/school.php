@@ -335,20 +335,31 @@ Route::prefix('hostel')->name('hostel.')->group(function () {
 
     Route::get('/floors/by-hostel/{hostelId}', [\App\Http\Controllers\School\HostelFloorController::class, 'getByHostel'])->name('floors.by-hostel');
     Route::post('/floors/fetch', [\App\Http\Controllers\School\HostelFloorController::class, 'index'])->name('floors.fetch');
+    Route::get('/floors/export', [\App\Http\Controllers\School\HostelFloorController::class, 'export'])->name('floors.export');
     Route::resource('floors', \App\Http\Controllers\School\HostelFloorController::class)->except(['create', 'edit', 'show']);
 
     Route::get('/rooms/by-floor/{floorId}', [\App\Http\Controllers\School\HostelRoomController::class, 'getByFloor'])->name('rooms.by-floor');
     Route::post('/rooms/fetch', [\App\Http\Controllers\School\HostelRoomController::class, 'index'])->name('rooms.fetch');
+    Route::post('/rooms/get-floors', [\App\Http\Controllers\School\HostelRoomController::class, 'getFloors'])->name('rooms.get-floors');
+    Route::get('/rooms/export', [\App\Http\Controllers\School\HostelRoomController::class, 'export'])->name('rooms.export');
     Route::resource('rooms', \App\Http\Controllers\School\HostelRoomController::class)->except(['create', 'edit', 'show']);
 
-    Route::get('/attendance', [\App\Http\Controllers\School\HostelAttendanceController::class, 'index'])->name('attendance.index');
-    Route::post('/attendance', [\App\Http\Controllers\School\HostelAttendanceController::class, 'store'])->name('attendance.store');
-    Route::get('/attendance/report', [\App\Http\Controllers\School\HostelAttendanceController::class, 'monthWiseReport'])->name('attendance.month_wise_report');
-    Route::get('/attendance/residents', [\App\Http\Controllers\School\HostelAttendanceController::class, 'getResidents'])->name('attendance.residents');
+    Route::post('/attendance/get-floors', [\App\Http\Controllers\School\HostelAttendanceController::class, 'getFloors'])->name('attendance.get-floors');
+    Route::post('/attendance/get-rooms', [\App\Http\Controllers\School\HostelAttendanceController::class, 'getRooms'])->name('attendance.get-rooms');
+    Route::post('/attendance/get-students', [\App\Http\Controllers\School\HostelAttendanceController::class, 'getStudents'])->name('attendance.get-students');
+    Route::post('/attendance/report/fetch', [\App\Http\Controllers\School\HostelAttendanceController::class, 'report'])->name('attendance.report.fetch');
+    Route::get('/attendance/report', [\App\Http\Controllers\School\HostelAttendanceController::class, 'report'])->name('attendance.report');
+    Route::get('/attendance/month-wise-report', [\App\Http\Controllers\School\HostelAttendanceController::class, 'monthWiseReport'])->name('attendance.month_wise_report');
+    Route::resource('attendance', \App\Http\Controllers\School\HostelAttendanceController::class)->only(['index', 'store']);
 
     Route::get('/assignments', [\App\Http\Controllers\School\HostelBedAssignmentController::class, 'index'])->name('assignments.index');
     Route::post('/assignments/fetch', [\App\Http\Controllers\School\HostelBedAssignmentController::class, 'index'])->name('assignments.fetch');
     Route::get('/assignments/history', [\App\Http\Controllers\School\HostelBedAssignmentController::class, 'history'])->name('assignments.history');
+    Route::get('/assignments/get-months', [\App\Http\Controllers\School\HostelBedAssignmentController::class, 'getMonths'])->name('assignments.get-months');
+    Route::post('/assignments/search-students', [\App\Http\Controllers\School\HostelBedAssignmentController::class, 'searchStudents'])->name('assignments.search-students');
+    Route::post('/assignments/get-floors', [\App\Http\Controllers\School\HostelBedAssignmentController::class, 'getFloors'])->name('assignments.get-floors');
+    Route::post('/assignments/get-rooms', [\App\Http\Controllers\School\HostelBedAssignmentController::class, 'getRooms'])->name('assignments.get-rooms');
+    Route::get('/assignments/export', [\App\Http\Controllers\School\HostelBedAssignmentController::class, 'export'])->name('assignments.export');
     Route::resource('assignments', \App\Http\Controllers\School\HostelBedAssignmentController::class)->except(['index', 'create', 'edit', 'show']);
 });
 

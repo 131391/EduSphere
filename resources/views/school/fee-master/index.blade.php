@@ -135,7 +135,7 @@
                         @endforeach
                     </tbody>
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
                         <template x-for="row in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group">
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -167,7 +167,7 @@
                 </table>
             </div>
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <!-- Bulk Assignment Modal -->
@@ -178,32 +178,34 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Class <span class="text-red-500">*</span></label>
-                        <select x-model="bulkData.class_id"
-                                @change="clearError('class_id')"
-                                class="no-select2 modal-input-premium"
-                                :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
-                            <option value="">Select a class</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                            @endforeach
-                        </select>
-                        <template x-if="errors.class_id">
+                        <div :class="errors.class_id ? 'border border-red-500 rounded-xl' : 'border border-slate-200 rounded-xl'">
+                            <select x-model="bulkData.class_id"
+                                    @change="clearError('class_id')"
+                                    class="no-select2 modal-input-premium border-0">
+                                <option value="">Select a class</option>
+                                @foreach($classes as $class)
+                                    <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <template x-if="errors.class_id && errors.class_id[0]">
                             <p class="modal-error-message" x-text="errors.class_id[0]"></p>
                         </template>
                     </div>
 
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Installment Type <span class="text-red-500">*</span></label>
-                        <select x-model="bulkData.fee_type_id"
-                                @change="clearError('fee_type_id')"
-                                class="no-select2 modal-input-premium"
-                                :class="errors.fee_type_id ? 'border-red-500' : 'border-slate-200'">
-                            <option value="">Select installment type</option>
-                            @foreach($feeTypes as $feeType)
-                                <option value="{{ $feeType->id }}">{{ $feeType->name }}</option>
-                            @endforeach
-                        </select>
-                        <template x-if="errors.fee_type_id">
+                        <div :class="errors.fee_type_id ? 'border border-red-500 rounded-xl' : 'border border-slate-200 rounded-xl'">
+                            <select x-model="bulkData.fee_type_id"
+                                    @change="clearError('fee_type_id')"
+                                    class="no-select2 modal-input-premium border-0">
+                                <option value="">Select installment type</option>
+                                @foreach($feeTypes as $feeType)
+                                    <option value="{{ $feeType->id }}">{{ $feeType->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <template x-if="errors.fee_type_id && errors.fee_type_id[0]">
                             <p class="modal-error-message" x-text="errors.fee_type_id[0]"></p>
                         </template>
                     </div>
@@ -296,7 +298,7 @@
                             >
                             <div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-sm">₹</div>
                         </div>
-                        <template x-if="errors.amount">
+                        <template x-if="errors.amount && errors.amount[0]">
                             <p class="modal-error-message" x-text="errors.amount[0]"></p>
                         </template>
                     </div>
@@ -318,15 +320,16 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Class <span class="text-red-500">*</span></label>
+                        <div :class="miscClassError ? 'border border-red-500 rounded-xl' : 'border border-slate-200 rounded-xl'">
                         <select x-model="miscData.class_id"
                                 @change="miscClassError = null"
-                                class="no-select2 modal-input-premium"
-                                :class="miscClassError ? 'border-red-500' : 'border-slate-200'">
+                                class="no-select2 modal-input-premium border-0">
                             <option value="">Select a class</option>
                             @foreach($classes as $class)
                                 <option value="{{ $class->id }}">{{ $class->name }}</option>
                             @endforeach
                         </select>
+                        </div>
                         <template x-if="miscClassError">
                             <p class="modal-error-message" x-text="miscClassError"></p>
                         </template>
@@ -334,15 +337,16 @@
 
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Fee Component <span class="text-red-500">*</span></label>
+                        <div :class="miscFeeNameError ? 'border border-red-500 rounded-xl' : 'border border-slate-200 rounded-xl'">
                         <select x-model="miscData.fee_name_id"
                                 @change="miscFeeNameError = null"
-                                class="no-select2 modal-input-premium"
-                                :class="miscFeeNameError ? 'border-red-500' : 'border-slate-200'">
+                                class="no-select2 modal-input-premium border-0">
                             <option value="">Select fee component</option>
                             @foreach($feeNames as $fn)
                                 <option value="{{ $fn->id }}">{{ $fn->name }}</option>
                             @endforeach
                         </select>
+                        </div>
                         <template x-if="miscFeeNameError">
                             <p class="modal-error-message" x-text="miscFeeNameError"></p>
                         </template>
@@ -352,15 +356,16 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                         <label class="modal-label-premium">Installment Type <span class="text-red-500">*</span></label>
+                        <div :class="miscFeeTypeError ? 'border border-red-500 rounded-xl' : 'border border-slate-200 rounded-xl'">
                         <select x-model="miscData.fee_type_id"
                                 @change="miscFeeTypeError = null"
-                                class="no-select2 modal-input-premium"
-                                :class="miscFeeTypeError ? 'border-red-500' : 'border-slate-200'">
+                                class="no-select2 modal-input-premium border-0">
                             <option value="">Select installment type</option>
                             @foreach($feeTypes as $ft)
                                 <option value="{{ $ft->id }}">{{ $ft->name }}</option>
                             @endforeach
                         </select>
+                        </div>
                         <template x-if="miscFeeTypeError">
                             <p class="modal-error-message" x-text="miscFeeTypeError"></p>
                         </template>

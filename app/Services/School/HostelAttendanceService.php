@@ -25,6 +25,13 @@ class HostelAttendanceService
             $now = now();
 
             foreach ($data['attendance_data'] as $studentData) {
+                $assignment = HostelBedAssignment::where('school_id', $school->id)
+                    ->where('hostel_id', $data['hostel_id'])
+                    ->where('student_id', $studentData['student_id'])
+                    ->where('status', GeneralStatus::Active)
+                    ->whereNull('deleted_at')
+                    ->first();
+
                 HostelAttendance::updateOrCreate(
                     [
                         'school_id' => $school->id,
@@ -34,8 +41,8 @@ class HostelAttendanceService
                     ],
                     [
                         'hostel_id' => $data['hostel_id'],
-                        'hostel_floor_id' => $data['hostel_floor_id'],
-                        'hostel_room_id' => $data['hostel_room_id'],
+                        'hostel_floor_id' => $assignment?->hostel_floor_id,
+                        'hostel_room_id' => $assignment?->hostel_room_id,
                         'is_present' => $studentData['is_present'],
                         'time' => $now,
                         'remarks' => $studentData['remarks'] ?? null,

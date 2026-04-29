@@ -163,7 +163,7 @@
                     </tbody>
 
                     {{-- Alpine-managed rows --}}
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" x-cloak :class="loading && rows.length &gt; 0 ? 'opacity-50' : 'opacity-100'">
                         <template x-for="(row, index) in rows" :key="row.id">
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400 font-medium" x-text="pagination.from + index"></td>
@@ -215,7 +215,7 @@
                 </table>
             </div>
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <!-- Add/Edit Mapping Modal -->

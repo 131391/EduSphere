@@ -221,7 +221,7 @@
             </div>
 
 
-            <x-table.pagination />
+            <x-table.pagination :initial="$initialData['pagination']" />
         </div>
 
         <x-confirm-modal title="Delete Route?"

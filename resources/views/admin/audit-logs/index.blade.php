@@ -253,7 +253,7 @@
         </div>
 
         <!-- Server-rendered pagination fallback -->
-        <x-table.pagination />
+        <x-table.pagination :initial="$initialData['pagination']" />
     </div>
 </div>
 @endsection
