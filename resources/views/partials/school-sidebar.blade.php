@@ -22,7 +22,8 @@
 
 {{-- ── Sidebar ──────────────────────────────────────────────────────────── --}}
 <aside
-    class="fixed inset-y-0 left-0 z-50 bg-[#1a237e] text-white flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 no-transition"
+    class="fixed inset-y-0 left-0 z-50 bg-[#1a237e] text-white flex flex-col transform lg:translate-x-0 lg:static lg:inset-0 no-transition"
+    style="width:{{ request()->cookie('sidebarCollapsed') === 'true' ? '5rem' : '16rem' }}"
     :style="(isMobile || sidebarOpen) ? 'width:16rem' : (sidebarCollapsed ? 'width:5rem' : 'width:16rem')"
     :class="{
         '-translate-x-full': !sidebarOpen,
@@ -34,12 +35,12 @@
     {{-- ── Logo ──────────────────────────────────────────────────────────── --}}
     <div class="p-4 border-b border-[#283593] flex-shrink-0 relative">
         <div class="flex items-center justify-center mb-2">
-            <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300"
+            <div class="logo-container bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 transition-all duration-300"
                 :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'"
                 style="width:4rem;height:4rem">
                 @if($school?->logo)
                     <img src="{{ asset('storage/'.$school->logo) }}" alt="{{ $school->name }}"
-                        class="rounded-full object-cover"
+                        class="logo-img rounded-full object-cover"
                         :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'"
                         style="width:4rem;height:4rem">
                 @else
