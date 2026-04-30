@@ -172,6 +172,7 @@
 
     <x-delete-confirmation />
     <x-toast />
+    <script src="{{ asset('js/disabled-btn.js') }}"></script>
 </body>
 
 </html>

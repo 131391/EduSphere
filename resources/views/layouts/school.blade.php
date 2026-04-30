@@ -342,6 +342,7 @@
     <script src="{{ asset('js/form-validation-handler.js') }}"></script>
     <script src="{{ asset('js/location-cascade.js') }}?v={{ filemtime(public_path('js/location-cascade.js')) }}"></script>
     <x-toast />
+    <script src="{{ asset('js/disabled-btn.js') }}"></script>
 </body>
 
 </html>

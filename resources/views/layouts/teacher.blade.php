@@ -217,6 +217,7 @@
     <x-toast />
 
     @stack('scripts')
+    <script src="{{ asset('js/disabled-btn.js') }}"></script>
 </body>
 
 </html>

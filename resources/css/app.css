@@ -791,6 +791,14 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
     box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3) !important;
 }
 
+/* Disabled buttons: always show not-allowed cursor */
+button:disabled,
+button[disabled] {
+    cursor: not-allowed !important;
+    pointer-events: auto !important;
+}
+
+
 .btn-premium-cancel {
     background-color: transparent !important;
     color: #6366f1 !important; /* Indigo 500 like the desired screenshot */
