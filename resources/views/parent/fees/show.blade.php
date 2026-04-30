@@ -83,7 +83,8 @@
                         <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Receipt No.</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Method</th>
-                        <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="text-center px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -92,11 +93,21 @@
                         <td class="px-6 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">{{ $payment->receipt_no }}</td>
                         <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ \Carbon\Carbon::parse($payment->payment_date)->format('d M Y') }}</td>
                         <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ optional($payment->paymentMethod)->name ?? '—' }}</td>
-                        <td class="px-6 py-3 text-right font-semibold text-green-600 dark:text-green-400">₹{{ number_format($payment->amount, 2) }}</td>
+                        <td class="px-4 py-3 text-right font-semibold text-green-600 dark:text-green-400">₹{{ number_format($payment->amount, 2) }}</td>
+                        <td class="px-6 py-3 text-center">
+                            @if($payment->receipt_no)
+                                <a href="{{ route('parent.fees.receipt', $payment->receipt_no) }}" target="_blank"
+                                   class="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-colors">
+                                    <i class="fas fa-receipt"></i> Receipt
+                                </a>
+                            @else
+                                <span class="text-xs text-gray-400">—</span>
+                            @endif
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">No payments recorded yet.</td>
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">No payments recorded yet.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -109,10 +120,13 @@
 @push('scripts')
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+    const initiatePaymentUrl = @json(route('parent.payments.initiate', ['fee_id' => '__FEE_ID__']));
+    const verifyPaymentUrl = @json(route('parent.payments.verify'));
+
     function initiatePayment(feeId) {
         if (!confirm('Are you sure you want to initiate payment for this fee?')) return;
 
-        fetch(`/parent/payments/initiate/${feeId}`, {
+        fetch(initiatePaymentUrl.replace('__FEE_ID__', feeId), {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -120,9 +134,19 @@
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || 'Error initiating payment');
+            }
+            return data;
+        })
         .then(data => {
             if (data.success) {
+                if (typeof Razorpay === 'undefined') {
+                    throw new Error('Payment gateway failed to load. Please refresh and try again.');
+                }
+
                 var options = {
                     "key": data.key,
                     "amount": data.amount, 
@@ -148,17 +172,17 @@
                 });
                 rzp1.open();
             } else {
-                alert(data.message || 'Error initiating payment');
+                throw new Error(data.message || 'Error initiating payment');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Something went wrong. Please try again.');
+            alert(error.message || 'Something went wrong. Please try again.');
         });
     }
 
     function verifyPayment(payment_id, order_id, signature, feeId) {
-        fetch('/parent/payments/verify', {
+        fetch(verifyPaymentUrl, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -172,18 +196,24 @@
                 fee_id: feeId
             })
         })
-        .then(response => response.json())
+        .then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || 'Payment verification failed.');
+            }
+            return data;
+        })
         .then(data => {
             if (data.success) {
                 alert('Payment Successful! Receipt No: ' + data.receipt_no);
                 window.location.reload();
             } else {
-                alert(data.message || 'Payment verification failed.');
+                throw new Error(data.message || 'Payment verification failed.');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error verifying payment.');
+            alert(error.message || 'Error verifying payment.');
         });
     }
 </script>

@@ -17,6 +17,11 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tracking financial records and payment status for your children.</p>
             </div>
             
+            <div class="flex items-center gap-3">
+                <a href="{{ route('parent.fees.export', request()->only('student_id')) }}"
+                   class="inline-flex items-center px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl hover:bg-emerald-100 transition-all uppercase tracking-wider">
+                    <i class="fas fa-file-csv mr-2"></i> Export
+                </a>
             @if($children->count() > 1)
             <div class="flex items-center gap-3">
                 <form method="GET" action="{{ route('parent.fees.index') }}" class="relative group">
@@ -161,16 +166,21 @@
     @endphp
 
     <div class="mt-4">
-        <x-data-table 
-            :columns="$tableColumns" 
-            :data="$fees" 
+        <x-data-table
+            :columns="$tableColumns"
+            :data="$fees"
             :actions="$tableActions"
-            empty-message="No fee records found for the selected criteria." 
+            :searchable="false"
+            :show-per-page="false"
+            :exportable="false"
+            empty-message="No fee records found for the selected criteria."
             empty-icon="fas fa-receipt"
         >
             Fee Statement & Payment History
         </x-data-table>
+        @if(method_exists($fees, 'hasPages') && $fees->hasPages())
+            <div class="mt-4">{{ $fees->links() }}</div>
+        @endif
     </div>
 </div>
 @endsection
-

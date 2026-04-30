@@ -42,6 +42,7 @@ use App\Http\Controllers\School\LibraryController;
 use App\Http\Controllers\School\AttendanceReportController;
 use App\Http\Controllers\School\AdhocFeeController;
 use App\Http\Controllers\School\FeeReportController;
+use App\Http\Controllers\School\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,12 @@ use App\Http\Controllers\School\FeeReportController;
 */
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Profile + password
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
 // Registration routes redirect to student-registrations (kept for backward-compat nav links)
 Route::get('/registrations', fn() => redirect()->route('school.student-registrations.index'))->name('registrations.index');

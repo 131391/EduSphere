@@ -2,69 +2,85 @@
 
 namespace App\Http\Controllers\Parent;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\ExamStatus;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Parent\Concerns\ResolvesParent;
+use App\Http\Controllers\TenantController;
+use App\Models\Attendance;
+use App\Models\Fee;
+use App\Models\Result;
+use App\Models\Student;
 
-class DashboardController extends Controller
+class DashboardController extends TenantController
 {
+    use ResolvesParent;
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     public function index()
     {
-        $parentProfile = Auth::user()->parent;
+        $this->ensureSchoolActive();
+        $parentProfile = $this->currentParentOrFail();
 
-        if (!$parentProfile) {
-            return redirect()->route('login')->with('error', 'Parent profile not found.');
-        }
+        $studentIds = $this->ownedStudentIds($parentProfile);
 
-        $children = $parentProfile->students()
-            ->with([
-                'class',
-                'section',
-                'attendance',
-                'fees.feeName',
-                'results' => fn ($query) => $query
-                    ->whereHas('exam', fn ($examQuery) => $examQuery->where('status', ExamStatus::Completed))
-                    ->with(['exam', 'subject']),
-            ])
+        // Children list — light load, just relationships needed for display.
+        $children = Student::whereIn('id', $studentIds)
+            ->where('school_id', $this->getSchoolId())
+            ->with(['class:id,name', 'section:id,name'])
             ->get();
+
+        // Aggregate stats via DB-level COUNT/SUM rather than collection iteration.
+        $totalDue = (float) Fee::whereIn('student_id', $studentIds)
+            ->where('school_id', $this->getSchoolId())
+            ->sum('due_amount');
+
+        $attendanceCounts = Attendance::whereIn('student_id', $studentIds)
+            ->where('school_id', $this->getSchoolId())
+            ->selectRaw('status, COUNT(*) as c')
+            ->groupBy('status')
+            ->pluck('c', 'status');
+
+        $totalDays   = (int) $attendanceCounts->sum();
+        $presentDays = (int) ($attendanceCounts[AttendanceStatus::Present->value] ?? 0);
+        $avgAttendance = $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 1) : 0;
+
+        // Upcoming dues — bounded list, eager-loaded.
+        $upcomingFees = Fee::whereIn('student_id', $studentIds)
+            ->where('school_id', $this->getSchoolId())
+            ->where('due_amount', '>', 0)
+            ->with(['feeName:id,name', 'student:id,first_name,last_name'])
+            ->orderBy('due_date')
+            ->limit(5)
+            ->get()
+            ->map(function ($fee) {
+                $fee->student_name = $fee->student?->full_name;
+                return $fee;
+            });
+
+        // Recent results from completed exams — bounded, eager-loaded.
+        $recentResults = Result::whereIn('student_id', $studentIds)
+            ->where('school_id', $this->getSchoolId())
+            ->whereHas('exam', fn ($q) => $q->where('status', ExamStatus::Completed))
+            ->with(['exam:id,name,exam_type_id', 'exam.examType:id,name', 'subject:id,name', 'student:id,first_name,last_name'])
+            ->latest('id')
+            ->limit(5)
+            ->get()
+            ->map(function ($result) {
+                $result->student_name = $result->student?->full_name;
+                return $result;
+            });
 
         $stats = [
             'total_children' => $children->count(),
-            'total_due' => 0,
-            'avg_attendance' => 0,
-            'recent_results' => collect(),
-            'upcoming_fees' => collect(),
+            'total_due'      => $totalDue,
+            'avg_attendance' => $avgAttendance,
+            'recent_results' => $recentResults,
+            'upcoming_fees'  => $upcomingFees,
         ];
-
-        if ($stats['total_children'] > 0) {
-            // Financials
-            $stats['total_due'] = $children->sum(function($c) {
-                return $c->fees->sum('due_amount');
-            });
-
-            $stats['upcoming_fees'] = $children->flatMap(function($c) {
-                return $c->fees->where('due_amount', '>', 0)->map(function($f) use ($c) {
-                    $f->student_name = $c->first_name;
-                    return $f;
-                });
-            })->sortBy('due_date')->take(5);
-
-            // Attendance
-            $totalDays = $children->sum(function($c) { return $c->attendance->count(); });
-            $presentDays = $children->sum(function($c) {
-                return $c->attendance->filter(fn($a) => $a->status?->value === 1)->count();
-            });
-            $stats['avg_attendance'] = $totalDays > 0 ? round(($presentDays / $totalDays) * 100, 1) : 0;
-
-            // Results
-            $stats['recent_results'] = $children->flatMap(function($c) {
-                return $c->results->map(function($r) use ($c) {
-                    $r->student_name = $c->first_name;
-                    return $r;
-                });
-            })->sortByDesc('created_at')->take(5);
-        }
 
         return view('parent.dashboard', compact('parentProfile', 'children', 'stats'));
     }

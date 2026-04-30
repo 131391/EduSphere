@@ -17,7 +17,7 @@
     $activeLibrary     = request()->routeIs('school.library.*');
     $activeMasterData  = request()->routeIs('school.student-types.*', 'school.boarding-types.*', 'school.blood-groups.*', 'school.religions.*', 'school.categories.*', 'school.qualifications.*', 'school.corresponding-relatives.*');
     $activeAdmSetup    = request()->routeIs('school.admission-codes.*', 'school.registration-codes.*', 'school.admission-news.*');
-    $activeSystem      = request()->routeIs('school.users.*', 'school.settings.*');
+    $activeSystem      = request()->routeIs('school.users.*', 'school.settings.*', 'school.profile.*');
 @endphp
 
 {{-- ── Sidebar ──────────────────────────────────────────────────────────── --}}
@@ -442,6 +442,13 @@
                     ['route' => 'school.settings.registration-fee.index',  'label' => 'Registration Fee'],
                     ['route' => 'school.settings.admission-fee.index',     'label' => 'Admission Fee'],
                 ],
+            ])
+
+            @include('partials.school-sidebar.nav-item', [
+                'route'  => 'school.profile.show',
+                'icon'   => 'fas fa-user-circle',
+                'label'  => 'My Profile',
+                'active' => request()->routeIs('school.profile.*'),
             ])
 
         </ul>

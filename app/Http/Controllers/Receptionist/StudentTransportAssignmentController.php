@@ -13,6 +13,7 @@ use App\Models\ClassModel;
 use App\Services\School\StudentTransportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class StudentTransportAssignmentController extends TenantController
@@ -138,13 +139,28 @@ class StudentTransportAssignmentController extends TenantController
     {
         try {
             $validated = $request->validate([
-                'student_id' => 'required|exists:students,id',
-                'route_id' => 'required|exists:transport_routes,id',
-                'bus_stop_id' => 'required|exists:bus_stops,id',
-                'vehicle_id' => 'nullable|exists:vehicles,id',
+                'student_id' => [
+                    'required',
+                    Rule::exists('students', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'route_id' => [
+                    'required',
+                    Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'bus_stop_id' => [
+                    'required',
+                    Rule::exists('bus_stops', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'vehicle_id' => [
+                    'nullable',
+                    Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId()),
+                ],
                 'fee_per_month' => 'nullable|numeric|min:0',
                 'start_date' => 'nullable|date',
-                'academic_year_id' => 'nullable|exists:academic_years,id',
+                'academic_year_id' => [
+                    'nullable',
+                    Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId()),
+                ],
             ]);
 
             $student = Student::where('school_id', $this->getSchoolId())
@@ -199,13 +215,28 @@ class StudentTransportAssignmentController extends TenantController
 
         try {
             $validated = $request->validate([
-                'student_id' => 'required|exists:students,id',
-                'route_id' => 'required|exists:transport_routes,id',
-                'bus_stop_id' => 'required|exists:bus_stops,id',
-                'vehicle_id' => 'nullable|exists:vehicles,id',
+                'student_id' => [
+                    'required',
+                    Rule::exists('students', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'route_id' => [
+                    'required',
+                    Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'bus_stop_id' => [
+                    'required',
+                    Rule::exists('bus_stops', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'vehicle_id' => [
+                    'nullable',
+                    Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId()),
+                ],
                 'fee_per_month' => 'nullable|numeric|min:0',
                 'start_date' => 'nullable|date',
-                'academic_year_id' => 'nullable|exists:academic_years,id',
+                'academic_year_id' => [
+                    'nullable',
+                    Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId()),
+                ],
             ]);
 
             $transportAssignment = $this->transportService->updateAssignment($transportAssignment, $validated);

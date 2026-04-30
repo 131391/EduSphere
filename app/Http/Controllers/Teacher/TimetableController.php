@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Http\Controllers\Teacher\Concerns\ResolvesTeacher;
 use App\Http\Controllers\TenantController;
 use App\Models\Timetable;
-use Illuminate\Support\Facades\Auth;
 
 class TimetableController extends TenantController
 {
+    use ResolvesTeacher;
+
     public function __construct()
     {
         parent::__construct();
@@ -37,16 +39,5 @@ class TimetableController extends TenantController
             'todayKey' => $todayKey,
             'total'    => $periods->count(),
         ]);
-    }
-
-    protected function currentTeacherOrFail()
-    {
-        $teacher = optional(Auth::user())->teacher;
-
-        if (!$teacher || (int) $teacher->school_id !== (int) $this->getSchoolId()) {
-            abort(403, 'Teacher profile not found for the current school.');
-        }
-
-        return $teacher;
     }
 }

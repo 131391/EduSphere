@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Http\Controllers\Teacher\Concerns\ResolvesTeacher;
 use App\Http\Controllers\TenantController;
 use App\Http\Requests\School\Examination\StoreMarksRequest;
 use App\Models\Exam;
@@ -15,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class MarksController extends TenantController
 {
+    use ResolvesTeacher;
+
     public function __construct(protected ResultService $resultService)
     {
         parent::__construct();
@@ -160,16 +163,5 @@ class MarksController extends TenantController
 
             return back()->with('error', 'Failed to save marks: ' . $e->getMessage())->withInput();
         }
-    }
-
-    protected function currentTeacherOrFail()
-    {
-        $teacher = optional(Auth::user())->teacher;
-
-        if (!$teacher || (int) $teacher->school_id !== (int) $this->getSchoolId()) {
-            abort(403, 'Teacher profile not found for the current school.');
-        }
-
-        return $teacher;
     }
 }

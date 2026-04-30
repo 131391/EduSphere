@@ -82,6 +82,15 @@
                 'active' => request()->routeIs('teacher.marks.*'),
             ])
 
+            @include('partials.school-sidebar.section-label', ['label' => 'Account'])
+
+            @include('partials.school-sidebar.nav-item', [
+                'route'  => 'teacher.profile.show',
+                'icon'   => 'fas fa-user-circle',
+                'label'  => 'My Profile',
+                'active' => request()->routeIs('teacher.profile.*'),
+            ])
+
         </ul>
     </nav>
 

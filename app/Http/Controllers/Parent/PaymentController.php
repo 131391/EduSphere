@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Parent;
 
 use App\Enums\FeeStatus;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Parent\Concerns\ResolvesParent;
+use App\Http\Controllers\TenantController;
 use App\Models\Fee;
 use App\Models\OnlineTransaction;
 use App\Models\PaymentMethod;
@@ -15,17 +16,19 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class PaymentController extends Controller
+class PaymentController extends TenantController
 {
-    public function __construct(
-        protected RazorpayGateway $gateway,
-        protected FeePaymentService $paymentService,
-    ) {}
+    use ResolvesParent;
+
+    public function __construct(protected FeePaymentService $paymentService)
+    {
+        parent::__construct();
+    }
 
     /**
      * Create a Razorpay order for a fee the authenticated parent owns.
      */
-    public function initiate(Request $request, int $fee_id)
+    public function initiate(int $fee_id)
     {
         $fee = $this->resolveOwnedFee($fee_id);
 
@@ -37,9 +40,10 @@ class PaymentController extends Controller
         }
 
         try {
+            $gateway = $this->gateway();
             $internalReceiptId = 'RC_ONL_' . time() . '_' . $fee->id;
 
-            $order = $this->gateway->createOrder(
+            $order = $gateway->createOrder(
                 amount: (float) $fee->due_amount,
                 currency: config('services.razorpay.currency', 'INR'),
                 receiptId: $internalReceiptId,
@@ -100,7 +104,21 @@ class PaymentController extends Controller
             'fee_id'              => 'required|integer|exists:fees,id',
         ]);
 
-        if (!$this->gateway->verifySignature([
+        try {
+            $gateway = $this->gateway();
+        } catch (Exception $e) {
+            Log::error('Payment verification unavailable', [
+                'fee_id' => $validated['fee_id'],
+                'error'  => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Online payment verification is currently unavailable.',
+            ], 503);
+        }
+
+        if (!$gateway->verifySignature([
             'razorpay_order_id'   => $validated['razorpay_order_id'],
             'razorpay_payment_id' => $validated['razorpay_payment_id'],
             'razorpay_signature'  => $validated['razorpay_signature'],
@@ -203,20 +221,27 @@ class PaymentController extends Controller
     }
 
     /**
-     * Load a fee record but only if it belongs to a student of the
-     * authenticated parent. Aborts 404 otherwise.
+     * Load a fee record only if (a) it belongs to a student of the
+     * authenticated parent, AND (b) both parent and fee live in the
+     * tenant bound by the school.access middleware. 404 otherwise so
+     * we don't leak existence of unrelated fees.
      */
     protected function resolveOwnedFee(int $feeId): Fee
     {
-        $parent = Auth::user()->parent ?? null;
-        abort_unless($parent, 404);
-
-        $studentIds = $parent->students()->pluck('students.id');
+        $this->ensureSchoolActive();
+        $parent = $this->currentParentOrFail();
+        $studentIds = $this->ownedStudentIds($parent);
 
         return Fee::with(['student.school', 'feeName'])
+            ->where('school_id', $this->getSchoolId())
             ->whereIn('student_id', $studentIds)
             ->where('payment_status', '!=', FeeStatus::Paid->value)
             ->findOrFail($feeId);
+    }
+
+    protected function gateway(): RazorpayGateway
+    {
+        return app(RazorpayGateway::class);
     }
 
     /**

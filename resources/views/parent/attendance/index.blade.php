@@ -18,6 +18,13 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Review your child's daily attendance records.</p>
             </div>
             
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                @if($selectedChildId)
+                <a href="{{ route('parent.attendance.export', ['student_id' => $selectedChildId]) }}"
+                   class="inline-flex items-center px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl hover:bg-emerald-100 transition-all uppercase tracking-wider">
+                    <i class="fas fa-file-csv mr-2"></i> Export
+                </a>
+                @endif
             @if($children->count() > 0)
             <form method="GET" action="{{ route('parent.attendance.index') }}" class="w-full sm:w-64" x-data="{
                 init() {
@@ -36,6 +43,7 @@
                 </select>
             </form>
             @endif
+            </div>
         </div>
     </div>
 
@@ -112,16 +120,20 @@
                 'sortable' => true,
                 'render' => function($row) {
                     $statusValue = $row->status?->value ?? null;
-                    if ($statusValue === 1) {
-                        return '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-check mr-1"></i>Present</span>';
-                    } elseif ($statusValue === 2) {
-                        return '<span class="px-2.5 py-1 bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-times mr-1"></i>Absent</span>';
-                    } elseif ($statusValue === 3) {
-                        return '<span class="px-2.5 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-clock mr-1"></i>Late</span>';
-                    } elseif ($statusValue === 4) {
-                        return '<span class="px-2.5 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-star-half-alt mr-1"></i>Half Day</span>';
-                    }
-                    return '<span class="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg uppercase tracking-wider">Unknown</span>';
+                    return match ($statusValue) {
+                        \App\Enums\AttendanceStatus::Present->value =>
+                            '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-check mr-1"></i>Present</span>',
+                        \App\Enums\AttendanceStatus::Absent->value =>
+                            '<span class="px-2.5 py-1 bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-times mr-1"></i>Absent</span>',
+                        \App\Enums\AttendanceStatus::Late->value =>
+                            '<span class="px-2.5 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-clock mr-1"></i>Late</span>',
+                        \App\Enums\AttendanceStatus::Excused->value =>
+                            '<span class="px-2.5 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-hospital mr-1"></i>Excused</span>',
+                        \App\Enums\AttendanceStatus::HalfDay->value =>
+                            '<span class="px-2.5 py-1 bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 text-xs font-bold rounded-lg uppercase tracking-wider"><i class="fas fa-star-half-alt mr-1"></i>Half Day</span>',
+                        default =>
+                            '<span class="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg uppercase tracking-wider">Unknown</span>',
+                    };
                 }
             ],
             [
@@ -136,15 +148,21 @@
     @endphp
 
     <div class="mt-4">
-        <x-data-table 
-            :columns="$tableColumns" 
-            :data="$attendanceLogs" 
+        <x-data-table
+            :columns="$tableColumns"
+            :data="$attendanceLogs"
             :actions="[]"
-            empty-message="No attendance records found for the selected child." 
+            :searchable="false"
+            :show-per-page="false"
+            :exportable="false"
+            empty-message="No attendance records found for the selected child."
             empty-icon="fas fa-calendar-times"
         >
             Daily Attendance Logs
         </x-data-table>
+        @if(method_exists($attendanceLogs, 'hasPages') && $attendanceLogs->hasPages())
+            <div class="mt-4">{{ $attendanceLogs->links() }}</div>
+        @endif
     </div>
     @else
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-12 text-center border border-indigo-100/50">

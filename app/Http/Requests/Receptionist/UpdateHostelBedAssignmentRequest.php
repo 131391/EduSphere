@@ -51,7 +51,9 @@ class UpdateHostelBedAssignmentRequest extends FormRequest
             $roomId = $this->input('hostel_room_id');
             $bedNo = $this->input('bed_no');
             $schoolId = app('currentSchool')->id;
-            $assignment = $this->route('hostelBedAssignment'); // route parameter
+            $assignment = $this->route('hostelBedAssignment')
+                ?? $this->route('hostel_bed_assignment')
+                ?? $this->route('assignment');
 
             if ($roomId && $assignment) {
                 $room = \App\Models\HostelRoom::where('school_id', $schoolId)->find($roomId);

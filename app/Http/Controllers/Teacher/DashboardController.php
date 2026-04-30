@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Enums\AttendanceStatus;
+use App\Http\Controllers\Teacher\Concerns\ResolvesTeacher;
 use App\Http\Controllers\TenantController;
 use App\Models\Attendance;
 use App\Models\ExamSubject;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends TenantController
 {
+    use ResolvesTeacher;
+
     public function __construct()
     {
         parent::__construct();
@@ -26,7 +29,7 @@ class DashboardController extends TenantController
 
         $schoolId = $this->getSchoolId();
         $today    = Carbon::today();
-        $classIds = $teacher->classes()->pluck('classes.id');
+        $classIds = $teacher->classes()->pluck('classes.id')->unique()->values();
 
         // ── Students ────────────────────────────────────────────────────────
         $studentCount = Student::where('school_id', $schoolId)
@@ -100,16 +103,5 @@ class DashboardController extends TenantController
             'todaysSchedule'  => $todaysSchedule,
             'openAssignments' => $assignments->take(5),
         ]);
-    }
-
-    protected function currentTeacherOrFail()
-    {
-        $teacher = optional(Auth::user())->teacher;
-
-        if (!$teacher || (int) $teacher->school_id !== (int) $this->getSchoolId()) {
-            abort(403, 'Teacher profile not found for the current school.');
-        }
-
-        return $teacher;
     }
 }

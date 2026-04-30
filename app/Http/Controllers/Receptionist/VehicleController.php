@@ -253,11 +253,22 @@ class VehicleController extends TenantController
     }
 
     /**
-     * Export vehicles to Excel.
+     * Export vehicles to CSV.
      */
-    public function export()
+    public function export(Request $request)
     {
-        // Excel export functionality - to be implemented with Laravel Excel
-        return back()->with('info', 'Export functionality coming soon.');
+        $query = Vehicle::where('school_id', $this->getSchoolId());
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('registration_no', 'like', "%{$search}%")
+                    ->orWhere('vehicle_no', 'like', "%{$search}%")
+                    ->orWhere('chassis_no', 'like', "%{$search}%")
+                    ->orWhere('engine_no', 'like', "%{$search}%");
+            });
+        }
+
+        return $this->exportToCsv($query);
     }
 }

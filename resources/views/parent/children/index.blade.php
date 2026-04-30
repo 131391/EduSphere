@@ -58,8 +58,8 @@
                 'sortable' => false,
                 'render' => function($row) {
                     $initial = strtoupper(substr($row->first_name, 0, 1));
-                    $img = $row->photo ? 
-                        '<img src="'.asset('storage/'.$row->photo).'" class="w-full h-full object-cover rounded-xl">' :
+                    $img = $row->student_photo ?
+                        '<img src="'.asset('storage/'.$row->student_photo).'" class="w-full h-full object-cover rounded-xl">' :
                         '<div class="w-full h-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black rounded-xl">'.$initial.'</div>';
                     
                     return '
@@ -93,12 +93,11 @@
                 'label' => 'Attendance',
                 'sortable' => false,
                 'render' => function($row) {
-                    $att = $row->attendance ?? collect();
-                    $total = $att->count();
-                    $pres = $att->filter(fn($a) => $a->status?->value === 1)->count();
-                    $pct = $total > 0 ? round($pres / $total * 100, 1) : 0;
+                    $pct   = $row->attendance_pct ?? 0;
+                    $pres  = $row->attendance_present ?? 0;
+                    $total = $row->attendance_total ?? 0;
                     $color = $pct >= 75 ? 'emerald' : ($pct >= 60 ? 'amber' : 'rose');
-                    
+
                     return '
                         <div class="flex flex-col gap-1.5">
                             <div class="flex items-center justify-between gap-4">
@@ -116,10 +115,10 @@
                 'label' => 'Financials',
                 'sortable' => false,
                 'render' => function($row) {
-                    $due = $row->fees->sum('due_amount');
-                    $paid = $row->fees->sum('paid_amount');
+                    $due   = $row->fees_due ?? 0;
+                    $paid  = $row->fees_paid ?? 0;
                     $color = $due > 0 ? 'rose' : 'emerald';
-                    
+
                     return '
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-'.$color.'-600">₹'.number_format($due, 2).' Due</span>
@@ -156,6 +155,9 @@
             :columns="$tableColumns" 
             :data="$children" 
             :actions="$tableActions"
+            :searchable="false"
+            :show-per-page="false"
+            :exportable="false"
             empty-message="No children profiles found linked to your account." 
             empty-icon="fas fa-child"
         >
@@ -164,4 +166,3 @@
     </div>
 </div>
 @endsection
-

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Http\Controllers\Teacher\Concerns\ResolvesTeacher;
 use App\Http\Controllers\TenantController;
 use App\Models\Attendance;
 use App\Models\Student;
@@ -15,6 +16,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttendanceController extends TenantController
 {
+    use ResolvesTeacher;
+
     public function __construct()
     {
         parent::__construct();
@@ -25,7 +28,7 @@ class AttendanceController extends TenantController
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 
-        $classIds = $teacher->classes()->pluck('classes.id')->unique();
+        $classIds = $teacher->classes()->pluck('classes.id')->unique()->values();
 
         $date = $request->filled('date') ? $request->date : now()->toDateString();
         $classId = $request->filled('class_id') ? (int) $request->class_id : $classIds->first();
@@ -37,7 +40,11 @@ class AttendanceController extends TenantController
 
         $students = collect();
         $existingAttendance = collect();
-        $classes = $teacher->classes()->get();
+        $classes = $teacher->classes()
+            ->select('classes.*')
+            ->distinct()
+            ->orderBy('classes.name')
+            ->get();
 
         if ($classId) {
             $students = Student::where('school_id', $this->getSchoolId())
@@ -88,7 +95,7 @@ class AttendanceController extends TenantController
         $classId  = (int) $validated['class_id'];
         $schoolId = $this->getSchoolId();
 
-        $classIds = $teacher->classes()->pluck('classes.id');
+        $classIds = $teacher->classes()->pluck('classes.id')->unique()->values();
         if (!$classIds->contains($classId)) {
             return back()->with('error', 'You are not authorized to mark attendance for this class.');
         }
@@ -158,7 +165,7 @@ class AttendanceController extends TenantController
             'to'         => 'required|date|after_or_equal:from',
         ]);
 
-        $classIds = $teacher->classes()->pluck('classes.id');
+        $classIds = $teacher->classes()->pluck('classes.id')->unique()->values();
         $classId  = (int) $validated['class_id'];
 
         if (!$classIds->contains($classId)) {
@@ -232,16 +239,5 @@ class AttendanceController extends TenantController
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
-    }
-
-    protected function currentTeacherOrFail()
-    {
-        $teacher = optional(Auth::user())->teacher;
-
-        if (!$teacher || (int) $teacher->school_id !== (int) $this->getSchoolId()) {
-            abort(403, 'Teacher profile not found for the current school.');
-        }
-
-        return $teacher;
     }
 }

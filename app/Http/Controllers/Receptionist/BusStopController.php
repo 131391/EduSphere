@@ -8,6 +8,7 @@ use App\Models\TransportRoute;
 use App\Models\Vehicle;
 use App\Services\School\BusStopService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 use App\Traits\HasAjaxDataTable;
@@ -105,8 +106,8 @@ class BusStopController extends TenantController
     {
         try {
             $validated = $request->validate([
-                'route_id' => ['required', 'integer', 'exists:transport_routes,id'],
-                'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
+                'route_id' => ['required', 'integer', Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId())],
+                'vehicle_id' => ['nullable', 'integer', Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId())],
                 'bus_stop_no' => ['required', 'string', 'max:255'],
                 'bus_stop_name' => ['required', 'string', 'max:255'],
                 'latitude' => ['nullable', 'numeric', 'between:-90,90'],
@@ -143,8 +144,8 @@ class BusStopController extends TenantController
 
         try {
             $validated = $request->validate([
-                'route_id' => ['required', 'integer', 'exists:transport_routes,id'],
-                'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
+                'route_id' => ['required', 'integer', Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId())],
+                'vehicle_id' => ['nullable', 'integer', Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId())],
                 'bus_stop_no' => ['required', 'string', 'max:255'],
                 'bus_stop_name' => ['required', 'string', 'max:255'],
                 'latitude' => ['nullable', 'numeric', 'between:-90,90'],

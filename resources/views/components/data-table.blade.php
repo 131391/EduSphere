@@ -7,6 +7,8 @@
     'actions' => [],
     'emptyMessage' => 'No records found',
     'emptyIcon' => 'fas fa-inbox',
+    'exportable' => true,
+    'showPerPage' => true,
     'route' => null,
     'routeParams' => [],
 ])
@@ -17,6 +19,7 @@
     $currentSearch = request('search', '');
     $currentPage = request('page', 1);
     $perPage = request('per_page', 15);
+    $visibleColumns = collect($columns)->reject(fn ($column) => ($column['hidden'] ?? false) === true)->values();
 @endphp
 
 <div class="bg-white rounded-lg shadow overflow-hidden" x-data="dataTable">
@@ -66,6 +69,7 @@
                 @endif
 
                 <!-- Per Page Selector -->
+                @if($showPerPage)
                 <select
                     data-table-select
                     x-model="perPage"
@@ -78,8 +82,10 @@
                     <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
                 </select>
+                @endif
 
                 <!-- Export Button (Optional) -->
+                @if($exportable)
                 <button 
                     @click="exportData()"
                     class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm flex items-center"
@@ -88,6 +94,7 @@
                     <i class="fas fa-download mr-2"></i>
                     Export
                 </button>
+                @endif
             </div>
         </div>
 
@@ -111,8 +118,8 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    @foreach($columns as $column)
-                    <th 
+                    @foreach($visibleColumns as $column)
+                        <th 
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider @if(isset($column['sortable']) && $column['sortable']) cursor-pointer hover:bg-gray-100 @endif"
                         @if(isset($column['sortable']) && $column['sortable'])
                         @click.prevent.stop="sort('{{ $column['key'] }}')"
@@ -150,7 +157,7 @@
                 @if($data && $data->count() > 0)
                     @foreach($data as $row)
                     <tr class="hover:bg-gray-50 transition-colors" x-data="{ row: {{ json_encode($row) }} }">
-                        @foreach($columns as $column)
+                        @foreach($visibleColumns as $column)
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             @if(isset($column['render']))
                                 @php
@@ -241,7 +248,7 @@
                     @endforeach
                 @else
                 <tr>
-                    <td colspan="{{ count($columns) + (count($actions) > 0 ? 1 : 0) }}" class="px-6 py-12 text-center">
+                    <td colspan="{{ count($visibleColumns) + (count($actions) > 0 ? 1 : 0) }}" class="px-6 py-12 text-center">
                         <div class="flex flex-col items-center">
                             <i class="{{ $emptyIcon }} text-4xl text-gray-300 mb-4"></i>
                             <p class="text-lg text-gray-500">{{ $emptyMessage }}</p>
@@ -413,4 +420,3 @@
 })();
 </script>
 @endpush
-

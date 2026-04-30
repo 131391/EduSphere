@@ -165,6 +165,16 @@
                 'active' => request()->routeIs('receptionist.staff.*'),
             ])
 
+            {{-- ════ ACCOUNT ════ --}}
+            @include('partials.school-sidebar.section-label', ['label' => 'Account'])
+
+            @include('partials.school-sidebar.nav-item', [
+                'route'  => 'receptionist.profile.show',
+                'icon'   => 'fas fa-user-circle',
+                'label'  => 'My Profile',
+                'active' => request()->routeIs('receptionist.profile.*'),
+            ])
+
         </ul>
     </nav>
 

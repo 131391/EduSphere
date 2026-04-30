@@ -73,7 +73,7 @@
     @endif
 
     <!-- Recent Results -->
-    @if($student->results->isNotEmpty())
+    @if($recentResults->isNotEmpty())
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <h3 class="text-base font-semibold text-gray-800 dark:text-white">Recent Results</h3>
@@ -92,7 +92,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @foreach($student->results->take(10) as $result)
+                    @foreach($recentResults as $result)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                         <td class="px-6 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->exam)->display_name ?? '—' }}</td>
                         <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->subject)->name ?? '—' }}</td>

@@ -82,7 +82,10 @@ class TransportAttendanceController extends TenantController
     {
         try {
             $validated = $request->validate([
-                'vehicle_id' => 'required|exists:vehicles,id',
+                'vehicle_id' => [
+                    'required',
+                    Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId()),
+                ],
             ]);
 
             $routesArray = $this->attendanceService->getRoutesForVehicle(
@@ -120,9 +123,18 @@ class TransportAttendanceController extends TenantController
     {
         try {
             $validated = $request->validate([
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'route_id' => 'required|exists:transport_routes,id',
-                'academic_year_id' => 'nullable|exists:academic_years,id',
+                'vehicle_id' => [
+                    'required',
+                    Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'route_id' => [
+                    'required',
+                    Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'academic_year_id' => [
+                    'nullable',
+                    Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId()),
+                ],
             ]);
 
             $students = $this->attendanceService->getStudentsForRoute(
@@ -162,13 +174,25 @@ class TransportAttendanceController extends TenantController
     {
         try {
             $validated = $request->validate([
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'route_id' => 'required|exists:transport_routes,id',
-                'academic_year_id' => 'nullable|exists:academic_years,id',
+                'vehicle_id' => [
+                    'required',
+                    Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'route_id' => [
+                    'required',
+                    Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId()),
+                ],
+                'academic_year_id' => [
+                    'nullable',
+                    Rule::exists('academic_years', 'id')->where('school_id', $this->getSchoolId()),
+                ],
                 'attendance_type' => ['required', 'integer', Rule::enum(TransportAttendanceType::class)],
                 'attendance_date' => 'required|date|before_or_equal:today',
                 'students' => 'required|array|min:1',
-                'students.*' => 'required|exists:students,id',
+                'students.*' => [
+                    'required',
+                    Rule::exists('students', 'id')->where('school_id', $this->getSchoolId()),
+                ],
                 'checked_students' => 'nullable|array',
                 'checked_students.*' => 'integer',
             ]);
@@ -250,7 +274,10 @@ class TransportAttendanceController extends TenantController
     {
         try {
             $request->validate([
-                'vehicle_id' => 'required|exists:vehicles,id',
+                'vehicle_id' => [
+                    'required',
+                    Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId()),
+                ],
             ]);
 
             $schoolId = $this->getSchoolId();

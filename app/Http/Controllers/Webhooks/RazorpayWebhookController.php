@@ -23,10 +23,7 @@ use Illuminate\Support\Facades\Log;
  */
 class RazorpayWebhookController extends Controller
 {
-    public function __construct(
-        protected RazorpayGateway $gateway,
-        protected FeePaymentService $paymentService,
-    ) {}
+    public function __construct(protected FeePaymentService $paymentService) {}
 
     public function handle(Request $request): Response
     {
@@ -34,7 +31,7 @@ class RazorpayWebhookController extends Controller
         $signature = $request->header('X-Razorpay-Signature', '');
 
         try {
-            if (!$this->gateway->verifyWebhookSignature($rawBody, $signature)) {
+            if (!$this->gateway()->verifyWebhookSignature($rawBody, $signature)) {
                 Log::warning('Razorpay webhook signature mismatch', [
                     'event' => $request->input('event'),
                 ]);
@@ -153,5 +150,10 @@ class RazorpayWebhookController extends Controller
             ]);
 
         return response('ok', 200);
+    }
+
+    protected function gateway(): RazorpayGateway
+    {
+        return app(RazorpayGateway::class);
     }
 }

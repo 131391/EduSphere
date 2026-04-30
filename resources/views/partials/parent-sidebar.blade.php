@@ -71,6 +71,15 @@
                 'active' => request()->routeIs('parent.fees.*'),
             ])
 
+            @include('partials.school-sidebar.section-label', ['label' => 'Account'])
+
+            @include('partials.school-sidebar.nav-item', [
+                'route'  => 'parent.profile.show',
+                'icon'   => 'fas fa-user-circle',
+                'label'  => 'My Profile',
+                'active' => request()->routeIs('parent.profile.*'),
+            ])
+
         </ul>
     </nav>
 

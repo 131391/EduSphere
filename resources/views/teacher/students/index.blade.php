@@ -184,6 +184,9 @@
             :columns="$tableColumns" 
             :data="$students" 
             :actions="$tableActions"
+            :searchable="false"
+            :show-per-page="false"
+            :exportable="false"
             empty-message="No student profiles are currently associated with your classes." 
             empty-icon="fas fa-user-slash"
         >
@@ -192,4 +195,3 @@
     </div>
 </div>
 @endsection
-

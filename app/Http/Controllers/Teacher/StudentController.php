@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Http\Controllers\Teacher\Concerns\ResolvesTeacher;
 use App\Http\Controllers\TenantController;
+use App\Models\Exam;
 use App\Models\Student;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentController extends TenantController
 {
+    use ResolvesTeacher;
+
     public function __construct()
     {
         parent::__construct();
@@ -20,10 +23,11 @@ class StudentController extends TenantController
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 
-        $classIds = $teacher->classes()->pluck('classes.id');
+        $classIds = $teacher->classes()->pluck('classes.id')->unique()->values();
 
         $base = Student::where('school_id', $this->getSchoolId())
-            ->whereIn('class_id', $classIds);
+            ->whereIn('class_id', $classIds)
+            ->active();
 
         $query = (clone $base)->with(['class', 'section']);
 
@@ -42,7 +46,11 @@ class StudentController extends TenantController
         }
 
         $students = $query->orderBy('first_name')->paginate(20)->withQueryString();
-        $classes  = $teacher->classes()->get();
+        $classes  = $teacher->classes()
+            ->select('classes.*')
+            ->distinct()
+            ->orderBy('classes.name')
+            ->get();
 
         // One aggregated query for stats instead of 3 separate counts.
         $genderCounts = (clone $base)
@@ -71,6 +79,16 @@ class StudentController extends TenantController
             ->whereIn('class_id', $classIds)
             ->with(['class', 'section']);
 
+        if ($request->filled('search')) {
+            $s = trim($request->string('search')->toString());
+            $query->where(function ($q) use ($s) {
+                $q->where('first_name', 'like', "%{$s}%")
+                    ->orWhere('last_name', 'like', "%{$s}%")
+                    ->orWhere('admission_no', 'like', "%{$s}%")
+                    ->orWhere('roll_no', 'like', "%{$s}%");
+            });
+        }
+
         if ($request->filled('class_id') && $classIds->contains((int) $request->class_id)) {
             $query->where('class_id', (int) $request->class_id);
         }
@@ -94,7 +112,7 @@ class StudentController extends TenantController
                     optional($s->section)->name,
                     $s->gender?->label() ?? '',
                     $s->mobile_no,
-                    optional($s->date_of_birth)->format('d-m-Y'),
+                    optional($s->dob)->format('d-m-Y'),
                 ]);
             }
             fclose($out);
@@ -108,7 +126,7 @@ class StudentController extends TenantController
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 
-        $classIds = $teacher->classes()->pluck('classes.id');
+        $classIds = $teacher->classes()->pluck('classes.id')->unique()->values();
 
         $student = Student::where('school_id', $this->getSchoolId())
             ->whereIn('class_id', $classIds)
@@ -117,6 +135,7 @@ class StudentController extends TenantController
 
         // Pull attendance summary as aggregated counts rather than hydrating every row.
         $statusCounts = $student->attendance()
+            ->where('school_id', $this->getSchoolId())
             ->selectRaw('status, COUNT(*) as c')
             ->groupBy('status')
             ->pluck('c', 'status');
@@ -134,6 +153,7 @@ class StudentController extends TenantController
 
         // Paginated, filterable results (was previously eager-loaded all-at-once).
         $resultsQuery = $student->results()
+            ->where('school_id', $this->getSchoolId())
             ->with(['exam.examType', 'subject'])
             ->latest('id');
 
@@ -143,23 +163,13 @@ class StudentController extends TenantController
 
         $results = $resultsQuery->paginate(15)->withQueryString();
 
-        $examOptions = \App\Models\Exam::whereIn('id', $student->results()->select('exam_id')->distinct())
+        $examOptions = Exam::where('school_id', $this->getSchoolId())
+            ->whereIn('id', $student->results()->where('school_id', $this->getSchoolId())->select('exam_id')->distinct())
             ->orderBy('id', 'desc')
             ->get(['id', 'name']);
 
         return view('teacher.students.show', compact(
             'student', 'attendanceSummary', 'teacher', 'results', 'examOptions'
         ));
-    }
-
-    protected function currentTeacherOrFail()
-    {
-        $teacher = optional(Auth::user())->teacher;
-
-        if (!$teacher || (int) $teacher->school_id !== (int) $this->getSchoolId()) {
-            abort(403, 'Teacher profile not found for the current school.');
-        }
-
-        return $teacher;
     }
 }

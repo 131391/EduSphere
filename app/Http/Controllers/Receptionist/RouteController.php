@@ -97,7 +97,10 @@ class RouteController extends TenantController
         try {
             $validated = $request->validate([
                 'route_name' => 'required|string|max:255',
-                'vehicle_id' => 'required|exists:vehicles,id',
+                'vehicle_id' => [
+                    'required',
+                    Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId()),
+                ],
                 'route_create_date' => 'required|date',
             ]);
 
@@ -138,7 +141,10 @@ class RouteController extends TenantController
         try {
             $validated = $request->validate([
                 'route_name' => 'required|string|max:255',
-                'vehicle_id' => 'required|exists:vehicles,id',
+                'vehicle_id' => [
+                    'required',
+                    Rule::exists('vehicles', 'id')->where('school_id', $this->getSchoolId()),
+                ],
                 'route_create_date' => 'required|date',
                 'status' => ['required', 'integer', Rule::enum(RouteStatus::class)],
             ]);

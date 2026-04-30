@@ -17,6 +17,7 @@ use App\Http\Controllers\Receptionist\HostelRoomController;
 use App\Http\Controllers\Receptionist\HostelBedAssignmentController;
 use App\Http\Controllers\Receptionist\HostelAttendanceController;
 use App\Http\Controllers\Receptionist\StaffController;
+use App\Http\Controllers\Receptionist\ProfileController;
 
 
 /*
@@ -30,6 +31,12 @@ use App\Http\Controllers\Receptionist\StaffController;
 
 // Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Profile + password
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
 // Visitor Management
 Route::get('visitors', [VisitorController::class, 'index'])->name('visitors.index');
@@ -131,4 +138,3 @@ Route::resource('hostel-attendance', HostelAttendanceController::class)->only(['
 Route::get('staff/get-sections/{classId}', [StaffController::class, 'getSections'])->name('staff.get-sections');
 Route::match(['get', 'post'], 'staff/fetch', [StaffController::class, 'index'])->name('staff.fetch');
 Route::resource('staff', StaffController::class);
-
