@@ -25,6 +25,8 @@ class BusStopController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         $query = BusStop::where('school_id', $schoolId)
@@ -104,6 +106,8 @@ class BusStopController extends TenantController
 
     public function store(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validate([
                 'route_id' => ['required', 'integer', Rule::exists('transport_routes', 'id')->where('school_id', $this->getSchoolId())],
@@ -140,6 +144,7 @@ class BusStopController extends TenantController
 
     public function update(Request $request, BusStop $busStop)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($busStop);
 
         try {
@@ -178,6 +183,7 @@ class BusStopController extends TenantController
 
     public function destroy(BusStop $busStop)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($busStop);
 
         try {
@@ -206,6 +212,8 @@ class BusStopController extends TenantController
      */
     public function export()
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
         $fileName = 'institutional_transit_nodes_manifest_' . now()->format('Y_m_d_His') . '.csv';
 

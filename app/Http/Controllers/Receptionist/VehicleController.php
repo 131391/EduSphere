@@ -27,6 +27,8 @@ class VehicleController extends TenantController
      */
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         // 1. Row Transformer (Gold Standard UI consistency)

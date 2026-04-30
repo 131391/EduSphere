@@ -75,6 +75,26 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Waiver::class, WaiverPolicy::class);
 
+        // Single ability that gates the entire Receptionist portal.
+        // Defense-in-depth on top of the route middleware stack
+        // (auth + tenant + school.access + role:receptionist). Most
+        // receptionist-only models (Hostel*, Transport*, Visitor, Staff,
+        // StudentEnquiry) don't have dedicated policies, so controllers
+        // call $this->authorize('receptionist:operate') instead.
+        Gate::define('receptionist:operate', function (User $user) {
+            if (!$user->isActive()) {
+                return false;
+            }
+
+            if (!$user->isReceptionist() && !$user->isSchoolAdmin()) {
+                return false;
+            }
+
+            $currentSchool = app()->bound('currentSchool') ? app('currentSchool') : null;
+
+            return $currentSchool && $user->canAccessSchool($currentSchool->id);
+        });
+
         \App\Models\Waiver::observe(\App\Observers\WaiverObserver::class);
 
         // Set default string length for MySQL

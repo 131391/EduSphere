@@ -9,7 +9,7 @@ Severity: 🔴 critical / 🟠 high / 🟡 medium / 🟢 low.
 
 ## Phase 1 — Blockers (must finish before any production deploy)
 
-- [ ] 🔴 **Tenantable null-safety.** [app/Traits/Tenantable.php](app/Traits/Tenantable.php) silently no-ops when `currentSchool` is unbound, returning cross-school data. Allow console + pre-auth + super_admin; throw in dev, fail-closed (zero rows) in prod for any other case; log every bypass.
+- [ ] 🔴 **Bind `currentSchool` from `user.school_id` early in the request.** [app/Traits/Tenantable.php](app/Traits/Tenantable.php) now logs (`Log::info`) every authenticated query made without a tenant binding, so misconfigured routes are visible — but it can't *throw* or fail-closed without recursing into User retrieval. The proper fix is to bind `currentSchool` from the authenticated user's `school_id` before any business query runs (in `Authenticate` or a new middleware). Once that exists, Tenantable can safely tighten to throw/fail-closed for the residual case. Today this means: the post-login `/dashboard` dispatcher, the super-admin portal, and any other tenant-less authenticated route emit log lines on every Tenantable query — usable for finding misconfigured routes but noisy.
 - [ ] 🔴 **Author `ARCHITECTURE.md`** — referenced in [README.md](README.md) but missing. Cover tenant resolution, role model, request flow, data isolation guarantees.
 - [ ] 🔴 **Author `DEPLOYMENT.md`** — referenced in [README.md](README.md) but missing. Cover prereqs, env vars, build, migrate, queue/Horizon, scheduler, cache, observability.
 - [ ] 🔴 **Wire error tracking (Sentry).** No service today; production errors land in `storage/logs/` with no alerting. Install `sentry/sentry-laravel`, configure DSN per env, capture release/environment.

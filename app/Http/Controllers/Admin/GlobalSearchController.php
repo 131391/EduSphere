@@ -14,6 +14,10 @@ class GlobalSearchController extends Controller
      */
     public function search(Request $request)
     {
+        // Cross-school search reveals data from every tenant; gate it on
+        // the platform-wide School.viewAny ability (super-admin only).
+        $this->authorize('viewAny', School::class);
+
         $query = $request->input('q');
 
         if (empty($query)) {

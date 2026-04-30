@@ -133,8 +133,11 @@ class UserController extends TenantController
 
     public function store(\App\Http\Requests\School\StoreUserRequest $request)
     {
+        // Hoisted out of the try/catch below so an AuthorizationException
+        // surfaces as a 403, not a 500 swallowed by the generic handler.
+        $this->authorize('create', User::class);
+
         try {
-            $this->authorize('create', User::class);
             $validated = $request->validated();
             $school = auth()->user()->school;
 

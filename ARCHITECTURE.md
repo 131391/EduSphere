@@ -68,14 +68,29 @@ which adds two boot-time hooks:
 - A `creating` hook that auto-fills `school_id` from `currentSchool`.
 
 The trait is the **single point that prevents cross-tenant data leakage** in
-the ORM layer. It now fails closed when `currentSchool` is missing:
+the ORM layer. Behavior matrix:
 
 | Caller | Behavior |
 |---|---|
+| `currentSchool` is bound (the normal tenant-scoped HTTP request) | Scope adds `where school_id = currentSchool->id`. |
 | Console (`php artisan ...`, scheduler, Horizon jobs) | No scope applied. Console code is trusted and often loops over schools. |
-| HTTP request, no auth user yet (login, password reset) | No scope applied. The controller is responsible for any scoping. |
-| HTTP request, user is super-admin | No scope applied. Super-admin queries are intentionally cross-tenant. |
-| HTTP request, normal authenticated user, no `currentSchool` bound | **`local` / `testing`:** throws `App\Exceptions\TenantResolutionException`. **`production`:** logs `Log::critical('Tenantable scope bypass blocked', ...)` and forces `where 1=0` (zero rows). |
+| HTTP request, no `currentSchool` bound | No scope applied; emits `Log::info('Tenantable scope skipped: tenant context not bound', ...)` with the model + route + URL. |
+
+Why the HTTP-no-tenant branch only logs and doesn't throw or return zero
+rows: this trait runs *inside* the User model's own retrieval (User uses
+Tenantable). Calling `auth()->user()` or `auth()->id()` from here causes
+infinite recursion because both ultimately call `User::find($id)`, which
+re-enters this scope. So we cannot distinguish "super admin browsing the
+admin portal" from "school user on a misconfigured route" inside the
+scope itself. The log line gives operations the visibility to catch
+genuinely-misconfigured routes; tightening this further requires binding
+`currentSchool` from `user.school_id` earlier in the request lifecycle —
+tracked in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) Phase 1.
+
+Legitimate authenticated routes that hit this branch today:
+
+- The post-login `/dashboard` role-dispatcher in `routes/web.php`.
+- The super-admin portal (`routes/admin.php`) — by design.
 
 Models that opt into the trait (49 today): `User`, `Student`, `Teacher`,
 `Fee`, `FeePayment`, `Result`, `Attendance`, `Timetable`, `Exam`,
@@ -126,10 +141,11 @@ stack for tenant-scoped portals is:
 ```
 
 Super-admin uses `['auth', 'role:super_admin']` only — no tenant binding.
+The `Tenantable` global scope falls through (with a log line) when
+`currentSchool` isn't bound, so super-admin queries return data across
+schools as intended. See §2.2.
 
-`User::isSuperAdmin()` requires `school_id IS NULL` on the user row, which
-is what allows the `Tenantable` global scope to recognize them and skip
-filtering.
+`User::isSuperAdmin()` requires `school_id IS NULL` on the user row.
 
 ---
 
@@ -279,7 +295,7 @@ A `PAYMENT_GATEWAY=stripe` setting today silently breaks payment processing.
 Concise list — the explanations live in
 [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
-- Tenant scope was silent on misconfiguration. **Fixed:** [Tenantable](app/Traits/Tenantable.php) now fails closed.
+- Tenant scope was silent on misconfiguration. **Partial fix:** [Tenantable](app/Traits/Tenantable.php) now logs (`Log::info`) every authenticated query made without a `currentSchool` binding so misconfigured routes are visible. Strictly failing closed requires binding `currentSchool` from `user.school_id` earlier in the request — tracked as Phase 1 work; see §2.2.
 - Tenant cache TTL is 300 s. (Phase 2)
 - Route parameters are not scoped to `school_id`. (Phase 2)
 - Most controllers don't call `$this->authorize(...)` despite policies existing. (Phase 1, finance first)

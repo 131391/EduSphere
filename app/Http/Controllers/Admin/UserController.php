@@ -14,6 +14,8 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', User::class);
+
         $perPage = $request->input('per_page', 15);
         $query = User::with(['role', 'school']);
 

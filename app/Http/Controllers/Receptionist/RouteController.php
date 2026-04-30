@@ -28,8 +28,10 @@ class RouteController extends TenantController
      */
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
-        
+
         $query = TransportRoute::where('school_id', $schoolId)->with('vehicle');
 
         // Search functionality
@@ -94,6 +96,8 @@ class RouteController extends TenantController
      */
     public function store(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validate([
                 'route_name' => 'required|string|max:255',
@@ -136,6 +140,7 @@ class RouteController extends TenantController
      */
     public function update(Request $request, TransportRoute $route)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($route);
 
         try {
@@ -179,6 +184,7 @@ class RouteController extends TenantController
      */
     public function destroy(Request $request, TransportRoute $route)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($route);
 
         try {
@@ -207,8 +213,10 @@ class RouteController extends TenantController
      */
     public function getVehicles()
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
-        
+
         $vehicles = Vehicle::where('school_id', $schoolId)
             ->select('id', 'vehicle_no', 'registration_no')
             ->orderBy('vehicle_no')
@@ -222,6 +230,8 @@ class RouteController extends TenantController
      */
     public function export()
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
         $fileName = 'institutional_routes_manifest_' . now()->format('Y_m_d_His') . '.csv';
         

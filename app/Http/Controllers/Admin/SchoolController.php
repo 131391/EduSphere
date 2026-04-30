@@ -15,6 +15,8 @@ class SchoolController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', School::class);
+
         $query = School::withTrashed()->with(['city', 'state', 'country']);
 
         // Search functionality
@@ -188,11 +190,15 @@ class SchoolController extends Controller
 
     public function create()
     {
+        $this->authorize('create', School::class);
+
         return view('admin.schools.create');
     }
 
     public function store(\App\Http\Requests\Admin\StoreSchoolRequest $request)
     {
+        $this->authorize('create', School::class);
+
         $validated = $request->validated();
 
         try {
@@ -257,6 +263,7 @@ class SchoolController extends Controller
     public function show($id)
     {
         $school = School::withTrashed()->findOrFail($id);
+        $this->authorize('view', $school);
 
         // Fetch the primary administrator
         $admin = \App\Models\User::where('school_id', $school->id)
@@ -270,6 +277,7 @@ class SchoolController extends Controller
     public function edit($id)
     {
         $school = School::withTrashed()->findOrFail($id);
+        $this->authorize('update', $school);
 
         // Fetch the primary administrator
         $admin = \App\Models\User::where('school_id', $school->id)
@@ -283,6 +291,8 @@ class SchoolController extends Controller
     public function update(\App\Http\Requests\Admin\UpdateSchoolRequest $request, $id)
     {
         $school = School::withTrashed()->findOrFail($id);
+        $this->authorize('update', $school);
+
         $validated = $request->validated();
 
         // Handle logo upload
@@ -341,6 +351,8 @@ class SchoolController extends Controller
     public function destroy(Request $request, $id)
     {
         $school = School::findOrFail($id);
+        $this->authorize('delete', $school);
+
         $school->delete();
 
         if ($request->ajax()) {
@@ -360,6 +372,7 @@ class SchoolController extends Controller
     public function restore($id)
     {
         $school = School::withTrashed()->findOrFail($id);
+        $this->authorize('restore', $school);
 
         if (!$school->trashed()) {
             return back()->with('error', 'School is not deleted.');
@@ -377,6 +390,8 @@ class SchoolController extends Controller
     public function forceDelete($id)
     {
         $school = School::withTrashed()->findOrFail($id);
+        $this->authorize('forceDelete', $school);
+
         $school->forceDelete();
 
         return redirect()->route('admin.schools.index')
@@ -389,6 +404,8 @@ class SchoolController extends Controller
     public function features($id)
     {
         $school = School::findOrFail($id);
+        $this->authorize('manageFeatures', $school);
+
         $features = $school->features ?? [];
 
         $availableFeatures = [
@@ -424,6 +441,7 @@ class SchoolController extends Controller
     public function updateFeatures(Request $request, $id)
     {
         $school = School::findOrFail($id);
+        $this->authorize('manageFeatures', $school);
 
         $school->update([
             'features' => $request->input('features', []),

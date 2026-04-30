@@ -460,10 +460,12 @@ class AdmissionController extends TenantController
 
     public function getClassData($classId)
     {
+        $this->authorize('create', Student::class);
+
         $sections = Section::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
             ->get(['id', 'name']);
-        
+
         $admissionFee = \App\Models\AdmissionFee::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
             ->first();
@@ -479,6 +481,8 @@ class AdmissionController extends TenantController
      */
     public function getRegistrationData($registrationId)
     {
+        $this->authorize('create', Student::class);
+
         $registration = StudentRegistration::where('id', $registrationId)
             ->where('school_id', $this->getSchoolId())
             ->first();

@@ -477,6 +477,8 @@ class AdmissionController extends TenantController
 
     public function getClassData($classId)
     {
+        $this->authorize('create', Student::class);
+
         $sections = Section::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
             ->get(['id', 'name']);
@@ -496,6 +498,8 @@ class AdmissionController extends TenantController
      */
     public function getRegistrationData($registrationId)
     {
+        $this->authorize('create', Student::class);
+
         $registration = StudentRegistration::where('id', $registrationId)
             ->where('school_id', $this->getSchoolId())
             ->first();
@@ -522,6 +526,8 @@ class AdmissionController extends TenantController
         $student = Student::with(['class', 'section', 'academicYear'])
             ->where('school_id', $this->getSchoolId())
             ->findOrFail($id);
+
+        $this->authorize('view', $student);
 
         $pdf = Pdf::loadView('pdf.student-admission', compact('student', 'school'));
         return $pdf->download('student-admission-' . $student->admission_no . '.pdf');

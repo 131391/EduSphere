@@ -2,7 +2,6 @@
 
 namespace App\Traits;
 
-use App\Exceptions\TenantResolutionException;
 use App\Models\School;
 use Illuminate\Support\Facades\Log;
 
@@ -22,46 +21,29 @@ trait Tenantable
                 }
             }
 
-            // No tenant context. Allow well-known cross-tenant callers; fail
-            // closed for everything else so a missing `tenant` middleware
-            // can't quietly leak data across schools.
             if (app()->runningInConsole()) {
                 return;
             }
 
-            $user = auth()->user();
-
-            if ($user === null) {
-                // Pre-auth requests (login, password reset). Controllers in
-                // this path are responsible for any tenant scoping they need.
-                return;
-            }
-
-            if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
-                return;
-            }
-
-            $modelClass = get_class($builder->getModel());
+            // Important: do NOT call auth()->user() or auth()->id() here.
+            // When the model being scoped is the User model itself,
+            // resolving auth re-enters retrieveById() which re-enters this
+            // scope, producing infinite recursion. We log and fall through.
+            //
+            // Legitimate tenant-less authenticated routes today:
+            //  - the post-login /dashboard role dispatcher in routes/web.php
+            //  - the super-admin portal in routes/admin.php
+            // PRODUCTION_READINESS.md tracks binding currentSchool from
+            // the user's school_id earlier in the request so this branch
+            // is rarely reached and any remaining hit is genuinely a
+            // misconfigured route.
             $route = request()->route();
 
-            Log::critical('Tenantable scope bypass blocked', [
-                'model' => $modelClass,
-                'user_id' => $user->getAuthIdentifier(),
+            Log::info('Tenantable scope skipped: tenant context not bound', [
+                'model' => get_class($builder->getModel()),
                 'route' => $route ? $route->getName() : null,
                 'url' => request()->fullUrl(),
             ]);
-
-            if (app()->environment('local', 'testing')) {
-                throw new TenantResolutionException(
-                    "No school context bound for query on {$modelClass}. "
-                    . 'Ensure the route is wrapped in the "tenant" middleware.'
-                );
-            }
-
-            // Production: fail closed. Returning zero rows is safer than
-            // throwing for a public-facing request that may already be
-            // rendering a partial response.
-            $builder->whereRaw('1 = 0');
         });
 
         static::creating(function ($model) {

@@ -16,6 +16,8 @@ class StudentController extends TenantController
     public function index(Request $request)
     {
         $this->ensureSchoolActive();
+        $this->authorize('viewAny', \App\Models\Student::class);
+
         $schoolId = $this->getSchoolId();
 
         $transformer = function($row) {
@@ -107,6 +109,8 @@ class StudentController extends TenantController
 
     public function create()
     {
+        $this->authorize('create', \App\Models\Student::class);
+
         // Admission and Registration flows handle student creation.
         // Direct creation can be added here if needed.
         return redirect()->route('school.admission.index')
@@ -142,6 +146,7 @@ class StudentController extends TenantController
     public function update(Request $request, $id)
     {
         $student = \App\Models\Student::where('school_id', $this->getSchoolId())->findOrFail($id);
+        $this->authorize('update', $student);
 
         $validated = $request->validate([
             'first_name'  => 'required|string|max:255',
