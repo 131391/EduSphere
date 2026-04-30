@@ -3,7 +3,7 @@
 @section('title', 'My Profile')
 
 @section('content')
-<div x-data="schoolProfilePage()" class="space-y-6 max-w-5xl">
+<div x-data="schoolProfilePage()" class="space-y-6">
 
     {{-- Header --}}
     <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden">
