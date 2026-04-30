@@ -6,6 +6,7 @@ use App\Http\Controllers\TenantController;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StudentController extends TenantController
 {
@@ -59,6 +60,49 @@ class StudentController extends TenantController
         return view('teacher.students.index', compact('students', 'classes', 'teacher', 'stats'));
     }
 
+    public function export(Request $request): StreamedResponse
+    {
+        $this->ensureSchoolActive();
+        $teacher = $this->currentTeacherOrFail();
+
+        $classIds = $teacher->classes()->pluck('classes.id');
+
+        $query = Student::where('school_id', $this->getSchoolId())
+            ->whereIn('class_id', $classIds)
+            ->with(['class', 'section']);
+
+        if ($request->filled('class_id') && $classIds->contains((int) $request->class_id)) {
+            $query->where('class_id', (int) $request->class_id);
+        }
+
+        $students = $query->orderBy('class_id')->orderBy('first_name')->get();
+
+        $filename = 'my-students-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($students) {
+            $out = fopen('php://output', 'w');
+            // UTF-8 BOM so Excel reads non-ASCII correctly.
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['Admission No', 'Roll No', 'Name', 'Class', 'Section', 'Gender', 'Mobile', 'Date of Birth']);
+
+            foreach ($students as $s) {
+                fputcsv($out, [
+                    $s->admission_no,
+                    $s->roll_no,
+                    $s->full_name,
+                    optional($s->class)->name,
+                    optional($s->section)->name,
+                    $s->gender?->label() ?? '',
+                    $s->mobile_no,
+                    optional($s->date_of_birth)->format('d-m-Y'),
+                ]);
+            }
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     public function show($id)
     {
         $this->ensureSchoolActive();
@@ -68,7 +112,7 @@ class StudentController extends TenantController
 
         $student = Student::where('school_id', $this->getSchoolId())
             ->whereIn('class_id', $classIds)
-            ->with(['class', 'section', 'results.exam', 'results.subject'])
+            ->with(['class', 'section'])
             ->findOrFail($id);
 
         // Pull attendance summary as aggregated counts rather than hydrating every row.
@@ -88,7 +132,24 @@ class StudentController extends TenantController
             'percentage' => $total > 0 ? round(($present / $total) * 100, 1) : 0,
         ];
 
-        return view('teacher.students.show', compact('student', 'attendanceSummary', 'teacher'));
+        // Paginated, filterable results (was previously eager-loaded all-at-once).
+        $resultsQuery = $student->results()
+            ->with(['exam.examType', 'subject'])
+            ->latest('id');
+
+        if (request()->filled('exam_id')) {
+            $resultsQuery->where('exam_id', (int) request()->exam_id);
+        }
+
+        $results = $resultsQuery->paginate(15)->withQueryString();
+
+        $examOptions = \App\Models\Exam::whereIn('id', $student->results()->select('exam_id')->distinct())
+            ->orderBy('id', 'desc')
+            ->get(['id', 'name']);
+
+        return view('teacher.students.show', compact(
+            'student', 'attendanceSummary', 'teacher', 'results', 'examOptions'
+        ));
     }
 
     protected function currentTeacherOrFail()

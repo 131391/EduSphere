@@ -18,6 +18,14 @@
             </div>
             
             <div class="flex items-center gap-3">
+                @if($classId)
+                <a href="{{ route('teacher.attendance.export', ['class_id' => $classId, 'from' => now()->startOfMonth()->toDateString(), 'to' => now()->toDateString()]) }}"
+                   class="inline-flex items-center px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl hover:bg-emerald-100 transition-all uppercase tracking-wider"
+                   title="Export this month's attendance register">
+                    <i class="fas fa-file-csv mr-2"></i>
+                    Export Register
+                </a>
+                @endif
                 <form method="GET" action="{{ route('teacher.attendance.index') }}" class="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/50 p-1.5 rounded-xl border border-gray-200 dark:border-gray-600 shadow-inner">
                     <div class="relative">
                         <input type="date" name="date" value="{{ $date }}" max="{{ now()->toDateString() }}" onchange="this.form.submit()"
@@ -89,8 +97,18 @@
     </div>
 
     @if($students->isNotEmpty())
+    @if($stats['unmarked'] > 0)
+    <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-5 py-3 text-sm flex items-center gap-3">
+        <i class="fas fa-exclamation-triangle text-amber-500"></i>
+        <div>
+            <span class="font-semibold">{{ $stats['unmarked'] }}</span> of {{ $stats['total'] }} students are still unmarked for {{ \Carbon\Carbon::parse($date)->format('d M Y') }}.
+            Pick a status for each student before saving — students you skip will not be recorded.
+        </div>
+    </div>
+    @endif
     <!-- Attendance Marking Form -->
-    <form method="POST" action="{{ route('teacher.attendance.store') }}" class="space-y-6">
+    <form method="POST" action="{{ route('teacher.attendance.store') }}" class="space-y-6"
+          x-data="{ confirmAll(value, label) { if (confirm('Mark all students as ' + label + '? This will overwrite any selections you made.')) setAll(value); } }">
         @csrf
         <input type="hidden" name="date" value="{{ $date }}">
         <input type="hidden" name="class_id" value="{{ $classId }}">
@@ -105,11 +123,11 @@
                 </div>
                 <!-- Quick Operations -->
                 <div class="flex gap-2">
-                    <button type="button" onclick="setAll(1)"
+                    <button type="button" @click="confirmAll(1, 'Present')"
                             class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white border border-emerald-100/50 transition-all duration-300 shadow-sm">
                         <i class="fas fa-check mr-1.5"></i> All Present
                     </button>
-                    <button type="button" onclick="setAll(2)"
+                    <button type="button" @click="confirmAll(2, 'Absent')"
                             class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white border border-rose-100/50 transition-all duration-300 shadow-sm">
                         <i class="fas fa-times mr-1.5"></i> All Absent
                     </button>
@@ -165,7 +183,7 @@
                                                name="attendance[{{ $student->id }}]"
                                                value="{{ $status->value }}"
                                                class="sr-only peer"
-                                               {{ $currentStatus === $status->value ? 'checked' : ($currentStatus === null && $status->value === 1 ? 'checked' : '') }}>
+                                               {{ $currentStatus === $status->value ? 'checked' : '' }}>
                                         <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all duration-300
                                             border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-400 group-hover/label:border-{{ $c['bg'] }}-200
                                             peer-checked:border-{{ $c['bg'] }}-500 peer-checked:bg-{{ $c['bg'] }}-50 peer-checked:text-{{ $c['bg'] }}-700 shadow-sm

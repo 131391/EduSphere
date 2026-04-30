@@ -62,6 +62,13 @@
             ])
 
             @include('partials.school-sidebar.nav-item', [
+                'route'  => 'teacher.timetable.index',
+                'icon'   => 'fas fa-clock',
+                'label'  => 'Timetable',
+                'active' => request()->routeIs('teacher.timetable.*'),
+            ])
+
+            @include('partials.school-sidebar.nav-item', [
                 'route'  => 'teacher.attendance.index',
                 'icon'   => 'fas fa-calendar-check',
                 'label'  => 'Attendance',

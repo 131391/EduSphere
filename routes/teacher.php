@@ -22,9 +22,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 // Attendance Management
 Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
 Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+Route::get('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
 
 // Student Management
 Route::get('/students', [StudentController::class, 'index'])->name('students.index');
+Route::get('/students/export', [StudentController::class, 'export'])->name('students.export');
 Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
 
 // Mark Entry (per-subject, scoped to teacher's assigned exam_subjects)

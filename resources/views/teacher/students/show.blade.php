@@ -56,45 +56,82 @@
     </div>
 
     <!-- Results Table -->
-    @if($student->results->isNotEmpty())
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-            <h3 class="text-base font-semibold text-gray-800 dark:text-white">Academic Results</h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50 dark:bg-gray-700/50">
-                    <tr>
-                        <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Exam</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subject</th>
-                        <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marks</th>
-                        <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">%</th>
-                        <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @foreach($student->results as $result)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                        <td class="px-6 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->exam)->display_name ?? '—' }}</td>
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->subject)->name ?? '—' }}</td>
-                        <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{{ $result->marks_obtained }} / {{ $result->total_marks }}</td>
-                        <td class="px-4 py-3 text-center">
-                            @php $p = (float)$result->percentage; @endphp
-                            <span class="font-semibold {{ $p >= 75 ? 'text-green-600 dark:text-green-400' : ($p >= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') }}">
-                                {{ $p }}%
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
-                                {{ $result->grade ?? '—' }}
-                            </span>
-                        </td>
-                    </tr>
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 class="text-base font-semibold text-gray-800 dark:text-white">
+                Academic Results
+                <span class="text-xs font-normal text-gray-500 ml-2">{{ $results->total() }} {{ \Illuminate\Support\Str::plural('record', $results->total()) }}</span>
+            </h3>
+            @if($examOptions->isNotEmpty())
+            <form method="GET" class="flex items-center gap-2">
+                <select name="exam_id" onchange="this.form.submit()"
+                        class="h-9 px-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-semibold text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500">
+                    <option value="">All Exams</option>
+                    @foreach($examOptions as $exam)
+                        <option value="{{ $exam->id }}" {{ request('exam_id') == $exam->id ? 'selected' : '' }}>{{ $exam->name }}</option>
                     @endforeach
-                </tbody>
-            </table>
+                </select>
+                @if(request('exam_id'))
+                    <a href="{{ route('teacher.students.show', $student->id) }}" class="text-xs text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></a>
+                @endif
+            </form>
+            @endif
         </div>
+
+        @if($results->isEmpty())
+            <div class="px-6 py-16 text-center">
+                <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
+                <p class="text-sm text-gray-500">No results recorded for this student yet.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50">
+                        <tr>
+                            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Exam</th>
+                            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subject</th>
+                            <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marks</th>
+                            <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">%</th>
+                            <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        @foreach($results as $result)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                            <td class="px-6 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->exam)->display_name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ optional($result->subject)->name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">
+                                @if($result->is_absent)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">Absent</span>
+                                @else
+                                    {{ $result->marks_obtained }} / {{ $result->total_marks }}
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @php $p = (float) $result->percentage; @endphp
+                                @if($result->is_absent)
+                                    <span class="text-gray-400">—</span>
+                                @else
+                                    <span class="font-semibold {{ $p >= 75 ? 'text-green-600 dark:text-green-400' : ($p >= 40 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') }}">{{ $p }}%</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
+                                    {{ $result->grade ?? '—' }}
+                                </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            @if($results->hasPages())
+                <div class="px-6 py-3 border-t border-gray-100 dark:border-gray-700">
+                    {{ $results->links() }}
+                </div>
+            @endif
+        @endif
     </div>
-    @endif
 </div>
 @endsection

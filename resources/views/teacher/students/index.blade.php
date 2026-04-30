@@ -17,7 +17,12 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Managing {{ number_format($stats['total']) }} students across {{ $stats['classes'] }} assigned classes.</p>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" @click="searchOpen = !searchOpen" 
+                <a href="{{ route('teacher.students.export', request()->only(['class_id', 'search'])) }}"
+                    class="inline-flex items-center px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold rounded-xl hover:bg-emerald-100 transition-all shadow-sm">
+                    <i class="fas fa-file-csv mr-2"></i>
+                    Export CSV
+                </a>
+                <button type="button" @click="searchOpen = !searchOpen"
                     class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm">
                     <i class="fas fa-filter mr-2 opacity-50"></i>
                     Filters
