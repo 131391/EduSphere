@@ -311,7 +311,7 @@ class StudentRegistrationController extends TenantController
         try {
             // Duplicate detection — Aadhaar and mobile across existing registrations
             if ($request->aadhaar_no) {
-                $exists = \App\Models\StudentRegistration::where('school_id', $school->id)
+                $exists = StudentRegistration::where('school_id', $school->id)
                     ->where('aadhaar_no', $request->aadhaar_no)
                     ->exists();
                 if ($exists) {
@@ -323,7 +323,7 @@ class StudentRegistrationController extends TenantController
                 }
             }
             if ($request->mobile_no) {
-                $exists = \App\Models\StudentRegistration::where('school_id', $school->id)
+                $exists = StudentRegistration::where('school_id', $school->id)
                     ->where('mobile_no', $request->mobile_no)
                     ->exists();
                 if ($exists) {

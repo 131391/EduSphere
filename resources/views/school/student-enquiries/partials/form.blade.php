@@ -110,8 +110,8 @@
                         :class="{'border-red-500 ring-red-500/10': errors.gender}"
                         class="no-select2 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                     <option value="">Choose Gender</option>
-                    @foreach(\App\Constants\Gender::getOptions() as $value => $label)
-                        <option value="{{ $value }}">{{ $label }}</option>
+                    @foreach(\App\Enums\Gender::cases() as $gender)
+                        <option value="{{ $gender->value }}">{{ $gender->label() }}</option>
                     @endforeach
                 </select>
                 <template x-if="errors.gender">
