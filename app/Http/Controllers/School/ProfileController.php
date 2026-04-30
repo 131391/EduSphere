@@ -30,12 +30,16 @@ class ProfileController extends TenantController
         $user = Auth::user();
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'  => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
         ]);
 
         $user->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Profile updated successfully.']);
+        }
 
         return redirect()->route('school.profile.show')
             ->with('success', 'Profile updated successfully.');
@@ -54,13 +58,17 @@ class ProfileController extends TenantController
 
         $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+            'password'         => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ]);
 
         Auth::user()->update([
-            'password' => Hash::make($request->password),
+            'password'             => Hash::make($request->password),
             'must_change_password' => false,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Password changed successfully.']);
+        }
 
         return redirect()->route('school.profile.show')
             ->with('success', 'Password changed successfully.');

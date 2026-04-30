@@ -175,7 +175,7 @@
                                 <a href="{{ route('school.profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
                                     <i class="fas fa-user-circle mr-3 text-gray-500 dark:text-gray-400"></i>Profile
                                 </a>
-                                <a href="{{ route('school.profile.password') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
+                                <a href="{{ route('school.profile.show') }}#password" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center">
                                     <i class="fas fa-key mr-3 text-gray-500 dark:text-gray-400"></i>Change Password
                                 </a>
                                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
