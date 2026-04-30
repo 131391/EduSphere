@@ -128,13 +128,13 @@ function registrationManagement() {
             @endforeach
         },
 
-        categoryOptions: @json($categories->pluck('name','id')),
-        religionOptions: @json($religions->pluck('name','id')),
-        qualificationOptions: @json($qualifications->pluck('name','id')),
-        bloodGroupOptions: @json($bloodGroups->pluck('name','id')),
-        studentTypeOptions: @json($studentTypes->pluck('name','id')),
-        correspondingRelativeOptions: @json($correspondingRelatives->pluck('name','id')),
-        boardingTypeOptions: @json($boardingTypes->pluck('name','id')),
+        categoryOptions: @json($categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values()),
+        religionOptions: @json($religions->map(fn($r) => ['id' => $r->id, 'name' => $r->name])->values()),
+        qualificationOptions: @json($qualifications->map(fn($q) => ['id' => $q->id, 'name' => $q->name])->values()),
+        bloodGroupOptions: @json($bloodGroups->map(fn($bg) => ['id' => $bg->id, 'name' => $bg->name])->values()),
+        studentTypeOptions: @json($studentTypes->map(fn($s) => ['id' => $s->id, 'name' => $s->name])->values()),
+        correspondingRelativeOptions: @json($correspondingRelatives->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values()),
+        boardingTypeOptions: @json($boardingTypes->map(fn($b) => ['id' => $b->id, 'name' => $b->name])->values()),
 
         previews: {
             father_photo: '', mother_photo: '', student_photo: '',
@@ -361,26 +361,14 @@ function registrationManagement() {
                 this.formData.email     = q.email_id || '';
                 this.formData.mobile_no = q.contact_no || '';
                 
-                if (q.religion) {
-                    const matched = this.matchOption(q.religion, this.religionOptions);
-                    this.formData.religion = matched.name;
-                    this.formData.religion_id = matched.id;
-                }
-                if (q.category) {
-                    const matched = this.matchOption(q.category, this.categoryOptions);
-                    this.formData.category = matched.name;
-                    this.formData.category_id = matched.id;
-                }
-                if (q.blood_group) {
-                    const matched = this.matchOption(q.blood_group, this.bloodGroupOptions);
-                    this.formData.blood_group = matched.name;
-                    this.formData.blood_group_id = matched.id;
-                }
+                if (q.religion_id) { const m = this.religionOptions.find(o => o.id == q.religion_id); if (m) { this.formData.religion_id = m.id; this.formData.religion = m.name; } }
+                if (q.category_id) { const m = this.categoryOptions.find(o => o.id == q.category_id); if (m) { this.formData.category_id = m.id; this.formData.category = m.name; } }
+                if (q.blood_group_id) { const m = this.bloodGroupOptions.find(o => o.id == q.blood_group_id); if (m) { this.formData.blood_group_id = m.id; this.formData.blood_group = m.name; } }
                 
                 if (q.aadhaar_no) this.formData.aadhaar_no = q.aadhaar_no;
                 if (q.no_of_brothers !== undefined && q.no_of_brothers !== null) this.formData.number_of_brothers = q.no_of_brothers;
                 if (q.no_of_sisters !== undefined && q.no_of_sisters !== null)   this.formData.number_of_sisters   = q.no_of_sisters;
-                if (q.transport_facility) this.formData.is_transport_required = q.transport_facility === 'Yes' ? 1 : 0;
+                if (q.transport_facility !== undefined && q.transport_facility !== null) this.formData.is_transport_required = q.transport_facility;
                 if (q.permanent_address) this.formData.permanent_address = q.permanent_address;
                 if (q.country_id) this.formData.permanent_country_id = q.country_id;
 
@@ -396,11 +384,7 @@ function registrationManagement() {
                 this.formData.father_department   = q.father_department || '';
                 this.formData.father_designation  = q.father_designation || '';
                 this.formData.father_annual_income = q.father_annual_income || '';
-                if (q.father_qualification) {
-                    const matched = this.matchOption(q.father_qualification, this.qualificationOptions);
-                    this.formData.father_qualification = matched.name;
-                    this.formData.father_qualification_id = matched.id;
-                }
+                if (q.father_qualification_id) { const m = this.qualificationOptions.find(o => o.id == q.father_qualification_id); if (m) { this.formData.father_qualification_id = m.id; this.formData.father_qualification = m.name; } }
 
                 const mp = (q.mother_name || '').split(' ');
                 this.formData.mother_first_name   = mp[0] || '';
@@ -414,15 +398,11 @@ function registrationManagement() {
                 this.formData.mother_department   = q.mother_department || '';
                 this.formData.mother_designation  = q.mother_designation || '';
                 this.formData.mother_annual_income = q.mother_annual_income || '';
-                if (q.mother_qualification) {
-                    const matched = this.matchOption(q.mother_qualification, this.qualificationOptions);
-                    this.formData.mother_qualification = matched.name;
-                    this.formData.mother_qualification_id = matched.id;
-                }
+                if (q.mother_qualification_id) { const m = this.qualificationOptions.find(o => o.id == q.mother_qualification_id); if (m) { this.formData.mother_qualification_id = m.id; this.formData.mother_qualification = m.name; } }
 
                 // Auto-expand collapsibles when extended parent data arrived from enquiry
-                if (q.father_organization || q.father_qualification || q.father_designation || q.father_department || q.father_annual_income) this.fatherExpanded = true;
-                if (q.mother_organization || q.mother_qualification || q.mother_designation || q.mother_department || q.mother_annual_income) this.motherExpanded = true;
+                if (q.father_organization || q.father_qualification_id || q.father_designation || q.father_department || q.father_annual_income) this.fatherExpanded = true;
+                if (q.mother_organization || q.mother_qualification_id || q.mother_designation || q.mother_department || q.mother_annual_income) this.motherExpanded = true;
 
                 ['father_photo','mother_photo','student_photo','father_signature','mother_signature','student_signature'].forEach(f => {
                     if (q[f]) {

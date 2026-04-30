@@ -57,6 +57,21 @@ class School extends Model
             ->logOnlyDirty();
     }
 
+    protected static function booted()
+    {
+        $clearCache = function ($school) {
+            \Illuminate\Support\Facades\Cache::forget("school.subdomain.{$school->subdomain}");
+            if ($school->domain) {
+                \Illuminate\Support\Facades\Cache::forget("school.domain.{$school->domain}");
+            }
+            \Illuminate\Support\Facades\Cache::forget("school.path.{$school->code}");
+            \Illuminate\Support\Facades\Cache::forget("school.id.{$school->id}");
+        };
+
+        static::saved($clearCache);
+        static::deleted($clearCache);
+    }
+
     // Relationships
     public function country()
     {

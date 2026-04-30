@@ -53,9 +53,9 @@ class UpdateAdmissionRequest extends FormRequest
             'dob'                      => 'required|date',
             'admission_date'           => 'required|date',
             'gender'                   => ['required', 'integer', Rule::enum(Gender::class)],
-            'aadhaar_no'               => 'nullable|string|max:12',
-            'father_aadhaar_no'        => 'nullable|string|max:12',
-            'mother_aadhaar_no'        => 'nullable|string|max:12',
+            'aadhaar_no'               => 'nullable|digits:12',
+            'father_aadhaar_no'        => 'nullable|digits:12',
+            'mother_aadhaar_no'        => 'nullable|digits:12',
 
             // Parent / Master Data IDs (Normalized)
             'blood_group_id'           => ['nullable', Rule::exists('blood_groups', 'id')->where('school_id', $schoolId)],

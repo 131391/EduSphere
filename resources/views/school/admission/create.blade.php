@@ -371,7 +371,7 @@ function admissionManagement() {
                 this.formData.mother_middle_name = d.mother_middle_name || '';
                 this.formData.mother_last_name   = d.mother_last_name   || '';
                 this.formData.mother_mobile_no   = d.mother_mobile_no   || '';
-                this.formData.email             = d.mother_email       || '';
+                this.formData.mother_email      = d.mother_email       || '';
                 this.formData.mother_occupation  = d.mother_occupation  || '';
                 this.formData.mother_qualification = d.mother_qualification || '';
                 this.formData.mother_qualification_id = d.mother_qualification_id || '';
@@ -393,6 +393,33 @@ function admissionManagement() {
                 this.autofillBanner = true;
                 setTimeout(() => this.autofillBanner = false, 5000);
                 if (window.Toast) window.Toast.fire({ icon: 'success', title: 'Form auto-filled from registration' });
+
+                // Trigger location cascade reload for the auto-filled country/state/city
+                this.$nextTick(() => {
+                    document.querySelectorAll('.location-selector-container').forEach(container => {
+                        const prefix = container.dataset.prefix;
+                        const countrySelect = container.querySelector('.country-select');
+                        const stateSelect = container.querySelector('[data-state-select]');
+                        const citySelect = container.querySelector('[data-city-select]');
+                        if (!countrySelect || !stateSelect || !citySelect) return;
+
+                        const countryId = this.formData[prefix + '_country_id'];
+                        const stateId = this.formData[prefix + '_state_id'];
+                        const cityId = this.formData[prefix + '_city_id'];
+
+                        if (countryId) {
+                            countrySelect.value = countryId;
+                            stateSelect.setAttribute('data-selected', stateId || '');
+                            citySelect.setAttribute('data-selected', cityId || '');
+                            // Remove init flags so cascade re-syncs
+                            delete countrySelect.dataset.cascadeInitialized;
+                            delete stateSelect.dataset.initSynced;
+                            delete citySelect.dataset.initSynced;
+                        }
+                    });
+                    // Re-trigger cascade initialization
+                    if (window.locationCascade) window.locationCascade.initCascades();
+                });
             } catch (err) {
                 console.error('Registration fetch error:', err);
                 if (window.Toast) window.Toast.fire({ icon: 'error', title: 'Could not load registration data' });

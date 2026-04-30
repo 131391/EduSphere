@@ -550,6 +550,7 @@
                        x-model="formData.aadhaar_no"
                        @input="clearError('aadhaar_no')"
                        placeholder="Aadhaar no of the Students"
+                       inputmode="numeric" maxlength="12" pattern="[0-9]{12}" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                        :class="{'border-red-500 ring-red-500/10': errors.aadhaar_no}"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                 <template x-if="errors.aadhaar_no">

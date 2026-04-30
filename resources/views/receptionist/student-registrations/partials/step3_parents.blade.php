@@ -84,11 +84,11 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Qualification</label>
-                    <select name="father_qualification" x-model="formData.father_qualification"
+                    <select name="father_qualification_id" x-model="formData.father_qualification_id"
                             class="no-select2 w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                         <option value="">Choose</option>
                         @foreach($qualifications as $qual)
-                            <option value="{{ $qual->name }}">{{ $qual->name }}</option>
+                            <option value="{{ $qual->id }}">{{ $qual->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -110,6 +110,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Aadhaar No</label>
                     <input type="text" name="father_aadhaar_no" x-model="formData.father_aadhaar_no" placeholder="Aadhaar number"
+                           inputmode="numeric" maxlength="12" pattern="[0-9]{12}" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                 </div>
                 <div>
@@ -213,11 +214,11 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Qualification</label>
-                    <select name="mother_qualification" x-model="formData.mother_qualification"
+                    <select name="mother_qualification_id" x-model="formData.mother_qualification_id"
                             class="no-select2 w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                         <option value="">Choose</option>
                         @foreach($qualifications as $qual)
-                            <option value="{{ $qual->name }}">{{ $qual->name }}</option>
+                            <option value="{{ $qual->id }}">{{ $qual->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -239,6 +240,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Aadhaar No</label>
                     <input type="text" name="mother_aadhaar_no" x-model="formData.mother_aadhaar_no" placeholder="Aadhaar number"
+                           inputmode="numeric" maxlength="12" pattern="[0-9]{12}" oninput="this.value=this.value.replace(/[^0-9]/g,'')"
                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-800 dark:text-white">
                 </div>
                 <div>

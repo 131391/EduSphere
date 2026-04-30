@@ -43,9 +43,9 @@ class StoreAdmissionRequest extends FormRequest
             'admission_date' => 'required|date',
             'dob' => 'required|date',
             'gender' => ['required', 'integer', Rule::enum(Gender::class)],
-            'aadhaar_no' => 'nullable|string|max:12',
-            'father_aadhaar_no' => 'nullable|string|max:12',
-            'mother_aadhaar_no' => 'nullable|string|max:12',
+            'aadhaar_no' => 'nullable|digits:12',
+            'father_aadhaar_no' => 'nullable|digits:12',
+            'mother_aadhaar_no' => 'nullable|digits:12',
 
             // Master Data IDs
             'blood_group_id'           => ['nullable', Rule::exists('blood_groups', 'id')->where('school_id', $schoolId)],
