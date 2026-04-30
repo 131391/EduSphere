@@ -365,9 +365,9 @@ function schoolProfilePage() {
                         detail: { type: 'success', message: data.message || 'Profile updated successfully.' }
                     }));
                 } else if (res.status === 422) {
-                    Object.entries(data.errors || {}).forEach(([k, v]) => {
-                        this.profileErrors[k] = Array.isArray(v) ? v[0] : v;
-                    });
+                    const errs = {};
+                    Object.entries(data.errors || {}).forEach(([k, v]) => { errs[k] = Array.isArray(v) ? v[0] : v; });
+                    this.profileErrors = errs;
                 } else {
                     throw new Error(data.message || 'Something went wrong.');
                 }
@@ -407,9 +407,9 @@ function schoolProfilePage() {
                         detail: { type: 'success', message: data.message || 'Password changed successfully.' }
                     }));
                 } else if (res.status === 422) {
-                    Object.entries(data.errors || {}).forEach(([k, v]) => {
-                        this.passwordErrors[k] = Array.isArray(v) ? v[0] : v;
-                    });
+                    const errs = {};
+                    Object.entries(data.errors || {}).forEach(([k, v]) => { errs[k] = Array.isArray(v) ? v[0] : v; });
+                    this.passwordErrors = errs;
                 } else {
                     throw new Error(data.message || 'Something went wrong.');
                 }
