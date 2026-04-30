@@ -15,12 +15,12 @@
     {{-- ── Logo ──────────────────────────────────────────────────────────── --}}
     <div class="p-4 border-b border-[#283593] flex-shrink-0 relative">
         <div class="flex items-center justify-center mb-2">
-            <div class="logo-container bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 transition-all duration-300"
+            <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300"
                 :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'"
                 style="width:4rem;height:4rem">
                 @if($school?->logo)
                     <img src="{{ asset('storage/'.$school->logo) }}" alt="{{ $school->name }}"
-                        class="logo-img rounded-full object-cover"
+                        class="rounded-full object-cover"
                         :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'"
                         style="width:4rem;height:4rem">
                 @else

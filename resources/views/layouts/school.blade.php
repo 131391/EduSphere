@@ -49,11 +49,7 @@
             if (this.isMobile) {
                 this.sidebarCollapsed = false;
             }
-            // sidebar-scripts.blade.php already set html.sidebar-collapsed synchronously
-            // before first paint — only re-sync if mobile overrides it
-            if (this.isMobile) {
-                document.documentElement.classList.remove('sidebar-collapsed');
-            }
+            document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
             window.addEventListener('resize', () => {
                 this.isMobile = window.innerWidth < 1024;
                 if (this.isMobile) {
@@ -67,20 +63,16 @@
                     this.sidebarOpen = false;
                 }
             });
-            // Add transitions only after first paint — prevents sidebar fluctuation on load
+            // Remove no-transition after first paint so subsequent transitions are smooth
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 const aside = document.querySelector('aside');
-                if (aside) {
-                    aside.classList.remove('no-transition');
-                    aside.classList.add('transition-all', 'duration-300', 'ease-in-out');
-                }
+                if (aside) aside.classList.remove('no-transition');
                 this.scrollActiveItemIntoView();
             }));
         },
         toggleSidebar() {
             this.sidebarCollapsed = !this.sidebarCollapsed;
             localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
-            document.cookie = 'sidebarCollapsed=' + this.sidebarCollapsed + ';path=/;max-age=31536000;SameSite=Lax';
             document.documentElement.classList.toggle('sidebar-collapsed', this.sidebarCollapsed);
             if (!this.sidebarCollapsed) {
                 this.$nextTick(() => this.scrollActiveItemIntoView());
