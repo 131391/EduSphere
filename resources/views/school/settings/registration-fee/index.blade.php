@@ -13,210 +13,208 @@
     initialPagination: @js($initialData['pagination']),
     initialStats: @js($initialData['stats']),
     filterLabels: { class_id: { @foreach($classes as $c)'{{ $c->id }}': '{{ addslashes($c->name) }}',@endforeach } }
-}), feeManager())" class="space-y-6">
+}), feeManager())" class="space-y-6" @close-modal.window="if ($event.detail === 'reg-fee-modal') { resetForm(); }">
 
-    {{-- ── Stats ── --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-4 shadow-sm">
-            <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
-                <i class="fas fa-chalkboard text-lg"></i>
-            </div>
-            <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Classes Configured</p>
-                <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.unique_classes ?? '{{ $stats['unique_classes'] }}'">{{ $stats['unique_classes'] }}</p>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-4 shadow-sm">
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-                <i class="fas fa-rupee-sign text-lg"></i>
-            </div>
-            <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Average Fee</p>
-                <p class="text-2xl font-bold text-gray-800 dark:text-white">₹<span x-text="stats.average_registration_fee ?? '{{ $stats['average_registration_fee'] }}'">{{ $stats['average_registration_fee'] }}</span></p>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-4 shadow-sm">
-            <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
-                <i class="fas fa-list-check text-lg"></i>
-            </div>
-            <div>
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Records</p>
-                <p class="text-2xl font-bold text-gray-800 dark:text-white" x-text="stats.total_configurations ?? '{{ $stats['total_configurations'] }}'">{{ $stats['total_configurations'] }}</p>
-            </div>
-        </div>
-    </div>
-
-    {{-- ── Page Header ── --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <i class="fas fa-user-plus text-teal-600 text-base"></i>
-                Registration Fee
-            </h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Set the one-time fee charged when a student submits a registration form, per class.</p>
-        </div>
-        <button @click="openAddModal()"
-            class="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95 shrink-0">
-            <i class="fas fa-plus text-xs"></i> Add Fee
-        </button>
-    </div>
-
-    {{-- ── Table Card ── --}}
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-
-        {{-- Toolbar --}}
-        <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div class="flex-1">
-                <x-table.search placeholder="Search by class name…" />
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <x-table.filter-select
-                    model="filters.class_id"
-                    action="applyFilter('class_id', $event.target.value)"
-                    placeholder="All Classes"
-                    :options="$classes->pluck('name', 'id')->toArray()"
-                />
-                <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
-            </div>
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <x-stat-card label="Classes Configured" :value="$stats['unique_classes']" icon="fas fa-chalkboard" color="teal" alpine-text="stats.unique_classes" />
+            <x-stat-card label="Average Fee" :value="'₹' . $stats['average_registration_fee']" icon="fas fa-rupee-sign" color="indigo" alpine-text="'₹' + (stats.average_registration_fee || '0.00')" />
+            <x-stat-card label="Total Records" :value="$stats['total_configurations']" icon="fas fa-list-check" color="rose" alpine-text="stats.total_configurations" />
         </div>
 
-        {{-- Active filters --}}
-        <div class="px-5 pb-3 flex flex-wrap gap-2" x-show="hasActiveFilters()" x-cloak>
-            <template x-for="(value, key) in filters" :key="key">
-                <template x-if="value">
-                    <span class="inline-flex items-center gap-1 bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-1 rounded-full text-xs font-semibold">
-                        <span x-text="getFilterLabel(key, value)"></span>
-                        <button @click="removeFilter(key)" class="ml-0.5 hover:text-teal-900"><i class="fas fa-times text-[10px]"></i></button>
-                    </span>
-                </template>
-            </template>
-            <button @click="clearAllFilters()" class="text-xs font-semibold text-red-500 hover:text-red-700 ml-1">Clear all</button>
-        </div>
+        <!-- Header Section -->
+        <x-page-header title="Registration Fee" description="Set the one-time fee charged when a student submits a registration form, per class." icon="fas fa-user-plus text-teal-600">
+            <button @click="openAddModal()"
+                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95">
+                <i class="fas fa-plus mr-2 text-xs"></i>
+                Add Fee
+            </button>
+        </x-page-header>
 
-        {{-- Table --}}
-        <div class="overflow-x-auto relative ajax-table-wrapper">
-            <x-table.loading-overlay />
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-700/40">
-                        <th class="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Class</th>
-                        <th class="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Registration Fee</th>
-                        <th class="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Set On</th>
-                        <th class="px-5 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-28">Actions</th>
-                    </tr>
-                </thead>
+        <!-- AJAX Data Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <!-- Table Header with Search -->
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Fee Configuration List</h2>
+                        <x-table.search placeholder="Search by class name..." />
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <x-table.filter-select
+                            model="filters.class_id"
+                            action="applyFilter('class_id', $event.target.value)"
+                            placeholder="All Classes"
+                            :options="$classes->pluck('name', 'id')->toArray()"
+                        />
+                        <x-table.per-page model="perPage" action="changePerPage($event.target.value)" :default="25" />
+                    </div>
+                </div>
+            </div>
 
-                {{-- SSR (hidden after Alpine hydrates) --}}
-                <tbody :class="{'hidden': true}" class="divide-y divide-gray-50 dark:divide-gray-700/50">
-                    @foreach($initialData['rows'] as $row)
-                    <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-700/30 transition-colors">
-                        <td class="px-5 py-3.5">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 text-xs shrink-0"><i class="fas fa-graduation-cap"></i></div>
-                                <span class="font-semibold text-gray-800 dark:text-gray-100">{{ $row['class_name'] }}</span>
-                            </div>
-                        </td>
-                        <td class="px-5 py-3.5">
-                            <span class="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-bold px-3 py-1 rounded-lg text-sm border border-emerald-100 dark:border-emerald-800">
-                                ₹{{ number_format($row['amount'], 2) }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-3.5 text-gray-500 dark:text-gray-400 text-sm">{{ $row['created_at'] }}</td>
-                        <td class="px-5 py-3.5 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button @click="openEditModal(@js($row))" title="Edit" class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 flex items-center justify-center transition-colors"><i class="fas fa-pencil text-xs"></i></button>
-                                <button @click="confirmDelete(@js($row))" title="Delete" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 flex items-center justify-center transition-colors"><i class="fas fa-trash text-xs"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-
-                {{-- Alpine --}}
-                <tbody x-cloak class="divide-y divide-gray-50 dark:divide-gray-700/50 transition-opacity duration-150" :class="loading && rows.length > 0 ? 'opacity-40' : ''">
-                    <template x-for="row in rows" :key="row.id">
-                        <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-700/30 transition-colors">
-                            <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 text-xs shrink-0"><i class="fas fa-graduation-cap"></i></div>
-                                    <span class="font-semibold text-gray-800 dark:text-gray-100" x-text="row.class_name"></span>
-                                </div>
-                            </td>
-                            <td class="px-5 py-3.5">
-                                <span class="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-bold px-3 py-1 rounded-lg text-sm border border-emerald-100 dark:border-emerald-800">
-                                    ₹<span x-text="Number(row.amount).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})"></span>
-                                </span>
-                            </td>
-                            <td class="px-5 py-3.5 text-gray-500 dark:text-gray-400 text-sm" x-text="row.created_at"></td>
-                            <td class="px-5 py-3.5 text-center">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <button @click="openEditModal(row)" title="Edit" class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 flex items-center justify-center transition-colors"><i class="fas fa-pencil text-xs"></i></button>
-                                    <button @click="confirmDelete(row)" title="Delete" class="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-100 flex items-center justify-center transition-colors"><i class="fas fa-trash text-xs"></i></button>
-                                </div>
-                            </td>
-                        </tr>
+            {{-- Active filters --}}
+            <div class="px-6 pb-3 pt-3 flex flex-wrap gap-2 bg-gray-50 dark:bg-gray-800/50" x-show="hasActiveFilters()" x-cloak>
+                <template x-for="(value, key) in filters" :key="key">
+                    <template x-if="value">
+                        <span class="inline-flex items-center gap-1 bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-1 rounded-full text-xs font-semibold">
+                            <span x-text="getFilterLabel(key, value)"></span>
+                            <button @click="removeFilter(key)" class="ml-0.5 hover:text-teal-900"><i class="fas fa-times text-[10px]"></i></button>
+                        </span>
                     </template>
-                    <x-table.empty-state :colspan="4" icon="fas fa-clipboard-list" message="No registration fees configured yet. Click 'Add Fee' to get started." />
-                </tbody>
-            </table>
-        </div>
+                </template>
+                <button @click="clearAllFilters()" class="text-xs font-semibold text-red-500 hover:text-red-700 ml-1">Clear all</button>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto relative ajax-table-wrapper">
+                <x-table.loading-overlay />
+
+                <table class="w-full text-left border-collapse table-fixed">
+                    <colgroup>
+                        <col class="w-[34%]">
+                        <col class="w-[34%]">
+                        <col class="w-[16%]">
+                        <col class="w-32">
+                    </colgroup>
+                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                        <tr>
+                            <x-table.sort-header column="class_name" label="Class" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="amount" label="Registration Fee" sort-var="sort" direction-var="direction" />
+                            <x-table.sort-header column="created_at" label="Set On" sort-var="sort" direction-var="direction" />
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700" data-ssr x-show="!hydrated">
+                        @foreach($initialData['rows'] as $row)
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fas fa-graduation-cap text-xs"></i>
+                                        </div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ $row['class_name'] }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 uppercase tracking-wider">
+                                        ₹{{ number_format($row['amount'], 2) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center text-gray-500 dark:text-gray-400 text-xs">
+                                        <i class="far fa-calendar-alt mr-2 text-gray-400"></i>
+                                        {{ $row['created_at'] }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditModal(@js($row))" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="confirmDelete(@js($row))" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700 transition-opacity duration-150" x-show="hydrated" :class="loading && rows.length > 0 ? 'opacity-50' : 'opacity-100'">
+                        <template x-for="row in rows" :key="row.id">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fas fa-graduation-cap text-xs"></i>
+                                        </div>
+                                        <div class="text-sm font-bold text-gray-800 dark:text-gray-100" x-text="row.class_name"></div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 uppercase tracking-wider">
+                                        ₹<span x-text="Number(row.amount).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})"></span>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center text-gray-500 dark:text-gray-400 text-xs">
+                                        <i class="far fa-calendar-alt mr-2 text-gray-400"></i>
+                                        <span x-text="row.created_at"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button @click="openEditModal(row)" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors" title="Edit"><i class="fas fa-edit text-xs"></i></button>
+                                        <button @click="confirmDelete(row)" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition-colors" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <x-table.empty-state :colspan="4" icon="fas fa-clipboard-list" message="No registration fees configured yet. Click 'Add Fee' to get started." />
+                    </tbody>
+                </table>
+            </div>
         <x-table.pagination :initial="$initialData['pagination']" />
     </div>
 
     {{-- ── Modal ── --}}
-    <x-modal name="reg-fee-modal" alpineTitle="editMode ? 'Edit Registration Fee' : 'Add Registration Fee'" maxWidth="sm">
-        <form @submit.prevent="save()" class="p-1 space-y-5">
+    <x-modal name="reg-fee-modal" alpineTitle="editMode ? 'Edit Registration Fee' : 'Add Registration Fee'" maxWidth="md">
+        <form @submit.prevent="submitForm()" method="POST" novalidate class="p-1">
             @csrf
+            <template x-if="editMode">
+                <input type="hidden" name="_method" value="PUT">
+            </template>
 
-            {{-- Class --}}
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                    Class <span class="text-red-500">*</span>
-                </label>
-                <select x-show="!editMode" x-model="form.class_id" @change="clearErr('class_id')"
-                    class="no-select2 w-full rounded-xl border px-4 py-2.5 text-sm bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
-                    :class="errors.class_id ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'">
-                    <option value="">— Select a class —</option>
-                    @foreach($unassignedClasses as $class)
-                        <option value="{{ $class->id }}">{{ $class->name }}</option>
-                    @endforeach
-                </select>
-                <div x-show="editMode"
-                    class="w-full rounded-xl border border-gray-200 dark:border-gray-600 px-4 py-2.5 text-sm bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-semibold cursor-not-allowed flex items-center gap-2">
-                    <i class="fas fa-lock text-xs text-gray-400"></i>
-                    <span x-text="form.class_name"></span>
+            <div class="space-y-6">
+                {{-- Class --}}
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Class <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <select x-show="!editMode" name="class_id" x-model="formData.class_id" @change="clearError('class_id')"
+                            class="modal-input-premium no-select2"
+                            :class="errors.class_id ? 'border-red-500' : 'border-slate-200'">
+                            <option value="">— Select a class —</option>
+                            @foreach($unassignedClasses as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                        <div x-show="editMode"
+                            class="modal-input-premium bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed flex items-center gap-2">
+                            <i class="fas fa-lock text-xs text-gray-400"></i>
+                            <span x-text="formData.class_name"></span>
+                        </div>
+                    </div>
+                    <template x-if="errors.class_id">
+                        <p class="modal-error-message" x-text="errors.class_id[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.class_id">
-                    <p x-text="errors.class_id[0]" class="mt-1 text-xs text-red-500 font-medium"></p>
-                </template>
-            </div>
 
-            {{-- Amount --}}
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                    Fee Amount <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm select-none">₹</span>
-                    <input type="number" step="0.01" min="0" x-model="form.amount" @input="clearErr('amount')"
-                        placeholder="0.00"
-                        class="w-full rounded-xl border pl-8 pr-4 py-2.5 text-sm font-semibold bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 transition"
-                        :class="errors.amount ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'">
+                {{-- Amount --}}
+                <div class="space-y-2">
+                    <label class="modal-label-premium">Fee Amount <span class="text-red-600 font-bold">*</span></label>
+                    <div class="relative group">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-teal-500 transition-colors z-10 flex items-center justify-center">
+                            <i class="fas fa-rupee-sign text-sm"></i>
+                        </div>
+                        <input type="number" step="0.01" min="0" name="amount" x-model="formData.amount" @input="clearError('amount')"
+                            placeholder="0.00"
+                            class="modal-input-premium pl-10"
+                            :class="errors.amount ? 'border-red-500' : 'border-slate-200'">
+                    </div>
+                    <template x-if="errors.amount">
+                        <p class="modal-error-message" x-text="errors.amount[0]"></p>
+                    </template>
                 </div>
-                <template x-if="errors.amount">
-                    <p x-text="errors.amount[0]" class="mt-1 text-xs text-red-500 font-medium"></p>
-                </template>
             </div>
 
             <x-slot name="footer">
-                <button type="button" @click="$dispatch('close-modal', 'reg-fee-modal')"
-                    class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <button type="button" @click="$dispatch('close-modal', 'reg-fee-modal')" class="btn-premium-cancel px-10">
                     Cancel
                 </button>
-                <button type="button" @click="save()" :disabled="saving"
-                    class="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white text-sm font-semibold transition-all flex items-center gap-2 min-w-[110px] justify-center">
-                    <span x-show="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    <span x-text="saving ? 'Saving…' : (editMode ? 'Update' : 'Save Fee')"></span>
+                <button type="button" @click="submitForm()" :disabled="submitting"
+                    class="btn-premium-primary min-w-[160px] !from-teal-600 !to-emerald-600 hover:!from-teal-700 hover:!to-emerald-700 shadow-teal-200">
+                    <template x-if="submitting">
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span>
+                    </template>
+                    <span x-text="editMode ? 'Update Changes' : 'Save Fee'"></span>
                 </button>
             </x-slot>
         </form>
@@ -231,63 +229,77 @@ function feeManager() {
     return {
         editMode: false,
         feeId:    null,
-        saving:   false,
+        submitting: false,
         errors:   {},
-        form:     { class_id: '', class_name: '', amount: '' },
+        formData: { class_id: '', class_name: '', amount: '' },
 
-        clearErr(f) { delete this.errors[f]; },
+        clearError(field) {
+            if (this.errors && this.errors[field]) {
+                const e = { ...this.errors };
+                delete e[field];
+                this.errors = e;
+            }
+        },
+
+        resetForm() {
+            this.editMode = false;
+            this.feeId = null;
+            this.errors = {};
+            this.formData = { class_id: '', class_name: '', amount: '' };
+        },
 
         openAddModal() {
-            this.editMode = false;
-            this.feeId    = null;
-            this.errors   = {};
-            this.form     = { class_id: '', class_name: '', amount: '' };
+            this.resetForm();
             this.$dispatch('open-modal', 'reg-fee-modal');
         },
 
         openEditModal(row) {
             this.editMode = true;
-            this.feeId    = row.id;
-            this.errors   = {};
-            this.form     = { class_id: row.class_id, class_name: row.class_name, amount: Number(row.amount) };
+            this.feeId = row.id;
+            this.errors = {};
+            this.formData = { class_id: row.class_id, class_name: row.class_name, amount: Number(row.amount) };
             this.$dispatch('open-modal', 'reg-fee-modal');
         },
 
-        async save() {
-            if (this.saving) return;
-            this.saving = true;
+        async submitForm() {
+            if (this.submitting) return;
+            this.submitting = true;
             this.errors = {};
 
-            const url    = this.editMode
+            const url = this.editMode
                 ? `/school/settings/registration-fee/${this.feeId}`
                 : `/school/settings/registration-fee`;
-            const method = this.editMode ? 'PUT' : 'POST';
 
             try {
-                const res  = await fetch(url, {
-                    method,
+                const response = await fetch(url, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept':       'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({ class_id: this.form.class_id, amount: this.form.amount }),
+                    body: JSON.stringify({
+                        ...this.formData,
+                        _method: this.editMode ? 'PUT' : 'POST'
+                    })
                 });
-                const json = await res.json();
 
-                if (res.ok && json.success) {
-                    window.Toast?.fire({ icon: 'success', title: json.message });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message });
                     this.$dispatch('close-modal', 'reg-fee-modal');
-                    this.refreshTable?.();
-                } else if (res.status === 422) {
-                    this.errors = json.errors ?? {};
+                    if (typeof this.refreshTable === 'function') this.refreshTable();
+                } else if (response.status === 422) {
+                    this.errors = result.errors || {};
+                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.errors)) });
                 } else {
-                    window.Toast?.fire({ icon: 'error', title: json.message ?? 'Something went wrong.' });
+                    throw new Error(window.resolveApiMessage(result, 'Something went wrong'));
                 }
-            } catch (e) {
-                window.Toast?.fire({ icon: 'error', title: 'Network error. Please try again.' });
+            } catch (error) {
+                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, error.message || 'Something went wrong') });
             } finally {
-                this.saving = false;
+                this.submitting = false;
             }
         },
 
@@ -295,19 +307,30 @@ function feeManager() {
             const self = this;
             window.dispatchEvent(new CustomEvent('open-confirm-modal', {
                 detail: {
-                    title:    'Delete Registration Fee',
-                    message:  `Remove the ₹${Number(row.amount).toLocaleString('en-IN', {minimumFractionDigits:2})} fee for ${row.class_name}? This cannot be undone.`,
+                    title: 'Delete Registration Fee',
+                    message: `Remove the ₹${Number(row.amount).toLocaleString('en-IN', {minimumFractionDigits:2})} fee for ${row.class_name}? This cannot be undone.`,
                     callback: async () => {
                         try {
-                            const res  = await fetch(`/school/settings/registration-fee/${row.id}`, {
-                                method:  'DELETE',
-                                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            const response = await fetch(`/school/settings/registration-fee/${row.id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({ _method: 'DELETE' })
                             });
-                            const json = await res.json();
-                            window.Toast?.fire({ icon: res.ok ? 'success' : 'error', title: json.message });
-                            if (res.ok) self.refreshTable?.();
-                        } catch {
-                            window.Toast?.fire({ icon: 'error', title: 'Deletion failed.' });
+
+                            const result = await response.json();
+
+                            if (response.ok) {
+                                if (window.Toast) window.Toast.fire({ icon: 'success', title: result.message || 'Deleted successfully' });
+                                if (typeof self.refreshTable === 'function') self.refreshTable();
+                            } else {
+                                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, 'Delete failed') });
+                            }
+                        } catch (error) {
+                            window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(error.response?.data || { message: error.message }, 'Delete failed') });
                         }
                     }
                 }
