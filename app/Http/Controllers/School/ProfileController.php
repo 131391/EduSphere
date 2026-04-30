@@ -49,7 +49,7 @@ class ProfileController extends TenantController
     {
         $this->ensureSchoolActive();
 
-        return view('school.profile.password');
+        return redirect()->route('school.profile.show');
     }
 
     public function updatePassword(Request $request)
