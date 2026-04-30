@@ -16,10 +16,3 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-
-FEE_MODULE_AUDIT.md
-database/migrations/2026_04_24_000004_harden_fee_cascade_deletes.php
-database/migrations/2026_04_25_000001_harden_online_transactions.php
-database/migrations/2026_04_27_095916_add_is_active_to_vehicles_table.php
-database/migrations/2026_04_28_143827_add_scheduling_to_exam_subjects_table.php
-database/migrations/2026_04_29_054748_add_no_of_beds_to_hostel_rooms_table.php
