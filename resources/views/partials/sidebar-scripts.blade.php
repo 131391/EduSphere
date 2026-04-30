@@ -46,6 +46,28 @@
     html.sidebar-collapsed aside {
         width: 5rem;
     }
+    html.sidebar-collapsed aside .sidebar-logo-container {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+    html.sidebar-collapsed aside .sidebar-logo-img {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+    }
+    html.sidebar-collapsed aside .sidebar-logo-icon {
+        font-size: 1.125rem !important;
+    }
+    aside .sidebar-logo-container {
+        width: 4rem;
+        height: 4rem;
+    }
+    aside .sidebar-logo-img {
+        width: 4rem;
+        height: 4rem;
+    }
+    aside .sidebar-logo-icon {
+        font-size: 1.5rem;
+    }
     html.sidebar-collapsed aside .logo-container {
         width: 2.5rem !important;
         height: 2.5rem !important;

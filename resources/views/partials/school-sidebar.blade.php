@@ -34,16 +34,14 @@
     {{-- ── Logo ──────────────────────────────────────────────────────────── --}}
     <div class="p-4 border-b border-[#283593] flex-shrink-0 relative">
         <div class="flex items-center justify-center mb-2">
-            <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300"
-                :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'"
-                style="width:4rem;height:4rem">
+<div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 sidebar-logo-container"
+                :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'">
                 @if($school?->logo)
                     <img src="{{ asset('storage/'.$school->logo) }}" alt="{{ $school->name }}"
-                        class="rounded-full object-cover"
-                        :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'"
-                        style="width:4rem;height:4rem">
+                        class="rounded-full object-cover sidebar-logo-img"
+                        :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'">
                 @else
-                    <i class="fas fa-school text-[#1a237e]" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
+                    <i class="fas fa-school text-[#1a237e] sidebar-logo-icon" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
                 @endif
             </div>
         </div>

@@ -11,10 +11,9 @@
     {{-- ── Logo ──────────────────────────────────────────────────────────── --}}
     <div class="p-4 border-b border-[#283593] flex-shrink-0 relative">
         <div class="flex items-center justify-center mb-2">
-            <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300"
-                :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'"
-                style="width:4rem;height:4rem">
-                <i class="fas fa-user-graduate text-[#1a237e]" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
+            <div class="bg-white rounded-full flex items-center justify-center transition-all duration-300 sidebar-logo-container"
+                :style="sidebarCollapsed ? 'width:2.5rem;height:2.5rem' : 'width:4rem;height:4rem'">
+                <i class="fas fa-user-graduate text-[#1a237e] sidebar-logo-icon" :class="sidebarCollapsed ? 'text-lg' : 'text-2xl'"></i>
             </div>
         </div>
         <div x-show="!sidebarCollapsed" class="sidebar-text text-center">
