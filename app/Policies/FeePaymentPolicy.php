@@ -38,6 +38,21 @@ class FeePaymentPolicy
             && $user->canAccessSchool($feePayment->school_id);
     }
 
+    /**
+     * Determine whether the user can revert/void a receipt.
+     *
+     * Reverts are addressed by receipt_no (multiple FeePayment rows), so the
+     * controller authorizes against the class rather than an instance.
+     */
+    public function delete(User $user): bool
+    {
+        $currentSchool = app()->bound('currentSchool') ? app('currentSchool') : null;
+
+        return $this->isFinanceOperator($user)
+            && $currentSchool
+            && $user->canAccessSchool($currentSchool->id);
+    }
+
     private function isFinanceOperator(User $user): bool
     {
         return $user->isActive()

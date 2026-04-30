@@ -15,6 +15,9 @@ class LateFeeController extends TenantController
 
     public function index(Request $request)
     {
+        $this->ensureSchoolActive();
+        $this->authorize('viewAny', LateFee::class);
+
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($lateFee) {
@@ -66,6 +69,9 @@ class LateFeeController extends TenantController
 
     public function store(StoreLateFeeRequest $request)
     {
+        $this->ensureSchoolActive();
+        $this->authorize('create', LateFee::class);
+
         $lateFee = LateFee::create([
             'school_id' => $this->getSchoolId(),
             'fine_date' => $request->fine_date,
@@ -86,6 +92,7 @@ class LateFeeController extends TenantController
     public function update(UpdateLateFeeRequest $request, LateFee $lateFee)
     {
         $this->authorizeTenant($lateFee);
+        $this->authorize('update', $lateFee);
 
         $lateFee->update([
             'fine_date' => $request->fine_date,
@@ -106,6 +113,7 @@ class LateFeeController extends TenantController
     public function destroy(LateFee $lateFee)
     {
         $this->authorizeTenant($lateFee);
+        $this->authorize('delete', $lateFee);
         $lateFee->delete();
 
         if (request()->wantsJson()) {

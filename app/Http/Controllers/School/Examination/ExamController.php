@@ -242,6 +242,7 @@ class ExamController extends TenantController
     public function marksEntry()
     {
         $this->ensureSchoolActive();
+        $this->authorize('viewAny', Exam::class);
 
         // Read-only listing. Subject snapshot is ensured at scheduling time and on
         // the per-exam mark-entry endpoint, not here.
@@ -407,6 +408,8 @@ class ExamController extends TenantController
 
         $exam = Exam::where('school_id', $this->getSchoolId())->findOrFail($request->exam_id);
         $examSubject = $exam->examSubjects()->findOrFail($request->exam_subject_id);
+
+        $this->authorize('enterSubjectMarks', [$exam, $examSubject]);
 
         $csv = $importService->generateTemplate($exam, $examSubject);
         $filename = "marks_template_" . str($exam->display_name)->slug() . "_" . str($examSubject->resolved_name)->slug() . ".csv";

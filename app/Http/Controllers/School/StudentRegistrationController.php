@@ -559,6 +559,8 @@ class StudentRegistrationController extends TenantController
 
     public function getEnquiryData($id)
     {
+        $this->authorize('viewAny', StudentRegistration::class);
+
         $schoolId = $this->getSchoolId();
         $enquiry = StudentEnquiry::where('school_id', $schoolId)
             ->where('id', $id)
@@ -576,8 +578,14 @@ class StudentRegistrationController extends TenantController
 
     public function getRegistrationFee($classId)
     {
+        $this->authorize('viewAny', StudentRegistration::class);
+
         try {
-            $class = ClassModel::with('registrationFee')->findOrFail($classId);
+            // Tenantable scope on ClassModel keeps this per-school; the
+            // explicit where is belt-and-suspenders.
+            $class = ClassModel::where('school_id', $this->getSchoolId())
+                ->with('registrationFee')
+                ->findOrFail($classId);
 
             return response()->json([
                 'success' => true,
@@ -600,6 +608,8 @@ class StudentRegistrationController extends TenantController
             ->where('school_id', $schoolId)
             ->findOrFail($id);
 
+        $this->authorize('view', $studentRegistration);
+
         $pdf = Pdf::loadView('pdf.student-registration', compact('studentRegistration', 'school'));
 
         return $pdf->download('student-registration-' . $studentRegistration->registration_no . '.pdf');
@@ -607,6 +617,8 @@ class StudentRegistrationController extends TenantController
 
     public function downloadTemplate()
     {
+        $this->authorize('create', StudentRegistration::class);
+
         $headers = [
             'Content-Type'        => 'text/csv',
             'Content-Disposition' => 'attachment; filename="registration_template.csv"',
@@ -622,6 +634,8 @@ class StudentRegistrationController extends TenantController
 
     public function import(Request $request)
     {
+        $this->authorize('create', StudentRegistration::class);
+
         $request->validate(['file' => 'required|file|mimes:csv,txt|max:2048']);
 
         $school = $this->getSchool();

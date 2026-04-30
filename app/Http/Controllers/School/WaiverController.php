@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\School;
 
 use App\Http\Controllers\TenantController;
+use App\Models\Waiver;
 use Illuminate\Http\Request;
 
 use App\Traits\HasAjaxDataTable;
@@ -17,6 +18,7 @@ class WaiverController extends TenantController
     public function index(Request $request)
     {
         $this->ensureSchoolActive();
+        $this->authorize('viewAny', Waiver::class);
         $schoolId = $this->getSchoolId();
 
         $transformer = function($row) {
@@ -86,6 +88,9 @@ class WaiverController extends TenantController
 
     public function create()
     {
+        $this->ensureSchoolActive();
+        $this->authorize('create', Waiver::class);
+
         $school = $this->getSchool();
         $students = \App\Models\Student::where('school_id', $school->id)
             ->with(['class', 'section'])
@@ -99,6 +104,9 @@ class WaiverController extends TenantController
 
     public function store(\App\Http\Requests\School\StoreWaiverRequest $request)
     {
+        $this->ensureSchoolActive();
+        $this->authorize('create', Waiver::class);
+
         $validated = $request->validated();
         $validated['school_id'] = $this->getSchoolId();
 
@@ -131,6 +139,7 @@ class WaiverController extends TenantController
     {
         try {
             $this->authorizeTenant($waiver);
+            $this->authorize('update', $waiver);
             $waiver->update($request->validated());
 
             if ($request->ajax() || $request->wantsJson()) {
@@ -158,6 +167,7 @@ class WaiverController extends TenantController
     {
         try {
             $this->authorizeTenant($waiver);
+            $this->authorize('delete', $waiver);
             $waiver->delete();
 
             if (request()->ajax() || request()->wantsJson()) {
