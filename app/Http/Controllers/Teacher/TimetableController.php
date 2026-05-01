@@ -17,6 +17,7 @@ class TimetableController extends TenantController
 
     public function index()
     {
+        $this->authorize('teacher:operate');
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 

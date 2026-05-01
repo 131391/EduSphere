@@ -29,8 +29,10 @@ class TransportAttendanceController extends TenantController
      */
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
-        
+
         // Get current academic year
         $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
             ->where('is_current', true)
@@ -80,6 +82,8 @@ class TransportAttendanceController extends TenantController
      */
     public function getRoutes(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validate([
                 'vehicle_id' => [
@@ -121,6 +125,8 @@ class TransportAttendanceController extends TenantController
      */
     public function getStudents(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validate([
                 'vehicle_id' => [
@@ -172,6 +178,8 @@ class TransportAttendanceController extends TenantController
      */
     public function store(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validate([
                 'vehicle_id' => [
@@ -227,6 +235,8 @@ class TransportAttendanceController extends TenantController
      */
     public function monthWiseReport(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         $vehicles = Vehicle::where('school_id', $schoolId)
@@ -272,6 +282,8 @@ class TransportAttendanceController extends TenantController
      */
     public function getRoutesForReport(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $request->validate([
                 'vehicle_id' => [

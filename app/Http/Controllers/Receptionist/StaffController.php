@@ -25,6 +25,8 @@ class StaffController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($staff) {
@@ -149,6 +151,8 @@ class StaffController extends TenantController
 
     public function store(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $validated = $this->validateStaff($request);
 
         if ($request->hasFile('aadhaar_card')) {
@@ -188,6 +192,7 @@ class StaffController extends TenantController
 
     public function update(Request $request, Staff $staff)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($staff);
         $validated = $this->validateStaff($request, $staff);
 
@@ -229,6 +234,7 @@ class StaffController extends TenantController
 
     public function destroy(Request $request, Staff $staff)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($staff);
 
         if ($staff->aadhaar_card) Storage::disk('public')->delete($staff->aadhaar_card);
@@ -246,6 +252,8 @@ class StaffController extends TenantController
 
     public function getSections(Request $request, $classId)
     {
+        $this->authorize('receptionist:operate');
+
         $sections = Section::where('school_id', $this->getSchoolId())
             ->where('class_id', $classId)
             ->orderBy('name')

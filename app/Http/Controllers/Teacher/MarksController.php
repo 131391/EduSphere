@@ -29,6 +29,7 @@ class MarksController extends TenantController
      */
     public function index(Request $request)
     {
+        $this->authorize('teacher:operate');
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 
@@ -62,6 +63,7 @@ class MarksController extends TenantController
 
     public function entry(Request $request)
     {
+        $this->authorize('teacher:operate');
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 
@@ -119,6 +121,7 @@ class MarksController extends TenantController
 
     public function store(StoreMarksRequest $request)
     {
+        $this->authorize('teacher:operate');
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 

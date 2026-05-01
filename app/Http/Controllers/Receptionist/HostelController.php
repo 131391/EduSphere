@@ -19,6 +19,8 @@ class HostelController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($hostel) {
@@ -100,6 +102,8 @@ class HostelController extends TenantController
 
     public function store(StoreHostelRequest $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validated();
             $validated['school_id'] = $this->getSchoolId();
@@ -123,6 +127,7 @@ class HostelController extends TenantController
 
     public function update(UpdateHostelRequest $request, Hostel $hostel)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($hostel);
 
         try {
@@ -147,6 +152,7 @@ class HostelController extends TenantController
 
     public function destroy(Hostel $hostel)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($hostel);
 
         try {
@@ -174,6 +180,8 @@ class HostelController extends TenantController
 
     public function export()
     {
+        $this->authorize('receptionist:operate');
+
         return redirect()->route('receptionist.hostels.index', ['export' => 'csv']);
     }
 }

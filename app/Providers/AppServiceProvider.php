@@ -95,7 +95,52 @@ class AppServiceProvider extends ServiceProvider
             return $currentSchool && $user->canAccessSchool($currentSchool->id);
         });
 
-        \App\Models\Waiver::observe(\App\Observers\WaiverObserver::class);
+        // Mirror of receptionist:operate, scoped to the Teacher portal.
+        // Gates the per-portal dashboard/profile/timetable/student-list
+        // surfaces. Per-record policies (ExamPolicy::enterMarks etc.) are
+        // still applied separately for actions that operate on a model.
+        Gate::define('teacher:operate', function (User $user) {
+            if (!$user->isActive()) {
+                return false;
+            }
+
+            if (!$user->isTeacher() && !$user->isSchoolAdmin()) {
+                return false;
+            }
+
+            $currentSchool = app()->bound('currentSchool') ? app('currentSchool') : null;
+
+            return $currentSchool && $user->canAccessSchool($currentSchool->id);
+        });
+
+        // Student portal — read-only views (own attendance / fees /
+        // results / timetable / library issues). The route stack already
+        // restricts to role:student; this gate is defense-in-depth.
+        Gate::define('student:operate', function (User $user) {
+            if (!$user->isActive() || !$user->isStudent()) {
+                return false;
+            }
+
+            $currentSchool = app()->bound('currentSchool') ? app('currentSchool') : null;
+
+            return $currentSchool && $user->canAccessSchool($currentSchool->id);
+        });
+
+        // Parent portal — view child records and pay fees. Per-fee
+        // ownership is still enforced inside the controllers via
+        // resolveOwnedFee() / ownedStudentIds(); this gate guards the
+        // portal surface.
+        Gate::define('parent:operate', function (User $user) {
+            if (!$user->isActive() || !$user->isParent()) {
+                return false;
+            }
+
+            $currentSchool = app()->bound('currentSchool') ? app('currentSchool') : null;
+
+            return $currentSchool && $user->canAccessSchool($currentSchool->id);
+        });
+
+        Waiver::observe(\App\Observers\WaiverObserver::class);
 
         // Set default string length for MySQL
         Schema::defaultStringLength(191);

@@ -25,6 +25,8 @@ class StudentEnquiryController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         // 1. Row Transformer (Crucial for Gold Standard UI consistency)
@@ -168,6 +170,8 @@ class StudentEnquiryController extends TenantController
 
     public function create()
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
         $academicYears = AcademicYear::where('school_id', $schoolId)->get();
         $classes = ClassModel::where('school_id', $schoolId)->get();
@@ -182,6 +186,8 @@ class StudentEnquiryController extends TenantController
 
     public function store(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $this->validateEnquiry($request);
 
@@ -225,12 +231,14 @@ class StudentEnquiryController extends TenantController
 
     public function show(StudentEnquiry $studentEnquiry)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($studentEnquiry);
         return view('receptionist.student-enquiries.show', compact('studentEnquiry'));
     }
 
     public function edit(StudentEnquiry $studentEnquiry)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($studentEnquiry);
 
         $schoolId = $this->getSchoolId();
@@ -247,6 +255,7 @@ class StudentEnquiryController extends TenantController
 
     public function update(Request $request, StudentEnquiry $studentEnquiry)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($studentEnquiry);
 
         try {
@@ -289,6 +298,7 @@ class StudentEnquiryController extends TenantController
 
     public function updateStatus(Request $request, StudentEnquiry $studentEnquiry)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($studentEnquiry);
 
         $validated = $request->validate([
@@ -327,6 +337,7 @@ class StudentEnquiryController extends TenantController
 
     public function destroy(StudentEnquiry $studentEnquiry)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($studentEnquiry);
 
         // Block deletion if enquiry has progressed to registration or admission

@@ -242,7 +242,7 @@
 
                 <x-slot name="footer">
                     <button type="button" @click="$dispatch('close-modal', 'issue-book-modal')" class="btn-premium-cancel px-10">Discard</button>
-                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[200px] !from-indigo-600 !to-violet-600 shadow-indigo-200">
+                    <button type="button" @click="submitIssue()" :disabled="submitting" class="btn-premium-primary min-w-[200px] !from-indigo-600 !to-violet-600 shadow-indigo-200">
                         <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
                         <span x-text="submitting ? 'Transmitting...' : 'Confirm Issuance'"></span>
                     </button>
@@ -286,7 +286,7 @@
                 </div>
                 <x-slot name="footer">
                     <button type="button" @click="$dispatch('close-modal', 'renew-modal')" class="btn-premium-cancel px-10">Cancel</button>
-                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[140px] !from-indigo-600 !to-violet-600">
+                    <button type="button" @click="submitRenewal()" :disabled="submitting" class="btn-premium-primary min-w-[140px] !from-indigo-600 !to-violet-600">
                         <span x-text="submitting ? 'Renewing...' : 'Confirm Renewal'"></span>
                     </button>
                 </x-slot>
@@ -469,8 +469,7 @@
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
-                                const firstError = Object.values(this.errors)[0]?.[0];
-                                if (firstError && window.Toast) window.Toast.fire({ icon: 'error', title: firstError });
+                                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.errors)) });
                             } else {
                                 throw new Error(window.resolveApiMessage(result, ''));
                             }

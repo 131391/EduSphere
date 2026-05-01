@@ -10,6 +10,8 @@ class LibraryController extends Controller
 {
     public function index()
     {
+        $this->authorize('student:operate');
+
         $student = Auth::user()->student;
 
         if (!$student) {

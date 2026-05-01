@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class TimetableController extends Controller
 {
     public function index()
     {
+        $this->authorize('student:operate');
+
         $student = Auth::user()->student;
 
         if (!$student) {

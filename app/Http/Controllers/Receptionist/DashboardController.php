@@ -12,6 +12,8 @@ class DashboardController extends TenantController
 {
     public function index()
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
         $today = Carbon::today();
 

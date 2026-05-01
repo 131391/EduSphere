@@ -24,6 +24,8 @@ class HostelAttendanceController extends TenantController
      */
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         $hostels = Hostel::where('school_id', $schoolId)
@@ -57,6 +59,8 @@ class HostelAttendanceController extends TenantController
      */
     public function getFloors(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
         $floors = \App\Models\HostelFloor::where('school_id', $schoolId)
             ->where('hostel_id', $request->hostel_id)
@@ -70,6 +74,8 @@ class HostelAttendanceController extends TenantController
      */
     public function getRooms(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
         $rooms = \App\Models\HostelRoom::where('school_id', $schoolId)
             ->where('hostel_floor_id', $request->hostel_floor_id)
@@ -83,6 +89,8 @@ class HostelAttendanceController extends TenantController
      */
     public function getStudents(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $schoolId = $this->getSchoolId();
 
@@ -131,6 +139,8 @@ class HostelAttendanceController extends TenantController
 
     public function store(StoreHostelAttendanceRequest $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $this->attendanceService->markBulkAttendance(
                 $this->getSchool(),
@@ -154,6 +164,8 @@ class HostelAttendanceController extends TenantController
      */
     public function report(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         // Get all hostels for the school

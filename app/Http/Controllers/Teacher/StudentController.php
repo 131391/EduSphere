@@ -20,6 +20,7 @@ class StudentController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('teacher:operate');
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 
@@ -70,6 +71,7 @@ class StudentController extends TenantController
 
     public function export(Request $request): StreamedResponse
     {
+        $this->authorize('teacher:operate');
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 
@@ -123,6 +125,7 @@ class StudentController extends TenantController
 
     public function show($id)
     {
+        $this->authorize('teacher:operate');
         $this->ensureSchoolActive();
         $teacher = $this->currentTeacherOrFail();
 

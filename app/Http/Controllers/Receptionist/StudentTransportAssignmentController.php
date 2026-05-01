@@ -29,6 +29,8 @@ class StudentTransportAssignmentController extends TenantController
      */
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
         $currentAcademicYear = AcademicYear::where('school_id', $schoolId)
             ->where('is_current', true)
@@ -137,6 +139,8 @@ class StudentTransportAssignmentController extends TenantController
      */
     public function store(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validate([
                 'student_id' => [
@@ -201,6 +205,7 @@ class StudentTransportAssignmentController extends TenantController
      */
     public function edit(StudentTransportAssignment $transportAssignment)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($transportAssignment);
 
         return response()->json($transportAssignment);
@@ -211,6 +216,7 @@ class StudentTransportAssignmentController extends TenantController
      */
     public function update(Request $request, StudentTransportAssignment $transportAssignment)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($transportAssignment);
 
         try {
@@ -274,6 +280,7 @@ class StudentTransportAssignmentController extends TenantController
      */
     public function destroy(Request $request, StudentTransportAssignment $transportAssignment)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($transportAssignment);
 
         try {
@@ -302,6 +309,8 @@ class StudentTransportAssignmentController extends TenantController
      */
     public function history(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         $query = StudentTransportAssignment::withTrashed()

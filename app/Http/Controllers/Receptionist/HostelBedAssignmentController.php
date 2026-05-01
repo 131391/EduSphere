@@ -34,6 +34,8 @@ class HostelBedAssignmentController extends TenantController
      */
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($row) {
@@ -139,6 +141,8 @@ class HostelBedAssignmentController extends TenantController
 
     public function export()
     {
+        $this->authorize('receptionist:operate');
+
         return redirect()->route('receptionist.hostel-bed-assignments.index', ['export' => 'csv']);
     }
 
@@ -147,6 +151,8 @@ class HostelBedAssignmentController extends TenantController
      */
     public function store(StoreHostelBedAssignmentRequest $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validated();
             $schoolId = $this->getSchoolId();
@@ -192,6 +198,7 @@ class HostelBedAssignmentController extends TenantController
      */
     public function update(UpdateHostelBedAssignmentRequest $request, HostelBedAssignment $hostelBedAssignment)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($hostelBedAssignment);
 
         try {
@@ -243,6 +250,7 @@ class HostelBedAssignmentController extends TenantController
      */
     public function destroy(HostelBedAssignment $hostelBedAssignment)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($hostelBedAssignment);
 
         try {
@@ -264,9 +272,11 @@ class HostelBedAssignmentController extends TenantController
      */
     public function searchStudents(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $schoolId = $this->getSchoolId();
-            
+
             $request->validate([
                 'search' => 'required|string|min:2',
             ]);
@@ -319,9 +329,11 @@ class HostelBedAssignmentController extends TenantController
      */
     public function getFloors(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $schoolId = $this->getSchoolId();
-            
+
             $request->validate([
                 'hostel_id' => 'required|exists:hostels,id',
             ]);
@@ -375,9 +387,11 @@ class HostelBedAssignmentController extends TenantController
      */
     public function getRooms(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $schoolId = $this->getSchoolId();
-            
+
             $request->validate([
                 'hostel_floor_id' => 'required|exists:hostel_floors,id',
             ]);
@@ -431,9 +445,11 @@ class HostelBedAssignmentController extends TenantController
      */
     public function getMonths()
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $schoolId = $this->getSchoolId();
-            
+
             // Get active fee names for the school
             $feeNames = FeeName::where('school_id', $schoolId)
                 ->active()

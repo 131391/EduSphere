@@ -22,6 +22,7 @@ class DashboardController extends TenantController
 
     public function index()
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $parentProfile = $this->currentParentOrFail();
 

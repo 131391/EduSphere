@@ -17,6 +17,8 @@ class HostelFloorController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         $transformer = function ($floor) {
@@ -106,6 +108,8 @@ class HostelFloorController extends TenantController
 
     public function store(StoreHostelFloorRequest $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validated();
             $validated['school_id'] = $this->getSchoolId();
@@ -129,6 +133,7 @@ class HostelFloorController extends TenantController
 
     public function update(UpdateHostelFloorRequest $request, HostelFloor $hostelFloor)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($hostelFloor);
 
         try {
@@ -153,6 +158,7 @@ class HostelFloorController extends TenantController
 
     public function destroy(HostelFloor $hostelFloor)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($hostelFloor);
 
         try {
@@ -179,6 +185,8 @@ class HostelFloorController extends TenantController
 
     public function export()
     {
+        $this->authorize('receptionist:operate');
+
         return redirect()->route('receptionist.hostel-floors.index', ['export' => 'csv']);
     }
 }

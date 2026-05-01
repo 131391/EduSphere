@@ -17,6 +17,7 @@ class ProfileController extends TenantController
 
     public function show()
     {
+        $this->authorize('receptionist:operate');
         $this->ensureSchoolActive();
 
         return view('receptionist.profile.show', [
@@ -26,6 +27,7 @@ class ProfileController extends TenantController
 
     public function update(Request $request)
     {
+        $this->authorize('receptionist:operate');
         $this->ensureSchoolActive();
         $user = Auth::user();
 
@@ -43,6 +45,7 @@ class ProfileController extends TenantController
 
     public function password()
     {
+        $this->authorize('receptionist:operate');
         $this->ensureSchoolActive();
 
         return view('receptionist.profile.password');
@@ -50,6 +53,7 @@ class ProfileController extends TenantController
 
     public function updatePassword(Request $request)
     {
+        $this->authorize('receptionist:operate');
         $this->ensureSchoolActive();
 
         $request->validate([

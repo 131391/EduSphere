@@ -273,7 +273,7 @@
 
                 <x-slot name="footer">
                     <button type="button" @click="$dispatch('close-modal', 'book-modal')" class="btn-premium-cancel px-10">Discard</button>
-                    <button type="submit" :disabled="submitting" class="btn-premium-primary min-w-[200px] !from-amber-500 !to-orange-600 shadow-amber-200">
+                    <button type="button" @click="submitForm()" :disabled="submitting" class="btn-premium-primary min-w-[200px] !from-amber-500 !to-orange-600 shadow-amber-200">
                         <template x-if="submitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
                         <span x-text="submitting ? (isEdit ? 'Updating...' : 'Registering...') : (isEdit ? 'Save Changes' : 'Add to Catalog')"></span>
                     </button>
@@ -335,7 +335,7 @@
 
                 <x-slot name="footer">
                     <button type="button" @click="$dispatch('close-modal', 'stock-modal')" class="btn-premium-cancel px-10">Cancel</button>
-                    <button type="submit" :disabled="stockSubmitting" class="btn-premium-primary min-w-[200px] !from-emerald-600 !to-teal-700">
+                    <button type="button" @click="submitStockAdjust()" :disabled="stockSubmitting" class="btn-premium-primary min-w-[200px] !from-emerald-600 !to-teal-700">
                         <template x-if="stockSubmitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
                         <span x-text="stockSubmitting ? 'Applying...' : 'Apply Adjustment'"></span>
                     </button>
@@ -365,7 +365,7 @@
 
                 <x-slot name="footer">
                     <button type="button" @click="$dispatch('close-modal', 'book-category-modal')" class="btn-premium-cancel px-10">Discard</button>
-                    <button type="submit" :disabled="categorySubmitting" class="btn-premium-primary min-w-[200px] !from-slate-700 !to-slate-900 shadow-slate-200">
+                    <button type="button" @click="submitCategoryForm()" :disabled="categorySubmitting" class="btn-premium-primary min-w-[200px] !from-slate-700 !to-slate-900 shadow-slate-200">
                         <template x-if="categorySubmitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
                         <span x-text="categorySubmitting ? 'Creating...' : 'Save Category'"></span>
                     </button>
@@ -483,6 +483,7 @@
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422 && result.errors) {
                                 this.stockErrors = result.errors;
+                                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.stockErrors)) });
                             } else {
                                 throw new Error(window.resolveApiMessage(result, ''));
                             }
@@ -564,6 +565,7 @@
                                 if (typeof this.refreshTable === 'function') this.refreshTable();
                             } else if (response.status === 422) {
                                 this.errors = result.errors || {};
+                                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.errors)) });
                             } else {
                                 throw new Error(window.resolveApiMessage(result, ''));
                             }
@@ -598,6 +600,7 @@
                                 window.location.reload();
                             } else if (response.status === 422) {
                                 this.categoryErrors = result.errors || {};
+                                window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.categoryErrors)) });
                             } else {
                                 throw new Error(window.resolveApiMessage(result, ''));
                             }

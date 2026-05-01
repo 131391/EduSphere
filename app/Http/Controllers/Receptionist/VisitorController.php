@@ -23,6 +23,8 @@ class VisitorController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $schoolId = $this->getSchoolId();
 
         // 1. Row Transformer (Crucial for Gold Standard UI consistency)
@@ -161,6 +163,7 @@ class VisitorController extends TenantController
 
     public function show(Visitor $visitor)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeAccess($visitor);
 
         return view('receptionist.visitors.show', compact('visitor'));
@@ -168,6 +171,8 @@ class VisitorController extends TenantController
 
     public function store(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -239,6 +244,7 @@ class VisitorController extends TenantController
 
     public function update(Request $request, Visitor $visitor)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeAccess($visitor);
 
         try {
@@ -317,6 +323,7 @@ class VisitorController extends TenantController
 
     public function destroy(Visitor $visitor)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeAccess($visitor);
 
         try {
@@ -351,6 +358,7 @@ class VisitorController extends TenantController
 
     public function checkIn(Visitor $visitor)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeAccess($visitor);
 
         try {
@@ -380,6 +388,7 @@ class VisitorController extends TenantController
 
     public function checkOut(Visitor $visitor)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeAccess($visitor);
 
         try {
@@ -409,6 +418,8 @@ class VisitorController extends TenantController
 
     public function export()
     {
+        $this->authorize('receptionist:operate');
+
         // Excel export functionality - to be implemented with Laravel Excel
         return back()->with('info', 'Export functionality coming soon.');
     }

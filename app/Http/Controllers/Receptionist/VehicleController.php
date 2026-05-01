@@ -131,6 +131,8 @@ class VehicleController extends TenantController
      */
     public function store(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         try {
             $validated = $request->validate([
                 'registration_no' => 'required|string|max:255',
@@ -180,6 +182,7 @@ class VehicleController extends TenantController
      */
     public function update(Request $request, Vehicle $vehicle)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($vehicle);
 
         try {
@@ -231,6 +234,7 @@ class VehicleController extends TenantController
      */
     public function destroy(Request $request, Vehicle $vehicle)
     {
+        $this->authorize('receptionist:operate');
         $this->authorizeTenant($vehicle);
 
         try {
@@ -259,6 +263,8 @@ class VehicleController extends TenantController
      */
     public function export(Request $request)
     {
+        $this->authorize('receptionist:operate');
+
         $query = Vehicle::where('school_id', $this->getSchoolId());
 
         if ($request->filled('search')) {

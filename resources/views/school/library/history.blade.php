@@ -87,6 +87,7 @@
                     if (typeof this.refreshTable === 'function') this.refreshTable();
                 } else if (response.status === 422 && result.errors) {
                     this.settleErrors = result.errors;
+                    window.Toast?.fire({ icon: 'error', title: window.resolveApiMessage(result, window.firstValidationMessage(this.settleErrors)) });
                 } else {
                     throw new Error(window.resolveApiMessage(result, ''));
                 }
@@ -272,7 +273,7 @@
 
                 <x-slot name="footer">
                     <button type="button" @click="$dispatch('close-modal', 'settle-fine-modal')" class="btn-premium-cancel px-10">Cancel</button>
-                    <button type="submit" :disabled="settleSubmitting" class="btn-premium-primary min-w-[200px] !from-slate-800 !to-slate-900">
+                    <button type="button" @click="submitSettle()" :disabled="settleSubmitting" class="btn-premium-primary min-w-[200px] !from-slate-800 !to-slate-900">
                         <template x-if="settleSubmitting"><span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3 inline-block"></span></template>
                         <span x-text="settleSubmitting ? 'Recording...' : 'Record Settlement'"></span>
                     </button>

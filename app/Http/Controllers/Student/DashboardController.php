@@ -9,6 +9,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $this->authorize('student:operate');
+
         return view('student.dashboard', [
             'title' => 'Student Dashboard',
         ]);

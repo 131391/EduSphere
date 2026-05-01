@@ -20,6 +20,7 @@ class AttendanceController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $parentProfile = $this->currentParentOrFail();
 
@@ -68,6 +69,7 @@ class AttendanceController extends TenantController
 
     public function export(Request $request): StreamedResponse
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $parentProfile = $this->currentParentOrFail();
 

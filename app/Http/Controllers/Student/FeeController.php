@@ -12,6 +12,8 @@ class FeeController extends Controller
 {
     public function index()
     {
+        $this->authorize('student:operate');
+
         $student = Auth::user()->student;
 
         if (!$student) {
@@ -38,6 +40,8 @@ class FeeController extends Controller
 
     public function show($id)
     {
+        $this->authorize('student:operate');
+
         $student = Auth::user()->student;
 
         if (!$student) {

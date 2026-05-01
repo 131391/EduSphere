@@ -130,7 +130,7 @@ class FeePaymentController extends TenantController
         $this->authorize('collect', [FeePayment::class, $student]);
 
         $pendingFees = $this->paymentService->getStudentPendingFees($student);
-        $paymentMethods = PaymentMethod::where('school_id', $this->getSchoolId())->active()->get();
+        $paymentMethods = PaymentMethod::where('school_id', $this->getSchoolId())->where('is_active', true)->get();
         $academicYear = AcademicYear::where('school_id', $this->getSchoolId())->where('is_current', true)->first();
 
         return view('school.fee-payments.collect', compact('student', 'pendingFees', 'paymentMethods', 'academicYear'));
