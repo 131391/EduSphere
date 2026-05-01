@@ -30,6 +30,8 @@ class PaymentController extends TenantController
      */
     public function initiate(int $fee_id)
     {
+        $this->authorize('parent:operate');
+
         $fee = $this->resolveOwnedFee($fee_id);
 
         if (bccomp((string) ($fee->due_amount ?? '0'), '0', 2) <= 0) {
@@ -97,6 +99,8 @@ class PaymentController extends TenantController
      */
     public function verify(Request $request)
     {
+        $this->authorize('parent:operate');
+
         $validated = $request->validate([
             'razorpay_payment_id' => 'required|string|max:100',
             'razorpay_order_id'   => 'required|string|max:100',

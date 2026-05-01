@@ -22,6 +22,7 @@ class ProfileController extends TenantController
 
     public function show()
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $parentProfile = $this->currentParentOrFail();
 
@@ -33,6 +34,7 @@ class ProfileController extends TenantController
 
     public function update(Request $request)
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $parentProfile = $this->currentParentOrFail();
         $user          = Auth::user();
@@ -79,6 +81,7 @@ class ProfileController extends TenantController
 
     public function password()
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $this->currentParentOrFail();
 
@@ -87,6 +90,7 @@ class ProfileController extends TenantController
 
     public function updatePassword(Request $request)
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $this->currentParentOrFail();
 

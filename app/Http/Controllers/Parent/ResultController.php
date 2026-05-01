@@ -19,6 +19,7 @@ class ResultController extends TenantController
 
     public function index(Request $request)
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $parentProfile = $this->currentParentOrFail();
 

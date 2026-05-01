@@ -20,6 +20,7 @@ class StudentController extends TenantController
 
     public function index()
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $parentProfile = $this->currentParentOrFail();
 
@@ -76,6 +77,7 @@ class StudentController extends TenantController
 
     public function show($id)
     {
+        $this->authorize('parent:operate');
         $this->ensureSchoolActive();
         $parentProfile = $this->currentParentOrFail();
 
